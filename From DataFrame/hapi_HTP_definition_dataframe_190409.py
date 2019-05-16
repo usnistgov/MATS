@@ -1,15 +1,19 @@
+from numpy import sqrt,abs,exp,pi,log,sin,cos,tan
 import numpy as np
+
 import pandas as pd
 from bisect import bisect
 import os, sys
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
-from scipy import interpolate, signal, fftpack
+from scipy import fftpack
+from numba import jit
 
 
 sys.path.append(r'C:\Users\ema3\Documents\Python Scripts\HAPI')#Add hapi.py folder location to system path
 sys.path.append(r'C:\Users\ema3\Documents\Cold Cavity - O2 A Band')# set location of HAPI.py module
-from hapi import *
+from hapi import EnvironmentDependency_Intensity, PYTIPS2017, molecularMass, PROFILE_HT, ISO, volumeConcentration
+
 from matplotlib import gridspec
 import pandas as pd
 import qgrid
@@ -26,6 +30,7 @@ sns.set_context("poster")
 
 
 # proposed inputs
+#Update to take out all hapi calls and just work from the limited 
 
 '''
 linelist = pd.read_csv('HITRAN_2016_linelist.csv')
@@ -41,13 +46,13 @@ diluent = 'air' # can define also as dictionary that it loops through with the v
 Diluent = {}
 '''
 
-
-def HTP_from_DF_select(linelist, wave_min, wave_max,wave_space = 0.01, wing_cutoff = 50, wing_wavenumbers = 50, 
+@jit
+def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50, 
                 pressure = 1, temperature = 296, concentration = {}, 
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30):
     
     #Generate X-axis for simulation
-    wavenumbers = np.arange(wave_min, wave_max + wave_space, wave_space)
+    wavenumbers = waves
         
     
     #Set Omegas to X-values
@@ -66,32 +71,49 @@ def HTP_from_DF_select(linelist, wave_min, wave_max,wave_space = 0.01, wing_cuto
     #Sets-up the  Diluent currently limited to air or self
     if not Diluent:
         Diluent = {diluent:1.}
-        '''
-        if diluent == 'air': 
-            Diluent = {'air':1.}
-        elif diluent == 'self':
-            Diluent = {'self':1.}
-        else:
-            raise Exception('Unknown GammaL value: %s' % GammaL)
-        '''
-              
+  
     #Iterate through lines in linelist
+    
+    #Calculate line intensity
+    
+    num_lines = len(linelist)
+    linelist['SigmaT'] = num_lines*[0]
+    linelist['SigmaTref'] = num_lines*[0]
+    linelist['GammaD'] = num_lines*[0]
+    linelist['m'] = num_lines*[0]
+    
+    for molec in linelist['molec_id'].unique():
+        for iso in linelist ['local_iso_id'].unique():
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = PYTIPS2017(molec,iso,T)
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) * 1.66053873e-27 * 1000
+    
+    linelist['LineIntensity'] = EnvironmentDependency_Intensity(linelist['sw'],T,Tref,linelist['SigmaT'],linelist['SigmaTref'],linelist['elower'],linelist['nu'])
+
+    
+    ##Calculate Doppler Broadening
+    linelist['GammaD'] = sqrt(2*1.380648813E-16*T*log(2)/linelist['m']/2.99792458e10**2)*linelist['nu']
+    #GammaD = sqrt(2*cBolts*T*log(2)/m/cc**2)*LineCenterDB
+    
+
     for index, line in linelist.iterrows():
 
         #Get Base line parameters
         LineCenterDB = line['nu']
-        LineIntensityDB = line['sw']
-        LowerStateEnergyDB = line['elower']
+        #LineIntensityDB = line['sw']
+        LineIntensity = line['LineIntensity']
+        #LowerStateEnergyDB = line['elower']
         MoleculeNumberDB = line['molec_id']
         IsoNumberDB = line['local_iso_id']
+        GammaD = line['GammaD']
    
         
         #Calculate partition function
-        SigmaT = PYTIPS2017(MoleculeNumberDB,IsoNumberDB,T) #Partition Function T using TIPS2017
-        SigmaTref = PYTIPS2017(MoleculeNumberDB,IsoNumberDB,Tref) #Partition Function T using TIPS2017
+        #SigmaT = PYTIPS2017(MoleculeNumberDB,IsoNumberDB,T) #Partition Function T using TIPS2017
+        #SigmaTref = PYTIPS2017(MoleculeNumberDB,IsoNumberDB,Tref) #Partition Function T using TIPS2017
         
         #Calculate Line Intensity
-        LineIntensity = EnvironmentDependency_Intensity(LineIntensityDB,T,Tref,SigmaT,SigmaTref, LowerStateEnergyDB,LineCenterDB)
+        #LineIntensity = EnvironmentDependency_Intensity(LineIntensityDB,T,Tref,SigmaT,SigmaTref, LowerStateEnergyDB,LineCenterDB)
         
         if LineIntensity < IntensityThreshold: continue
         
@@ -106,13 +128,7 @@ def HTP_from_DF_select(linelist, wave_min, wave_max,wave_space = 0.01, wing_cuto
         
         if ( natural_abundance == False) and abundance_ratio_MI != {}:
             abun_ratio = abundance_ratio_MI[MoleculeNumberDB][IsoNumberDB]
-            
-        
-        
-        ##Calculate Doppler Broadening
-        cMassMol = 1.66053873e-27 # hapi
-        m = molecularMass(MoleculeNumberDB,IsoNumberDB) * cMassMol * 1000
-        GammaD = sqrt(2*cBolts*T*log(2)/m/cc**2)*LineCenterDB
+
         
         #Set values for parameter summation across diluents
         Gamma0 = 0.; Shift0 = 0.; Gamma2 = 0.; Shift2 = 0.; NuVC = 0.; EtaNumer = 0.; Y = 0;
@@ -172,20 +188,24 @@ def HTP_from_DF_select(linelist, wave_min, wave_max,wave_space = 0.01, wing_cuto
         
         appx_voigt_width = 0.5346*Gamma0 + (0.2166*Gamma0**2 + GammaD**2)**0.5
         OmegaWingF = max(wing_wavenumbers,wing_cutoff*appx_voigt_width)
+
+        
         
         
         BoundIndexLower = bisect(wavenumbers,LineCenterDB-OmegaWingF)
         BoundIndexUpper = bisect(wavenumbers,LineCenterDB+OmegaWingF)
+        
+
+
         lineshape_vals_real, lineshape_vals_imag = PROFILE_HT(LineCenterDB,GammaD,Gamma0,Gamma2,Shift0,Shift2,NuVC,Eta,wavenumbers[BoundIndexLower:BoundIndexUpper])#[BoundIndexLower:BoundIndexUpper])
-        
-        
-        
-        #/ abundance(MoleculeNumberDB,IsoNumberDB)
-        
+
+    
         Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
                                                     concentration[MoleculeNumberDB] * abun_ratio * \
                                                     LineIntensity * (lineshape_vals_real + Y*lineshape_vals_imag) 
-    return (wavenumbers, np.asarray(Xsect))        
+
+                                                        
+    return (wavenumbers, np.asarray(Xsect))         
 
 '''
 nu, alpha = HTP_from_DF_select(linelist, wavenumbers, wing_cutoff = 50, wing_wavenumbers = 50, 
@@ -1064,103 +1084,107 @@ def hasNumbers(inputString):
 
 class Fit_DataSet:
     def __init__(self, dataset, base_linelist_file, param_linelist_file, fit_intensity = 1e-27,
-                baseline_limit = False, baseline_limit_percent = 10, 
-                concentration_limit = False, concentration_limit_percent = 50, 
-                etalon_limit = False, etalon_limit_percent = 50, #phase is constrained to +/- 2pi, 
+                baseline_limit = False, baseline_limit_factor = 10, 
+                concentration_limit = False, concentration_limit_factor = 10, 
+                etalon_limit = False, etalon_limit_factor = 50, #phase is constrained to +/- 2pi, 
                 x_shift_limit = False, x_shift_limit_magnitude = 0.1, 
                 nu_limit = False, nu_limit_magnitude = 0.1, 
-                sw_limit = False, sw_limit_percent = 50, 
-                gamma0_limit = False, gamma0_limit_percent = 50, n_gamma0_limit= True, n_gamma0_limit_percent = 50, 
-                delta0_limit = False, delta0_limit_percent = 50, n_delta0_limit = True, n_delta0_limit_percent = 50, 
-                SD_gamma_limit = False, SD_gamma_limit_percent = 50, n_gamma2_limit = True, n_gamma2_limit_percent = 50, 
-                SD_delta_limit = True, SD_delta_limit_percent = 50, n_delta2_limit = True, n_delta2_limit_percent = 50, 
-                nuVC_limit = False, nuVC_limit_percent = 50, n_nuVC_limit = True, n_nuVC_limit_percent = 50, 
-                eta_limit = True, eta_limit_percent = 50, linemixing_limit = False, linemixing_limit_percent = 50, 
-                constrain_n_SD = True):
+                sw_limit = False, sw_limit_factor = 10, 
+                gamma0_limit = False, gamma0_limit_factor = 10, n_gamma0_limit= True, n_gamma0_limit_factor = 10, 
+                delta0_limit = False, delta0_limit_factor = 10, n_delta0_limit = True, n_delta0_limit_factor = 10, 
+                SD_gamma_limit = False, SD_gamma_limit_factor  = 10, n_gamma2_limit = True, n_gamma2_limit_factor  = 10, 
+                SD_delta_limit = True, SD_delta_limit_factor  = 10, n_delta2_limit = True, n_delta2_limit_factor  = 10, 
+                nuVC_limit = False, nuVC_limit_factor  = 10, n_nuVC_limit = True, n_nuVC_limit_factor = 10, 
+                eta_limit = True, eta_limit_factor  = 10, linemixing_limit = False, linemixing_limit_factor  = 10):
         self.dataset = dataset
         self.base_linelist_file = base_linelist_file
+        self.baseline_list = pd.read_csv(self.base_linelist_file + '.csv', index_col = 0)
+        
         self.param_linelist_file = param_linelist_file
+        self.lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
+        
         self.fit_intensity = fit_intensity
         self.baseline_limit = baseline_limit
-        self.baseline_limit_percent = baseline_limit_percent
+        self.baseline_limit_factor  = baseline_limit_factor
         self.etalon_limit = etalon_limit
-        self.etalon_limit_percent = etalon_limit_percent
+        self.etalon_limit_factor = etalon_limit_factor
         self.concentration_limit = concentration_limit
-        self.concentration_limit_percent = concentration_limit_percent
+        self.concentration_limit_factor = concentration_limit_factor
         self.etalon_limit = etalon_limit
-        self.etalon_limit_percent = etalon_limit_percent
+        self.etalon_limit_factor = etalon_limit_factor
         self.x_shift_limit = x_shift_limit
         self.x_shift_limit_magnitude = x_shift_limit_magnitude
         self.nu_limit = nu_limit
         self.nu_limit_magnitude = nu_limit_magnitude
         self.sw_limit = sw_limit
-        self.sw_limit_percent = sw_limit_percent
+        self.sw_limit_factor = sw_limit_factor
         self.gamma0_limit = gamma0_limit
-        self.gamma0_limit_percent = gamma0_limit_percent
+        self.gamma0_limit_factor = gamma0_limit_factor
         self.n_gamma0_limit = n_gamma0_limit
-        self.n_gamma0_limit_percent = n_gamma0_limit_percent
+        self.n_gamma0_limit_factor = n_gamma0_limit_factor
         self.delta0_limit = delta0_limit
-        self.delta0_limit_percent = delta0_limit_percent
+        self.delta0_limit_factor= delta0_limit_factor
         self.n_delta0_limit = n_delta0_limit
-        self.n_delta0_limit_percent = n_delta0_limit_percent
+        self.n_delta0_limit_factor = n_delta0_limit_factor
         self.SD_gamma_limit = SD_gamma_limit
-        self.SD_gamma_limit_percent = SD_gamma_limit_percent
+        self.SD_gamma_limit_factor = SD_gamma_limit_factor
         self.n_gamma2_limit = n_gamma2_limit
-        self.n_gamma2_limit_percent = n_gamma2_limit_percent
+        self.n_gamma2_limit_factor = n_gamma2_limit_factor
         self.SD_delta_limit = SD_gamma_limit
-        self.SD_delta_limit_percent = SD_delta_limit_percent
+        self.SD_delta_limit_factor = SD_delta_limit_factor
         self.n_delta2_limit = n_delta2_limit
-        self.n_delta2_limit_percent = n_delta2_limit_percent
+        self.n_delta2_limit_factor = n_delta2_limit_factor
         self.nuVC_limit = nuVC_limit
-        self.nuVC_limit_percent = nuVC_limit_percent
+        self.nuVC_limit_factor = nuVC_limit_factor
         self.n_nuVC_limit = n_nuVC_limit
-        self.n_nuVC_limit_percent = n_nuVC_limit_percent
+        self.n_nuVC_limit_factor = n_nuVC_limit_factor
         self.eta_limit = eta_limit
-        self.eta_limit_percent = eta_limit_percent
+        self.eta_limit_factor = eta_limit_factor
         self.linemixing_limit = linemixing_limit
-        self.linemixing_limit_percent = linemixing_limit_percent
-        self.constrain_n_SD = constrain_n_SD
+        self.linemixing_limit_factor = linemixing_limit_factor
+        
+
     def generate_params(self):
         params = Parameters()
         
         #Baseline Parameters
-        baseline_list = pd.read_csv(self.base_linelist_file + '.csv', index_col = 0)
+        #baseline_list = pd.read_csv(self.base_linelist_file + '.csv', index_col = 0)
         baseline_parameters = []
-        for base_param in list(baseline_list):
+        for base_param in list(self.baseline_list):
             if ('_vary' not in base_param) and ('_err' not in base_param):
                 baseline_parameters.append(base_param)
-        for spec_num in baseline_list.index.values:
+        for spec_num in self.baseline_list.index.values:
             for base_param in baseline_parameters:
                 #print (base_param)
-                if baseline_list.loc[int(spec_num)][base_param] == 0:
-                    params.add(base_param + '_'+str(int(spec_num)), baseline_list.loc[int(spec_num)][base_param], baseline_list.loc[int(spec_num)][base_param + '_vary'])
+                if self.baseline_list.loc[int(spec_num)][base_param] == 0:
+                    params.add(base_param + '_'+str(int(spec_num)), self.baseline_list.loc[int(spec_num)][base_param], self.baseline_list.loc[int(spec_num)][base_param + '_vary'])
                 elif ('Concentration' in base_param) and self.concentration_limit:
-                    params.add(base_param + '_'+str(int(spec_num)), baseline_list.loc[int(spec_num)][base_param], baseline_list.loc[int(spec_num)][base_param + '_vary'], 
-                              min = (1 / self.concentration_limit_percent)*baseline_list.loc[int(spec_num)][base_param], 
-                              max = self.concentration_limit_percent*baseline_list.loc[int(spec_num)][base_param])
+                    params.add(base_param + '_'+str(int(spec_num)), self.baseline_list.loc[int(spec_num)][base_param], self.baseline_list.loc[int(spec_num)][base_param + '_vary'], 
+                              min = (1 / self.concentration_limit_factor)*self.baseline_list.loc[int(spec_num)][base_param], 
+                              max = self.concentration_limit_factor*self.baseline_list.loc[int(spec_num)][base_param])
                 elif ('baseline' in base_param) and self.baseline_limit:
-                    params.add(base_param + '_'+str(int(spec_num)), baseline_list.loc[int(spec_num)][base_param], baseline_list.loc[int(spec_num)][base_param + '_vary'], 
-                              min = (1 / self.baseline_limit_percent )*baseline_list.loc[int(spec_num)][base_param], 
-                              max = self.baseline_limit_percent *baseline_list.loc[int(spec_num)][base_param])
+                    params.add(base_param + '_'+str(int(spec_num)), self.baseline_list.loc[int(spec_num)][base_param], self.baseline_list.loc[int(spec_num)][base_param + '_vary'], 
+                              min = (1 / self.baseline_limit_factor)*self.baseline_list.loc[int(spec_num)][base_param], 
+                              max = self.baseline_limit_factor *self.baseline_list.loc[int(spec_num)][base_param])
                 elif ('etalon_' in base_param) and self.etalon_limit and ('phase' not in base_param):
-                    params.add(base_param + '_'+str(int(spec_num)), baseline_list.loc[int(spec_num)][base_param], baseline_list.loc[int(spec_num)][base_param + '_vary'], 
-                              min = (1 / self.etalon_limit_percent )*baseline_list.loc[int(spec_num)][base_param], 
-                              max = self.etalon_limit_percent *baseline_list.loc[int(spec_num)][base_param])
+                    params.add(base_param + '_'+str(int(spec_num)), self.baseline_list.loc[int(spec_num)][base_param], self.baseline_list.loc[int(spec_num)][base_param + '_vary'], 
+                              min = (1 / self.etalon_limit_factor )*self.baseline_list.loc[int(spec_num)][base_param], 
+                              max = self.etalon_limit_factor *self.baseline_list.loc[int(spec_num)][base_param])
                 elif ('etalon_' in base_param) and self.etalon_limit and ('phase' in base_param):
-                    params.add(base_param + '_'+str(int(spec_num)), baseline_list.loc[int(spec_num)][base_param], baseline_list.loc[int(spec_num)][base_param + '_vary'], 
+                    params.add(base_param + '_'+str(int(spec_num)), self.baseline_list.loc[int(spec_num)][base_param], self.baseline_list.loc[int(spec_num)][base_param + '_vary'], 
                               min = -2*np.pi, max = 2*np.pi)
                 elif ('x_shift' in base_param) and self.x_shift_limit:
-                    params.add(base_param + '_'+str(int(spec_num)), baseline_list.loc[int(spec_num)][base_param], baseline_list.loc[int(spec_num)][base_param + '_vary'], 
-                              min = (baseline_list.loc[int(spec_num)][base_param] - self.x_shift_limit_magnitude), 
-                              max = self.x_shift_limit_magnitude + baseline_list.loc[int(spec_num)][base_param])   
+                    params.add(base_param + '_'+str(int(spec_num)), self.baseline_list.loc[int(spec_num)][base_param], self.baseline_list.loc[int(spec_num)][base_param + '_vary'], 
+                              min = (self.baseline_list.loc[int(spec_num)][base_param] - self.x_shift_limit_magnitude), 
+                              max = self.x_shift_limit_magnitude + self.baseline_list.loc[int(spec_num)][base_param])   
                 else:
-                    params.add(base_param + '_'+str(int(spec_num)), baseline_list.loc[int(spec_num)][base_param], baseline_list.loc[int(spec_num)][base_param + '_vary'])
+                    params.add(base_param + '_'+str(int(spec_num)), self.baseline_list.loc[int(spec_num)][base_param], self.baseline_list.loc[int(spec_num)][base_param + '_vary'])
         
         #Lineshape parameters
-        lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
+        #lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
         linelist_params = []
         
-        for line_param in list(lineparam_list):
+        for line_param in list(self.lineparam_list):
             if (self.dataset.get_number_nominal_temperatures()[0]) == 1:
                 if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower') and ('n_' not in line_param):
                     linelist_params.append(line_param)
@@ -1219,186 +1243,188 @@ class Fit_DataSet:
             for temperature in (self.dataset.get_number_nominal_temperatures()[1]):
                 linemix_terms_constrained.append('y_'+diluent + '_' + str(temperature))
         
-        for spec_line in lineparam_list.index.values:
-            if lineparam_list.loc[spec_line]['sw'] >= self.fit_intensity / lineparam_list.loc[spec_line]['sw_scale_factor']:# bigger than 1 because fit_intensity / fit_intensity
+        for spec_line in self.lineparam_list.index.values:
+            if self.lineparam_list.loc[spec_line]['sw'] >= self.fit_intensity / self.lineparam_list.loc[spec_line]['sw_scale_factor']:# bigger than 1 because fit_intensity / fit_intensity
                 for line_param in linelist_params:
                     #NU
                     if line_param == 'nu' and nu_constrain:
                         if self.nu_limit:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                      min = lineparam_list.loc[spec_line][line_param] - self.nu_limit_magnitude, 
-                                      max = lineparam_list.loc[spec_line][line_param] + self.nu_limit_magnitude)
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                      min = self.lineparam_list.loc[spec_line][line_param] - self.nu_limit_magnitude, 
+                                      max = self.lineparam_list.loc[spec_line][line_param] + self.nu_limit_magnitude)
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif (line_param != 'nu') and ('nu' in line_param) and ('nuVC' not in line_param) and (not nu_constrain):
                         if self.nu_limit:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                      min = lineparam_list.loc[spec_line][line_param] - self.nu_limit_magnitude, 
-                                      max = lineparam_list.loc[spec_line][line_param] + self.nu_limit_magnitude)
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                      min = self.lineparam_list.loc[spec_line][line_param] - self.nu_limit_magnitude, 
+                                      max = self.lineparam_list.loc[spec_line][line_param] + self.nu_limit_magnitude)
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #SW
                     elif line_param == 'sw' and sw_constrain:
                         if self.sw_limit:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.sw_limit_percent)* lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.sw_limit_percent* lineparam_list.loc[int(spec_line)][line_param])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.sw_limit_factor)* self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.sw_limit_factor* self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif (line_param != 'sw') and ('sw' in line_param) and (not sw_constrain) and (line_param != 'sw_scale_factor'):
                         if self.sw_limit:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min =  (1 / self.sw_limit_percent)* lineparam_list.loc[int(spec_line)][line_param],
-                                  max = self.sw_limit_percent*lineparam_list.loc[int(spec_line)][line_param])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min =  (1 / self.sw_limit_factor)* self.lineparam_list.loc[int(spec_line)][line_param],
+                                  max = self.sw_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #GAMMA0
                     elif ('gamma0_' in line_param) and ('n_' not in line_param) and (gamma0_constrain) and (not hasNumbers(line_param.replace("gamma0_", ''))):
-                        if self.gamma0_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.gamma0_limit_percent)*lineparam_list.loc[int(spec_line)][line_param] ,#(1 - (self.gamma0_limit_percent / 100))*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.gamma0_limit_percent*lineparam_list.loc[int(spec_line)][line_param])#(1 + (self.gamma0_limit_percent / 100))*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.gamma0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.gamma0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param] ,#(1 - (self.gamma0_limit_percent / 100))*lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.gamma0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])#(1 + (self.gamma0_limit_percent / 100))*lineparam_list.loc[int(spec_line)][line_param])
                                 
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('gamma0_' in line_param) and ('n_' not in line_param) and (not gamma0_constrain) and (hasNumbers(line_param.replace("gamma0_", ''))):
-                        if self.gamma0_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.gamma0_limit_percent)*lineparam_list.loc[int(spec_line)][line_param],#(1 - (self.gamma0_limit_percent / 100))*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.gamma0_limit_percent*lineparam_list.loc[int(spec_line)][line_param])#(1 + (self.gamma0_limit_percent / 100))*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.gamma0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.gamma0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],#(1 - (self.gamma0_limit_percent / 100))*lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.gamma0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])#(1 + (self.gamma0_limit_percent / 100))*lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('n_gamma0' in line_param):
-                        if self.n_gamma0_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.n_gamma0_limit_percent) *lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.n_gamma0_limit_percent*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.n_gamma0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.n_gamma0_limit_factor) *self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.n_gamma0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param],self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #DELTA0
                     elif ('delta0' in line_param) and ('n_' not in line_param) and (delta0_constrain) and (not hasNumbers(line_param.replace("delta0", ''))):
-                        if self.delta0_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.delta0_limit_percent )*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.delta0_limit_percent*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.delta0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.delta0_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.delta0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('delta0_' in line_param) and ('n_' not in line_param) and (not delta0_constrain) and (hasNumbers(line_param.replace("delta0_", ''))):
-                        if self.delta0_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.delta0_limit_percent)*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.delta0_limit_percent*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.delta0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.delta0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.delta0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('n_delta0' in line_param):
-                        if self.n_delta0_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.n_delta0_limit_percent )*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.n_delta0_limit_percent / 100*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.n_delta0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param],self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.n_delta0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.n_delta0_limit_factor / 100*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #SD Gamma
                     elif ('SD_gamma' in line_param) and (SD_gamma_constrain) and (not hasNumbers(line_param.replace("SD_gamma", ''))):
-                        if self.SD_gamma_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.SD_gamma_limit_percent) *lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.SD_gamma_limit_percent*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.SD_gamma_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.SD_gamma_limit_factor) *self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.SD_gamma_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                            min = 1e-4)
                     elif ('SD_gamma' in line_param) and (not SD_gamma_constrain) and (hasNumbers(line_param.replace("SD_gamma", ''))):
-                        if self.SD_gamma_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.SD_gamma_limit_percent)*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.SD_gamma_limit_percent*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.SD_gamma_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.SD_gamma_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.SD_gamma_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                             min = 1e-4)
                     elif ('n_gamma2' in line_param):
                     
-                        if self.n_gamma2_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                min = (1 / self.n_gamma2_limit_percent)*lineparam_list.loc[int(spec_line)][line_param], 
-                                max = (self.n_gamma2_limit_percent / 100)*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.n_gamma2_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                min = (1 / self.n_gamma2_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                                max = (self.n_gamma2_limit_factor / 100)*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #SD Delta
                     elif ('SD_delta' in line_param) and (SD_delta_constrain) and (not hasNumbers(line_param.replace("SD_delta", ''))):
-                        if self.SD_delta_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.SD_delta_limit_percent )*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.SD_delta_limit_percent*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.SD_delta_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.SD_delta_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.SD_delta_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('SD_delta' in line_param) and (not SD_delta_constrain) and (hasNumbers(line_param.replace("SD_delta", ''))):
-                        if self.SD_delta_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.SD_delta_limit_percent )*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max =self.SD_delta_limit_percent / 100*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.SD_delta_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.SD_delta_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max =self.SD_delta_limit_factor / 100*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('n_delta2' in line_param):
 
-                        if self.n_delta2_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                min = (1 / self.n_delta2_limit_percent )*lineparam_list.loc[int(spec_line)][line_param], 
-                                max = self.n_delta2_limit_percent*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.n_delta2_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                min = (1 / self.n_delta2_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param], 
+                                max = self.n_delta2_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #nuVC
                     elif ('nuVC' in line_param) and ('n_' not in line_param) and (nuVC_constrain) and (not hasNumbers(line_param.replace("nuVC", ''))):
-                        if self.nuVC_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 /self.nuVC_limit_percent)*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.nuVC_limit_percent*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.nuVC_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 /self.nuVC_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.nuVC_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('nuVC_' in line_param) and ('n_' not in line_param) and (not nuVC_constrain) and (hasNumbers(line_param.replace("nuVC_", ''))):
-                        if self.nuVC_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.nuVC_limit_percent)*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.nuVC_limit_percent*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.nuVC_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.nuVC_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.nuVC_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('n_nuVC' in line_param):
-                        if self.n_nuVC_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.n_nuVC_limit_percent )*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.n_nuVC_limit_percent*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.n_nuVC_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.n_nuVC_limit_factor )*lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.n_nuVC_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])                    
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])                    
                     #eta
                     elif ('eta_' in line_param) and (eta_constrain) and (not hasNumbers(line_param.replace("eta", ''))):
-                        if self.eta_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.eta_limit_percent)*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = (self.eta_limit_percent)*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.eta_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.eta_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = (self.eta_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('eta_' in line_param) and (not eta_constrain) and (hasNumbers(line_param.replace("eta_", ''))):
-                        if self.eta_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.eta_limit_percent)*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.eta_limit_percent*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.eta_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.eta_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.eta_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary']) 
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary']) 
                     # linemixing
                     elif ('y_' in line_param) and (linemix_constrain) and (line_param in linemix_terms_constrained):
-                        if self.linemixing_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.linemixing_limit_percent)*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.linemixing_limit_percent *lineparam_list.loc[int(spec_line)][line_param])
+                        if self.linemixing_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.linemixing_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.linemixing_limit_factor *self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('y_' in line_param) and (not linemix_constrain) and (not line_param in linemix_terms_constrained):
-                        if self.linemixing_limit and lineparam_list.loc[spec_line][line_param] != 0:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.linemixing_limit_percent)*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.linemixing_limit_percent / 100*lineparam_list.loc[int(spec_line)][line_param])
+                        if self.linemixing_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                                  min = (1 / self.linemixing_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                                  max = self.linemixing_limit_factor / 100*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), lineparam_list.loc[spec_line][line_param], lineparam_list.loc[spec_line][line_param + '_vary']) 
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary']) 
         return (params)
     def add_expr_params(self, params, param_name, expr):
         pass
-    def simulation_model(self, params, wave_space = 0.001, wing_cutoff = 50, wing_wavenumbers = 50):
+    def simulation_model(self, params, wing_cutoff = 50, wing_wavenumbers = 50):
         total_simulated = []
         total_residuals = []
         baseline_params = []
@@ -1411,7 +1437,7 @@ class Fit_DataSet:
             else:
                 linelist_params.append(param)
         #Lineparameter fitting initialization       
-        lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
+        #lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
         for spectrum in self.dataset.spectra:
             Diluent = spectrum.Diluent
             spectrum_number = spectrum.spectrum_number
@@ -1433,19 +1459,19 @@ class Fit_DataSet:
                 columns.append('y_' + species + '_' + str(nominal_temp))
             rename_dictionary = {}
             
-            for column in lineparam_list:
+            for column in self.lineparam_list:
                 if ('vary' not in column) and ('err' not in column):
-                    if ((column + '_' + str(spectrum_number)) in lineparam_list) and ('y_' not in column):
+                    if ((column + '_' + str(spectrum_number)) in self.lineparam_list) and ('y_' not in column):
                         columns = [(column + '_'  + str(spectrum_number))if x==column else x for x in columns]
                         rename_dictionary[(column + '_'  + str(spectrum_number))] = column
                     elif ('y_' in column):
-                        if ((column + '_' + str(spectrum_number)) in lineparam_list):
+                        if ((column + '_' + str(spectrum_number)) in self.lineparam_list):
                             columns = [(column + '_'  +str(spectrum_number))if x==column else x for x in columns]
                             rename_dictionary[(column) + '_' + str(spectrum_number)] = (column[:column.find(str(nominal_temp))-1])
                         elif column.count('_') < 3:
                             rename_dictionary[(column)] = (column[:column.find(str(nominal_temp))-1])
             
-            linelist_for_sim = lineparam_list[columns].copy()
+            linelist_for_sim = self.lineparam_list[columns].copy()
            
             # Replaces the relevant linelist locations with the 
             for parameter in linelist_params:
@@ -1469,14 +1495,15 @@ class Fit_DataSet:
                     fit_concentration[molecule] = np.float(params[('Concentration_'+ ISO[(molecule, 1)][4]) + '_' + str(spectrum_number)])
             
             #Simulate Spectra
-            fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, np.min(spectrum.wavenumber), np.max(spectrum.wavenumber),wave_space = wave_space, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, 
+
+            x_shift = np.float(params['x_shift_' + str(spectrum_number)])
+            linelist_for_sim['nu'] = linelist_for_sim['nu'] + x_shift
+            
+            fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, spectrum.wavenumber, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, 
                     pressure = spectrum.pressure, temperature = spectrum.temperature, concentration = fit_concentration, 
                     natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
             fit_coef *= 1e6
-            x_shift = np.float(params['x_shift_' + str(spectrum_number)])
-            fit_nu += x_shift
-            f = interpolate.interp1d(fit_nu, fit_coef, fill_value = 0, bounds_error = False)
-            fit_alpha = f(spectrum.wavenumber)
+
             
             
             
@@ -1509,7 +1536,7 @@ class Fit_DataSet:
             for i in range(1, len(spectrum.etalons)+1):
                 etalons += etalon(spectrum.wavenumber - np.min(spectrum.wavenumber), fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['freq'], fit_etalon_parameters[i]['phase'])
                 
-            simulated_spectra = baseline + etalons + fit_alpha
+            simulated_spectra = baseline + etalons + fit_coef
             residuals = simulated_spectra - spectrum.alpha
        
             total_simulated = np.append(total_simulated, simulated_spectra)
@@ -1518,8 +1545,8 @@ class Fit_DataSet:
         total_residuals = np.asarray(total_residuals)
         total_simulated = np.asarray(total_simulated)
         return total_residuals
-    def fit_data(self, params,wave_space = 0.001, wing_cutoff = 50, wing_wavenumbers = 50):
-        minner = Minimizer(self.simulation_model, params, iter_cb = max_iter, fcn_args=(wave_space, wing_cutoff, wing_wavenumbers))
+    def fit_data(self, params, wing_cutoff = 50, wing_wavenumbers = 50):
+        minner = Minimizer(self.simulation_model, params, iter_cb = max_iter, fcn_args=(wing_cutoff, wing_wavenumbers))
         result = minner.minimize(method = 'leastsq')#'
         return result
     def residual_analysis(self, result, indv_resid_plot = False):
@@ -1535,30 +1562,31 @@ class Fit_DataSet:
             base_linelist_update_file = self.base_linelist_file
         if param_linelist_update_file == None:
             param_linelist_update_file = self.param_linelist_file
-        baseline_list = pd.read_csv(self.base_linelist_file + '.csv', index_col = 0) # from the input
-        lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
+        #baseline_list = pd.read_csv(self.base_linelist_file + '.csv', index_col = 0) # from the input
+        #lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
         
         
         for key, par in result.params.items():
             if ('Concentration' in par.name) or ('baseline' in par.name) or ('x_shift' in par.name):
                 parameter = par.name[:(par.name.find('_', par.name.find('_')+1))]
                 line = int(par.name[(par.name.find('_', par.name.find('_')+1))+1:])
+                self.baseline_list.loc[line, parameter] = par.value
                 if par.vary:
-                    baseline_list.loc[line, parameter + '_err'] = par.stderr
+                    self.baseline_list.loc[line, parameter + '_err'] = par.stderr
             elif ('etalon' in par.name):
                 parameter =  (par.name[:par.name.find('_',par.name.find('_', par.name.find('_')+1)+1)])
                 line=  int(par.name[par.name.find('_',par.name.find('_', par.name.find('_')+1)+1)+1:])
-                baseline_list.loc[line, parameter] = par.value
+                self.baseline_list.loc[line, parameter] = par.value
                 if par.vary:
-                    baseline_list.loc[line, parameter + '_err'] = par.stderr
+                    self.baseline_list.loc[line, parameter + '_err'] = par.stderr
             else:
                 parameter = par.name[:par.name.find('_line')]
                 line = int(par.name[par.name.find('_line')+6:])
-                lineparam_list.loc[line, parameter] = par.value
+                self.lineparam_list.loc[line, parameter] = par.value
                 if par.vary:
-                    lineparam_list.loc[line, parameter + '_err'] = par.stderr
-        baseline_list.to_csv(base_linelist_update_file + '.csv')
-        lineparam_list.to_csv(param_linelist_update_file + '.csv')
+                    self.lineparam_list.loc[line, parameter + '_err'] = par.stderr
+        self.baseline_list.to_csv(base_linelist_update_file + '.csv')
+        self.lineparam_list.to_csv(param_linelist_update_file + '.csv')
         
         #Calculate Baseline + Etalons and add to the Baseline term for each spectra
         for spectrum in self.dataset.spectra:
