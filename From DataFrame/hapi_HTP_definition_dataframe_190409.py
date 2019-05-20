@@ -402,6 +402,7 @@ class Spectrum:
         file_contents = pd.read_csv(self.filename + '.csv')       
         new_file = pd.DataFrame()
         new_file['Spectrum Number'] = [self.spectrum_number]*len(self.alpha)
+        new_file['Spectrum Name'] = [self.filename]*len(self.alpha)
         new_file['Frequency (MHz)'] = self.frequency
         new_file['Wavenumber (cm-1)'] = self.wavenumber
         new_file['Pressure (Torr)'] = file_contents[self.pressure_column].values
