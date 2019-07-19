@@ -1337,8 +1337,7 @@ class Fit_DataSet:
                                   min = (1 / self.SD_gamma_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
                                   max = self.SD_gamma_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                             min = 1e-4)
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('n_gamma2' in line_param):
                     
                         if self.n_gamma2_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
@@ -1388,7 +1387,7 @@ class Fit_DataSet:
                     elif ('n_nuVC' in line_param):
                         if self.n_nuVC_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.n_nuVC_limit_factor )*lineparam_list.loc[int(spec_line)][line_param], 
+                                  min = (1 / self.n_nuVC_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param], 
                                   max = self.n_nuVC_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])                    
