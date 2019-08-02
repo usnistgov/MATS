@@ -1233,7 +1233,7 @@ class Fit_DataSet:
                 SD_gamma_constrain = False
             if (sum('SD_delta' in param for param in linelist_params)) >  len(diluent_list) + 1:
                 SD_delta_constrain = False
-            if (sum('nuVC' in param for param in linelist_params)) >  len(diluent_list) + 1:
+            if (sum('nuVC' in param for param in linelist_params)) >  2*len(diluent_list):
                 nuVC_constrain = False
             if (sum('eta' in param for param in linelist_params)) >  len(diluent_list) + 1:
                 eta_constrain = False 
