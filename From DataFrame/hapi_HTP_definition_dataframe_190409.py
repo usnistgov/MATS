@@ -890,57 +890,57 @@ class Generate_FitParam_File:
                                         param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'y_' +diluent+ '_'+ str(nominal_temp) +'_'+str(spec) + '_vary'] = (vary_linemixing[molecule][isotope])
 
 
-        #Temperature Dependence
-        
-        if num_nominal_temps > 1:
+            #Temperature Dependence
             
-            
-            param_linelist_df['n_gamma0_'+diluent+'_vary'] = len(param_linelist_df)*[False]
-            param_linelist_df['n_gamma0_'+diluent+'_err'] = len(param_linelist_df)*[0]
-            param_linelist_df['n_delta0_'+diluent+'_vary'] = len(param_linelist_df)*[False]
-            param_linelist_df['n_delta0_'+diluent+'_err'] = len(param_linelist_df)*[0]
-            param_linelist_df['n_gamma2_'+diluent+'_vary'] = len(param_linelist_df)*[False]
-            param_linelist_df['n_gamma2_'+diluent+'_err'] = len(param_linelist_df)*[0]
-            param_linelist_df['n_delta2_'+diluent+'_vary'] = len(param_linelist_df)*[False]
-            param_linelist_df['n_delta2_'+diluent+'_err'] = len(param_linelist_df)*[0]
-            param_linelist_df['n_nuVC_'+diluent+'_vary'] = len(param_linelist_df)*[False]
-            param_linelist_df['n_nuVC_'+diluent+'_err'] = len(param_linelist_df)*[0]
-            
-            
-            #n_Gamma0
-            if vary_n_gamma0 != {}:
-                for molecule in vary_n_gamma0:
-                    for isotope in vary_n_gamma0[molecule]:
-                        param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'n_gamma0_' +diluent + '_vary'] = (vary_n_gamma0[molecule][isotope])
-            #n_Delta0
-
-            if vary_n_delta0 != {}:
-                for molecule in vary_n_delta0:
-                    for isotope in vary_n_delta0[molecule]:
-                        param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'n_delta0_' +diluent + '_vary'] = (vary_n_delta0[molecule][isotope])
-            #n_Gamma2
-            
-            if not (self.lineprofile == 'VP') or  not (self.lineprofile == 'NGP') :
-                if vary_n_gamma2 != {}:
-                    for molecule in vary_n_gamma2:
-                        for isotope in vary_n_gamma2[molecule]:
-                            param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'n_gamma2_' +diluent + '_vary'] = (vary_n_gamma2[molecule][isotope])
-
-            #n_Delta2
-            
-            if not (self.lineprofile == 'VP') or  not (self.lineprofile == 'NGP') :
-                if vary_n_delta2 != {}:
-                    for molecule in vary_n_delta2:
-                        for isotope in vary_n_delta2[molecule]:
-                            param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'n_delta2_' +diluent + '_vary'] = (vary_n_delta2[molecule][isotope])
-            #n_nuVC
-            
-            if not (self.lineprofile == 'VP') or  not (self.lineprofile == 'SDVP') :
-                if vary_n_nuVC != {}:
-                    for molecule in vary_n_nuVC:
-                        for isotope in vary_n_nuVC[molecule]:
-                            param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'n_nuVC_' +diluent + '_vary'] = (vary_n_nuVC[molecule][isotope])
-            
+            if num_nominal_temps > 1:
+                
+                
+                param_linelist_df['n_gamma0_'+diluent+'_vary'] = len(param_linelist_df)*[False]
+                param_linelist_df['n_gamma0_'+diluent+'_err'] = len(param_linelist_df)*[0]
+                param_linelist_df['n_delta0_'+diluent+'_vary'] = len(param_linelist_df)*[False]
+                param_linelist_df['n_delta0_'+diluent+'_err'] = len(param_linelist_df)*[0]
+                param_linelist_df['n_gamma2_'+diluent+'_vary'] = len(param_linelist_df)*[False]
+                param_linelist_df['n_gamma2_'+diluent+'_err'] = len(param_linelist_df)*[0]
+                param_linelist_df['n_delta2_'+diluent+'_vary'] = len(param_linelist_df)*[False]
+                param_linelist_df['n_delta2_'+diluent+'_err'] = len(param_linelist_df)*[0]
+                param_linelist_df['n_nuVC_'+diluent+'_vary'] = len(param_linelist_df)*[False]
+                param_linelist_df['n_nuVC_'+diluent+'_err'] = len(param_linelist_df)*[0]
+                
+                
+                #n_Gamma0
+                if vary_n_gamma0 != {}:
+                    for molecule in vary_n_gamma0:
+                        for isotope in vary_n_gamma0[molecule]:
+                            param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'n_gamma0_' +diluent + '_vary'] = (vary_n_gamma0[molecule][isotope])
+                #n_Delta0
+    
+                if vary_n_delta0 != {}:
+                    for molecule in vary_n_delta0:
+                        for isotope in vary_n_delta0[molecule]:
+                            param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'n_delta0_' +diluent + '_vary'] = (vary_n_delta0[molecule][isotope])
+                #n_Gamma2
+                
+                if not (self.lineprofile == 'VP') or  not (self.lineprofile == 'NGP') :
+                    if vary_n_gamma2 != {}:
+                        for molecule in vary_n_gamma2:
+                            for isotope in vary_n_gamma2[molecule]:
+                                param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'n_gamma2_' +diluent + '_vary'] = (vary_n_gamma2[molecule][isotope])
+    
+                #n_Delta2
+                
+                if not (self.lineprofile == 'VP') or  not (self.lineprofile == 'NGP') :
+                    if vary_n_delta2 != {}:
+                        for molecule in vary_n_delta2:
+                            for isotope in vary_n_delta2[molecule]:
+                                param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'n_delta2_' +diluent + '_vary'] = (vary_n_delta2[molecule][isotope])
+                #n_nuVC
+                
+                if not (self.lineprofile == 'VP') or  not (self.lineprofile == 'SDVP') :
+                    if vary_n_nuVC != {}:
+                        for molecule in vary_n_nuVC:
+                            for isotope in vary_n_nuVC[molecule]:
+                                param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'n_nuVC_' +diluent + '_vary'] = (vary_n_nuVC[molecule][isotope])
+                
     
         #param_linelist_df = param_linelist_df.reindex(sorted(param_linelist_df.columns), axis=1)
         ordered_list = ['molec_id', 'local_iso_id','elower']
