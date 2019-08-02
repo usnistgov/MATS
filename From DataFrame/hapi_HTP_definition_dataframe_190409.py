@@ -1207,7 +1207,9 @@ class Fit_DataSet:
         eta_constrain = True
         linemix_constrain = True
         
-        if ((sum('nu' in param for param in linelist_params)) - (sum('nuVC' in param for param in linelist_params))) > 1:
+        #if ((sum('nu' in param for param in linelist_params)) - (sum('nuVC' in param for param in linelist_params))) > 1:
+            #nu_constrain = False
+        if ((sum(('nu' in param) & ('nuVC' not in param) for param in linelist_params))) > 1:
             nu_constrain = False
         if (sum('sw' in param for param in linelist_params)) > 2:
             sw_constrain = False
@@ -1225,9 +1227,9 @@ class Fit_DataSet:
             if (sum('eta' in param for param in linelist_params)) >  len(diluent_list):
                 eta_constrain = False 
         else:
-            if (sum('gamma0' in param for param in linelist_params)) >  len(diluent_list) + 1:
+            if (sum('gamma0' in param for param in linelist_params)) >  2*len(diluent_list):
                 gamma0_constrain = False
-            if (sum('delta0' in param for param in linelist_params)) >  len(diluent_list) + 1:
+            if (sum('delta0' in param for param in linelist_params)) >  2*len(diluent_list):
                 delta0_constrain = False
             if (sum('SD_gamma' in param for param in linelist_params)) >  len(diluent_list) + 1:
                 SD_gamma_constrain = False
@@ -1235,7 +1237,7 @@ class Fit_DataSet:
                 SD_delta_constrain = False
             if (sum('nuVC' in param for param in linelist_params)) >  2*len(diluent_list):
                 nuVC_constrain = False
-            if (sum('eta' in param for param in linelist_params)) >  len(diluent_list) + 1:
+            if (sum('eta' in param for param in linelist_params)) >  len(diluent_list): #until a temperature dependence is added
                 eta_constrain = False 
         if (sum('y' in param for param in linelist_params)) >  len(diluent_list)*(self.dataset.get_number_nominal_temperatures()[0]):
             linemix_constrain = False
