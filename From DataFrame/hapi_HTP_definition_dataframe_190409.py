@@ -1331,8 +1331,7 @@ class Fit_DataSet:
                                   min = (1 / self.SD_gamma_limit_factor) *self.lineparam_list.loc[int(spec_line)][line_param], 
                                   max = self.SD_gamma_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
-                            min = 1e-4)
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('SD_gamma' in line_param) and (not SD_gamma_constrain) and (hasNumbers(line_param.replace("SD_gamma", ''))):
                         if self.SD_gamma_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
