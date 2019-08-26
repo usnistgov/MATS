@@ -7,7 +7,8 @@ import os, sys
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from scipy import fftpack
-from numba import jit
+from scipy.interpolate import interp1d
+
 
 
 sys.path.append(r'C:\Users\ema3\Documents\Python Scripts\HAPI')#Add hapi.py folder location to system path
@@ -46,7 +47,7 @@ diluent = 'air' # can define also as dictionary that it loops through with the v
 Diluent = {}
 '''
 
-@jit
+
 def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50, 
                 pressure = 1, temperature = 296, concentration = {}, 
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30):
@@ -155,7 +156,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
             SDDB = line['SD_gamma_%s'%species]
             Gamma2DB = SDDB*Gamma0DB
             TempRatioPowerDB_Gamma2 =line['n_gamma2_%s'%species]
-            Gamma2T = Gamma2DB*p/pref*(Tref/T)**TempRatioPowerDB_Gamma2
+            Gamma2T = Gamma2DB*(p/pref)*((Tref/T)**TempRatioPowerDB_Gamma2)
             Gamma2 += abun*Gamma2T
         
             #Delta 2
@@ -168,7 +169,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
             #nuVC
             NuVCDB = line['nuVC_%s'%species]
             KappaDB = line['n_nuVC_%s'%species]
-            NuVCT = NuVCDB*(p/pref)*(Tref/T)**(KappaDB)
+            NuVCT = NuVCDB*(p/pref)*((Tref/T)**(KappaDB))
             NuVC += abun*NuVCT
             
             #Eta
@@ -246,7 +247,7 @@ class Spectrum:
         
         
         #Defined from contents of file
-        file_contents = pd.read_csv(self.filename + '.csv')
+        file_contents = pd.read_csv(self.filename + '.csv',float_precision = 'High')
         self.pressure = file_contents[self.pressure_column].mean() / 760
         self.temperature = file_contents[self.temperature_column].mean() + 273.15
         if self.input_freq:
@@ -502,6 +503,12 @@ class Dataset:
                 if np.max(spectrum.wavenumber) > wave_max:
                     wave_max = np.max(spectrum.wavenumber)
         return wave_min, wave_max
+    def get_spectrum_extremes(self):
+        extreme_dictionary = {}
+        for spectrum in self.spectra:
+            extreme_dictionary[spectrum.get_spectrum_number()] = [np.min(spectrum.wavenumber), np.max(spectrum.wavenumber)]
+        return extreme_dictionary
+            
     def get_number_nominal_temperatures(self):
         nominal_temperatures = []
         for spectrum in self.spectra:
@@ -568,7 +575,7 @@ class Dataset:
             plot_color = colors[((spectrum.spectrum_number % 7)-1)]
             ax0.plot(spectrum.wavenumber,spectrum.model, plot_color+'-')
             ax0.plot(spectrum.wavenumber, spectrum.alpha, plot_color+'.', label = spectrum.filename)
-            ax1.plot(spectrum.wavenumber,spectrum.residuals, plot_color+".")
+            ax1.plot(spectrum.wavenumber,spectrum.residuals, plot_color+"-")
         ax0.legend(bbox_to_anchor=(1, 1))
         
         plt.show()
@@ -631,6 +638,7 @@ class Generate_FitParam_File:
         param_linelist_df = param_linelist_df[param_linelist_df['sw'] > self.threshold_intensity] #intensity thresholding
         #Cutdown linelist to parameters within specified simulation window of minimum and maximum of dataset
         dataset_min, dataset_max = (self.dataset.get_spectra_extremes())
+        extreme_dictionary = self.dataset.get_spectrum_extremes()
         param_linelist_df = param_linelist_df[param_linelist_df['nu'] < (dataset_max + self.sim_window)]
         param_linelist_df = param_linelist_df[param_linelist_df['nu'] > (dataset_min - self.sim_window)]
 
@@ -705,7 +713,7 @@ class Generate_FitParam_File:
                 if vary_sw != {}:
                     for molecule in vary_sw:
                         for isotope in vary_sw[molecule]:
-                            param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'sw_' + str(spec) + '_vary'] = (vary_sw[molecule][isotope])
+                            param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'sw_' + str(spec) + '_vary'] = (vary_sw[molecule][isotope])
         #Loop through other parameters and then set things to 0 based on lineshape 
         order_gamma0 = []
         order_delta0 = []
@@ -733,7 +741,7 @@ class Generate_FitParam_File:
                     if vary_gamma0 != {}:
                         for molecule in vary_gamma0:
                             for isotope in vary_gamma0[molecule]:
-                                param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'gamma0_' +diluent +'_'+str(spec) + '_vary'] = (vary_gamma0[molecule][isotope])
+                                param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'gamma0_' +diluent +'_'+str(spec) + '_vary'] = (vary_gamma0[molecule][isotope])
             
             order_gamma0.append('n_gamma0_' +diluent )
             #Delta0 option for constrain and not constrained
@@ -754,7 +762,7 @@ class Generate_FitParam_File:
                     if vary_delta0 != {}:
                         for molecule in vary_delta0:
                             for isotope in vary_delta0[molecule]:
-                                param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'delta0_' +diluent +'_'+str(spec) + '_vary'] = (vary_delta0[molecule][isotope])
+                                param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'delta0_' +diluent +'_'+str(spec) + '_vary'] = (vary_delta0[molecule][isotope])
             order_delta0.append('n_delta0_' +diluent ) 
             #SD Gamma option for constrain and not constrained
             order_SD_gamma.append('SD_gamma_' + diluent )
@@ -780,7 +788,7 @@ class Generate_FitParam_File:
                         if vary_aw != {}:
                             for molecule in vary_aw:
                                 for isotope in vary_aw[molecule]:
-                                    param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'SD_gamma_' +diluent +'_'+str(spec) + '_vary'] = (vary_aw[molecule][isotope])
+                                    param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'SD_gamma_' +diluent +'_'+str(spec) + '_vary'] = (vary_aw[molecule][isotope])
             order_SD_gamma.append('n_gamma2_' +diluent )
             #SD Delta option for constrain and not constrained
             order_SD_delta.append('SD_delta_' + diluent)
@@ -807,7 +815,7 @@ class Generate_FitParam_File:
                         if vary_as != {}:
                             for molecule in vary_as:
                                 for isotope in vary_as[molecule]:
-                                    param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'SD_delta_' +diluent +'_'+str(spec) + '_vary'] = (vary_as[molecule][isotope])           
+                                    param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'SD_delta_' +diluent +'_'+str(spec) + '_vary'] = (vary_as[molecule][isotope])           
             order_SD_delta.append('n_delta2_' +diluent )
             #nuVC option for constrain and not constrained
             order_nuVC.append('nuVC_' + diluent)
@@ -834,7 +842,7 @@ class Generate_FitParam_File:
                         if vary_nuVC != {}:
                             for molecule in vary_nuVC:
                                 for isotope in vary_nuVC[molecule]:
-                                    param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'nuVC_' +diluent +'_'+str(spec) + '_vary'] = (vary_nuVC[molecule][isotope])
+                                    param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'nuVC_' +diluent +'_'+str(spec) + '_vary'] = (vary_nuVC[molecule][isotope])
             order_nuVC.append('n_nuVC_' +diluent )
             #eta option for constrain and not constrained
             order_eta.append('eta_' + diluent)
@@ -860,7 +868,7 @@ class Generate_FitParam_File:
                         if vary_eta != {}:
                             for molecule in vary_eta:
                                 for isotope in vary_eta[molecule]:
-                                    param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'eta_' +diluent +'_'+str(spec) + '_vary'] = (vary_eta[molecule][isotope])
+                                    param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'eta_' +diluent +'_'+str(spec) + '_vary'] = (vary_eta[molecule][isotope])
             # Linemixing
             
             for nominal_temp in list_nominal_temps:
@@ -887,11 +895,11 @@ class Generate_FitParam_File:
                             if vary_linemixing != {}:
                                 for molecule in vary_linemixing:
                                     for isotope in vary_linemixing[molecule]:
-                                        param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'y_' +diluent+ '_'+ str(nominal_temp) +'_'+str(spec) + '_vary'] = (vary_linemixing[molecule][isotope])
+                                        param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'y_' +diluent+ '_'+ str(nominal_temp) +'_'+str(spec) + '_vary'] = (vary_linemixing[molecule][isotope])
 
 
             #Temperature Dependence
-            
+        
             if num_nominal_temps > 1:
                 
                 
@@ -1206,9 +1214,10 @@ class Fit_DataSet:
         nuVC_constrain = True
         eta_constrain = True
         linemix_constrain = True
-        
-        #if ((sum('nu' in param for param in linelist_params)) - (sum('nuVC' in param for param in linelist_params))) > 1:
-            #nu_constrain = False
+        '''
+        if ((sum('nu' in param for param in linelist_params)) - (sum('nuVC' in param for param in linelist_params))) > 1:
+            nu_constrain = False
+        '''
         if ((sum(('nu' in param) & ('nuVC' not in param) for param in linelist_params))) > 1:
             nu_constrain = False
         if (sum('sw' in param for param in linelist_params)) > 2:
@@ -1235,9 +1244,9 @@ class Fit_DataSet:
                 SD_gamma_constrain = False
             if (sum('SD_delta' in param for param in linelist_params)) >  len(diluent_list) + 1:
                 SD_delta_constrain = False
-            if (sum('nuVC' in param for param in linelist_params)) >  2*len(diluent_list):
+            if (sum('nuVC' in param for param in linelist_params)) >  2*len(diluent_list) :
                 nuVC_constrain = False
-            if (sum('eta' in param for param in linelist_params)) >  len(diluent_list): #until a temperature dependence is added
+            if (sum('eta' in param for param in linelist_params)) >  len(diluent_list):
                 eta_constrain = False 
         if (sum('y' in param for param in linelist_params)) >  len(diluent_list)*(self.dataset.get_number_nominal_temperatures()[0]):
             linemix_constrain = False
@@ -1249,6 +1258,7 @@ class Fit_DataSet:
         for spec_line in self.lineparam_list.index.values:
             if self.lineparam_list.loc[spec_line]['sw'] >= self.fit_intensity / self.lineparam_list.loc[spec_line]['sw_scale_factor']:# bigger than 1 because fit_intensity / fit_intensity
                 for line_param in linelist_params:
+                    
                     #NU
                     if line_param == 'nu' and nu_constrain:
                         if self.nu_limit:
@@ -1331,7 +1341,8 @@ class Fit_DataSet:
                                   min = (1 / self.SD_gamma_limit_factor) *self.lineparam_list.loc[int(spec_line)][line_param], 
                                   max = self.SD_gamma_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                            min = 0)
                     elif ('SD_gamma' in line_param) and (not SD_gamma_constrain) and (hasNumbers(line_param.replace("SD_gamma", ''))):
                         if self.SD_gamma_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
@@ -1371,14 +1382,14 @@ class Fit_DataSet:
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #nuVC
-                    elif ('nuVC' in line_param) and ('n_' not in line_param) and (nuVC_constrain) and (not hasNumbers(line_param.replace("nuVC", ''))):
+                    elif ('nuVC' in line_param) and ('n_nuVC_' not in line_param) and (nuVC_constrain) and (not hasNumbers(line_param.replace("nuVC", ''))):
                         if self.nuVC_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 /self.nuVC_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
                                   max = self.nuVC_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
-                    elif ('nuVC_' in line_param) and ('n_' not in line_param) and (not nuVC_constrain) and (hasNumbers(line_param.replace("nuVC_", ''))):
+                    elif ('nuVC' in line_param) and ('n_nuVC' not in line_param) and (not nuVC_constrain) and (hasNumbers(line_param.replace("nuVC", ''))):
                         if self.nuVC_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 / self.nuVC_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
@@ -1500,10 +1511,12 @@ class Fit_DataSet:
             x_shift = np.float(params['x_shift_' + str(spectrum_number)])
             linelist_for_sim['nu'] = linelist_for_sim['nu'] + x_shift
             
+
             fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, spectrum.wavenumber, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, 
                     pressure = spectrum.pressure, temperature = spectrum.temperature, concentration = fit_concentration, 
                     natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
             fit_coef *= 1e6
+
 
             
             
@@ -1527,11 +1540,11 @@ class Fit_DataSet:
             for param in baseline_params:
                 if ('etalon' in param) and (str(spectrum_number) in param[param.find('_', 7):]):
                     etalon_num = int(param[param.find('_')+1: param.find('_', param.find('_')+1)])
-                    if ('amp' in param) and (str(etalon_num) in param):
+                    if param == 'etalon_' + str(etalon_num) + '_amp_' + str(spectrum_number):#('amp' in param) and (str(etalon_num) in param):
                         fit_etalon_parameters[etalon_num]['amp'] = np.float(params[param])
-                    if ('freq' in param) and (str(etalon_num) in param):
+                    if param == 'etalon_' + str(etalon_num) + '_freq_' + str(spectrum_number):#('freq' in param) and (str(etalon_num) in param):
                         fit_etalon_parameters[etalon_num]['freq'] = np.float(params[param])
-                    if ('phase' in param) and (str(etalon_num) in param):
+                    if param == 'etalon_' + str(etalon_num) + '_phase_' + str(spectrum_number):#('phase' in param) and (str(etalon_num) in param):
                         fit_etalon_parameters[etalon_num]['phase'] = np.float(params[param])
             etalons = len(spectrum.wavenumber)*[0]
             for i in range(1, len(spectrum.etalons)+1):
