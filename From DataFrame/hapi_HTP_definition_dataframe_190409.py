@@ -1621,9 +1621,12 @@ class Fit_DataSet:
             for segment in list(set(spectrum.segments)):
                 wavenumbers = wavenumber_segments[segment]
                 wavenumbers_relative = wavenumbers - np.min(spectrum.wavenumber)
-                #print (spectrum_number, segment)
-                #plt.plot(wavenumbers, alpha_segments[segment])
-                #plt.show()
+                
+                x_shift = np.float(params['x_shift_' + str(spectrum_number) + '_' + str(segment)])
+                #linelist_for_sim['nu'] = linelist_for_sim['nu'] + x_shift # Q
+                wavenumbers += x_shift
+                wavenumbers_relative+= x_shift
+                
                 
                 
             
@@ -1635,9 +1638,7 @@ class Fit_DataSet:
             
                 #Simulate Spectra
     
-                x_shift = np.float(params['x_shift_' + str(spectrum_number) + '_' + str(segment)])
-                linelist_for_sim['nu'] = linelist_for_sim['nu'] + x_shift
-                
+
     
                 fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
                         p = spectrum.pressure, T = spectrum.temperature, molefraction = fit_molefraction, 
