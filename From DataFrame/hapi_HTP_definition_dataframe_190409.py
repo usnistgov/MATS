@@ -634,9 +634,8 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
         x = wavenumbers - np.min(wavenumbers)
         
         etalon_model += amp*np.sin((2*np.pi * freq)*x+ phase) 
-    
-    alpha_noise = (baseline + alpha + etalon_model) 
-    alpha_noise += np.max(alpha_noise)*np.random.normal(loc = 0, scale =1, size = len(alpha_noise))*1/SNR
+    alpha_noise = alpha + np.max(alpha)*np.random.normal(loc = 0, scale =1, size = len(alpha))*1/SNR
+    alpha_noise += (baseline + alpha + etalon_model) 
     spectrum = pd.DataFrame()
     spectrum['Wavenumber (cm-1)'] = wavenumbers
     spectrum['Wavenumber + Noise (cm-1)'] = wavenumbers_err
