@@ -1,25 +1,23 @@
-from numpy import sqrt,abs,exp,pi,log,sin,cos,tan
 import numpy as np
 
 import pandas as pd
 from bisect import bisect
-import os, sys
+import sys
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
-from scipy import fftpack
-from scipy.interpolate import interp1d
+import re
+
+
 
 
 
 sys.path.append(r'C:\Users\ema3\Documents\Python Scripts\HAPI')#Add hapi.py folder location to system path
-sys.path.append(r'C:\Users\ema3\Documents\Cold Cavity - O2 A Band')# set location of HAPI.py module
-from hapi import EnvironmentDependency_Intensity, PYTIPS2017, molecularMass, PROFILE_HT, ISO, volumeConcentration
+#sys.path.append(r'C:\Users\ema3\Documents\Cold Cavity - O2 A Band')# set location of HAPI.py module
+from hapi import EnvironmentDependency_Intensity, PYTIPS2017, molecularMass, pcqsdhc, ISO
 
-from matplotlib import gridspec
-import pandas as pd
 import qgrid
 
-from lmfit import minimize, Parameters, report_fit, Model, Minimizer
+from lmfit import Parameters, Minimizer
 #from lmfit.models import GaussianModel, LinearModel, Model, VoigtModel
 
 
@@ -30,26 +28,8 @@ sns.set_style("ticks")
 sns.set_context("poster")
 
 
-# proposed inputs
-#Update to take out all hapi calls and just work from the limited 
-
-'''
-linelist = pd.read_csv('HITRAN_2016_linelist.csv')
-wavenumbers = np.arange(13040, 13045, 0.001)
-wing_cutoff = 50 # wingcut-off will be x halfwidths or end of range which ever is later
-wing_wavenumbers = 50
-pressure = 1#atm
-temperature = 296 #K
-concentration ={ 7 : 0.2} # Concentration is a dictionary with a concentration (out of 1) with the Molecule ID as the key
-natural_abundance = True # if false then need to correct calculations
-abundance_ratio_MI = {7 : {1: 1, 2: 1/0.01, 3: 1/0.01}}
-diluent = 'air' # can define also as dictionary that it loops through with the value being the abun for the calc of each param
-Diluent = {}
-'''
-
-
-def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50, 
-                pressure = 1, temperature = 296, concentration = {}, 
+def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff',
+                p = 1, T = 296, molefraction = {}, 
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30):
     
     #Generate X-axis for simulation
@@ -62,170 +42,111 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
     #define reference temperature and pressure
     Tref = 296. # K
     pref = 1. # atm
-    # define actual temperature and pressure
-    T = temperature # K
-    p = pressure # atm
    
-    mol_dens = volumeConcentration(p,T)
+    #mol_dens = volumeConcentration(p,T)
+    mol_dens = (p/9.869233e-7)/(1.380648813E-16*T) 
     
     
     #Sets-up the  Diluent currently limited to air or self
     if not Diluent:
         Diluent = {diluent:1.}
-  
-    #Iterate through lines in linelist
     
+  
+
     #Calculate line intensity
     
-    num_lines = len(linelist)
-    linelist['SigmaT'] = num_lines*[0]
-    linelist['SigmaTref'] = num_lines*[0]
-    linelist['GammaD'] = num_lines*[0]
-    linelist['m'] = num_lines*[0]
+    #num_lines = len(linelist)
+    linelist['SigmaT'] = 0
+    linelist['SigmaTref'] = 0#num_lines*[0]
+    linelist['GammaD'] = 0#num_lines*[0]
+    linelist['m'] = 0#num_lines*[0]
+    linelist['abun_ratio'] = 1
     
     for molec in linelist['molec_id'].unique():
         for iso in linelist ['local_iso_id'].unique():
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = PYTIPS2017(molec,iso,T)
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
-            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) * 1.66053873e-27 * 1000
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) * 1.66053873e-27 * 1000 #cmassmol and kg conversion
+            if ( natural_abundance == False) and abundance_ratio_MI != {}:
+                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'abun_ratio'] = abundance_ratio_MI[molec][iso]
+
     
     linelist['LineIntensity'] = EnvironmentDependency_Intensity(linelist['sw'],T,Tref,linelist['SigmaT'],linelist['SigmaTref'],linelist['elower'],linelist['nu'])
 
     
     ##Calculate Doppler Broadening
-    linelist['GammaD'] = sqrt(2*1.380648813E-16*T*log(2)/linelist['m']/2.99792458e10**2)*linelist['nu']
+    linelist['GammaD'] = np.sqrt(2*1.380648813E-16*T*np.log(2)/linelist['m']/2.99792458e10**2)*linelist['nu']
     #GammaD = sqrt(2*cBolts*T*log(2)/m/cc**2)*LineCenterDB
     
+    linelist['Gamma0'] = 0
+    linelist['Shift0'] = 0
+    linelist['Gamma2'] = 0
+    linelist['Shift2'] = 0
+    linelist['NuVC'] = 0
+    linelist['Eta'] = 0
+    linelist['Y'] = 0
+    for species in Diluent:
+        abun = Diluent[species]
+        #Gamma0: pressure broadening coefficient HWHM
+        linelist['Gamma0'] += abun*(linelist['gamma0_%s'%species]*(p/pref)*((Tref/T)**linelist['n_gamma0_%s'%species]))
 
+        #Delta0
+        linelist['Shift0'] += abun*((linelist['delta0_%s'%species] + linelist['n_delta0_%s'%species]*(T-Tref))*p/pref)
+        
+        #Gamma2
+        linelist['Gamma2'] += abun*(linelist['SD_gamma_%s'%species]*linelist['gamma0_%s'%species]*(p/pref)*((Tref/T)**linelist['n_gamma2_%s'%species]))
+        
+        #Delta2
+        linelist['Shift2'] += abun*((linelist['SD_delta_%s'%species]*linelist['delta0_%s'%species] + linelist['n_delta2_%s'%species]*(T-Tref))*p/pref)
+        
+        #nuVC
+        linelist['NuVC'] += abun*(linelist['nuVC_%s'%species]*(p/pref)*((Tref/T)**(linelist['n_nuVC_%s'%species])))
+        
+        #eta
+        linelist['Eta'] += linelist['eta_%s'%species] *abun
+        
+        #Line mixing
+        linelist['Y'] += abun*linelist['y_%s'%species]  
+    
+    
+    
+    if wing_method == 'wing_cutoff':
+        linelist['line cut-off'] = (0.5346*linelist['Gamma0'] + (0.2166*linelist['Gamma0']**2 + linelist['GammaD']**2)**0.5)*wing_cutoff
+        
+
+    else:
+        linelist['line cut-off'] = wing_wavenumbers
+
+    linelist = linelist[linelist['LineIntensity']>= IntensityThreshold] 
+    
     for index, line in linelist.iterrows():
+        BoundIndexLower = bisect(wavenumbers, line['nu'] - line['line cut-off'])
+        BoundIndexUpper = bisect(wavenumbers, line['nu'] + line['line cut-off'])
+        lineshape_vals_real, lineshape_vals_imag = pcqsdhc(line['nu'],line['GammaD'],line['Gamma0'],line['Gamma2'],line['Shift0'],line['Shift2'],
+                                                    line['NuVC'],line['Eta'],wavenumbers[BoundIndexLower:BoundIndexUpper])    
+        Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
+                                                    molefraction[line['molec_id']] * line['abun_ratio'] * \
+                                                    line['LineIntensity'] * (lineshape_vals_real + line['Y']*lineshape_vals_imag) 
+    
+                                                        
+    return (wavenumbers, np.asarray(Xsect))  
+    
 
-        #Get Base line parameters
-        LineCenterDB = line['nu']
-        #LineIntensityDB = line['sw']
-        LineIntensity = line['LineIntensity']
-        #LowerStateEnergyDB = line['elower']
-        MoleculeNumberDB = line['molec_id']
-        IsoNumberDB = line['local_iso_id']
-        GammaD = line['GammaD']
-   
-        
-        #Calculate partition function
-        #SigmaT = PYTIPS2017(MoleculeNumberDB,IsoNumberDB,T) #Partition Function T using TIPS2017
-        #SigmaTref = PYTIPS2017(MoleculeNumberDB,IsoNumberDB,Tref) #Partition Function T using TIPS2017
-        
-        #Calculate Line Intensity
-        #LineIntensity = EnvironmentDependency_Intensity(LineIntensityDB,T,Tref,SigmaT,SigmaTref, LowerStateEnergyDB,LineCenterDB)
-        
-        if LineIntensity < IntensityThreshold: continue
-        
-        #Isotopic Abundance Calculations
-        abun_ratio = 1
-        
-        '''
-        if (natural_abundance == True):
-            abun_ratio *= abundance(MoleculeNumberDB,IsoNumberDB)
-        '''
-        
-        
-        if ( natural_abundance == False) and abundance_ratio_MI != {}:
-            abun_ratio = abundance_ratio_MI[MoleculeNumberDB][IsoNumberDB]
-
-        
-        #Set values for parameter summation across diluents
-        Gamma0 = 0.; Shift0 = 0.; Gamma2 = 0.; Shift2 = 0.; NuVC = 0.; EtaNumer = 0.; Y = 0;
-        for species in Diluent:
-            abun = Diluent[species]
-            
-            
-            
-            #Gamma0: pressure broadening coefficient HWHM
-            Gamma0DB = line['gamma0_%s'%species]
-            TempRatioPowerDB_Gamma0 =line['n_gamma0_%s'%species]
-            Gamma0T = Gamma0DB*(p/pref)*((Tref/T)**TempRatioPowerDB_Gamma0)
-            Gamma0 += abun*Gamma0T
-            
-            #Delta0
-            Shift0DB = line['delta0_%s'%species]
-            deltap = line['n_delta0_%s'%species]  
-            Shift0T = (Shift0DB + deltap*(T-Tref))*p/pref
-            Shift0 += abun*Shift0T
-            
-            
-            
-            #Gamma2
-            SDDB = line['SD_gamma_%s'%species]
-            Gamma2DB = SDDB*Gamma0DB
-            TempRatioPowerDB_Gamma2 =line['n_gamma2_%s'%species]
-            Gamma2T = Gamma2DB*(p/pref)*((Tref/T)**TempRatioPowerDB_Gamma2)
-            Gamma2 += abun*Gamma2T
-        
-            #Delta 2
-            SDshiftDB = line['SD_delta_%s'%species]
-            Shift2DB = SDshiftDB*Shift0DB
-            delta2p =line['n_delta2_%s'%species]
-            Shift2T = (Shift2DB + delta2p*(T-Tref))*p/pref
-            Shift2 += abun*Shift2T
-                      
-            #nuVC
-            NuVCDB = line['nuVC_%s'%species]
-            KappaDB = line['n_nuVC_%s'%species]
-            NuVCT = NuVCDB*(p/pref)*((Tref/T)**(KappaDB))
-            NuVC += abun*NuVCT
-            
-            #Eta
-            EtaDB = line['eta_%s'%species]        
-            EtaNumer += EtaDB*abun*(Gamma0T+1j*Shift0T)
-            
-            # Line mixing
-
-            YDB = line['y_%s'%species]
-            # What does temperature look like here
-            Y += abun*YDB
-
-        Eta = EtaNumer/(Gamma0 + 1j*Shift0)
-
-        
-        
-        
-        appx_voigt_width = 0.5346*Gamma0 + (0.2166*Gamma0**2 + GammaD**2)**0.5
-        OmegaWingF = max(wing_wavenumbers,wing_cutoff*appx_voigt_width)
-
-        
-        
-        
-        BoundIndexLower = bisect(wavenumbers,LineCenterDB-OmegaWingF)
-        BoundIndexUpper = bisect(wavenumbers,LineCenterDB+OmegaWingF)
-        
-
-
-        lineshape_vals_real, lineshape_vals_imag = PROFILE_HT(LineCenterDB,GammaD,Gamma0,Gamma2,Shift0,Shift2,NuVC,Eta,wavenumbers[BoundIndexLower:BoundIndexUpper])#[BoundIndexLower:BoundIndexUpper])
 
     
-        Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
-                                                    concentration[MoleculeNumberDB] * abun_ratio * \
-                                                    LineIntensity * (lineshape_vals_real + Y*lineshape_vals_imag) 
 
-                                                        
-    return (wavenumbers, np.asarray(Xsect))         
 
-'''
-nu, alpha = HTP_from_DF_select(linelist, wavenumbers, wing_cutoff = 50, wing_wavenumbers = 50, 
-                pressure = pressure, temperature = temperature, concentration =concentration, 
-                natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI, Diluent = {}, diluent = 'air') 
 
-                                                              
-plt.plot(nu, alpha)
-plt.show()
-'''
+
 class Spectrum:
 
-    def __init__(self, filename, concentration = {}, natural_abundance = True, diluent = 'air', Diluent = {}, abundance_ratio_MI = {}, spectrum_number = 1, 
+    def __init__(self, filename, molefraction = {}, natural_abundance = True, diluent = 'air', Diluent = {}, abundance_ratio_MI = {}, spectrum_number = 1, 
                     input_freq = True, input_tau = True, 
                     pressure_column = 'Cavity Pressure /Torr', temperature_column = 'Cavity Temperature Side 2 /C', frequency_column = 'Total Frequency /MHz', 
-                    tau_column = 'Mean tau/us', tau_stats_column = 'tau rel. std. dev./%', 
-                    etalons = {}, nominal_temperature = 296, x_shift = 0):
+                    tau_column = 'Mean tau/us', tau_stats_column = None, segment_column = None, 
+                    etalons = {}, nominal_temperature = 296, x_shift = 0, baseline_order = 1):
         self.filename = filename
-        self.concentration = concentration
+        self.molefraction = molefraction
         self.natural_abundance = natural_abundance
         self.abundance_ratio_MI = abundance_ratio_MI
         self.diluent = diluent
@@ -233,17 +154,21 @@ class Spectrum:
             self.Diluent = {self.diluent: 1}
         else:
             self.Diluent = Diluent
+
         self.spectrum_number = spectrum_number
         self.pressure_column = pressure_column
         self.temperature_column = temperature_column
         self.frequency_column = frequency_column
         self.tau_column = tau_column
         self.tau_stats_column = tau_stats_column
+        self.segment_column = segment_column
         self.input_freq = input_freq
         self.input_tau = input_tau
         self.etalons = etalons
         self.nominal_temperature = nominal_temperature
         self.x_shift = x_shift
+        self.baseline_order = baseline_order
+        self.diluent_sum_check()
         
         
         #Defined from contents of file
@@ -267,18 +192,41 @@ class Spectrum:
             self.tau_stats = file_contents[self.tau_stats_column].values
         else:
             self.tau_stats = None
+        if self.segment_column != None:
+            self.segments = file_contents[self.segment_column].values
+        else:
+            self.segments = len(file_contents)*[1]
+            
         
         
         
         self.model = len(self.alpha)*[0]
         self.residuals = self.alpha - self.model
         self.background = len(self.alpha)*[0]
+    def diluent_sum_check(self):
+        diluent_sum = 0
+        for dil in self.Diluent:
+            diluent_sum+=self.Diluent[dil]
+        if diluent_sum != 1:
+            print ("YOUR DILUENTS DO NOT SUM TO ONE!")
+    def segment_wave_alpha(self):
+        wavenumber_segments = {}
+        alpha_segments = {}
+        indices_segments = {}
+        for segment in list(set(self.segments)):
+            indices = [i for i, x in enumerate(self.segments) if x == segment]
+            indices_segments[segment] = indices
+            wavenumber_segments[segment] = self.wavenumber[indices]
+            alpha_segments[segment] = self.alpha[indices]
+        return wavenumber_segments, alpha_segments, indices_segments
+
+            
         
     ## GETTERS    
     def get_filename(self):
         return self.filename
-    def get_concentration(self):
-        return self.concentration
+    def get_molefraction(self):
+        return self.molefraction
     def get_natural_abundance(self):
         return self.natural_abundance
     def get_abundance_ratio_MI(self):
@@ -319,8 +267,8 @@ class Spectrum:
         return self.nominal_temperature
 
     ##SETTERS 
-    def set_concentration(self, new_concentration):
-        self.concentration = new_concentration
+    def set_molefraction(self, new_molefraction):
+        self.molefraction = new_molefraction
    
     def set_natural_abundance(self, new_natural_abundance):
         self.natural_abundance = new_natural_abundance
@@ -364,7 +312,9 @@ class Spectrum:
     def set_background(self, new_background):
         self.background = new_background
     def set_nominal_temperature(self, new_nominal_temperature):
-        self.nominal_temperature = new_nominal_temperature     
+        self.nominal_temperature = new_nominal_temperature 
+        
+        
  
     ##Other Functions
     def plot_freq_tau(self):
@@ -455,12 +405,58 @@ class Dataset:
         self.spectra = spectra
         self.dataset_name = dataset_name
         self.baseline_order = baseline_order
+       
         self.renumber_spectra()
+        self.correct_component_list()
+        self.correct_etalon_list()
+        self.max_baseline_order()
+        
     def renumber_spectra(self):
         count = 1
         for spectrum in self.spectra:
             spectrum.set_spectrum_number(count)
             count+=1
+    def max_baseline_order(self):
+        baseline_order_list = []
+        for spectrum in self.spectra:
+            baseline_order_list.append(spectrum.baseline_order)
+        self.baseline_order = max(baseline_order_list)
+
+
+    def correct_component_list(self):
+        dataset_molecule_list = []
+        for spectrum in self.spectra:
+            dataset_molecule_list += (spectrum.molefraction.keys())
+        dataset_molecule_list = list(set(dataset_molecule_list))
+        for spectrum in self.spectra:
+            spectrum_molefraction_dictionary = spectrum.get_molefraction()
+            for molecule in dataset_molecule_list:
+                if molecule not in spectrum_molefraction_dictionary:
+                    spectrum_molefraction_dictionary[molecule] = 0
+            spectrum.set_molefraction(spectrum_molefraction_dictionary)
+    def correct_etalon_list(self):
+        dataset_etalon_list = []
+        for spectrum in self.spectra:
+            dataset_etalon_list += spectrum.etalons.keys()
+        dataset_etalon_list = list(set(dataset_etalon_list))
+        for spectrum in self.spectra:
+            spectrum_etalon_dictionary = spectrum.get_etalons()
+            for etalon_number in dataset_etalon_list:
+                if etalon_number not in spectrum_etalon_dictionary:
+                    spectrum_etalon_dictionary[etalon_number] = [0,0]
+            spectrum.set_etalons(spectrum_etalon_dictionary)
+    def get_etalons(self):
+        dataset_etalon_list = []
+        for spectrum in self.spectra:
+            dataset_etalon_list += spectrum.etalons.keys()
+        dataset_etalon_list = list(set(dataset_etalon_list))
+        return dataset_etalon_list
+    def get_molecules(self):
+        dataset_molecule_list = []
+        for spectrum in self.spectra:
+            dataset_molecule_list += (spectrum.molefraction.keys())
+        dataset_molecule_list = list(set(dataset_molecule_list)) 
+        return dataset_molecule_list       
     def get_spectra(self):
         return list(self.spectra)
     def get_dataset_name(self):
@@ -508,6 +504,7 @@ class Dataset:
         for spectrum in self.spectra:
             extreme_dictionary[spectrum.get_spectrum_number()] = [np.min(spectrum.wavenumber), np.max(spectrum.wavenumber)]
         return extreme_dictionary
+
             
     def get_number_nominal_temperatures(self):
         nominal_temperatures = []
@@ -515,6 +512,7 @@ class Dataset:
             if spectrum.nominal_temperature not in nominal_temperatures:
                 nominal_temperatures.append(spectrum.nominal_temperature)
         return len(nominal_temperatures), nominal_temperatures
+    
             
             
     def average_QF(self):
@@ -531,22 +529,25 @@ class Dataset:
         baseline_paramlist = pd.DataFrame()
         
         for spectrum in self.spectra:
-            line = {}
-            line['Spectrum Number'] = spectrum.spectrum_number
-            line['x_shift'] = spectrum.x_shift
-            for molecule in spectrum.concentration:
-                line['Concentration_' + (ISO[(molecule, 1)][4])] = (spectrum.concentration[molecule])
-            for i in range(0, self.baseline_order + 1):
-                if chr(i+97) == 'a':
-                    line['baseline_' + chr(i+97)] = spectrum.alpha[0]
-                else:
-                    line['baseline_' + chr(i+97)] = 0
-                
-            for etalon_name in spectrum.etalons:
-                line['etalon_' + str(etalon_name) + '_amp'] = spectrum.etalons[etalon_name][0]
-                line['etalon_' + str(etalon_name) + '_freq'] = spectrum.etalons[etalon_name][1]
-                line['etalon_' + str(etalon_name) + '_phase'] = 0
-            baseline_paramlist  = baseline_paramlist.append(line, ignore_index=True)
+            for segment in list(set(spectrum.segments)):
+                line = {}
+                line['Spectrum Number'] = spectrum.spectrum_number
+                line['Segment Number'] = segment
+                line['Baseline Order'] = spectrum.baseline_order
+                line['x_shift'] = spectrum.x_shift
+                for molecule in spectrum.molefraction:
+                    line['molefraction_' + (ISO[(molecule, 1)][4])] = (spectrum.molefraction[molecule])
+                for i in range(0, self.baseline_order + 1):
+                    if chr(i+97) == 'a':
+                        line['baseline_' + chr(i+97)] = spectrum.alpha[0]
+                    else:
+                        line['baseline_' + chr(i+97)] = 0
+                    
+                for etalon_name in spectrum.etalons:
+                    line['etalon_' + str(etalon_name) + '_amp'] = spectrum.etalons[etalon_name][0]
+                    line['etalon_' + str(etalon_name) + '_freq'] = spectrum.etalons[etalon_name][1]
+                    line['etalon_' + str(etalon_name) + '_phase'] = 0
+                baseline_paramlist  = baseline_paramlist.append(line, ignore_index=True)
         
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
         baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv')
@@ -591,6 +592,65 @@ def max_iter(pars, iter, resid, *args, **kws):
         
 def etalon(x, amp, freq, phase):
     return amp*np.sin((2*np.pi * freq)*x+ phase) 
+    
+   
+        
+        
+def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_error = 0, 
+                        SNR = 10000, baseline_terms = [0], temperature = 25, temperature_err = 0, pressure = 760, pressure_err = 0, 
+                        wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
+                        natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {}, 
+                        nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30):
+    if not Diluent:
+        Diluent = {diluent:1.}
+    for dil in Diluent:
+        parameter_linelist['y_' + dil] = parameter_linelist['y_' + dil + '_' + str(nominal_temperature)]
+        
+ 
+    baseline_terms = np.flip(baseline_terms)
+    temperature_K = temperature + 273.15
+    pressure_atm = pressure / 760
+    wavenumbers = np.arange(wave_min, wave_max + wave_space, wave_space)
+    wavenumbers_err = wavenumbers + wave_error*np.random.normal(loc = 0, scale =1, size = len(wavenumbers))
+    pressure_w_error = pressure_atm + pressure_atm*np.random.normal()*(pressure_err/100)
+    temperature_w_error = temperature_K + temperature_K*np.random.normal()*(temperature_err/100)
+    molefraction_w_error = {}        
+    for species in molefraction:
+        if molefraction_err == {}:
+            molefraction_err[species] = 0
+        molefraction_w_error[species] = molefraction[species] + molefraction[species]*np.random.normal(loc = 0, scale =1, size = 1)*(molefraction_err[species]/100)
+    wavenumbers, alpha = HTP_from_DF_select(parameter_linelist, wavenumbers, wing_cutoff, wing_wavenumbers, wing_method,
+                        p = pressure_w_error, T = temperature_w_error,  molefraction = molefraction_w_error, 
+                        natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,  
+                        Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold)       
+    alpha *= 1e6
+    baseline = np.polyval(baseline_terms, wavenumbers -np.min(wavenumbers) )
+    
+    etalon_model = len(wavenumbers)*[0]
+    for r in range(1, len(etalons)+1):
+        amp = etalons[r][0]
+        freq = etalons[r][1]
+        phase = np.random.rand()
+        x = wavenumbers - np.min(wavenumbers)
+        
+        etalon_model += amp*np.sin((2*np.pi * freq)*x+ phase) 
+    
+    alpha_noise = (baseline + alpha + etalon_model) 
+    alpha_noise += np.max(alpha_noise)*np.random.normal(loc = 0, scale =1, size = len(alpha_noise))*1/SNR
+    spectrum = pd.DataFrame()
+    spectrum['Wavenumber (cm-1)'] = wavenumbers
+    spectrum['Wavenumber + Noise (cm-1)'] = wavenumbers_err
+    spectrum['Alpha (ppm/cm)'] = alpha + baseline + etalon_model
+    spectrum['Alpha + Noise (ppm/cm)'] = alpha_noise
+    spectrum['Pressure (Torr)'] = [pressure]*len(spectrum) # currently this is the pressure that was used for the simulation and not the actual one used (ie if there was error added to the pressure)
+    spectrum['Temperature (C)'] = [temperature]*len(spectrum)
+    spectrum.to_csv(filename + '.csv', index = False)
+    
+    return Spectrum(filename, molefraction = molefraction, natural_abundance = natural_abundance, diluent = diluent, Diluent = Diluent, abundance_ratio_MI = abundance_ratio_MI, spectrum_number = 1, 
+                input_freq = False, input_tau = False, 
+                pressure_column = 'Pressure (Torr)', temperature_column = 'Temperature (C)', frequency_column = 'Wavenumber + Noise (cm-1)', 
+                tau_column = 'Alpha + Noise (ppm/cm)', tau_stats_column = None, 
+                etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1)
     
     
 class Generate_FitParam_File:
@@ -1024,31 +1084,45 @@ class Generate_FitParam_File:
         return param_linelist_df 
  
 
-    def generate_fit_baseline_linelist(self, vary_baseline = True, vary_concentration = {7:True, 1:False}, vary_xshift = False, 
+    def generate_fit_baseline_linelist(self, vary_baseline = True, vary_molefraction = {7:True, 1:False}, vary_xshift = False, 
                                       vary_etalon_amp= False, vary_etalon_freq= False, vary_etalon_phase= False):
         base_linelist_df = self.get_base_linelist().copy()
+        #base_linelist_df['order'] = self.dataset
         parameters =  (list(base_linelist_df))
         for param in parameters:
-            base_linelist_df[param + '_err'] = len(base_linelist_df)*[0]
-            if 'baseline' in param:
-                base_linelist_df[param + '_vary'] = len(base_linelist_df)*[vary_baseline]
-            if 'Concentration' in param:
-                for molecule in vary_concentration:
-                    if (ISO[(molecule, 1)][4]) in param:
-                        base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_concentration[molecule])]
-                        base_linelist_df[param + '_err'] = len(base_linelist_df)*[0]
+            if ('Baseline Order' != param) and ('Segment Number' != param):
+                base_linelist_df[param + '_err'] = 0
+                base_linelist_df[param + '_vary']= False
             if 'x_shift' in param:
                 base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_xshift)]
-                base_linelist_df[param + '_err'] = len(base_linelist_df)*[0]
+            if 'baseline' in param:
+                order = ord(param.replace('baseline_', '')) - 97
+                base_linelist_df.loc[base_linelist_df['Baseline Order']>= order, param + '_vary'] = vary_baseline
+                #base_linelist_df[param + '_vary'] = len(base_linelist_df)*[vary_baseline]           
+            if 'molefraction' in param:
+                for molecule in vary_molefraction:
+                    if (ISO[(molecule, 1)][4]) in param:  
+                        base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_molefraction[molecule])                     
+                        #base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_molefraction[molecule])]
+                        #base_linelist_df[param + '_err'] = len(base_linelist_df)*[0]
+            
             if 'amp' in param:
-                base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_etalon_amp)]
-                base_linelist_df[param + '_err'] = len(base_linelist_df)*[0]
+                base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_etalon_amp) 
+                #base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_etalon_amp)]
+                #base_linelist_df[param + '_err'] = len(base_linelist_df)*[0]
             if 'freq' in param:
-                base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_etalon_freq)]
-                base_linelist_df[param + '_err'] = len(base_linelist_df)*[0]
+                base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_etalon_freq) 
+                #base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_etalon_freq)]
+                #base_linelist_df[param + '_err'] = len(base_linelist_df)*[0]
             if 'phase' in param:
-                base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_etalon_phase)]  
-                base_linelist_df[param + '_err'] = len(base_linelist_df)*[0] 
+                base_linelist_df.loc[base_linelist_df[param.replace("phase", "freq")]!=0, param + '_vary'] = (vary_etalon_phase)
+                #base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_etalon_phase)]  
+                #base_linelist_df[param + '_err'] = len(base_linelist_df)*[0] 
+                
+        # Portion to correct for if the amp/freq = 0
+        
+
+        base_linelist_df.drop(['Baseline Order'], axis=1, inplace = True)
         base_linelist_df = base_linelist_df.reindex(sorted(base_linelist_df.columns), axis=1)
         base_linelist_df.to_csv(self.base_linelist_savename + '.csv')
         return base_linelist_df
@@ -1085,16 +1159,16 @@ class Edit_Fit_Param_Files:
         return param_linelist_df
      
 def hasNumbers(inputString):
-    has_digits = False
+    #has_digits = False
     for char in inputString:
         if char.isdigit():
             return True
     return False
 
 class Fit_DataSet:
-    def __init__(self, dataset, base_linelist_file, param_linelist_file, fit_intensity = 1e-27,
+    def __init__(self, dataset, base_linelist_file, param_linelist_file, minimum_parameter_fit_intensity = 1e-27,
                 baseline_limit = False, baseline_limit_factor = 10, 
-                concentration_limit = False, concentration_limit_factor = 10, 
+                molefraction_limit = False, molefraction_limit_factor = 10, 
                 etalon_limit = False, etalon_limit_factor = 50, #phase is constrained to +/- 2pi, 
                 x_shift_limit = False, x_shift_limit_magnitude = 0.1, 
                 nu_limit = False, nu_limit_magnitude = 0.1, 
@@ -1107,18 +1181,18 @@ class Fit_DataSet:
                 eta_limit = True, eta_limit_factor  = 10, linemixing_limit = False, linemixing_limit_factor  = 10):
         self.dataset = dataset
         self.base_linelist_file = base_linelist_file
-        self.baseline_list = pd.read_csv(self.base_linelist_file + '.csv', index_col = 0)
+        self.baseline_list = pd.read_csv(self.base_linelist_file + '.csv')#, index_col = 0
         
         self.param_linelist_file = param_linelist_file
         self.lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
         
-        self.fit_intensity = fit_intensity
+        self.minimum_parameter_fit_intensity = minimum_parameter_fit_intensity
         self.baseline_limit = baseline_limit
         self.baseline_limit_factor  = baseline_limit_factor
         self.etalon_limit = etalon_limit
         self.etalon_limit_factor = etalon_limit_factor
-        self.concentration_limit = concentration_limit
-        self.concentration_limit_factor = concentration_limit_factor
+        self.molefraction_limit = molefraction_limit
+        self.molefraction_limit_factor = molefraction_limit_factor
         self.etalon_limit = etalon_limit
         self.etalon_limit_factor = etalon_limit_factor
         self.x_shift_limit = x_shift_limit
@@ -1160,34 +1234,36 @@ class Fit_DataSet:
         #baseline_list = pd.read_csv(self.base_linelist_file + '.csv', index_col = 0)
         baseline_parameters = []
         for base_param in list(self.baseline_list):
-            if ('_vary' not in base_param) and ('_err' not in base_param):
+            if ('_vary' not in base_param) and ('_err' not in base_param) and ('Spectrum Number' not in base_param) and ('Segment Number' not in base_param):
                 baseline_parameters.append(base_param)
-        for spec_num in self.baseline_list.index.values:
+        for index in self.baseline_list.index.values:
+            spec_num = self.baseline_list.iloc[index]['Spectrum Number']
+            seg_num = self.baseline_list.iloc[index]['Segment Number']
+            ## can still loop through index values, but now need to call the actual spec_num and segment_num and force them together
             for base_param in baseline_parameters:
-                #print (base_param)
-                if self.baseline_list.loc[int(spec_num)][base_param] == 0:
-                    params.add(base_param + '_'+str(int(spec_num)), self.baseline_list.loc[int(spec_num)][base_param], self.baseline_list.loc[int(spec_num)][base_param + '_vary'])
-                elif ('Concentration' in base_param) and self.concentration_limit:
-                    params.add(base_param + '_'+str(int(spec_num)), self.baseline_list.loc[int(spec_num)][base_param], self.baseline_list.loc[int(spec_num)][base_param + '_vary'], 
-                              min = (1 / self.concentration_limit_factor)*self.baseline_list.loc[int(spec_num)][base_param], 
-                              max = self.concentration_limit_factor*self.baseline_list.loc[int(spec_num)][base_param])
+                if self.baseline_list.loc[index][base_param] == 0:
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'])
+                elif ('molefraction' in base_param) and self.molefraction_limit:
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
+                              min = (1 / self.molefraction_limit_factor)*self.baseline_list.loc[index][base_param], 
+                              max = self.molefraction_limit_factor*self.baseline_list.loc[index][base_param])
                 elif ('baseline' in base_param) and self.baseline_limit:
-                    params.add(base_param + '_'+str(int(spec_num)), self.baseline_list.loc[int(spec_num)][base_param], self.baseline_list.loc[int(spec_num)][base_param + '_vary'], 
-                              min = (1 / self.baseline_limit_factor)*self.baseline_list.loc[int(spec_num)][base_param], 
-                              max = self.baseline_limit_factor *self.baseline_list.loc[int(spec_num)][base_param])
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
+                              min = (1 / self.baseline_limit_factor)*self.baseline_list.loc[index][base_param], 
+                              max = self.baseline_limit_factor *self.baseline_list.loc[index][base_param])
                 elif ('etalon_' in base_param) and self.etalon_limit and ('phase' not in base_param):
-                    params.add(base_param + '_'+str(int(spec_num)), self.baseline_list.loc[int(spec_num)][base_param], self.baseline_list.loc[int(spec_num)][base_param + '_vary'], 
-                              min = (1 / self.etalon_limit_factor )*self.baseline_list.loc[int(spec_num)][base_param], 
-                              max = self.etalon_limit_factor *self.baseline_list.loc[int(spec_num)][base_param])
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
+                              min = (1 / self.etalon_limit_factor )*self.baseline_list.loc[index][base_param], 
+                              max = self.etalon_limit_factor *self.baseline_list.loc[index][base_param])
                 elif ('etalon_' in base_param) and self.etalon_limit and ('phase' in base_param):
-                    params.add(base_param + '_'+str(int(spec_num)), self.baseline_list.loc[int(spec_num)][base_param], self.baseline_list.loc[int(spec_num)][base_param + '_vary'], 
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
                               min = -2*np.pi, max = 2*np.pi)
                 elif ('x_shift' in base_param) and self.x_shift_limit:
-                    params.add(base_param + '_'+str(int(spec_num)), self.baseline_list.loc[int(spec_num)][base_param], self.baseline_list.loc[int(spec_num)][base_param + '_vary'], 
-                              min = (self.baseline_list.loc[int(spec_num)][base_param] - self.x_shift_limit_magnitude), 
-                              max = self.x_shift_limit_magnitude + self.baseline_list.loc[int(spec_num)][base_param])   
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
+                              min = (self.baseline_list.loc[index][base_param] - self.x_shift_limit_magnitude), 
+                              max = self.x_shift_limit_magnitude + self.baseline_list.loc[index][base_param])   
                 else:
-                    params.add(base_param + '_'+str(int(spec_num)), self.baseline_list.loc[int(spec_num)][base_param], self.baseline_list.loc[int(spec_num)][base_param + '_vary'])
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'])
         
         #Lineshape parameters
         #lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
@@ -1256,7 +1332,7 @@ class Fit_DataSet:
                 linemix_terms_constrained.append('y_'+diluent + '_' + str(temperature))
         
         for spec_line in self.lineparam_list.index.values:
-            if self.lineparam_list.loc[spec_line]['sw'] >= self.fit_intensity / self.lineparam_list.loc[spec_line]['sw_scale_factor']:# bigger than 1 because fit_intensity / fit_intensity
+            if self.lineparam_list.loc[spec_line]['sw'] >= self.minimum_parameter_fit_intensity / self.lineparam_list.loc[spec_line]['sw_scale_factor']:# bigger than 1 because fit_intensity / fit_intensity
                 for line_param in linelist_params:
                     
                     #NU
@@ -1434,9 +1510,50 @@ class Fit_DataSet:
                         else:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary']) 
         return (params)
-    def add_expr_params(self, params, param_name, expr):
-        pass
-    def simulation_model(self, params, wing_cutoff = 50, wing_wavenumbers = 50):
+    def constrained_baseline(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
+                                    etalon_amp_segment_constrained = True, etalon_freq_segment_constrained = True, etalon_phase_segment_constrained = True):
+        
+        spectrum_segment_min = {}
+        for spectrum in self.dataset.spectra:
+            spectrum_segment_min[spectrum.spectrum_number] = np.min(list(set(spectrum.segments)))
+        
+        for param in params:
+            if ('baseline' in param) and baseline_segment_constrained:
+                indices = [m.start() for m in re.finditer('_', param)]
+                spectrum_num = int(param[indices[1]+1:indices[2]])
+                segment_num = int(param[indices[2]+1:])
+                if segment_num != spectrum_segment_min[spectrum_num]:
+                    params[param].set(expr = param[:indices[1]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
+            
+            elif ('x_shift' in param) and xshift_segment_constrained:
+                indices = [m.start() for m in re.finditer('_', param)]
+                spectrum_num = int(param[indices[1]+1:indices[2]])
+                segment_num = int(param[indices[2]+1:])
+                if segment_num != spectrum_segment_min[spectrum_num]:
+                    params[param].set(expr = param[:indices[1]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
+            elif ('molefraction' in param) and molefraction_segment_constrained:
+                indices = [m.start() for m in re.finditer('_', param)]
+                spectrum_num = int(param[indices[1]+1:indices[2]])
+                segment_num = int(param[indices[2]+1:])
+                if segment_num != spectrum_segment_min[spectrum_num]:
+                    params[param].set(expr = param[:indices[1]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
+            elif ('etalon' in param):
+                indices = [m.start() for m in re.finditer('_', param)]
+                spectrum_num = int(param[indices[2]+1:indices[3]])
+                segment_num = int(param[indices[3]+1:])
+                if 'amp' in param and etalon_amp_segment_constrained:
+                    if segment_num != spectrum_segment_min[spectrum_num]:
+                        params[param].set(expr = param[:indices[2]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
+                elif 'freq' in param and etalon_freq_segment_constrained:
+                    if segment_num != spectrum_segment_min[spectrum_num]:
+                        params[param].set(expr = param[:indices[2]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
+                elif 'phase' in param and etalon_phase_segment_constrained:
+                    if segment_num != spectrum_segment_min[spectrum_num]:
+                        params[param].set(expr = param[:indices[2]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
+        return params
+                    
+
+    def simulation_model(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff'):
         total_simulated = []
         total_residuals = []
         baseline_params = []
@@ -1444,13 +1561,16 @@ class Fit_DataSet:
         
         # Set-up Baseline Parameters
         for param in (list(params.valuesdict().keys())):
-            if ('Concentration' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param):
+            if ('molefraction' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param):
                 baseline_params.append(param)
             else:
                 linelist_params.append(param)
-        #Lineparameter fitting initialization       
-        #lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
+
         for spectrum in self.dataset.spectra:
+            
+            simulated_spectra = len(spectrum.wavenumber)*[0]    
+            residuals = len(spectrum.alpha)*[0]        
+            wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
             Diluent = spectrum.Diluent
             spectrum_number = spectrum.spectrum_number
             nominal_temp = spectrum.nominal_temperature          
@@ -1498,69 +1618,77 @@ class Fit_DataSet:
             #Renames columns to generic (no scan number)
             linelist_for_sim=linelist_for_sim.rename(columns = rename_dictionary) 
             linelist_for_sim['sw'] = linelist_for_sim['sw']*linelist_for_sim['sw_scale_factor']
-            #print (linelist_for_sim)
-            
-            #Set-up Concentration for Fitting
-            fit_concentration = spectrum.concentration
-            for molecule in spectrum.concentration:
-                if ('Concentration_'+ ISO[(molecule, 1)][4]) + '_' + str(spectrum_number) in baseline_params:
-                    fit_concentration[molecule] = np.float(params[('Concentration_'+ ISO[(molecule, 1)][4]) + '_' + str(spectrum_number)])
-            
-            #Simulate Spectra
-
-            x_shift = np.float(params['x_shift_' + str(spectrum_number)])
-            linelist_for_sim['nu'] = linelist_for_sim['nu'] + x_shift
-            
-
-            fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, spectrum.wavenumber, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, 
-                    pressure = spectrum.pressure, temperature = spectrum.temperature, concentration = fit_concentration, 
-                    natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
-            fit_coef *= 1e6
-
-
-            
-            
-            
-            ## Baseline Calculation
-            baseline_param_array = [0]*(self.dataset.baseline_order+1)
-            for param in baseline_params:
-                if ('baseline' in param) and ((spectrum_number) == int(param[11:])):
-                    baseline_param_array[ord(param[9:param.find('_',9)])-97] = np.float(params[param])
-            
-            baseline_param_array = baseline_param_array[::-1] # reverses array to be used for polyval
-            baseline = np.polyval(baseline_param_array, spectrum.wavenumber - np.min(spectrum.wavenumber))
-            
-            
-            #Etalon Calculation
-            #print ((spectrum.etalons))
-            fit_etalon_parameters = {}
-            for i in range(1, len(spectrum.etalons)+1):
-                fit_etalon_parameters[i] = {'amp': 0, 'freq':1, 'phase':0}
-            
-            for param in baseline_params:
-                if ('etalon' in param) and (str(spectrum_number) in param[param.find('_', 7):]):
-                    etalon_num = int(param[param.find('_')+1: param.find('_', param.find('_')+1)])
-                    if param == 'etalon_' + str(etalon_num) + '_amp_' + str(spectrum_number):#('amp' in param) and (str(etalon_num) in param):
-                        fit_etalon_parameters[etalon_num]['amp'] = np.float(params[param])
-                    if param == 'etalon_' + str(etalon_num) + '_freq_' + str(spectrum_number):#('freq' in param) and (str(etalon_num) in param):
-                        fit_etalon_parameters[etalon_num]['freq'] = np.float(params[param])
-                    if param == 'etalon_' + str(etalon_num) + '_phase_' + str(spectrum_number):#('phase' in param) and (str(etalon_num) in param):
-                        fit_etalon_parameters[etalon_num]['phase'] = np.float(params[param])
-            etalons = len(spectrum.wavenumber)*[0]
-            for i in range(1, len(spectrum.etalons)+1):
-                etalons += etalon(spectrum.wavenumber - np.min(spectrum.wavenumber), fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['freq'], fit_etalon_parameters[i]['phase'])
+            for segment in list(set(spectrum.segments)):
+                wavenumbers = wavenumber_segments[segment]
+                wavenumbers_relative = wavenumbers - np.min(spectrum.wavenumber)
+                #print (spectrum_number, segment)
+                #plt.plot(wavenumbers, alpha_segments[segment])
+                #plt.show()
                 
-            simulated_spectra = baseline + etalons + fit_coef
-            residuals = simulated_spectra - spectrum.alpha
-       
+                
+            
+                #Set-up MoleFraction for Fitting
+                fit_molefraction = spectrum.molefraction
+                for molecule in spectrum.molefraction:
+                    if ('molefraction_'+ ISO[(molecule, 1)][4]) + '_' + str(spectrum_number) + '_' + str(segment) in baseline_params:
+                        fit_molefraction[molecule] = np.float(params[('molefraction_'+ ISO[(molecule, 1)][4]) + '_' + str(spectrum_number) + '_' + str(segment)])
+            
+                #Simulate Spectra
+    
+                x_shift = np.float(params['x_shift_' + str(spectrum_number) + '_' + str(segment)])
+                linelist_for_sim['nu'] = linelist_for_sim['nu'] + x_shift
+                
+    
+                fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
+                        p = spectrum.pressure, T = spectrum.temperature, molefraction = fit_molefraction, 
+                        natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
+                fit_coef *= 1e6
+                
+                
+
+
+            
+            
+            
+                ## Baseline Calculation
+                baseline_param_array = [0]*(self.dataset.baseline_order+1)
+                for param in baseline_params:
+                    if ('baseline' in param) and ((str(spectrum_number) + '_' + str(segment)) in param):
+                        baseline_param_array[ord(param[9:param.find('_',9)])-97] = np.float(params[param])
+                
+                baseline_param_array = baseline_param_array[::-1] # reverses array to be used for polyval
+                baseline = np.polyval(baseline_param_array, wavenumbers_relative)
+                
+                
+                #Etalon Calculation
+                #print ((spectrum.etalons))
+                fit_etalon_parameters = {}
+                for i in range(1, len(spectrum.etalons)+1):
+                    fit_etalon_parameters[i] = {'amp': 0, 'freq':1, 'phase':0}
+                
+                for param in baseline_params:
+                    if ('etalon' in param) and (str(spectrum_number) in param[param.find('_', 7):]):
+                        etalon_num = int(param[param.find('_')+1: param.find('_', param.find('_')+1)])
+                        if param == 'etalon_' + str(etalon_num) + '_amp_' + str(spectrum_number) + '_' +str(segment):#('amp' in param) and (str(etalon_num) in param):
+                            fit_etalon_parameters[etalon_num]['amp'] = np.float(params[param])
+                        if param == 'etalon_' + str(etalon_num) + '_freq_' + str(spectrum_number) + '_' +str(segment):#('freq' in param) and (str(etalon_num) in param):
+                            fit_etalon_parameters[etalon_num]['freq'] = np.float(params[param])
+                        if param == 'etalon_' + str(etalon_num) + '_phase_' + str(spectrum_number) +'_' + str(segment):#('phase' in param) and (str(etalon_num) in param):
+                            fit_etalon_parameters[etalon_num]['phase'] = np.float(params[param])
+                etalons = len(wavenumbers)*[0]
+                for i in range(1, len(spectrum.etalons)+1):
+                    etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['freq'], fit_etalon_parameters[i]['phase'])
+                    
+                simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = baseline + etalons + fit_coef
+                residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] - alpha_segments[segment]
             total_simulated = np.append(total_simulated, simulated_spectra)
             total_residuals = np.append(total_residuals, residuals)
         
         total_residuals = np.asarray(total_residuals)
         total_simulated = np.asarray(total_simulated)
         return total_residuals
-    def fit_data(self, params, wing_cutoff = 50, wing_wavenumbers = 50):
-        minner = Minimizer(self.simulation_model, params, iter_cb = max_iter, fcn_args=(wing_cutoff, wing_wavenumbers))
+    def fit_data(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff', xtol = 1e-7, maxfev = 2000, ftol = 1e-7):
+        minner = Minimizer(self.simulation_model, params, xtol =xtol, maxfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
         result = minner.minimize(method = 'leastsq')#'
         return result
     def residual_analysis(self, result, indv_resid_plot = False):
@@ -1581,54 +1709,73 @@ class Fit_DataSet:
         
         
         for key, par in result.params.items():
-            if ('Concentration' in par.name) or ('baseline' in par.name) or ('x_shift' in par.name):
-                parameter = par.name[:(par.name.find('_', par.name.find('_')+1))]
-                line = int(par.name[(par.name.find('_', par.name.find('_')+1))+1:])
-                self.baseline_list.loc[line, parameter] = par.value
+            if ('molefraction' in par.name) or ('baseline' in par.name) or ('x_shift' in par.name):
+                indices = [m.start() for m in re.finditer('_', par.name)]
+                parameter = (par.name[:indices[1]])
+                spectrum = int(par.name[indices[1] + 1:indices[2]])
+                segment = int(par.name[indices[2] + 1:])
+                #print (parameter, spectrum, parameter)
+                
+                self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
                 if par.vary:
-                    self.baseline_list.loc[line, parameter + '_err'] = par.stderr
+                    self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
+
             elif ('etalon' in par.name):
-                parameter =  (par.name[:par.name.find('_',par.name.find('_', par.name.find('_')+1)+1)])
-                line=  int(par.name[par.name.find('_',par.name.find('_', par.name.find('_')+1)+1)+1:])
-                self.baseline_list.loc[line, parameter] = par.value
+                indices = [m.start() for m in re.finditer('_', par.name)]
+                parameter = par.name[:indices[2]]
+                spectrum = int(par.name[indices[2]+1:indices[3]])
+                segment = int(par.name[indices[3]+1:])
+                #print (parameter, spectrum, parameter)
+                self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
+
                 if par.vary:
-                    self.baseline_list.loc[line, parameter + '_err'] = par.stderr
+                    self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
             else:
                 parameter = par.name[:par.name.find('_line')]
                 line = int(par.name[par.name.find('_line')+6:])
                 self.lineparam_list.loc[line, parameter] = par.value
                 if par.vary:
                     self.lineparam_list.loc[line, parameter + '_err'] = par.stderr
-        self.baseline_list.to_csv(base_linelist_update_file + '.csv')
+        self.baseline_list.to_csv(base_linelist_update_file + '.csv', index = False)
         self.lineparam_list.to_csv(param_linelist_update_file + '.csv')
         
         #Calculate Baseline + Etalons and add to the Baseline term for each spectra
         for spectrum in self.dataset.spectra:
+            wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
             baseline = len(spectrum.wavenumber)*[0]
-            
-            baseline_param_array = [0]*(self.dataset.baseline_order+1)
-            fit_etalon_parameters = {}
-            for i in range(1, len(spectrum.etalons)+1):
-                fit_etalon_parameters[i] = {'amp': 0, 'freq':1, 'phase':0}
-            
-            for key, par in result.params.items():
+            for segment in set(spectrum.segments):
+                waves = wavenumber_segments[segment]
+                bound_min = np.min(indices_segments[segment])
+                bound_max = np.max(indices_segments[segment])
+                wave_rel = waves - np.min(spectrum.wavenumber)
                 
-                if ('baseline' in par.name) and (str(spectrum.spectrum_number) in par.name):
-                    baseline_param_array[ord(par.name[9:par.name.find('_',9)])-97] = np.float(par.value)
-                elif ('etalon' in par.name) and (str(spectrum.spectrum_number) in par.name[par.name.find('_', 7):]):
-                    etalon_num = int(par.name[par.name.find('_')+1: par.name.find('_', par.name.find('_')+1)])
-                    if ('amp' in par.name) and (str(etalon_num) in par.name):
-                        fit_etalon_parameters[etalon_num]['amp'] = par.value
-                    if ('freq' in par.name) and (str(etalon_num) in par.name):
-                        fit_etalon_parameters[etalon_num]['freq'] = par.value
-                    if ('phase' in par.name) and (str(etalon_num) in par.name):
-                        fit_etalon_parameters[etalon_num]['phase'] = par.value
-            
-            baseline_param_array = baseline_param_array[::-1] # reverses array to be used for polyval
-            baseline += np.polyval(baseline_param_array, spectrum.wavenumber - np.min(spectrum.wavenumber))
-            for i in range(1, len(spectrum.etalons)+1):
-                baseline += etalon(spectrum.wavenumber - np.min(spectrum.wavenumber), fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['freq'], fit_etalon_parameters[i]['phase'])
+                
+                
+                baseline_param_array = [0]*(self.dataset.baseline_order+1)
+                fit_etalon_parameters = {}
+                for i in range(1, len(spectrum.etalons)+1):
+                    fit_etalon_parameters[i] = {'amp': 0, 'freq':1, 'phase':0}
+                
+                for key, par in result.params.items():
+                    
+                    if ('baseline' in par.name) and (str(spectrum.spectrum_number) in par.name):
+                        baseline_param_array[ord(par.name[9:par.name.find('_',9)])-97] = np.float(par.value)
+                    elif ('etalon' in par.name) and (str(spectrum.spectrum_number) in par.name[par.name.find('_', 7):]):
+                        etalon_num = int(par.name[par.name.find('_')+1: par.name.find('_', par.name.find('_')+1)])
+                        if ('amp' in par.name) and (str(etalon_num) in par.name):
+                            fit_etalon_parameters[etalon_num]['amp'] = par.value
+                        if ('freq' in par.name) and (str(etalon_num) in par.name):
+                            fit_etalon_parameters[etalon_num]['freq'] = par.value
+                        if ('phase' in par.name) and (str(etalon_num) in par.name):
+                            fit_etalon_parameters[etalon_num]['phase'] = par.value
+                
+                baseline_param_array = baseline_param_array[::-1] # reverses array to be used for polyval
+                baseline[bound_min: bound_max + 1] += np.polyval(baseline_param_array, wave_rel)
+                for i in range(1, len(spectrum.etalons)+1):
+                    baseline[bound_min: bound_max +1] += etalon(wave_rel, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['freq'], fit_etalon_parameters[i]['phase'])
+                
             spectrum.set_background(baseline)
+
 
                      
 
@@ -1636,23 +1783,6 @@ class Fit_DataSet:
             
 
         
-'''
-spectrum_80 = Spectrum('15Feb19_80Torr Air_ oxygen Computer _new config_corr', 
-                       concentration = { 7 : 0.2072}, natural_abundance = True, diluent = 'air', 
-                       etalons = {1: [0.001455, 0.83629422058], 2: [ 6.2325e-04, 1.67258844116]})
-spectrum_100 = Spectrum('15Feb19_100Torr Air_ oxygen Computer _new config_corr', 
-                        concentration = { 7 : 0.2072}, natural_abundance = True, diluent = 'air', 
-                        etalons = {1: [0.001455, 0.83629422058], 2: [ 6.2325e-04, 1.67258844116]})
-spectrum_120 = Spectrum('15Feb19_120Torr Air_ Oxygen Computer _new config_corr', 
-                        concentration = { 7 : 0.2072}, natural_abundance = True, diluent = 'air',
-                        etalons = {1: [0.001455, 0.83629422058], 2: [ 6.2325e-04, 1.67258844116]})
-
-#Add all spectrum to a Dataset object
-SPECTRA = Dataset([spectrum_80, spectrum_100, spectrum_120], 'New Configuration Oxygen A-Band')  
-print (SPECTRA.plot_model_residuals())
-'''
-
-
 
 
 
