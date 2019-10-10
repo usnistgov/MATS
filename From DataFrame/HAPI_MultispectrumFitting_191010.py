@@ -1229,10 +1229,10 @@ class Fit_DataSet:
             for temperature in (self.dataset.get_number_nominal_temperatures()[1]):
                 linemix_terms_constrained.append('y_'+diluent + '_' + str(temperature))
         for spec_line in self.lineparam_list.index.values:
-            indices = [m.start() for m in re.finditer('_', line_param)]
-            index_length = len(indices)
             if self.lineparam_list.loc[spec_line]['sw'] >= self.minimum_parameter_fit_intensity / self.lineparam_list.loc[spec_line]['sw_scale_factor']:# bigger than 1 because fit_intensity / fit_intensity
                 for line_param in linelist_params:
+                    indices = [m.start() for m in re.finditer('_', line_param)]
+                    index_length = len(indices)
                     #NU
                     if line_param == 'nu' and nu_constrain:
                         if self.nu_limit:
