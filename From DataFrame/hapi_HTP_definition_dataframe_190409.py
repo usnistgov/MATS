@@ -319,6 +319,7 @@ class Spectrum:
         new_file['Alpha (ppm/cm)'] = self.alpha
         new_file['Model (ppm/cm)'] = self.model
         new_file['Residuals (ppm/cm)'] = self.residuals
+        new_file['QF'] = [self.calculate_QF()]*len(new_file)
         new_file['Background'] = self.background
         if save_file:
             new_file.to_csv(self.filename + '_saved.csv', index = False)
@@ -1228,6 +1229,8 @@ class Fit_DataSet:
             for temperature in (self.dataset.get_number_nominal_temperatures()[1]):
                 linemix_terms_constrained.append('y_'+diluent + '_' + str(temperature))
         for spec_line in self.lineparam_list.index.values:
+            indices = [m.start() for m in re.finditer('_', line_param)]
+            index_length = len(indices)
             if self.lineparam_list.loc[spec_line]['sw'] >= self.minimum_parameter_fit_intensity / self.lineparam_list.loc[spec_line]['sw_scale_factor']:# bigger than 1 because fit_intensity / fit_intensity
                 for line_param in linelist_params:
                     #NU
@@ -1261,7 +1264,7 @@ class Fit_DataSet:
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #GAMMA0
-                    elif ('gamma0_' in line_param) and ('n_' not in line_param) and (gamma0_constrain) and (not hasNumbers(line_param.replace("gamma0_", ''))):
+                    elif ('gamma0_' in line_param) and ('n_' not in line_param) and (gamma0_constrain) and (index_length==1):
                         if self.gamma0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 / self.gamma0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param] ,#(1 - (self.gamma0_limit_percent / 100))*lineparam_list.loc[int(spec_line)][line_param], 
@@ -1269,7 +1272,7 @@ class Fit_DataSet:
                                 
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
-                    elif ('gamma0_' in line_param) and ('n_' not in line_param) and (not gamma0_constrain) and (hasNumbers(line_param.replace("gamma0_", ''))):
+                    elif ('gamma0_' in line_param) and ('n_' not in line_param) and (not gamma0_constrain) and (index_length>1):
                         if self.gamma0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 / self.gamma0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],#(1 - (self.gamma0_limit_percent / 100))*lineparam_list.loc[int(spec_line)][line_param], 
@@ -1284,14 +1287,14 @@ class Fit_DataSet:
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param],self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #DELTA0
-                    elif ('delta0' in line_param) and ('n_' not in line_param) and (delta0_constrain) and (not hasNumbers(line_param.replace("delta0", ''))):
+                    elif ('delta0' in line_param) and ('n_' not in line_param) and (delta0_constrain) and (index_length==1):
                         if self.delta0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 / self.delta0_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param], 
                                   max = self.delta0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
-                    elif ('delta0_' in line_param) and ('n_' not in line_param) and (not delta0_constrain) and (hasNumbers(line_param.replace("delta0_", ''))):
+                    elif ('delta0_' in line_param) and ('n_' not in line_param) and (not delta0_constrain) and (index_length>1):
                         if self.delta0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 / self.delta0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
@@ -1306,7 +1309,7 @@ class Fit_DataSet:
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #SD Gamma
-                    elif ('SD_gamma' in line_param) and (SD_gamma_constrain) and (not hasNumbers(line_param.replace("SD_gamma", ''))):
+                    elif ('SD_gamma' in line_param) and (SD_gamma_constrain) and (index_length==2):
                         if self.SD_gamma_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 / self.SD_gamma_limit_factor) *self.lineparam_list.loc[int(spec_line)][line_param], 
@@ -1314,7 +1317,7 @@ class Fit_DataSet:
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
                             min = 0)
-                    elif ('SD_gamma' in line_param) and (not SD_gamma_constrain) and (hasNumbers(line_param.replace("SD_gamma", ''))):
+                    elif ('SD_gamma' in line_param) and (not SD_gamma_constrain) and (index_length>2):
                         if self.SD_gamma_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 / self.SD_gamma_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
@@ -1330,14 +1333,14 @@ class Fit_DataSet:
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #SD Delta
-                    elif ('SD_delta' in line_param) and (SD_delta_constrain) and (not hasNumbers(line_param.replace("SD_delta", ''))):
+                    elif ('SD_delta' in line_param) and (SD_delta_constrain) and (index_length==2):
                         if self.SD_delta_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 / self.SD_delta_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param], 
                                   max = self.SD_delta_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
-                    elif ('SD_delta' in line_param) and (not SD_delta_constrain) and (hasNumbers(line_param.replace("SD_delta", ''))):
+                    elif ('SD_delta' in line_param) and (not SD_delta_constrain) and (index_length>2):
                         if self.SD_delta_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 / self.SD_delta_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param], 
@@ -1353,14 +1356,14 @@ class Fit_DataSet:
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #nuVC
-                    elif ('nuVC' in line_param) and ('n_nuVC_' not in line_param) and (nuVC_constrain) and (not hasNumbers(line_param.replace("nuVC", ''))):
+                    elif ('nuVC' in line_param) and ('n_nuVC_' not in line_param) and (nuVC_constrain) and (index_length==1):
                         if self.nuVC_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 /self.nuVC_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
                                   max = self.nuVC_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
-                    elif ('nuVC' in line_param) and ('n_nuVC' not in line_param) and (not nuVC_constrain) and (hasNumbers(line_param.replace("nuVC", ''))):
+                    elif ('nuVC' in line_param) and ('n_nuVC' not in line_param) and (not nuVC_constrain) and (index_length>1):
                         if self.nuVC_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 / self.nuVC_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
@@ -1375,14 +1378,14 @@ class Fit_DataSet:
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])                    
                     #eta
-                    elif ('eta_' in line_param) and (eta_constrain) and (not hasNumbers(line_param.replace("eta", ''))):
+                    elif ('eta_' in line_param) and (eta_constrain) and (index_length==1):
                         if self.eta_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 / self.eta_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
                                   max = (self.eta_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
-                    elif ('eta_' in line_param) and (not eta_constrain) and (hasNumbers(line_param.replace("eta_", ''))):
+                    elif ('eta_' in line_param) and (not eta_constrain) and (index_length>1):
                         if self.eta_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 / self.eta_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
@@ -1521,12 +1524,16 @@ class Fit_DataSet:
                 fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
                         p = spectrum.pressure, T = spectrum.temperature, molefraction = fit_molefraction, 
                         natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
-                fit_coef = fit_coef * 1000000
+                fit_coef = fit_coef * 1e6
                 ## Baseline Calculation
                 baseline_param_array = [0]*(self.dataset.baseline_order+1)
                 for param in baseline_params:
-                    if ('baseline' in param) and ((str(spectrum_number) + '_' + str(segment)) in param):
-                        baseline_param_array[ord(param[9:param.find('_',9)])-97] = np.float(params[param])
+                    if ('baseline' in param):
+                        indices = [m.start() for m in re.finditer('_', param)]
+                        spectrum_num = int(param[indices[1]+1:indices[2]])
+                        segment_num = int(param[indices[2]+1:])
+                        if (spectrum_num == spectrum_number) and (segment_num == segment): 
+                            baseline_param_array[ord(param[9:param.find('_',9)])-97] = np.float(params[param])
                 baseline_param_array = baseline_param_array[::-1] # reverses array to be used for polyval
                 baseline = np.polyval(baseline_param_array, wavenumbers_relative)
                 #Etalon Calculation
