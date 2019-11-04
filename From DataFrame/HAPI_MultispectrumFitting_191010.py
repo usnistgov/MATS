@@ -487,6 +487,8 @@ class Dataset:
                 line['Spectrum Number'] = spectrum.spectrum_number
                 line['Segment Number'] = segment
                 line['Baseline Order'] = spectrum.baseline_order
+                line['Pressure'] = spectrum.get_pressure()
+                line['Temperature'] = spectrum.get_temperature()
                 line['x_shift'] = spectrum.x_shift
                 for molecule in spectrum.molefraction:
                     line['molefraction_' + (ISO[(molecule, 1)][4])] = (spectrum.molefraction[molecule])
@@ -1012,7 +1014,7 @@ class Generate_FitParam_File:
         param_linelist_df.to_csv(self.param_linelist_savename + '.csv')
         return param_linelist_df 
 
-    def generate_fit_baseline_linelist(self, vary_baseline = True, vary_molefraction = {7:True, 1:False}, vary_xshift = False, 
+    def generate_fit_baseline_linelist(self, vary_baseline = True, vary_pressure = False, vary_temperature = False,vary_molefraction = {7:True, 1:False}, vary_xshift = False, 
                                       vary_etalon_amp= False, vary_etalon_freq= False, vary_etalon_phase= False):
         base_linelist_df = self.get_base_linelist().copy()
         parameters =  (list(base_linelist_df))
@@ -1020,6 +1022,14 @@ class Generate_FitParam_File:
             if ('Baseline Order' != param) and ('Segment Number' != param):
                 base_linelist_df[param + '_err'] = 0
                 base_linelist_df[param + '_vary']= False
+            if 'Pressure' in param:
+                base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_pressure)]
+                if (vary_pressure):
+                    print ('USE CAUTION WHEN FLOATING PRESSURES')
+            if 'Temperature' in param:
+                base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_temperature)]
+                if (vary_temperature):
+                    print ('USE CAUTION WHEN FLOATING TEMPERATURES')
             if 'x_shift' in param:
                 base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_xshift)]
             if 'baseline' in param:
@@ -1078,6 +1088,8 @@ def hasNumbers(inputString):
 class Fit_DataSet:
     def __init__(self, dataset, base_linelist_file, param_linelist_file, minimum_parameter_fit_intensity = 1e-27,
                 baseline_limit = False, baseline_limit_factor = 10, 
+                pressure_limit = False, pressure_limit_factor = 10,
+                temperature_limit = False, temperature_limit_factor = 10,
                 molefraction_limit = False, molefraction_limit_factor = 10, 
                 etalon_limit = False, etalon_limit_factor = 50, #phase is constrained to +/- 2pi, 
                 x_shift_limit = False, x_shift_limit_magnitude = 0.1, 
@@ -1097,6 +1109,10 @@ class Fit_DataSet:
         self.minimum_parameter_fit_intensity = minimum_parameter_fit_intensity
         self.baseline_limit = baseline_limit
         self.baseline_limit_factor  = baseline_limit_factor
+        self.pressure_limit = pressure_limit
+        self.pressure_limit_factor = pressure_limit_factor
+        self.temperature_limit = temperature_limit
+        self.temperature_limit_factor = temperature_limit_factor
         self.etalon_limit = etalon_limit
         self.etalon_limit_factor = etalon_limit_factor
         self.molefraction_limit = molefraction_limit
@@ -1147,6 +1163,14 @@ class Fit_DataSet:
             for base_param in baseline_parameters:
                 if self.baseline_list.loc[index][base_param] == 0:
                     params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'])
+                elif ('Pressure' in base_param) and self.pressure_limit:
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
+                              min = (1 / self.pressure_limit_factor)*self.baseline_list.loc[index][base_param], 
+                              max = self.pressure_limit_factor*self.baseline_list.loc[index][base_param])
+                elif ('Temperature' in base_param) and self.temperature_limit:
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
+                              min = (1 / self.temperature_limit_factor)*self.baseline_list.loc[index][base_param], 
+                              max = self.temperature_limit_factor*self.baseline_list.loc[index][base_param])
                 elif ('molefraction' in base_param) and self.molefraction_limit:
                     params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
                               min = (1 / self.molefraction_limit_factor)*self.baseline_list.loc[index][base_param], 
@@ -1410,12 +1434,22 @@ class Fit_DataSet:
         return (params)
 
     def constrained_baseline(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
-                                    etalon_amp_segment_constrained = True, etalon_freq_segment_constrained = True, etalon_phase_segment_constrained = True):
+                                    etalon_amp_segment_constrained = True, etalon_freq_segment_constrained = True, etalon_phase_segment_constrained = True, 
+                                    pressure_segment_constrained = True, temperature_segment_constrained = True):
         spectrum_segment_min = {}
         for spectrum in self.dataset.spectra:
             spectrum_segment_min[spectrum.spectrum_number] = np.min(list(set(spectrum.segments)))
         for param in params:
-            if ('baseline' in param) and baseline_segment_constrained:
+            if ('Pressure' in param) and pressure_segment_constrained:
+                indices = [m.start() for m in re.finditer('_', param)]
+                spectrum_num = int(param[indices[0]+1:indices[1]])
+                segment_num = int(param[indices[1]+1:])
+            elif ('Temperature' in param) and temperature_segment_constrained:
+                indices = [m.start() for m in re.finditer('_', param)]
+                spectrum_num = int(param[indices[0]+1:indices[1]])
+                segment_num = int(param[indices[1]+1:])
+            
+            elif ('baseline' in param) and baseline_segment_constrained:
                 indices = [m.start() for m in re.finditer('_', param)]
                 spectrum_num = int(param[indices[1]+1:indices[2]])
                 segment_num = int(param[indices[2]+1:])
@@ -1456,7 +1490,7 @@ class Fit_DataSet:
         
         # Set-up Baseline Parameters
         for param in (list(params.valuesdict().keys())):
-            if ('molefraction' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param):
+            if ('molefraction' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param) or ('Pressure' in param) or ('Temperature' in param):
                 baseline_params.append(param)
             else:
                 linelist_params.append(param)
@@ -1520,9 +1554,12 @@ class Fit_DataSet:
                 for molecule in spectrum.molefraction:
                     if ('molefraction_'+ ISO[(molecule, 1)][4]) + '_' + str(spectrum_number) + '_' + str(segment) in baseline_params:
                         fit_molefraction[molecule] = np.float(params[('molefraction_'+ ISO[(molecule, 1)][4]) + '_' + str(spectrum_number) + '_' + str(segment)])
+                #Get Environmental Parameters
+                p = np.float(params['Pressure_' + str(spectrum_number) + '_' + str(segment)])
+                T = np.float(params['Temperature_' + str(spectrum_number) + '_' + str(segment)])               
                 #Simulate Spectra
                 fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
-                        p = spectrum.pressure, T = spectrum.temperature, molefraction = fit_molefraction, 
+                        p = p, T = T, molefraction = fit_molefraction, 
                         natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
                 fit_coef = fit_coef * 1e6
                 ## Baseline Calculation
@@ -1577,7 +1614,16 @@ class Fit_DataSet:
         if param_linelist_update_file == None:
             param_linelist_update_file = self.param_linelist_file
         for key, par in result.params.items():
-            if ('molefraction' in par.name) or ('baseline' in par.name) or ('x_shift' in par.name):
+            if ('Pressure' in par.name) or ('Temperature' in par.name):
+                indices = [m.start() for m in re.finditer('_', par.name)]
+                parameter = (par.name[:indices[0]])
+                spectrum = int(par.name[indices[0] + 1:indices[1]])
+                segment = int(par.name[indices[1] + 1:])
+                self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
+                if par.vary:
+                    self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
+                
+            elif ('molefraction' in par.name) or ('baseline' in par.name) or ('x_shift' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
                 parameter = (par.name[:indices[1]])
                 spectrum = int(par.name[indices[1] + 1:indices[2]])
