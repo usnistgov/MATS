@@ -1589,8 +1589,8 @@ class Fit_DataSet:
                 etalons = len(wavenumbers)*[0]
                 for i in range(1, len(spectrum.etalons)+1):
                     etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['freq'], fit_etalon_parameters[i]['phase']) 
-                simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = baseline + etalons + fit_coef
-                residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] - alpha_segments[segment]
+                simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = (baseline + etalons + fit_coef)
+                residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = (baseline + etalons + fit_coef) - alpha_segments[segment]
             total_simulated = np.append(total_simulated, simulated_spectra)
             total_residuals = np.append(total_residuals, residuals)
         total_residuals = np.asarray(total_residuals)
