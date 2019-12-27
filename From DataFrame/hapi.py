@@ -36,7 +36,7 @@ from numpy import sort as npsort
 from bisect import bisect
 from warnings import warn,simplefilter
 import pydoc
-from numba import jit
+
 
 # Enable warning repetitions
 simplefilter('always', UserWarning)
@@ -17608,7 +17608,7 @@ tt = __FloatType__([0.5e0,1.5e0,2.5e0,3.5e0,4.5e0,5.5e0,6.5e0,7.5e0,8.5e0,9.5e0,
 pipwoeronehalf = __FloatType__(0.564189583547756e0)
 
 # "naive" implementation for benchmarks
-@jit
+#@jit
 def cpf3(X,Y):
 
     # X,Y,WR,WI - numpy arrays
@@ -17641,7 +17641,7 @@ U = __FloatType__([1.01172805e0,-0.75197147e0,1.2557727e-2,1.00220082e-2,-2.4206
 S = __FloatType__([1.393237e0,0.231152406e0,-0.155351466e0,6.21836624e-3,9.19082986e-5,-6.27525958e-7])
 
 # Complex probability function implementation (Humlicek)
-@jit
+#@jit
 def cpf(X,Y):
 
     # X,Y,WR,WI - numpy arrays
@@ -17776,7 +17776,7 @@ def polyval(p, x):
         y += v
     return y
 """;
-@jit    
+#@jit    
 def cef(x,y,N):
     # Computes the function w(z) = exp(-zA2) erfc(-iz) using a rational
     # series with N terms. It is assumed that Im(z) > 0 or Im(z) = 0.
@@ -17797,7 +17797,7 @@ def cef(x,y,N):
 # weideman24 by default    
 #weideman24 = lambda x,y: cef(x,y,24)
 weideman = lambda x,y,n: cef(x,y,n)
-@jit
+#@jit
 def hum1_wei(x,y,n=24):
     t = y-1.0j*x
     cerf=1/sqrt(pi)*t/(0.5+t**2)
@@ -17815,7 +17815,7 @@ VARIABLES['CPF'] = hum1_wei
 #VARIABLES['CPF'] = cpf
     
 # ------------------ Hartmann-Tran Profile (HTP) ------------------------
-@jit
+#@jit
 def pcqsdhc(sg0,GamD,Gam0,Gam2,Shift0,Shift2,anuVC,eta,sg):
     #-------------------------------------------------
     #      "pCqSDHC": partially-Correlated quadratic-Speed-Dependent Hard-Collision
@@ -17996,7 +17996,7 @@ def pcqsdhc(sg0,GamD,Gam0,Gam2,Shift0,Shift2,anuVC,eta,sg):
 # ------------------  CROSS-SECTIONS, XSECT.PY --------------------------------
 
 # set interfaces for profiles
-@jit
+#@jit
 def PROFILE_HT(sg0,GamD,Gam0,Gam2,Shift0,Shift2,anuVC,eta,sg):
     """
     #-------------------------------------------------
@@ -18600,9 +18600,9 @@ def absorptionCoefficient_HT(Components=None,SourceTables=None,partitionFunction
                     EtaDB = 0.
                     if VARIABLES['DEBUG']: print('absorptionCoefficient_HT: EtaDB=%f (not found in database)'%EtaDB)
                 
-                EtaNumer += EtaDB*abun*(Gamma0T+1j*Shift0T)
+                EtaNumer += EtaDB*abun#*(Gamma0T+1j*Shift0T)
                 
-            Eta = EtaNumer/(Gamma0 + 1j*Shift0)
+            Eta = EtaNumer#/(Gamma0 + 1j*Shift0)
                     
             #   get final wing of the line according to Gamma0, OmegaWingHW and OmegaWing
             OmegaWingF = max(OmegaWing,OmegaWingHW*Gamma0,OmegaWingHW*GammaD)
