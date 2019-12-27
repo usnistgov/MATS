@@ -541,13 +541,16 @@ def max_iter(pars, iter, resid, *args, **kws):
             return False
                    
 def etalon(x, amp, freq, phase):
-    return amp*np.sin((2*np.pi * freq)*x+ phase)       
+    return amp*np.sin((2*np.pi * freq)*x+ phase)   
+
+    
         
 def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_error = 0, 
-                        SNR = 10000, baseline_terms = [0], temperature = 25, temperature_err = 0, pressure = 760, pressure_err = 0, 
+                        SNR = 10000, baseline_terms = [0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760, 
+                        pressure_err = {'per_bias': 0, 'function': None, 'params': {}}, 
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
                         natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {}, 
-                        nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30):
+                        nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 10):
     #Checks to make a Diluent dictionary has been assigned    
     if not Diluent:
         Diluent = {diluent:1.}
@@ -559,20 +562,55 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
     temperature_K = temperature + 273.15
     pressure_atm = pressure / 760
     wavenumbers = np.arange(wave_min, wave_max + wave_space, wave_space)
+
     wavenumbers_err = wavenumbers + wave_error*np.random.normal(loc = 0, scale =1, size = len(wavenumbers))
-    pressure_w_error = pressure_atm + pressure_atm*np.random.normal()*(pressure_err/100)
-    temperature_w_error = temperature_K + temperature_K*np.random.normal()*(temperature_err/100)
+    #molefraction error
     molefraction_w_error = {}        
     for species in molefraction:
         if molefraction_err == {}:
             molefraction_err[species] = 0
-        molefraction_w_error[species] = molefraction[species] + molefraction[species]*np.random.normal(loc = 0, scale =1, size = 1)*(molefraction_err[species]/100)
-    #Simulate Spectrum    
-    wavenumbers, alpha = HTP_from_DF_select(parameter_linelist, wavenumbers, wing_cutoff, wing_wavenumbers, wing_method,
-                        p = pressure_w_error, T = temperature_w_error,  molefraction = molefraction_w_error, 
-                        natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,  
-                        Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold)       
-    alpha *= 1e6
+        molefraction_w_error[species] = molefraction[species] + molefraction[species]*(molefraction_err[species]/100)
+    #pressure error
+    pressure_w_error = pressure_atm + pressure_atm*(pressure_err['per_bias']/100)#adds the pressure bias based on the percent bias of the pressure measaurement.  Can loop this or set this to be constant for all spectra
+    pressure_w_error = len(wavenumbers)*[pressure_w_error]   
+    if pressure_err['function'] == 'linear':
+        pressure_w_error += pressure_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + pressure_err['params']['b']
+    elif pressure_err['function'] == 'sine':
+        pressure_w_error += etalon((wavenumbers-np.min(wavenumbers)), pressure_err['params']['amp'], pressure_err['params']['freq'], pressure_err['params']['phase'])
+    #temperature error  
+    temperature_w_error = temperature_K + temperature_err['bias']
+    temperature_w_error = len(wavenumbers)*[temperature_w_error] 
+    if temperature_err['function'] == 'linear':
+        temperature_w_error += temperature_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + temperature_err['params']['b']
+    elif pressure_err['function'] == 'sine':
+        temperature_w_error += etalon((wavenumbers-np.min(wavenumbers)), temperature_err['params']['amp'], temperature_err['params']['freq'], temperature_err['params']['phase'])
+
+    #Define Segments
+    seg_number = np.arange(len(wavenumbers))
+    seg_number = np.abs(seg_number// (len(wavenumbers)/num_segments)).astype(int)
+
+    alpha_array = len(wavenumbers)*[0]
+    pressure_array = len(wavenumbers)*[0]
+    temperature_array = len(wavenumbers)*[0]
+    for seg in range(0, num_segments):
+
+        segment_array = (np.where(seg_number == seg)[0])
+        waves = np.take(wavenumbers, segment_array)
+        segment_pressure = np.mean(np.take(pressure_w_error, segment_array))
+        segment_temperature = np.mean(np.take(temperature_w_error, segment_array))
+
+  
+        waves, alpha = HTP_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
+                            p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, 
+                            natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,  
+                            Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold)
+        alpha_array[np.min(segment_array): np.max(segment_array)+1] = alpha * 1e6
+
+        pressure_array[np.min(segment_array): np.max(segment_array)+1] = len(alpha)*[segment_pressure]
+        temperature_array[np.min(segment_array): np.max(segment_array)+1] = len(alpha)*[segment_temperature]
+    pressure_array = np.asarray(pressure_array) - pressure_atm*(pressure_err['per_bias'] / 100)
+    temperature_array = np.asarray(temperature_array) - temperature_err['bias']
+    
     #Calculate Baseline
     baseline = np.polyval(baseline_terms, wavenumbers -np.min(wavenumbers) )
     # Calculate Etalons
@@ -584,22 +622,23 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
         x = wavenumbers - np.min(wavenumbers)
         etalon_model += amp*np.sin((2*np.pi * freq)*x+ phase) 
     #Calculate Noisy Spectrum
-    alpha_noise = alpha + np.max(alpha)*np.random.normal(loc = 0, scale =1, size = len(alpha))*1/SNR
+    alpha_noise = alpha_array + np.max(alpha_array)*np.random.normal(loc = 0, scale =1, size = len(alpha_array))*1/SNR
     alpha_noise += (baseline + etalon_model) 
     #Generate and save Simulated Spectrum File
     spectrum = pd.DataFrame()
+    spectrum['Segment Number'] = seg_number
     spectrum['Wavenumber (cm-1)'] = wavenumbers
     spectrum['Wavenumber + Noise (cm-1)'] = wavenumbers_err
-    spectrum['Alpha (ppm/cm)'] = alpha + baseline + etalon_model
+    spectrum['Alpha (ppm/cm)'] = alpha_array + baseline + etalon_model
     spectrum['Alpha + Noise (ppm/cm)'] = alpha_noise
-    spectrum['Pressure (Torr)'] = [pressure]*len(spectrum) # currently this is the pressure that was used for the simulation and not the actual one used (ie if there was error added to the pressure)
-    spectrum['Temperature (C)'] = [temperature]*len(spectrum)
+    spectrum['Pressure (Torr)'] = pressure_array*760
+    spectrum['Temperature (C)'] = temperature_array - 273.15
     spectrum.to_csv(filename + '.csv', index = False)
     # Returns a spectrum class object for facile integration into the fitting workflow
     return Spectrum(filename, molefraction = molefraction, natural_abundance = natural_abundance, diluent = diluent, Diluent = Diluent, abundance_ratio_MI = abundance_ratio_MI, spectrum_number = 1, 
                 input_freq = False, input_tau = False, 
                 pressure_column = 'Pressure (Torr)', temperature_column = 'Temperature (C)', frequency_column = 'Wavenumber + Noise (cm-1)', 
-                tau_column = 'Alpha + Noise (ppm/cm)', tau_stats_column = None, 
+                tau_column = 'Alpha + Noise (ppm/cm)', tau_stats_column = None, segment_column = 'Segment Number',
                 etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1)
         
 class Generate_FitParam_File:
@@ -1439,6 +1478,7 @@ class Fit_DataSet:
         spectrum_segment_min = {}
         for spectrum in self.dataset.spectra:
             spectrum_segment_min[spectrum.spectrum_number] = np.min(list(set(spectrum.segments)))
+
         for param in params:
             if ('Pressure' in param) and pressure_segment_constrained:
                 indices = [m.start() for m in re.finditer('_', param)]
@@ -1494,6 +1534,7 @@ class Fit_DataSet:
                 baseline_params.append(param)
             else:
                 linelist_params.append(param)
+
         for spectrum in self.dataset.spectra:
             simulated_spectra = len(spectrum.wavenumber)*[0]    
             residuals = len(spectrum.alpha)*[0]        
@@ -1676,15 +1717,4 @@ class Fit_DataSet:
                 for i in range(1, len(spectrum.etalons)+1):
                     baseline[bound_min: bound_max +1] += etalon(wave_rel, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['freq'], fit_etalon_parameters[i]['phase'])
             spectrum.set_background(baseline)
-
-
-                     
-
-                
-            
-
-        
-
-
-
-                
+     
