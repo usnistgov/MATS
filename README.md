@@ -6,25 +6,9 @@ There are two files that contain parameters that are fit in this model, one for 
 
 The fitting class fits the data and allows you to impose constraints on the parameters (min and max values), which are defined as a factor of the absolute value (for most cases the x-shift and line center terms are absolute).  The fitting class also allows you to define the wing cut-off and fitting convergence criteria. 
 
-In addition to fitting real spectra, there is a simulate_spectrum function, which returns a spectrum object that match input simulation parameters.  This is useful for performing error analysis in the same framework as primary data analysis.
+In addition to fitting real spectra, there is a simulate_spectrum function, which returns a spectrum object that match input simulation parameters.  This is useful for performing error analysis in the same framework as primary data analysis.  See wiki for more detailed discussion of functionality.
 
-**The process of fitting spectrum can be broken down into these basic components:**
-1.  [Set Up and Load Packages](Set-Up-and-Load-Packages)
-2.  Load Spectra by generating [Spectrum](Spectrum) class objects for each spectrum, which can done by loading spectrum .csv files or by using the [Simulate Spectrum](Simulate-Spectrum) function 
-3.  Create a dataset by generating a [Dataset](Dataset) class object combining all loaded spectra together (or desired subset).
-4.  Set-up fit parameters using [Generate Fit Parameters File](Generate-Fit-Parameters-File) class.  This will need a spectral parameter line list.  Provided along with the package is a separate jupyter notebook that generates one from HITRAN with the option to then manually update with the literature values of your choice.  [Generating Panda Linelists from HITRAN](Generating-Pandas-Linelists)
-5.  Use the [Edit Fit Parameters File](Edit-Fit-Parameters-File) class to edit the fit parameters files in the jupyter notebook.  Additionally, fit parameter files can be edited in the generated .csv files.
-6.  Use the [Fit Dataset](Fit-Dataset) files to perform fits.  Iterating through steps 5 and 6 will optimize fits.  
-
-
-**Code documentation can be found here for each class/definition**
-*  [HTP definition from Dataframe](HTP-definition-from-Dataframe)
-*  [Spectrum](Spectrum)
-*  [Simulate Spectrum](Simulate-Spectrum) 
-*  [Dataset](Dataset)
-*  [Generate Fit Parameters File](Generate-Fit-Parameters-File)
-*  [Edit Fit Parameters File](Edit-Fit-Parameters-File)
-*  [Fit Dataset](Fit-Dataset)
+[**Wiki**](https://gitlab.nist.gov/gitlab/ema3/HAPI-spectral-fitting/wikis/home)
 
 [**Examples**](https://gitlab.nist.gov/gitlab/ema3/HAPI-spectral-fitting/tree/master/From%20DataFrame/Examples)
 
