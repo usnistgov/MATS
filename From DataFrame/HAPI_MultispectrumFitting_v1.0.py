@@ -574,16 +574,20 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
     pressure_w_error = pressure_atm + pressure_atm*(pressure_err['per_bias']/100)#adds the pressure bias based on the percent bias of the pressure measaurement.  Can loop this or set this to be constant for all spectra
     pressure_w_error = len(wavenumbers)*[pressure_w_error]   
     if pressure_err['function'] == 'linear':
-        pressure_w_error += pressure_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + pressure_err['params']['b']
+        if 'params' in pressure_err:
+            pressure_w_error += pressure_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + pressure_err['params']['b']
     elif pressure_err['function'] == 'sine':
-        pressure_w_error += etalon((wavenumbers-np.min(wavenumbers)), pressure_err['params']['amp'], pressure_err['params']['freq'], pressure_err['params']['phase'])
+        if 'params' in pressure_err:
+            pressure_w_error += etalon((wavenumbers-np.min(wavenumbers)), pressure_err['params']['amp'], pressure_err['params']['freq'], pressure_err['params']['phase'])
     #temperature error  
     temperature_w_error = temperature_K + temperature_err['bias']
     temperature_w_error = len(wavenumbers)*[temperature_w_error] 
     if temperature_err['function'] == 'linear':
-        temperature_w_error += temperature_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + temperature_err['params']['b']
+        if 'params' in pressure_err:
+            temperature_w_error += temperature_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + temperature_err['params']['b']
     elif pressure_err['function'] == 'sine':
-        temperature_w_error += etalon((wavenumbers-np.min(wavenumbers)), temperature_err['params']['amp'], temperature_err['params']['freq'], temperature_err['params']['phase'])
+        if 'params' in pressure_err:
+            temperature_w_error += etalon((wavenumbers-np.min(wavenumbers)), temperature_err['params']['amp'], temperature_err['params']['freq'], temperature_err['params']['phase'])
 
     #Define Segments
     seg_number = np.arange(len(wavenumbers))
@@ -1717,4 +1721,3 @@ class Fit_DataSet:
                 for i in range(1, len(spectrum.etalons)+1):
                     baseline[bound_min: bound_max +1] += etalon(wave_rel, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['freq'], fit_etalon_parameters[i]['phase'])
             spectrum.set_background(baseline)
-     
