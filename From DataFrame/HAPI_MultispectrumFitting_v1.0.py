@@ -102,6 +102,89 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
     # Return two arrays corresponding to the wavenumber axis and the calculated cross-section                                                                                                      
     return (wavenumbers, np.asarray(Xsect))  
 
+def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff',
+                p = 1, T = 296, molefraction = {}, 
+                natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30):
+    
+    #Generate X-axis for simulation
+    wavenumbers = waves
+        
+    #Set Omegas to X-values
+    Xsect = [0]*len(wavenumbers)
+    
+    #define reference temperature/pressure and calculate molecular density
+    Tref = 296. # K
+    pref = 1. # atm
+    mol_dens = (p/9.869233e-7)/(1.380648813E-16*T) 
+    
+    #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
+    if not Diluent:
+        Diluent = {diluent:1.}
+
+    #Calculate line intensity
+    linelist['SigmaT'] = 0
+    linelist['SigmaTref'] = 0
+    linelist['GammaD'] = 0
+    linelist['m'] = 0
+    linelist['abun_ratio'] = 1
+    
+    for molec in linelist['molec_id'].unique():
+        for iso in linelist ['local_iso_id'].unique():
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = PYTIPS2017(molec,iso,T)
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) * 1.66053873e-27 * 1000 #cmassmol and kg conversion
+            if ( natural_abundance == False) and abundance_ratio_MI != {}:
+                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'abun_ratio'] = abundance_ratio_MI[molec][iso]
+    linelist['LineIntensity'] = EnvironmentDependency_Intensity(linelist['sw'],T,Tref,linelist['SigmaT'],linelist['SigmaTref'],linelist['elower'],linelist['nu'])
+    
+    #Calculate Doppler Broadening
+    linelist['GammaD'] = np.sqrt(2*1.380648813E-16*T*np.log(2)/linelist['m']/2.99792458e10**2)*linelist['nu']
+    # Calculated Line Parameters across Broadeners
+    linelist['Gamma0'] = 0
+    linelist['Shift0'] = 0
+    linelist['Gamma2'] = 0
+    linelist['Shift2'] = 0
+    linelist['NuVC'] = 0
+    linelist['Eta'] = 0
+    linelist['Y'] = 0
+    for species in Diluent:
+        abun = Diluent[species]
+        #Gamma0: pressure broadening coefficient HWHM
+        linelist['Gamma0'] += abun*(linelist['gamma0_%s'%species]*(p/pref)*((Tref/T)**linelist['n_gamma0_%s'%species]))
+        #Delta0
+        linelist['Shift0'] += abun*((linelist['delta0_%s'%species] + linelist['n_delta0_%s'%species]*(T-Tref))*p/pref)
+        #Gamma2
+        linelist['Gamma2'] += abun*(linelist['SD_gamma_%s'%species]*linelist['gamma0_%s'%species]*(p/pref)*((Tref/T)**linelist['n_gamma2_%s'%species]))
+        #Delta2
+        linelist['Shift2'] += abun*((linelist['SD_delta_%s'%species]*linelist['delta0_%s'%species] + linelist['n_delta2_%s'%species]*(T-Tref))*p/pref)
+        #nuVC
+        linelist['NuVC'] += abun*(linelist['nuVC_%s'%species]*(p/pref)*((Tref/T)**(linelist['n_nuVC_%s'%species])))
+        #eta
+        linelist['Eta'] += linelist['eta_%s'%species] *abun
+        #Line mixing
+        linelist['Y'] += abun*linelist['y_%s'%species]  
+    
+    #Line profile simulation cut-off determination    
+    if wing_method == 'wing_cutoff':
+        linelist['line cut-off'] = (0.5346*linelist['Gamma0'] + (0.2166*linelist['Gamma0']**2 + linelist['GammaD']**2)**0.5)*wing_cutoff
+    else:
+        linelist['line cut-off'] = wing_wavenumbers
+    
+    #Enforce  Line Intensity Simulation Threshold
+    linelist = linelist[linelist['LineIntensity']>= IntensityThreshold] 
+    
+    #For each line calculate spectrum and add to the global spectrum
+    for index, line in linelist.iterrows():
+        BoundIndexLower = bisect(wavenumbers, line['nu'] - line['line cut-off'])
+        BoundIndexUpper = bisect(wavenumbers, line['nu'] + line['line cut-off'])
+        lineshape_vals_real, lineshape_vals_imag = pcqsdhc(line['nu'],line['GammaD'],line['Gamma0'],line['Gamma2'],line['Shift0'],line['Shift2'],
+                                                    line['NuVC'],line['Eta'],wavenumbers[BoundIndexLower:BoundIndexUpper])    
+        Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
+                                                    molefraction[line['molec_id']] * line['abun_ratio'] * \
+                                                    line['LineIntensity'] * (lineshape_vals_real + line['Y']*lineshape_vals_imag) 
+    
+    # Return two arrays corresponding to the wavenumber axis and the calculated cross-section                                                                                                      
+    return (wavenumbers, np.asarray(Xsect)) 
 
 class Spectrum:
     def __init__(self, filename, molefraction = {}, natural_abundance = True, diluent = 'air', Diluent = {}, abundance_ratio_MI = {}, spectrum_number = 1, 
