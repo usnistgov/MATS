@@ -34,8 +34,13 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
     mol_dens = (p/9.869233e-7)/(1.380648813E-16*T) 
     
     #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
+    #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
     if not Diluent:
-        Diluent = {diluent:1.}
+         #Diluent = {diluent:1.}
+         if diluent == 'air':
+             Diluent = {diluent: {'composition':1, 'm':28.95734}}
+         elif diluent == 'self':
+            Diluent = {diluent: {'composition':1, 'm':0}}
 
     #Calculate line intensity
     linelist['SigmaT'] = 0
@@ -64,7 +69,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
     linelist['Eta'] = 0
     linelist['Y'] = 0
     for species in Diluent:
-        abun = Diluent[species]
+        abun = Diluent[species]['composition']
         #Gamma0: pressure broadening coefficient HWHM
         linelist['Gamma0'] += abun*(linelist['gamma0_%s'%species]*(p/pref)*((Tref/T)**linelist['n_gamma0_%s'%species]))
         #Delta0
@@ -163,7 +168,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
     linelist['Eta'] = 0
     linelist['Y'] = 0
     for species in Diluent:
-        abun = Diluent[species]
+        abun = Diluent[species]['composition]
         #Gamma0: pressure broadening coefficient HWHM
         linelist['Gamma0'] += abun*(linelist['gamma0_%s'%species]*(p/pref)*((Tref/T)**linelist['n_gamma0_%s'%species]))
         #Delta0
@@ -219,7 +224,16 @@ class Spectrum:
         self.abundance_ratio_MI = abundance_ratio_MI
         self.diluent = diluent
         if Diluent == {}: #if Diluent was not set as the dictionary of various broadeners, then define dictionary with all of the broadening contribution coming from the diluent broadener
-            self.Diluent = {self.diluent: 1}
+            if self.diluent == 'air':
+                self.Diluent = {self.diluent: {'composition':1, 'm': 28.95734}}
+            elif self.diluent == 'self': 
+                self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
+                #mass will be set during HTP_wBeta_from_DF_select if necessary 
+            else:
+                print ('If using the HTP_wBeta_from_DF_select then you need to go back and use the Diluent{diluent:{'composition': 1, 'm': mass}} format')
+                self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
+                
+                
         else:
             self.Diluent = Diluent
         self.spectrum_number = spectrum_number
@@ -271,7 +285,7 @@ class Spectrum:
         for dil in self.Diluent:
             diluent_sum+=self.Diluent[dil]
         if diluent_sum != 1:
-            print ("YOUR DILUENTS DO NOT SUM TO ONE!")
+            print ("YOUR DILUENTS DO NOT SUM TO ONE!  They sum to " + str(diluent_sum))
 
     def segment_wave_alpha(self):
         wavenumber_segments = {}
@@ -337,7 +351,14 @@ class Spectrum:
         self.abundance_ratio_MI = new_abundance_ratio_MI
     def set_diluent(self, new_diluent):
         self.diluent = new_diluent
-        self.Diluent = {new_diluent : 1}
+        if self.diluent == 'air':
+            self.Diluent = {self.diluent: {'composition':1, 'm': 28.95734}}
+        elif self.diluent == 'self': 
+            self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
+                #mass will be set during HTP_wBeta_from_DF_select if necessary 
+        else:
+            print ('If using the HTP_wBeta_from_DF_select then you need to go back and use the Diluent{diluent:{'composition': 1, 'm': mass}} format')
+            self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
     def set_Diluent(self, new_Diluent):
         self.Diluent = new_Diluent
     def set_spectrum_number(self, new_spectrum_number):
