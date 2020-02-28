@@ -129,6 +129,10 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
              Diluent = {diluent: {'composition':1, 'm':28.95734}}
          elif diluent == 'self':
             Diluent = {diluent: {'composition':1, 'm':0}}
+         else:
+            Diluent = {diluent: {'composition':1, 'm':0}}
+            print ('THIS IS GOING TO BREAK WITH A DIVISION ERROR.  GO BACK AND USE DILUENT FORMALISM FOR THE SPECTRUM DEFINITION')
+            
             
 
     #Calculate line intensity
@@ -675,10 +679,16 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
                         pressure_err = {'per_bias': 0, 'function': None, 'params': {}}, 
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
                         natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {}, 
-                        nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 10):
+                        nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False):
     #Checks to make a Diluent dictionary has been assigned    
     if not Diluent:
-        Diluent = {diluent:1.}
+         if diluent == 'air':
+             Diluent = {diluent: {'composition':1, 'm':28.95734}}
+         elif diluent == 'self':
+            Diluent = {diluent: {'composition':1, 'm':0}}
+         else:
+            Diluent = {diluent: {'composition':1, 'm':0}}
+            print ('THIS IS GOING TO BREAK WITH A DIVISION ERROR IF YOU USE THE BETA VERSION')
     #Generates a linemixing column for each Diluent
     for dil in Diluent:
         parameter_linelist['y_' + dil] = parameter_linelist['y_' + dil + '_' + str(nominal_temperature)]
@@ -728,11 +738,16 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
         segment_pressure = np.mean(np.take(pressure_w_error, segment_array))
         segment_temperature = np.mean(np.take(temperature_w_error, segment_array))
 
-  
-        waves, alpha = HTP_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
-                            p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, 
-                            natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,  
-                            Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold)
+        if beta_formalism:
+            waves, alpha = HTP_wBeta_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
+                                p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, 
+                                natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,  
+                                Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold)
+        else:
+            waves, alpha = HTP_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
+                    p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, 
+                    natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,  
+                    Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold)
         alpha_array[np.min(segment_array): np.max(segment_array)+1] = alpha * 1e6
 
         pressure_array[np.min(segment_array): np.max(segment_array)+1] = len(alpha)*[segment_pressure]
@@ -1651,7 +1666,7 @@ class Fit_DataSet:
                         params[param].set(expr = param[:indices[2]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
         return params
 
-    def simulation_model(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff'):
+    def simulation_model(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff', beta_formalism=False):
         total_simulated = []
         total_residuals = []
         baseline_params = []
@@ -1728,9 +1743,16 @@ class Fit_DataSet:
                 p = np.float(params['Pressure_' + str(spectrum_number) + '_' + str(segment)])
                 T = np.float(params['Temperature_' + str(spectrum_number) + '_' + str(segment)])               
                 #Simulate Spectra
-                fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
-                        p = p, T = T, molefraction = fit_molefraction, 
-                        natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
+                
+                if beta_formalism:
+                   fit_nu, fit_coef = HTP_wBeta_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
+                                        p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, 
+                                        natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,  
+                                        Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold)
+                else:
+                    fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
+                            p = p, T = T, molefraction = fit_molefraction, 
+                            natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
                 fit_coef = fit_coef * 1e6
                 ## Baseline Calculation
                 baseline_param_array = [0]*(self.dataset.baseline_order+1)
