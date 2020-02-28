@@ -172,7 +172,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
     linelist['Eta'] = 0
     linelist['Y'] = 0
     for species in Diluent:
-        abun = Diluent[species]['composition]
+        abun = Diluent[species]['composition']
         #Gamma0: pressure broadening coefficient HWHM
         linelist['Gamma0'] += abun*(linelist['gamma0_%s'%species]*(p/pref)*((Tref/T)**linelist['n_gamma0_%s'%species]))
         #Delta0
@@ -234,7 +234,7 @@ class Spectrum:
                 self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
                 #mass will be set during HTP_wBeta_from_DF_select if necessary 
             else:
-                print ('If using the HTP_wBeta_from_DF_select then you need to go back and use the Diluent{diluent:{'composition': 1, 'm': mass}} format')
+                print ('If using the HTP_wBeta_from_DF_select then you need to go back and use the Diluent{diluent:{"composition": 1, "m": mass}} format')
                 self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
                 
                 
@@ -361,7 +361,7 @@ class Spectrum:
             self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
                 #mass will be set during HTP_wBeta_from_DF_select if necessary 
         else:
-            print ('If using the HTP_wBeta_from_DF_select then you need to go back and use the Diluent{diluent:{'composition': 1, 'm': mass}} format')
+            print ('If using the HTP_wBeta_from_DF_select then you need to go back and use the Diluent{diluent:{"composition": 1, "m": mass}} format')
             self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
     def set_Diluent(self, new_Diluent):
         self.Diluent = new_Diluent
@@ -1745,10 +1745,9 @@ class Fit_DataSet:
                 #Simulate Spectra
                 
                 if beta_formalism:
-                   fit_nu, fit_coef = HTP_wBeta_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
-                                        p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, 
-                                        natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,  
-                                        Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold)
+                   fit_nu, fit_coef = HTP_wBeta_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
+                            p = p, T = T, molefraction = fit_molefraction, 
+                            natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
                 else:
                     fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
                             p = p, T = T, molefraction = fit_molefraction, 
