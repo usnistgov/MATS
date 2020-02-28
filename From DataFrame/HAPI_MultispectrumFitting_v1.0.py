@@ -119,7 +119,12 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
     
     #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
     if not Diluent:
-        Diluent = {diluent:1.}
+         #Diluent = {diluent:1.}
+         if diluent == 'air':
+             Diluent = {diluent: {'composition':1, 'm':28.95734}}
+         elif diluent == 'self':
+            Diluent = {diluent: {'composition':1, 'm':0}}
+            
 
     #Calculate line intensity
     linelist['SigmaT'] = 0
@@ -132,11 +137,21 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
         for iso in linelist ['local_iso_id'].unique():
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = PYTIPS2017(molec,iso,T)
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'ma'] = molecularMass(molec,iso)
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) * 1.66053873e-27 * 1000 #cmassmol and kg conversion
+            if (len(Diluent) == 1) & ('self' in Diluent):
+                Diluent['self']['mp'] = molecularMass(molec,iso)
             if ( natural_abundance == False) and abundance_ratio_MI != {}:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'abun_ratio'] = abundance_ratio_MI[molec][iso]
+    # Calculate mp
+    mp = 0
+    for diluent in Diluent:
+        mp += Diluent[diluent]['composition']*Diluent[diluent]['m']
+    linelist['alpha'] = linelist['ma'] / mp
+        
+            
+    # Get Line Intensity
     linelist['LineIntensity'] = EnvironmentDependency_Intensity(linelist['sw'],T,Tref,linelist['SigmaT'],linelist['SigmaTref'],linelist['elower'],linelist['nu'])
-    
     #Calculate Doppler Broadening
     linelist['GammaD'] = np.sqrt(2*1.380648813E-16*T*np.log(2)/linelist['m']/2.99792458e10**2)*linelist['nu']
     # Calculated Line Parameters across Broadeners
@@ -162,7 +177,13 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
         #eta
         linelist['Eta'] += linelist['eta_%s'%species] *abun
         #Line mixing
-        linelist['Y'] += abun*linelist['y_%s'%species]  
+        linelist['Y'] += abun*linelist['y_%s'%species]
+    linelist['Chi'] = linelist['NuVC'] / linelist['GammaD']
+    linelist['A'] = 0.0534 + 0.1585*np.exp(-0.451*linelist['alpha'].values)
+    linelist['B'] = 1.9595 - 0.1258*linelist['alpha'].values + 0.0056*linelist['alpha'].values**2 + 0.0050*linelist['alpha'].values**3
+    linelist['C'] = -0.0546 + 0.0672*linelist['alpha'].values - 0.0125*linelist['alpha'].values**2+0.0003*linelist['alpha'].values**3
+    linelist['D'] = 0.9466 - 0.1585*np.exp(-0.4510*linelist['alpha'].values)
+    linelist['Beta'] = linelist['A'].values*np.tanh(linelist['B'].values * np.log10(linelist['Chi'].values) + linelist['C'].values) + linelist['D'].values
     
     #Line profile simulation cut-off determination    
     if wing_method == 'wing_cutoff':
@@ -178,7 +199,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
         BoundIndexLower = bisect(wavenumbers, line['nu'] - line['line cut-off'])
         BoundIndexUpper = bisect(wavenumbers, line['nu'] + line['line cut-off'])
         lineshape_vals_real, lineshape_vals_imag = pcqsdhc(line['nu'],line['GammaD'],line['Gamma0'],line['Gamma2'],line['Shift0'],line['Shift2'],
-                                                    line['NuVC'],line['Eta'],wavenumbers[BoundIndexLower:BoundIndexUpper])    
+                                                    line['NuVC']*line['Beta'],line['Eta'],wavenumbers[BoundIndexLower:BoundIndexUpper])    
         Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
                                                     molefraction[line['molec_id']] * line['abun_ratio'] * \
                                                     line['LineIntensity'] * (lineshape_vals_real + line['Y']*lineshape_vals_imag) 
