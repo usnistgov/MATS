@@ -76,9 +76,9 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
         #nuVC
         linelist['NuVC'] += abun*(linelist['nuVC_%s'%species]*(p/pref)*((Tref/T)**(linelist['n_nuVC_%s'%species])))
         #eta
-        linelist['Eta'] += linelist['eta_%s'%species] *abun
+        linelist['Eta'] += abun*linelist['eta_%s'%species] 
         #Line mixing
-        linelist['Y'] += abun*linelist['y_%s'%species]  
+        linelist['Y'] += abun*(linelist['y_%s'%species]*(p/pref))
     
     #Line profile simulation cut-off determination    
     if wing_method == 'wing_cutoff':
