@@ -287,7 +287,7 @@ class Spectrum:
     def diluent_sum_check(self):
         diluent_sum = 0
         for dil in self.Diluent:
-            diluent_sum+=self.Diluent[dil]
+            diluent_sum+=self.Diluent[dil]['composition']
         if diluent_sum != 1:
             print ("YOUR DILUENTS DO NOT SUM TO ONE!  They sum to " + str(diluent_sum))
 
