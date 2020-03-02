@@ -1787,7 +1787,7 @@ class Fit_DataSet:
         total_residuals = np.asarray(total_residuals)
         total_simulated = np.asarray(total_simulated)
         return total_residuals
-    def fit_data(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff', xtol = 1e-7, maxfev = 2000, ftol = 1e-7):
+    def fit_data(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff', xtol = 1e-7, maxfev = 2000, ftol = 1e-7, beta_formalism = False):
         minner = Minimizer(self.simulation_model, params, xtol =xtol, maxfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
         result = minner.minimize(method = 'leastsq')#'
         return result
