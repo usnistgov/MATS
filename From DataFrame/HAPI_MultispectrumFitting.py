@@ -156,7 +156,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
     mp = 0
     for diluent in Diluent:
         mp += Diluent[diluent]['composition']*Diluent[diluent]['m']
-    linelist['alpha'] = linelist['ma'] / mp
+    linelist['alpha'] =  mp / linelist['ma']
 
         
             
@@ -194,7 +194,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
     linelist['C'] = -0.0546 + 0.0672*linelist['alpha'].values - 0.0125*linelist['alpha'].values**2+0.0003*linelist['alpha'].values**3
     linelist['D'] = 0.9466 - 0.1585*np.exp(-0.4510*linelist['alpha'].values)
     linelist['Beta'] = linelist['A'].values*np.tanh(linelist['B'].values * np.log10(linelist['Chi'].values) + linelist['C'].values) + linelist['D'].values
-
+   
     
     #Line profile simulation cut-off determination    
     if wing_method == 'wing_cutoff':
