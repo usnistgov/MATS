@@ -157,6 +157,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
     for diluent in Diluent:
         mp += Diluent[diluent]['composition']*Diluent[diluent]['m']
     linelist['alpha'] = linelist['ma'] / mp
+
         
             
     # Get Line Intensity
@@ -193,6 +194,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
     linelist['C'] = -0.0546 + 0.0672*linelist['alpha'].values - 0.0125*linelist['alpha'].values**2+0.0003*linelist['alpha'].values**3
     linelist['D'] = 0.9466 - 0.1585*np.exp(-0.4510*linelist['alpha'].values)
     linelist['Beta'] = linelist['A'].values*np.tanh(linelist['B'].values * np.log10(linelist['Chi'].values) + linelist['C'].values) + linelist['D'].values
+
     
     #Line profile simulation cut-off determination    
     if wing_method == 'wing_cutoff':
@@ -1283,7 +1285,8 @@ class Fit_DataSet:
                 SD_gamma_limit = False, SD_gamma_limit_factor  = 10, n_gamma2_limit = True, n_gamma2_limit_factor  = 10, 
                 SD_delta_limit = True, SD_delta_limit_factor  = 10, n_delta2_limit = True, n_delta2_limit_factor  = 10, 
                 nuVC_limit = False, nuVC_limit_factor  = 10, n_nuVC_limit = True, n_nuVC_limit_factor = 10, 
-                eta_limit = True, eta_limit_factor  = 10, linemixing_limit = False, linemixing_limit_factor  = 10):
+                eta_limit = True, eta_limit_factor  = 10, linemixing_limit = False, linemixing_limit_factor  = 10, 
+                beta_formalism = False):
         self.dataset = dataset
         self.base_linelist_file = base_linelist_file
         self.baseline_list = pd.read_csv(self.base_linelist_file + '.csv')#, index_col = 0
@@ -1332,6 +1335,7 @@ class Fit_DataSet:
         self.eta_limit_factor = eta_limit_factor
         self.linemixing_limit = linemixing_limit
         self.linemixing_limit_factor = linemixing_limit_factor
+        self.beta_formalism = beta_formalism
         
     def generate_params(self):
         params = Parameters()
@@ -1569,14 +1573,20 @@ class Fit_DataSet:
                                   min = (1 /self.nuVC_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
                                   max = self.nuVC_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
+                            if self.beta_formalism:
+                                params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], min = 0)
+                            else:
+                                params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('nuVC' in line_param) and ('n_nuVC' not in line_param) and (not nuVC_constrain) and (index_length>1):
                         if self.nuVC_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
                                   min = (1 / self.nuVC_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
                                   max = self.nuVC_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
+                            if self.beta_formalism:
+                                params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], min = 0)
+                            else:
+                                params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('n_nuVC' in line_param):
                         if self.n_nuVC_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
@@ -1666,7 +1676,7 @@ class Fit_DataSet:
                         params[param].set(expr = param[:indices[2]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
         return params
 
-    def simulation_model(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff', beta_formalism=False):
+    def simulation_model(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff'):
         total_simulated = []
         total_residuals = []
         baseline_params = []
@@ -1744,8 +1754,8 @@ class Fit_DataSet:
                 T = np.float(params['Temperature_' + str(spectrum_number) + '_' + str(segment)])               
                 #Simulate Spectra
                 
-                if beta_formalism:
-                   fit_nu, fit_coef = HTP_wBeta_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
+                if self.beta_formalism == True:
+                    fit_nu, fit_coef = HTP_wBeta_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
                             p = p, T = T, molefraction = fit_molefraction, 
                             natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
                 else:
@@ -1787,7 +1797,7 @@ class Fit_DataSet:
         total_residuals = np.asarray(total_residuals)
         total_simulated = np.asarray(total_simulated)
         return total_residuals
-    def fit_data(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff', xtol = 1e-7, maxfev = 2000, ftol = 1e-7, beta_formalism = False):
+    def fit_data(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff', xtol = 1e-7, maxfev = 2000, ftol = 1e-7):
         minner = Minimizer(self.simulation_model, params, xtol =xtol, maxfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
         result = minner.minimize(method = 'leastsq')#'
         return result
