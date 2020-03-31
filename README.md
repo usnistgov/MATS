@@ -8,11 +8,7 @@ The fitting class fits the data and allows you to impose constraints on the para
 
 In addition to fitting real spectra, there is a simulate_spectrum function, which returns a spectrum object that match input simulation parameters.  This is useful for performing error analysis in the same framework as primary data analysis.  See wiki for more detailed discussion of functionality.
 
-[**Wiki**](https://gitlab.nist.gov/gitlab/ema3/HAPI-spectral-fitting/wikis/home)
+The wiki contains additional documentation and instructions.  There are also examples jupyterlab notebooks and formatted linelists available in the /HAP-spectral-fitting/From DataFrame appropriately named folders.  
 
-[**Examples**](https://gitlab.nist.gov/gitlab/ema3/HAPI-spectral-fitting/tree/master/From%20DataFrame/Examples)
-
-
-[**Linelists**](https://gitlab.nist.gov/gitlab/ema3/HAPI-spectral-fitting/tree/master/From%20DataFrame/Linelists)
 
 
