@@ -674,10 +674,10 @@ class Dataset:
                         CIA_list.append(broadener + '_' + broadener)
                         
             CIA_paramlist['CIA Pair'] = CIA_list
-            CIA_paramlist['EXCH_scalar'] = [1]*len(CIA_list)
+            CIA_paramlist['EXCH_scalar'] = [0]*len(CIA_list)
             CIA_paramlist['EXCH_gamma'] = [3]*len(CIA_list)
             CIA_paramlist['EXCH_l'] = [2]*len(CIA_list)
-            CIA_paramlist['SO_scalar'] = [1]*len(CIA_list)
+            CIA_paramlist['SO_scalar'] = [0]*len(CIA_list)
             CIA_paramlist['SO_ahard'] = [7]*len(CIA_list)
             CIA_paramlist['SO_l'] = [2]*len(CIA_list)
             CIA_paramlist['bandcenter'] = [13122]*len(CIA_list)
@@ -724,6 +724,8 @@ def max_iter(pars, iter, resid, *args, **kws):
                    
 def etalon(x, amp, freq, phase):
     return amp*np.sin((2*np.pi * freq)*x+ phase)   
+
+#def 
 
     
         
