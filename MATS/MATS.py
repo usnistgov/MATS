@@ -1311,24 +1311,38 @@ class Generate_FitParam_File:
                 if 'EXCH_scalar' in param:
                     CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_EXCH_scalar)]
                 if 'EXCH_gamma' in param:
-                    print ('USE CAUTION WHEN FLOATING EXCH_GAMMA')
                     CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_EXCH_gamma)]
+                    if vary_EXCH_gamma:
+                        print ('USE CAUTION WHEN FLOATING EXCH_GAMMA')
                 if 'EXCH_l' in param:
-                    print ('USE CAUTION WHEN FLOATING EXCH_L')
                     CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_EXCH_l)]
+                    if vary_EXCH_l:
+                        print ('USE CAUTION WHEN FLOATING EXCH_L')
                 if 'SO_scalar' in param:
                     CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_SO_scalar)]
                 if 'SO_ahard' in param:
-                    print ('USE CAUTION WHEN FLOATING SO_AHARD')
                     CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_SO_ahard)]
+                    if vary_SO_ahard:
+                        print ('USE CAUTION WHEN FLOATING SO_AHARD')
                 if 'SO_l' in param:
-                    print ('USE CAUTION WHEN FLOATING SO_L')
-                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_SO_l)]   
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_SO_l)] 
+                    if vary_SO_l:
+                        print ('USE CAUTION WHEN FLOATING SO_L')
                 if 'bandcenter' in param:
                     CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_bandcenter)]   
                 if 'Nmax' in param:
-                    print ('USE CAUTION WHEN FLOATING NMAX')
-                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_Nmax)]   
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_Nmax)] 
+                    if vary_Nmax:
+                        print ('USE CAUTION WHEN FLOATING NMAX')
+            CIA_linelist_df = CIA_linelist_df[['CIA Pair', 
+                      'EXCH_scalar', 'EXCH_scalar_err', 'EXCH_scalar_vary', 
+                      'EXCH_gamma', 'EXCH_gamma_err', 'EXCH_gamma_vary',
+                      'EXCH_l', 'EXCH_l_err', 'EXCH_l_vary', 
+                      'SO_scalar', 'SO_scalar_err', 'SO_scalar_vary', 
+                      'SO_ahard', 'SO_ahard_err', 'SO_ahard_vary',
+                      'SO_l', 'SO_l_err','SO_l_vary',
+                      'bandcenter','bandcenter_err', 'bandcenter_vary', 
+                      'Nmax', 'Nmax_err', 'Nmax_vary']]
             CIA_linelist_df.to_csv(self.CIA_linelist_savename + '.csv')
             return CIA_linelist_df
         else:
