@@ -489,6 +489,7 @@ class Dataset:
         self.molecule_list = self.correct_component_list()
         self.correct_etalon_list()
         self.max_baseline_order()
+        self.broadener_list = self.get_broadener_list()
         
     def renumber_spectra(self):
         count = 1
@@ -514,6 +515,29 @@ class Dataset:
                     spectrum_molefraction_dictionary[molecule] = 0
             spectrum.set_molefraction(spectrum_molefraction_dictionary)
         return dataset_molecule_list
+    
+    def get_broadener_list(self):
+        dataset_broadener_list = []
+        for spectrum in self.spectra:
+            dataset_broadener_list += spectrum.Diluent.keys()
+        dataset_broadener_list = list(set(dataset_broadener_list))
+        return get_broadener_list
+            
+
+            
+        
+        '''
+        for spectrum in self.spectra:
+            dataset_broadener_list += (spectrum.molefraction.keys())
+        dataset_molecule_list = list(set(dataset_molecule_list))
+        for spectrum in self.spectra:
+            spectrum_molefraction_dictionary = spectrum.get_molefraction()
+            for molecule in dataset_molecule_list:
+                if molecule not in spectrum_molefraction_dictionary:
+                    spectrum_molefraction_dictionary[molecule] = 0
+            spectrum.set_molefraction(spectrum_molefraction_dictionary)
+        return dataset_molecule_list
+        '''
 
     def correct_etalon_list(self):
         dataset_etalon_list = []
