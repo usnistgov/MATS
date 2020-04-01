@@ -524,20 +524,6 @@ class Dataset:
         return dataset_broadener_list
             
 
-            
-        
-        '''
-        for spectrum in self.spectra:
-            dataset_broadener_list += (spectrum.molefraction.keys())
-        dataset_molecule_list = list(set(dataset_molecule_list))
-        for spectrum in self.spectra:
-            spectrum_molefraction_dictionary = spectrum.get_molefraction()
-            for molecule in dataset_molecule_list:
-                if molecule not in spectrum_molefraction_dictionary:
-                    spectrum_molefraction_dictionary[molecule] = 0
-            spectrum.set_molefraction(spectrum_molefraction_dictionary)
-        return dataset_molecule_list
-        '''
 
     def correct_etalon_list(self):
         dataset_etalon_list = []
@@ -670,13 +656,14 @@ class Dataset:
             CIA_paramlist = pd.DataFrame()
             CIA_list = []
             for molecule in self.molecule_list:
+                molecule_name = ISO[(molecule, 1)][4]
                 for broadener in self.broadener_list:
                     if broadener == 'self':
-                        if molecule + '_' + molecule not in CIA_list:
-                            CIA_list.append(molecule + '_' + molecule)
+                        if molecule_name + '_' + molecule_name not in CIA_list:
+                            CIA_list.append(molecule_name + '_' + molecule_name)
                     else:
-                        if (molecule + '_' + broadener not in CIA_list) & (broadener + '_' + molecule not in CIA_list):
-                            CIA_list.append(molecule + '_' + broadener)
+                        if (molecule_name + '_' + broadener not in CIA_list) & (broadener + '_' + molecule_name not in CIA_list):
+                            CIA_list.append(molecule_name + '_' + broadener)
                     if (broadener + '_' + broadener not in CIA_list):
                         CIA_list.append(broadener + '_' + broadener)
                         
