@@ -840,14 +840,21 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
                 etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1)
         
 class Generate_FitParam_File:
-    def __init__ (self, dataset, param_linelist, base_linelist, 
+    def __init__ (self, dataset, param_linelist, base_linelist, CIA_linelist = None, 
                   lineprofile = 'VP', linemixing = False, threshold_intensity = 1e-30, fit_intensity = 1e-26, fit_window = 1.5, sim_window = 5, 
-                  param_linelist_savename = 'Parameter_LineList', base_linelist_savename = 'Baseline_LineList', 
+                  param_linelist_savename = 'Parameter_LineList', base_linelist_savename = 'Baseline_LineList', CIA_linelist_savename = 'CIA_LineList', 
                  nu_constrain = True, sw_constrain = True, gamma0_constrain = True, delta0_constrain = True, aw_constrain = True, as_constrain = True, 
                  nuVC_constrain = True, eta_constrain =True, linemixing_constrain = True):
         self.dataset = dataset
         self.param_linelist = param_linelist
         self.base_linelist = base_linelist
+        if self.dataset.CIA_model == None:
+            self.CIA_linelist = None
+            self.CIA_linelist_savename = None
+        else:
+            self.CIA_linelist = CIA_linelist
+            self.CIA_linelist_savename = CIA_linelist_savename
+
         self.lineprofile = lineprofile
         self.linemixing = linemixing
         self.threshold_intensity = threshold_intensity
@@ -871,6 +878,8 @@ class Generate_FitParam_File:
         return self.param_linelist
     def get_base_linelist(self):
         return self.base_linelist
+    def get_CIA_linelist(self):
+        return self.CIA_linelist
     def generate_fit_param_linelist_from_linelist(self, vary_nu = {7:{1:True, 2:False, 3:False}, 1:{1:False}}, vary_sw = {7:{1:True, 2:False, 3:False}},
                                    vary_gamma0 = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_gamma0 = {}, 
                                    vary_delta0 = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_delta0 = {}, 
@@ -1286,6 +1295,47 @@ class Generate_FitParam_File:
         base_linelist_df = base_linelist_df.reindex(sorted(base_linelist_df.columns), axis=1)
         base_linelist_df.to_csv(self.base_linelist_savename + '.csv')
         return base_linelist_df
+    
+    def generate_fit_KarmanCIA_linelist(self, vary_EXCH_scalar = False, vary_EXCH_gamma = False, vary_EXCH_l = False, 
+                                  vary_SO_scalar = False, vary_SO_ahard = False, vary_SO_l = False, vary_bandcenter = False, vary_Nmax = False):
+        if self.dataset.CIA_model == 'Karman':
+            #Initial Calculation of the Karman CIA based on initial guesses and application to spectra
+                        
+            # Set parameter floats
+            CIA_linelist_df = self.get_CIA_linelist().copy()
+            parameters =  (list(CIA_linelist_df))
+            for param in parameters:
+                if ('CIA Pair' != param):
+                    CIA_linelist_df[param + '_err'] = 0
+                    CIA_linelist_df[param + '_vary']= False
+                if 'EXCH_scalar' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_EXCH_scalar)]
+                if 'EXCH_gamma' in param:
+                    print ('USE CAUTION WHEN FLOATING EXCH_GAMMA')
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_EXCH_gamma)]
+                if 'EXCH_l' in param:
+                    print ('USE CAUTION WHEN FLOATING EXCH_L')
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_EXCH_l)]
+                if 'SO_scalar' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_SO_scalar)]
+                if 'SO_ahard' in param:
+                    print ('USE CAUTION WHEN FLOATING SO_AHARD')
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_SO_ahard)]
+                if 'SO_l' in param:
+                    print ('USE CAUTION WHEN FLOATING SO_L')
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_SO_l)]   
+                if 'bandcenter' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_bandcenter)]   
+                if 'Nmax' in param:
+                    print ('USE CAUTION WHEN FLOATING NMAX')
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_Nmax)]   
+            CIA_linelist_df.to_csv(self.CIA_linelist_savename + '.csv')
+            return CIA_linelist_df
+        else:
+            print ('Generate_fit_KarmanCIA_linelist only applies to the CIA files generated for the Karman CIA model')
+            return None
+            
+
     
 class Edit_Fit_Param_Files:
     def __init__(self, base_linelist_file, param_linelist_file, new_base_linelist_file = None, new_param_linelist_file = None):
