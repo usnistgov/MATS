@@ -285,6 +285,7 @@ class Spectrum:
         self.model = len(self.alpha)*[0]
         self.residuals = self.alpha - self.model
         self.background = len(self.alpha)*[0]
+        self.cia = len(self.alpha)*[0]
     
     def diluent_sum_check(self):
         diluent_sum = 0
@@ -345,6 +346,8 @@ class Spectrum:
         return self.residuals
     def get_background(self):
         return self.background
+    def get_cia(self):
+        return self.cia
     def get_nominal_temperature(self):
         return self.nominal_temperature
 
@@ -399,6 +402,8 @@ class Spectrum:
         self.residuals = new_residuals     
     def set_background(self, new_background):
         self.background = new_background
+    def set_cia(self, new_cia):
+        self.cia = new_cia
     def set_nominal_temperature(self, new_nominal_temperature):
         self.nominal_temperature = new_nominal_temperature 
 
@@ -452,6 +457,7 @@ class Spectrum:
         new_file['Residuals (ppm/cm)'] = self.residuals
         new_file['QF'] = [self.calculate_QF()]*len(new_file)
         new_file['Background'] = self.background
+        new_file['CIA (ppm/cm)'] = self.cia 
         if save_file:
             new_file.to_csv(self.filename + '_saved.csv', index = False)
         return (new_file)
