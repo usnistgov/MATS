@@ -486,7 +486,7 @@ class Dataset:
         self.baseline_order = baseline_order
         self.CIA_model = CIA_model
         self.renumber_spectra()
-        self.correct_component_list()
+        self.molecule_list = self.correct_component_list()
         self.correct_etalon_list()
         self.max_baseline_order()
         
@@ -513,6 +513,7 @@ class Dataset:
                 if molecule not in spectrum_molefraction_dictionary:
                     spectrum_molefraction_dictionary[molecule] = 0
             spectrum.set_molefraction(spectrum_molefraction_dictionary)
+        return dataset_molecule_list
 
     def correct_etalon_list(self):
         dataset_etalon_list = []
@@ -642,6 +643,7 @@ class Dataset:
         if self.CIA_model == None:
             return None
         elif self.CIA_model == 'Karman':
+            print (self.spectra)
             CIA_paramlist = pd.DataFrame()
             # Determine all combos of molecules
             # For each combo make a line in CIA_paramlist
