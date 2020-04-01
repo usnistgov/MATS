@@ -480,10 +480,11 @@ class Spectrum:
         plt.show()
 
 class Dataset:
-    def __init__(self, spectra, dataset_name, baseline_order = 1):
+    def __init__(self, spectra, dataset_name, baseline_order = 1, CIA_model = None):
         self.spectra = spectra
         self.dataset_name = dataset_name
         self.baseline_order = baseline_order
+        self.CIA_model = CIA_model
         self.renumber_spectra()
         self.correct_component_list()
         self.correct_etalon_list()
@@ -524,6 +525,7 @@ class Dataset:
                 if etalon_number not in spectrum_etalon_dictionary:
                     spectrum_etalon_dictionary[etalon_number] = [0,0]
             spectrum.set_etalons(spectrum_etalon_dictionary)
+
 
     def get_etalons(self):
         dataset_etalon_list = []
@@ -636,6 +638,17 @@ class Dataset:
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
         baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv')
         return baseline_paramlist
+    def generate_CIA_paramlist(self):
+        if self.CIA_model == None:
+            return None
+        elif self.CIA_model == 'Karman':
+            CIA_paramlist = pd.DataFrame()
+            # Determine all combos of molecules
+            # For each combo make a line in CIA_paramlist
+            CIA_paramlist.to_csv(self.dataset_name + '_CIA_paramlist.csv') 
+            return CIA_paramlist
+        else:
+            return None
 
     def generate_summary_file(self, save_file = False):
         summary_file = pd.DataFrame()
