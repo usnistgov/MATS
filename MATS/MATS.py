@@ -521,7 +521,7 @@ class Dataset:
         for spectrum in self.spectra:
             dataset_broadener_list += spectrum.Diluent.keys()
         dataset_broadener_list = list(set(dataset_broadener_list))
-        return get_broadener_list
+        return dataset_broadener_list
             
 
             
@@ -667,10 +667,29 @@ class Dataset:
         if self.CIA_model == None:
             return None
         elif self.CIA_model == 'Karman':
-            print (self.spectra)
             CIA_paramlist = pd.DataFrame()
-            # Determine all combos of molecules
-            # For each combo make a line in CIA_paramlist
+            CIA_list = []
+            for molecule in self.molecule_list:
+                for broadener in self.broadener_list:
+                    if broadener == 'self':
+                        if molecule + '_' + molecule not in CIA_list:
+                            CIA_list.append(molecule + '_' + molecule)
+                    else:
+                        if (molecule + '_' + broadener not in CIA_list) & (broadener + '_' + molecule not in CIA_list):
+                            CIA_list.append(molecule + '_' + broadener)
+                    if (broadener + '_' + broadener not in CIA_list):
+                        CIA_list.append(broadener + '_' + broadener)
+                        
+            CIA_paramlist['CIA Pair'] = CIA_list
+            CIA_paramlist['EXCH_scalar'] = [1]*len(CIA_list)
+            CIA_paramlist['EXCH_gamma'] = [3]*len(CIA_list)
+            CIA_paramlist['EXCH_l'] = [2]*len(CIA_list)
+            CIA_paramlist['SO_scalar'] = [1]*len(CIA_list)
+            CIA_paramlist['SO_ahard'] = [7]*len(CIA_list)
+            CIA_paramlist['SO_l'] = [2]*len(CIA_list)
+            CIA_paramlist['bandcenter'] = [13122]*len(CIA_list)
+            CIA_paramlist['Nmax'] = [31]*len(CIA_list)
+            #index definition?            
             CIA_paramlist.to_csv(self.dataset_name + '_CIA_paramlist.csv') 
             return CIA_paramlist
         else:
