@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 from bisect import bisect
-import sys
+#import sys
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import re
@@ -13,9 +13,12 @@ import seaborn as sns
 sns.set_style("whitegrid")
 sns.set_style("ticks")
 sns.set_context("poster")
-# Set HAPI location and upload necessary portions
-sys.path.append(r'C:\Users\ema3\Documents\Python Scripts\HAPI')#Add hapi.py folder location to system path
+#Files that should be in the same folder
 from hapi import EnvironmentDependency_Intensity, PYTIPS2017, molecularMass, pcqsdhc, ISO
+from Karman_CIA import Karman_CIA_Model
+
+
+
 
 
 def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff',
@@ -670,8 +673,6 @@ class Dataset:
                     else:
                         if (molecule_name + '_' + broadener not in CIA_list) & (broadener + '_' + molecule_name not in CIA_list):
                             CIA_list.append(molecule_name + '_' + broadener)
-                    if (broadener + '_' + broadener not in CIA_list):
-                        CIA_list.append(broadener + '_' + broadener)
                         
             CIA_paramlist['CIA Pair'] = CIA_list
             CIA_paramlist['EXCH_scalar'] = [0]*len(CIA_list)
@@ -725,9 +726,7 @@ def max_iter(pars, iter, resid, *args, **kws):
 def etalon(x, amp, freq, phase):
     return amp*np.sin((2*np.pi * freq)*x+ phase)   
 
-#def 
-
-    
+   
         
 def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_error = 0, 
                         SNR = 10000, baseline_terms = [0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760, 
@@ -1297,15 +1296,32 @@ class Generate_FitParam_File:
         base_linelist_df = base_linelist_df.reindex(sorted(base_linelist_df.columns), axis=1)
         base_linelist_df.to_csv(self.base_linelist_savename + '.csv')
         return base_linelist_df
-    
+        
     def generate_fit_KarmanCIA_linelist(self, vary_EXCH_scalar = False, vary_EXCH_gamma = False, vary_EXCH_l = False, 
-                                  vary_SO_scalar = False, vary_SO_ahard = False, vary_SO_l = False, vary_bandcenter = False, vary_Nmax = False):
+                                  vary_SO_scalar = False, vary_SO_ahard = False, vary_SO_l = False, vary_bandcenter = False, vary_Nmax = False, wave_step = 5):
+        CIA_linelist_df = self.get_CIA_linelist().copy()
+        parameters =  (list(CIA_linelist_df))
+        #Initial Calculation of the Karman CIA based on initial guesses and application to spectra
         if self.dataset.CIA_model == 'Karman':
-            #Initial Calculation of the Karman CIA based on initial guesses and application to spectra
-                        
+            CIA_pairs = CIA_linelist_df['CIA Pair'].unique()
+            for spectrum in self.dataset.spectra:
+                CIA = len(spectrum.wavenumber)*[0]
+                for CIA_pair in CIA_pairs:
+                    for molecule in self.dataset.molecule_list:
+                        molecule_name = ISO[(molecule, 1)][4]
+                        for broadener in self.dataset.broadener_list:
+                            broadener_composition = spectrum.Diluent[broadener]['composition']
+                            if broadener == 'self':
+                                broadener = molecule_name
+                            if (molecule_name in CIA_pair) and (broadener in CIA_pair):
+                                CIA_select = CIA_linelist_df[CIA_linelist_df['CIA Pair'] == CIA_pair]
+                                CIA += broadener_composition*Karman_CIA_Model(spectrum.wavenumber, spectrum.get_pressure_torr(), spectrum.get_temperature_C(), wave_step = wave_step,
+                                     EXCH_scalar = CIA_select['EXCH_scalar'].values[0], EXCH_gamma = CIA_select['EXCH_gamma'].values[0], EXCH_l = CIA_select['EXCH_l'].values[0],
+                                     SO_scalar = CIA_select['SO_scalar'].values[0], SO_ahard = CIA_select['SO_ahard'].values[0], SO_l = CIA_select['SO_l'].values[0],
+                                     bandcenter = CIA_select['bandcenter'].values[0], Nmax = CIA_select['Nmax'].values[0])                  
+                spectrum.set_cia(CIA)
+
             # Set parameter floats
-            CIA_linelist_df = self.get_CIA_linelist().copy()
-            parameters =  (list(CIA_linelist_df))
             for param in parameters:
                 if ('CIA Pair' != param):
                     CIA_linelist_df[param + '_err'] = 0
