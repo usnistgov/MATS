@@ -1265,6 +1265,8 @@ class Generate_FitParam_File:
                                       vary_etalon_amp= False, vary_etalon_freq= False, vary_etalon_phase= False):
         base_linelist_df = self.get_base_linelist().copy()
         parameters =  (list(base_linelist_df))
+
+        #Generate Fit Baseline file
         for param in parameters:
             if ('Baseline Order' != param) and ('Segment Number' != param):
                 base_linelist_df[param + '_err'] = 0
@@ -1405,7 +1407,8 @@ def hasNumbers(inputString):
     return False
 
 class Fit_DataSet:
-    def __init__(self, dataset, base_linelist_file, param_linelist_file, minimum_parameter_fit_intensity = 1e-27,
+    def __init__(self, dataset, base_linelist_file, param_linelist_file, CIA_linelist_file = None,
+                minimum_parameter_fit_intensity = 1e-27,
                 baseline_limit = False, baseline_limit_factor = 10, 
                 pressure_limit = False, pressure_limit_factor = 10,
                 temperature_limit = False, temperature_limit_factor = 10,
@@ -1419,13 +1422,20 @@ class Fit_DataSet:
                 SD_gamma_limit = False, SD_gamma_limit_factor  = 10, n_gamma2_limit = True, n_gamma2_limit_factor  = 10, 
                 SD_delta_limit = True, SD_delta_limit_factor  = 10, n_delta2_limit = True, n_delta2_limit_factor  = 10, 
                 nuVC_limit = False, nuVC_limit_factor  = 10, n_nuVC_limit = True, n_nuVC_limit_factor = 10, 
-                eta_limit = True, eta_limit_factor  = 10, linemixing_limit = False, linemixing_limit_factor  = 10, 
-                beta_formalism = False):
+                eta_limit = True, eta_limit_factor  = 10, 
+                linemixing_limit = False, linemixing_limit_factor  = 10, 
+                beta_formalism = False, 
+                CIA_calculate = False, CIA_model = None):
         self.dataset = dataset
         self.base_linelist_file = base_linelist_file
         self.baseline_list = pd.read_csv(self.base_linelist_file + '.csv')#, index_col = 0
         self.param_linelist_file = param_linelist_file
         self.lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
+        if self.CIA_linelist_file != None:
+            self.CIA_linelist_file = CIA_linelist_file
+            self.CIAparam_list = pd.read_csv(self.CIA_linelist_file + '.csv')
+        else:
+            self.CIAparam_list = None
         self.minimum_parameter_fit_intensity = minimum_parameter_fit_intensity
         self.baseline_limit = baseline_limit
         self.baseline_limit_factor  = baseline_limit_factor
@@ -1470,6 +1480,8 @@ class Fit_DataSet:
         self.linemixing_limit = linemixing_limit
         self.linemixing_limit_factor = linemixing_limit_factor
         self.beta_formalism = beta_formalism
+        self.CIA_calculate = CIA_calculate
+        self.CIA_model = CIA_model
         
     def generate_params(self):
         params = Parameters()
@@ -1513,7 +1525,18 @@ class Fit_DataSet:
                               max = self.x_shift_limit_magnitude + self.baseline_list.loc[index][base_param])   
                 else:
                     params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'])
-        
+        # CIA parameters
+        if self.CIA_calculate and (self.CIAparam_list!= None) and (self.CIA_model):
+            CIA_parameters = []
+            for CIA_param in list(self.CIAparam_list):
+                if ('_vary' not in CIA_param) and ('_err' not in CIA_param) and ('CIA pair' not in CIA_param):
+                    CIA_parameters.append(CIA_param)
+            for index in self.CIAparam_list.index.values:
+                CIA_pair = self.CIAparam_list.iloc[index]['CIA Pair']
+                for CIA_param in CIA_parameters:
+                    params.add(CIA_param + '_'+ CIA_pair, self.CIAparam_list.loc[index][CIA_param], self.CIAparam_list.loc[index][CIA_param + '_vary'])
+
+            
         #Lineshape parameters
         linelist_params = []
         for line_param in list(self.lineparam_list):
