@@ -132,12 +132,12 @@ def EXCH(omegas, gamma=3, lexch=2, Nmax=31, Temp=296):
 def Karman_CIA_Model(wavenumbers, pressure, temperature, wave_step = 5,
                      EXCH_scalar = 1, EXCH_gamma = 3, EXCH_l = 2,
                      SO_scalar = 1, SO_ahard = 7, SO_l = 2,
-                     band_center = 13122, Nmax = 31):
+                     bandcenter = 13122, Nmax = 31):
     #X-Axis
     wave_min = np.min(wavenumbers)
     wave_max = np.max(wavenumbers)
     sim_wave = np.arange(wave_min, wave_max + wave_step, wave_step)
-    omegas = sim_wave - band_center
+    omegas = sim_wave - bandcenter
     #Density Correction
     amagat = (760 / (62.36357736*273.15)) #mol / L
     at_P_T = (pressure/ (62.36357736*(temperature+273.15)))
@@ -152,7 +152,7 @@ def Karman_CIA_Model(wavenumbers, pressure, temperature, wave_step = 5,
     else:
         VGSO = SO_scalar*SO(omegas, ahard=SO_ahard , lso=SO_l, Nmax=Nmax, Temp=temperature + 273.15)
     #Add the Exchange and SO components and correct for density
-    CIA_model_sim = (VGEXCH + VGSO)*density_correction
+    CIA_model_sim = (np.asarray(VGEXCH) + np.asarray(VGSO))*density_correction
     f = interpolate.interp1d(sim_wave, CIA_model_sim)
     return f(wavenumbers)
     
