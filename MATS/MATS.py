@@ -684,7 +684,7 @@ class Dataset:
             CIA_paramlist['bandcenter'] = [13122]*len(CIA_list)
             CIA_paramlist['Nmax'] = [31]*len(CIA_list)
             #index definition?            
-            CIA_paramlist.to_csv(self.dataset_name + '_CIA_paramlist.csv') 
+            CIA_paramlist.to_csv(self.dataset_name + '_CIA_paramlist.csv', index = False) 
             return CIA_paramlist
         else:
             return None
@@ -1366,7 +1366,7 @@ class Generate_FitParam_File:
                       'SO_l', 'SO_l_err','SO_l_vary',
                       'bandcenter','bandcenter_err', 'bandcenter_vary', 
                       'Nmax', 'Nmax_err', 'Nmax_vary']]
-            CIA_linelist_df.to_csv(self.CIA_linelist_savename + '.csv')
+            CIA_linelist_df.to_csv(self.CIA_linelist_savename + '.csv', index = False)
             return CIA_linelist_df
         else:
             print ('Generate_fit_KarmanCIA_linelist only applies to the CIA files generated for the Karman CIA model')
@@ -1434,6 +1434,7 @@ class Fit_DataSet:
         self.baseline_list = pd.read_csv(self.base_linelist_file + '.csv')#, index_col = 0
         self.param_linelist_file = param_linelist_file
         self.lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
+        self.CIA_linelist_file = CIA_linelist_file
         if self.CIA_linelist_file != None:
             self.CIA_linelist_file = CIA_linelist_file
             self.CIAparam_list = pd.read_csv(self.CIA_linelist_file + '.csv')
@@ -1530,15 +1531,16 @@ class Fit_DataSet:
                 else:
                     params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'])
         # CIA parameters
-        if self.CIA_calculate and (self.CIAparam_list!= None) and (self.CIA_model != None):
-            CIA_parameters = []
-            for CIA_param in list(self.CIAparam_list):
-                if ('_vary' not in CIA_param) and ('_err' not in CIA_param) and ('CIA pair' not in CIA_param):
-                    CIA_parameters.append(CIA_param)
-            for index in self.CIAparam_list.index.values:
-                CIA_pair = self.CIAparam_list.iloc[index]['CIA Pair']
-                for CIA_param in CIA_parameters:
-                    params.add(CIA_param + '_'+ CIA_pair, self.CIAparam_list.loc[index][CIA_param], self.CIAparam_list.loc[index][CIA_param + '_vary'])
+        if self.CIA_calculate & (self.CIA_linelist_file != None):
+            if (self.CIA_model != None):
+                CIA_parameters = []
+                for CIA_param in list(self.CIAparam_list):
+                    if ('_vary' not in CIA_param) and ('_err' not in CIA_param) and ('CIA Pair' not in CIA_param):
+                        CIA_parameters.append(CIA_param)
+                for index in self.CIAparam_list.index.values:
+                    CIA_pair = self.CIAparam_list.iloc[index]['CIA Pair']
+                    for CIA_param in CIA_parameters:
+                        params.add(CIA_param + '_'+ CIA_pair, self.CIAparam_list.loc[index][CIA_param], self.CIAparam_list.loc[index][CIA_param + '_vary'])
 
             
         #Lineshape parameters
