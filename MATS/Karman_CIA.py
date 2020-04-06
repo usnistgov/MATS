@@ -146,14 +146,14 @@ def Karman_CIA_Model(wavenumbers, pressure, temperature, wave_step = 5,
     if EXCH_scalar == 0:
         VGEXCH = len(omegas)*[0]
     else:
-        VGEXCH = EXCH_scalar*EXCH(omegas, gamma=EXCH_gamma, lexch=EXCH_l, Nmax=Nmax, Temp=temperature + 273.15)
+        VGEXCH = EXCH_scalar*EXCH(omegas, gamma=EXCH_gamma, lexch=int(EXCH_l), Nmax=Nmax, Temp=temperature + 273.15)
     if SO_scalar == 0:
         VGSO = len(omegas)*[0]
     else:
-        VGSO = SO_scalar*SO(omegas, ahard=SO_ahard , lso=SO_l, Nmax=Nmax, Temp=temperature + 273.15)
+        VGSO = SO_scalar*SO(omegas, ahard=SO_ahard , lso=int(SO_l), Nmax=Nmax, Temp=temperature + 273.15)
     #Add the Exchange and SO components and correct for density
     CIA_model_sim = (np.asarray(VGEXCH) + np.asarray(VGSO))*density_correction
-    f = interpolate.interp1d(sim_wave, CIA_model_sim)
+    f = interpolate.interp1d(sim_wave, CIA_model_sim, bounds_error = False, fill_value = 'extrapolate')
     return f(wavenumbers)
     
 
