@@ -1258,7 +1258,7 @@ class Generate_FitParam_File:
             ordered_list.append(item + '_err')
             ordered_list.append(item + '_vary')
         param_linelist_df = param_linelist_df[ordered_list]
-        param_linelist_df.to_csv(self.param_linelist_savename + '.csv', index = False)
+        param_linelist_df.to_csv(self.param_linelist_savename + '.csv') #
         return param_linelist_df 
 
     def generate_fit_baseline_linelist(self, vary_baseline = True, vary_pressure = False, vary_temperature = False,vary_molefraction = {7:True, 1:False}, vary_xshift = False, 
@@ -1400,7 +1400,7 @@ class Edit_Fit_Param_Files:
         return param_widget
     def save_editted_paramlist(self, param_widget):
         param_linelist_df = param_widget.get_changed_df()
-        param_linelist_df.to_csv(self.new_param_linelist_file + '.csv', index = False) 
+        param_linelist_df.to_csv(self.new_param_linelist_file + '.csv') 
         return param_linelist_df
      
 def hasNumbers(inputString):
@@ -2058,7 +2058,7 @@ class Fit_DataSet:
         self.baseline_list.to_csv(base_linelist_update_file + '.csv', index = False)
         if CIA_linelist_update_file != None:
             self.CIAparam_list.to_csv(CIA_linelist_update_file + '.csv', index = False)
-        self.lineparam_list.to_csv(param_linelist_update_file + '.csv', index = False)
+        self.lineparam_list.to_csv(param_linelist_update_file + '.csv')
         #Calculated CIA and add to the CIA term for each spectra
         if self.CIA_calculate and self.CIA_model == 'Karman':
             for spectrum in self.dataset.spectra:
