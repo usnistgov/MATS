@@ -56,7 +56,7 @@ Links
 
 `NIST Optical Measurements Group <https://www.nist.gov/mml/csd/optical-measurements-group>`_
 
-`NIST home page <http://nist.gov>`_
+`NIST Home Page <http://nist.gov>`_
 
   
 Indices and tables
