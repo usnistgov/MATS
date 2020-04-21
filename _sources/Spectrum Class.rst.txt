@@ -1,2 +1,17 @@
 Spectrum Class
-**************
+==============
+
+.. currentmodule:: MATS.Spectrum
+
+.. autosummary::
+   MATS.Spectrum
+   MATS.Spectrum.calculate_QF
+   MATS.Spectrum.fft_spectrum
+   MATS.Spectrum.plot_freq_tau
+   MATS.Spectrum.plot_model_residuals
+   MATS.Spectrum.plot_wave_alpha
+   MATS.Spectrum.save_spectrum_info
+   MATS.Spectrum.segment_wave_alpha
+
+
+

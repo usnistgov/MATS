@@ -4,84 +4,73 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>MATS: Multi-spectrum Analysis Tool for Spectroscopy &#8212; MATS v1.0 documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <title>MATS: Multi-spectrum Analysis Tool for Spectroscopy &#8212; MATS 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css" />
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/language_data.js"></script>
+    <script src="https://pages.nist.gov/nist-header-footer/js/jquery-1.9.0.min.js"></script>
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js"></script>
+    <script id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-42404149-54&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+    <script src="https://code.jquery.com/jquery.1.12.4.min.js"></script>
+    <script src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
+    <script src="_static/leave_notice.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="MATS Overview" href="MATS Overview.html" />
-<link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
-  <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
-  <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
-
-
-<script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
-<script>
-$(document).ready(function(){
-  // Mark external (non-nist.gov) A tags with class "external"
-  //If the adress start with https and ends with nist.gov
-  var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)');
-  //Regex to find address that start with https
-  var re_absolute_address = new RegExp('^((https?:)?\/\/)');
-  $("a").each(function(){
-    var url=$(this).attr('href');
-    if(re_nist.test(url) || !re_absolute_address.test(url)){
-      $(this).addClass('local');
-    }else{
-      //This a href appears to be external, so tag it
-      $(this).addClass('external');
-    }
-  });
-  // Add leaveNotice to external A elements
-  $('a.external').leaveNotice();
-});
-</script>
-<link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
-
+    <link rel="next" title="Getting Started" href="Getting Started.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="MATS Overview.html" title="MATS Overview"
-             accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">MATS v1.0 documentation</a> &#187;</li> 
-      </ul>
-    </div>  
+  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="mats-multi-spectrum-analysis-tool-for-spectroscopy">
 <h1>MATS: Multi-spectrum Analysis Tool for Spectroscopy<a class="headerlink" href="#mats-multi-spectrum-analysis-tool-for-spectroscopy" title="Permalink to this headline">¶</a></h1>
 <p><a class="reference external" href="mailto:erin&#46;adkins&#37;&#52;&#48;nist&#46;gov">Erin M<span>&#46;</span> Adkins</a></p>
 <p><em>National Institute of Standards and Technology</em></p>
-<p><em>Last Revision</em> Apr 17, 2020</p>
+<p><em>Last Revision</em> Apr 21, 2020</p>
 <p><a class="reference external" href="https://github.com/usnistgov/MATS">This software is available on GitHub</a></p>
-<p>The purpose of the MATS project is to develop a NIST-based multi-spectrum fitting and analysis tool for spectroscopic data that allows the flexibility to test and adapt to experimental/data-driven needs.  This software allows for the use of several commonly-used spectroscopic line profiles (Voigt, Nelkin-Ghatak, speed-dependent Voigt, speed-dependent Nelkin-Ghatak, and Hartmann-Tran) and allows for pressure, temperature, and sample composition constraints to be imposed on solutions.  In addition to fitting experimental spectra, MATS can generate simulated spectram, which allows for its use as an error analysis tool.  The tool uses existing python applications such as the HITRAN Application Programming Interface (HAPI) and LMFit as the engine for spectral fitting.</p>
+<p><strong>The purpose of the MATS project is to develop a NIST-based multi-spectrum fitting and analysis tool for spectroscopic data that allows the flexibility to test and adapt to experimental/data-driven needs.  This software allows for the use of several commonly-used spectroscopic line profiles (Voigt, Nelkin-Ghatak, speed-dependent Voigt, speed-dependent Nelkin-Ghatak, and Hartmann-Tran) and allows for pressure, temperature, and sample composition constraints to be imposed on solutions.  In addition to fitting experimental spectra, MATS can generate simulated spectram, which allows for its use as an error analysis tool.</strong></p>
+<p>In multi-spectrum fitting, there are a collection of spectrum that can be modeled by the same line-by-line spectroscopic parameters, but might vary in pressure, temperature, and sample composition.</p>
+<p>The MATS program is based on <a class="reference internal" href="MATS.html#MATS.Spectrum" title="MATS.Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Spectrum</span></code></a> objects, which are defined by not only their wavenumber and absorption data, but also information on the spectrum pressure, temperature, baseline characteristics, and sample composition.  In addition to utilizing real spectra, there is a <a class="reference internal" href="MATS.html#MATS.simulate_spectrum" title="MATS.simulate_spectrum"><code class="xref py py-func docutils literal notranslate"><span class="pre">MATS.simulate_spectrum()</span></code></a> function, which returns a spectrum object that match input simulation parameters.  This is useful for performing error analysis in the same framework as primary data analysis.  These <a class="reference internal" href="MATS.html#MATS.Spectrum" title="MATS.Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Spectrum</span></code></a> objects are combined to form a <a class="reference internal" href="MATS.html#MATS.Dataset" title="MATS.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Dataset</span></code></a> object, which is the collection of spectra that are being analyzed together in the multi-spectrum analysis.</p>
+<p>There are two files that contain parameters that are fit in this model, one for spectrum dependent parameters (baseline parameters, etalons, sample composition, x-shift) and the other for linelist parameters that are common across all spectra.  These files are saved locally as .csv files with a column for each parameter and with rows corresponding to either the spectrum number or spectral line number.  In addition to the columns for fit parameter, there are two additional columns for each parameter called param_vary and param_err.  The param_vary column is a boolean flag that is toggled to indicate whether a given parameter will be varied in the fit.  The param_err column will be set to zero initially and replaced with the fit error value, if it is floated after fitting.  Calls of the <a class="reference internal" href="MATS.html#MATS.Generate_FitParam_File" title="MATS.Generate_FitParam_File"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Generate_FitParam_File</span></code></a> class not only makes these input files, but also set the lineshape (HTP derivatives) and define initial conditions for whether a parameter should be varied and whether the parameter should be constrained to multi-spectrum fit or allowed to vary by spectrum.  The <a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files" title="MATS.Edit_Fit_Param_Files"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files</span></code></a> class allows for edits to the parameters files in the ipython interface rather than editing in the .csv file.</p>
+<p>Finally, the <a class="reference internal" href="MATS.html#MATS.Fit_DataSet" title="MATS.Fit_DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Fit_DataSet</span></code></a> class fits the data and allows you to impose constraints on the parameters (min and max values), impose simulation and impose convergence criteria, update parameter/parameter line lists, and plot fit results.</p>
 <div class="section" id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="MATS Overview.html">MATS Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Set-Up and Load Packages.html">Set-Up and Load Packages</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Spectrum Class.html">Spectrum Class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Dataset Class.html">Dataset Class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Generate Fit Parameters File Class.html">Generate Fit Parameters File Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Getting Started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Getting Started.html#set-up">Set-Up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Getting Started.html#main-packages">Main Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Getting Started.html#dependent-packages">Dependent Packages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MATS Summary.html">MATS Summary</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MATS Summary.html#spectrum-class-and-objects">Spectrum Class and Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Summary.html#line-by-line-model-and-etalon-models">Line-by-line Model and Etalon Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Summary.html#dataset-class">Dataset Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Summary.html#generate-fitparam-file-class">Generate FitParam File Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Summary.html#edit-fit-param-files-class">Edit Fit Param Files Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Summary.html#fit-dataset-class">Fit Dataset Class</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Generating Pandas Line lists from HITRAN.html">Generating Pandas Line lists from HITRAN</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Edit Fit Parameters File Class.html">Edit From Parameters File Class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Fit Dataset Class.html">Fit Dataset Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MATS.html">MATS module</a></li>
 </ul>
 </div>
 </div>
@@ -116,32 +105,36 @@ $(document).ready(function(){
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="#">Table of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">MATS: Multi-spectrum Analysis Tool for Spectroscopy</a><ul>
-<li><a class="reference internal" href="#contents">Contents</a></li>
-<li><a class="reference internal" href="#legal">Legal</a></li>
-<li><a class="reference internal" href="#contact">Contact</a></li>
-<li><a class="reference internal" href="#links">Links</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+<h1 class="logo"><a href="#">MATS</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Getting Started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MATS Summary.html">MATS Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Generating Pandas Line lists from HITRAN.html">Generating Pandas Line lists from HITRAN</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MATS.html">MATS module</a></li>
 </ul>
 
-  <h4>Next topic</h4>
-  <p class="topless"><a href="MATS Overview.html"
-                        title="next chapter">MATS Overview</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/index.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="Getting Started.html" title="next chapter">Getting Started</a></li>
+  </ul></li>
+</ul>
+</div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
@@ -152,25 +145,32 @@ $(document).ready(function(){
     </div>
 </div>
 <script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="MATS Overview.html" title="MATS Overview"
-             >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">MATS v1.0 documentation</a> &#187;</li> 
-      </ul>
+    <div class="footer">
+      
+      
+      
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
     </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, Erin Adkins.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
-    </div>
+
+    
+
+    
   </body>
 </html>
