@@ -21,7 +21,95 @@ from hapi import EnvironmentDependency_Intensity, PYTIPS2017, molecularMass, pcq
 def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff',
                 p = 1, T = 296, molefraction = {}, 
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30):
+    """Simulates the absorbance based on input line list, wavenumbers, and sample parameters.
     
+    Outline
+    
+    1.  Uses provided wavenumber axis
+    
+    2.  Calculates the molecular density from pressure and temperature
+    
+    3.  Set-up Diluent dictionary if not given as input
+    
+    4.  Calculate line intensity and doppler width at temperature for all lines
+    
+    5.  Loop through each line in the line list and loop through each diluent and generate a line parameter 
+        that is the appropriate ratio of each diluent species corrected for pressure and temperature.  For each line then simulate the line for the given simulation cutoffs and add to cross section
+    
+    6.  Return wavenumber and cross section arrays 
+    
+
+    Parameters
+    ----------
+    linelist : dataframe
+        Pandas dataframe with the following column headers, where species corresponds to each diluent in the spectrum objects included in the dataset and nominal temperature corresponds to the nominal temperatures included in the dataset:
+            nu = wavenumber of the spectral line transition (cm-1) in vacuum
+            
+            sw = The spectral line intensity (cm−1/(molecule⋅cm−2)) at Tref=296K
+            
+            elower = The lower-state energy of the transition (cm-1)
+            
+            molec_id = HITRAN molecular ID number
+            
+            local_iso_id = HITRAN isotopologue ID number
+            
+            gamma_0_species = half width at half maximum (HWHM) (cm−1/atm) at Tref=296K and reference pressure pref=1atm for a given diluent (air, self, CO2, etc.)
+            
+            n_gamma0_species = The coefficient of the temperature dependence of the half width
+            
+            delta_0_species = The pressure shift (cm−1/atm) at Tref=296K and pref=1atm of the line position with respect to the vacuum transition wavenumber νij
+            
+            n_delta0_species = the coefficient of the temperature dependence of the pressure shift
+            
+            SD_gamma_species = the ratio of the speed dependent width to the half-width at reference temperature and pressure
+            
+            n_gamma2_species = the coefficient of the temperature dependence of the speed dependent width NOTE: This is the temperature dependence of the speed dependent width not the ratio of the speed dependence to the half-width
+            
+            SD_delta_species = the ratio of the speed dependent shift to the half-width at reference temperature and pressure
+            
+            n_delta2_species = the coefficient of the temperature dependence of the speed dependent shift NOTE: This is the temperature dependence of the speed dependent shift not the ratio of the speed dependence to the shift
+            
+            nuVC_species = dicke narrowing term at reference temperature
+            
+            n_nuVC_species = coefficient of the temperature dependence of the dicke narrowing term
+            
+            eta_species = the correlation parameter for the VC and SD effects
+            
+            y_species_nominaltemperature = linemixing term (as currently written this doens't have a temperature dependence, so read in a different column for each nominal temperature)
+    waves : array
+        1-D array comprised of wavenumbers (cm-1) to use as x-axis for simulation.
+    wing_cutoff : float, optional
+        number of half-widths for each line to be calculated for. The default is 50.
+    wing_wavenumbers : float, optional
+        number of wavenumber for each line to be calculated. The default is 50.
+    wing_method : str, optional
+        defines which wing cut-off option to use.  Options are wing_cutoff or wing_wavenumbers The default is 'wing_cutoff'.
+    p : float, optional
+        pressure for simulation in atmospheres. The default is 1.
+    T : float, optional
+        temperature for simulation in kelvin. The default is 296.
+    molefraction : dict, optional
+        takes the form {molecule_id : mole fraction, molecule_id: mole fraction, . . .}. The default is {}.
+    natural_abundance : bool, optional
+        True indicates the sample is at natural abundance. The default is True.
+    abundance_ratio_MI : dictionary, optional
+        If sample is not at natural abundance, then the natural abundance defines the enrichment factor compared to natural abundance(ie a sample where the main isotope is the only isotope would have a 1/natural abundance as the enrichment factor). Defined as {M:{I:enrichment factor, I: enrichment factor, I: enrichment factor}, . . . }. The default is {}.
+    Diluent : dict, optional
+        contains the species as the key with the value being the abundance of that diluent in the sample, ie {'He':0.5, 'self':0.5}. The default is {}.
+    diluent : str, optional
+        If Diluent = {}, then this value will be used to set the only diluent to be equal to this diluent. The default is 'air'.
+    IntensityThreshold : float, optional
+        minimum line intensity that will be simulated. The default is 1e-30.
+
+    Returns
+    -------
+    wavenumbers : array
+        wavenumber axis that should match the input waves
+    xsect : array
+        simulated cross section as a function of wavenumbers (ppm/cm)
+        
+
+    """
     #Generate X-axis for simulation
     wavenumbers = waves
         
@@ -104,6 +192,50 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
 
 
 class Spectrum:
+    """Spectrum class provides all information describing experimental or simulated spectrum necessary for fitting.
+    
+    Parameters
+    ----------
+    filename : str
+        file containing spectrum with .csv extension. File extension is not included in the name
+    molefraction : dict
+        mole fraction of each molecule in spectra in the format {molec_id: mole fraction (out of 1), molec_id: molefraction, . . . }
+    natural_abundance : bool, optional
+        flag for if the spectrum contains data at natural abundance
+    abundance_ratio_MI : dict, optional
+        if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }
+    diluent : str, optional
+        sets the diluent for the sample.  Default = 'air'
+    Diluent : dict, optional
+        sets the diluent for the sample if there are a combination of several. Format {'he': 0.5, 'air': 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.
+    spectrum_number : int, optional
+        sets a number for the spectrum that will correspond to fit parameters. This is set in the Dataset class, so should not need to be defined manually
+    input_freq : bool, optional
+        True indicates that the frequency_column is in MHz. False indicates that the frequency column is in wavenumbers.
+    input_tau : bool, optional
+        True indicates that the tau_column is in us. False indicates that the tau column is in 1/c*tau (ppm/cm).
+    pressure_column : str, optional
+        Name of the pressure column in input file. Column should be in torr. Default is Cavity Pressure /Torr.
+    temperature_column : str, optional
+        Name of the temperature column in input file. Column should be in celsius. Default is Cavity Temperature Side 2 /C.
+    frequency_column  : str, optional
+        Name of the frequency column in input file. Column should be in MHz or Wavenumbers (with appropriate flag for input_freq). NOTE: This is not a detuning axis. Default is Total Frequency /MHz.
+    tau_column : str, optional
+        Name of the tau column in input file. Column should be in us or in 1/ctau (ppm/cm) (with appropriate flag for input_tau). Default is Mean tau/us.
+    tau_stats_column  : str, optional
+        Name of the tau stats column in input file. Default is 'tau rel. std. dev./%
+    segment_column  : str, optional
+        Name of column with segment numbers in input file. This column allows spectrum background parameters to be treated in segments across the spectrum. If None then the entire spectrum will share the same segment.
+    etalons : dict, optional
+        Allows you to define etalons by an amplitude and period (1/ frequency in cm-1). Default is no etalons. Input is dictionary with keys being a number and the value being an array with the first index being the amplitude and the second being the period.
+    nominal_temperature : int, optional
+        nominal temperature indicates the approximate temperature of the spectrum. When combining spectra into a dataset this acts as a flag to whether temperature dependence terms should be parameters that can be fit or whether they should act as constants.  Default = 296
+    x_shift : float, optional
+        value in wavenumbers of the x shift for the spectrum axis. This is a fittable parameter. Be careful in using this parameter as floating multiple parameters with similar effects cause fits to not converge (ie. unconstrained line centers + x_shift or fits with line center, shifts, and x_shifts terms without enough lines per spectrum to isolate the different effects). Floating this term works best if you have a good initial guess. Default = 0
+    baseline_order : int, optional
+        sets the baseline order for this spectrum. Allows you to change the baseline order across the broader dataset.()
+    """
+
     def __init__(self, filename, molefraction = {}, natural_abundance = True, diluent = 'air', Diluent = {}, abundance_ratio_MI = {}, spectrum_number = 1, 
                     input_freq = True, input_tau = True, 
                     pressure_column = 'Cavity Pressure /Torr', temperature_column = 'Cavity Temperature Side 2 /C', frequency_column = 'Total Frequency /MHz', 
@@ -163,6 +295,15 @@ class Spectrum:
         self.background = len(self.alpha)*[0]
     
     def diluent_sum_check(self):
+        """Checks that if multiple broadeners are used that the contributions sum to one
+               
+
+        Returns
+        -------
+        str
+            Warning if the diluents don't sum to one
+
+        """
         diluent_sum = 0
         for dil in self.Diluent:
             diluent_sum+=self.Diluent[dil]
@@ -170,6 +311,19 @@ class Spectrum:
             print ("YOUR DILUENTS DO NOT SUM TO ONE!")
 
     def segment_wave_alpha(self):
+        """Defines the wavenumber, alpha, and indices of spectrum that correspond to a given spectrum segment
+        
+
+        Returns
+        -------
+        wavenumber_segments : dict
+            dictionary where the key corresponds to a segment number and the values correspond to the wavenumbers for that segment
+        alpha_segments : dict
+            dictionary where the key corresponds to a segment number and the values correspond to the alpha values for that segment.
+        indices_segments : dict
+            dictionary where the key corresponds to a segment number and the values correspond to the array indices for that segment.
+
+        """
         wavenumber_segments = {}
         alpha_segments = {}
         indices_segments = {}
@@ -273,21 +427,38 @@ class Spectrum:
 
     ##Other Functions
     def plot_freq_tau(self):
+        """Generates a plot of Tau (us) as a function of Frequency (MHz)
+        """
         plt.plot(self.frequency, self.tau)
         plt.xlabel('Frequency (MHz)')
         plt.ylabel('$\\tau (\mu s)$')
         plt.show()
 
     def plot_wave_alpha(self):
+        """Generates a plot of alpha (ppm/cm) as a function of Wavenumber (cm-1)
+        """
         plt.plot(self.wavenumber, self.alpha)
         plt.xlabel('Wavenumber ($cm^{-1}$)')
         plt.ylabel('$\\alpha (\\frac{ppm}{cm})$')
         plt.show()
 
     def calculate_QF(self):
+        """Calculates the quality of fit factor (QF) for spectrum
+        
+        QF = (maximum alpha - minimum alpha) / std(residuals)
+        
+
+        Returns
+        -------
+        float
+            QF.
+
+        """
         return np.around((self.alpha.max() - self.alpha.min()) / self.residuals.std(),0)
 
     def plot_model_residuals(self):
+        """Generates a plot of the alpha and model (ppm/cm) as a function of Wavenumber (cm-1) and on lower plot shows the residuals (ppm/cm) as a function of wavenumber (cm-1)
+        """
         fig = plt.figure(figsize = (16,10))
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
         QF = self.calculate_QF()
@@ -306,6 +477,20 @@ class Spectrum:
         plt.show()
 
     def save_spectrum_info(self, save_file = False):
+        """Saves spectrum information to a pandas dataframe with option to also save as .csv
+        
+
+        Parameters
+        ----------
+        save_file : bool, optional
+           If False, then only a dataframe is created. If True, then a csv file will be generated with the name filename + '_saved.csv'. The default is False.
+
+        Returns
+        -------
+        new_file : dataframe
+            returns a pandas dataframe with columns related to the spectrum information
+
+        """
         file_contents = pd.read_csv(self.filename + '.csv')       
         new_file = pd.DataFrame()
         new_file['Spectrum Number'] = [self.spectrum_number]*len(self.alpha)
@@ -326,6 +511,10 @@ class Spectrum:
         return (new_file)
 
     def fft_spectrum(self):
+        """Takes the FFT of the residuals of the spectrum
+        Prints a dataframe with the 20 highest amplitude frequencies with the FFT frequency (period), amplitude, FFT phase, and frequency (cm-1).
+        Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)
+        """
         wave = self.wavenumber
         y = self.residuals
         wave_step = wave[1] - wave[0]
@@ -349,6 +538,18 @@ class Spectrum:
         plt.show()
 
 class Dataset:
+    """Combines spectrum objects into a Dataset object to enable multi-spectrum fitting
+    
+    Parameters
+    ----------
+    spectra : list
+        list of spectrum objects to be included in the Dataset. Example [spectrum_1, spectrum_2, . . .]
+    dataset_name : str
+        Used to provide a name for the Dataset to use when saving files
+    baseline_order : int
+        sets the baseline order for all spectra in the dataset.  This will automaticall be set to the maximum baseline order across all spectrum included in the Dataset.
+        
+    """
     def __init__(self, spectra, dataset_name, baseline_order = 1):
         self.spectra = spectra
         self.dataset_name = dataset_name
@@ -359,18 +560,24 @@ class Dataset:
         self.max_baseline_order()
         
     def renumber_spectra(self):
+        """renumbers the spectra to be sequential starting at 1. It is called in the initialization of the class
+         """
         count = 1
         for spectrum in self.spectra:
             spectrum.set_spectrum_number(count)
             count+=1
 
     def max_baseline_order(self):
+        """ sets the baseline order to be equal to the maximum set in any of the included spectra       
+        """
         baseline_order_list = []
         for spectrum in self.spectra:
             baseline_order_list.append(spectrum.baseline_order)
         self.baseline_order = max(baseline_order_list)
 
     def correct_component_list(self):
+        """Corrects so that all spectrum share the same molecules, but the mole fraction is fixed to zero where molecule is not present.  Called at the initialization of the class
+        """
         dataset_molecule_list = []
         for spectrum in self.spectra:
             dataset_molecule_list += (spectrum.molefraction.keys())
@@ -383,6 +590,8 @@ class Dataset:
             spectrum.set_molefraction(spectrum_molefraction_dictionary)
 
     def correct_etalon_list(self):
+        """Corrects so that all spectrum share the same number of etalons, but the amplitude and period are fixed to zero where appropriate.  Called at the initialization of the class
+          """
         dataset_etalon_list = []
         for spectrum in self.spectra:
             dataset_etalon_list += spectrum.etalons.keys()
@@ -395,6 +604,15 @@ class Dataset:
             spectrum.set_etalons(spectrum_etalon_dictionary)
 
     def get_etalons(self):
+        """ Get list of number of etalons for spectra
+        
+
+        Returns
+        -------
+        dataset_etalon_list : list
+            etalon keys across spectra
+
+        """
         dataset_etalon_list = []
         for spectrum in self.spectra:
             dataset_etalon_list += spectrum.etalons.keys()
@@ -402,6 +620,15 @@ class Dataset:
         return dataset_etalon_list
 
     def get_molecules(self):
+        """ Get list of molecules in spectra
+        
+
+        Returns
+        -------
+        dataset_molecule_list : list
+            list of molecules in spectra
+
+        """
         dataset_molecule_list = []
         for spectrum in self.spectra:
             dataset_molecule_list += (spectrum.molefraction.keys())
@@ -425,24 +652,77 @@ class Dataset:
         return len(self.spectra)
 
     def get_spectrum_filename(self, spectrum_num):
+        """ Gets spectrum filename for spectrum in Dataset
+        
+
+        Parameters
+        ----------
+        spectrum_num : int
+            Integer assigned to a given spectrum.
+
+        Returns
+        -------
+        filename : str
+            if spectrum_num in Dataset then the filename for that the spectrum_number is returned
+
+        """
         for spectrum in self.spectra:
             if spectrum.spectrum_number == spectrum_num:
                 return (spectrum.get_filename())
         return None
 
     def get_spectrum_pressure(self, spectrum_num):
+        """Gets spectrum pressure for spectrum in Dataset
+        
+
+        Parameters
+        ----------
+        spectrum_num : int
+            Integer assigned to a given spectrum.
+
+        Returns
+        -------
+        pressure : float
+            if spectrum_num in Dataset then the pressure (torr) for that the spectrum_number is returned.
+
+        """
         for spectrum in self.spectra:
             if spectrum.spectrum_number == spectrum_num:
                 return (spectrum.get_pressure_torr())
         return None
 
     def get_spectrum_temperature(self, spectrum_num):
+        """Gets spectrum temperature for spectrum in Dataset
+        
+
+        Parameters
+        ----------
+        spectrum_num : int
+            Integer assigned to a given spectrum.
+
+        Returns
+        -------
+        temperature : float
+            if spectrum_num in Dataset then the temperature (K) for that the spectrum_number is returned.
+
+        """
         for spectrum in self.spectra:
             if spectrum.spectrum_number == spectrum_num:
                 return (spectrum.get_temperature())
         return None
 
     def get_spectra_extremes(self):
+        """Gets the minimum and maximum wavenumber for the entire Dataset
+        
+
+        Returns
+        -------
+        wave_min : float
+            The minimum wavenumber in all spectra in the Dataset.
+        wave_max : float
+            The maximum wavenumber in all spectra in the Dataset.
+
+        """
         for spectrum in self.spectra:
             if spectrum.get_spectrum_number() == 1:
                 wave_min = np.min(spectrum.wavenumber)
@@ -455,12 +735,31 @@ class Dataset:
         return wave_min, wave_max
 
     def get_spectrum_extremes(self):
+        """Gets the minimum and maximum wavenumber for each spectrum in the Dataset
+        
+
+        Returns
+        -------
+        extreme_dictionary : dict
+            Dictionary where the key corresponds to the spectrum_num with the value equal to a list where list[0] = minimum wavenumber in spectrum and list[1] = maximum wavenumber in spectrum
+        """
         extreme_dictionary = {}
         for spectrum in self.spectra:
             extreme_dictionary[spectrum.get_spectrum_number()] = [np.min(spectrum.wavenumber), np.max(spectrum.wavenumber)]
         return extreme_dictionary
             
     def get_number_nominal_temperatures(self):
+        """ Get the number of nominal temperatures in the Dataset
+        
+
+        Returns
+        -------
+        num_nominal_temperatures : int
+            number of nominal temperatures in the Dataset
+        nominal_temperatures : list
+            list of all nominal temperatures listed in the input spectra
+
+        """
         nominal_temperatures = []
         for spectrum in self.spectra:
             if spectrum.nominal_temperature not in nominal_temperatures:
@@ -468,18 +767,45 @@ class Dataset:
         return len(nominal_temperatures), nominal_temperatures
          
     def average_QF(self):
+        """Calculates the Average QF from all spectrum
+        
+
+        Returns
+        -------
+        average_QF : float
+            average QF of all spectra in dataset
+
+        """
         sum_ = 0
         for spectrum in self.spectra:
             sum_ += spectrum.calculate_QF()
         return sum_ / self.get_number_spectra()
 
     def get_list_spectrum_numbers(self):
+        """ Generates a list of all spectrum_numbers
+        
+
+        Returns
+        -------
+        spec_num_list : list
+            list of all spectrum numbers used in the dataset.  
+
+        """
         spec_num_list = []
         for spectrum in self.spectra:
             spec_num_list.append(spectrum.spectrum_number)
         return spec_num_list    
         
     def generate_baseline_paramlist(self):
+        """Generates a .csv file called dataset_name + _baseline_paramlist.csv. This file will be used to generate another .csv that is used for fitting these spectrum dependent parameters. With columns for 
+        spectrum number, segment number, x_shift, concentration for each molecule in the dataset, baseline terms (a = 0th order term, b = 1st order , . . .), and etalon terms (set an amplitude, period, and phase for the number of etalons listed for each spectrum in the Dataset)
+
+        Returns
+        -------
+        baseline_paramlist : dataframe
+            dataframe containing information describing baseline parameters.  Also saves to .csv.  Either file can be edited before making the baseline parameter list used for fitting.  If editting the .csv file will need to regenerate dataframe from .csv.
+
+        """
         baseline_paramlist = pd.DataFrame()
         for spectrum in self.spectra:
             for segment in list(set(spectrum.segments)):
@@ -507,6 +833,20 @@ class Dataset:
         return baseline_paramlist
 
     def generate_summary_file(self, save_file = False):
+        """ Generates a summary file combining spectral information from all spectra in the Dataset
+        
+
+        Parameters
+        ----------
+        save_file : bool, optional
+            If True, then a .csv is generated in addition to the dataframe. The default is False.
+
+        Returns
+        -------
+        summary_file : dataframe
+            Summary dataframe comprised of spectral information inculding model and residuals for all spectra in Dataset.
+
+        """
         summary_file = pd.DataFrame()
         for spectrum in self.spectra:
             spectrum_data = spectrum.save_spectrum_info(save_file = False)
@@ -516,6 +856,8 @@ class Dataset:
         return summary_file
 
     def plot_model_residuals(self):
+        """ Generates a plot showing both the model and experimental data as a function of wavenumber in the main plot. A subplot shows the residuals as function of wavenumber.  Each spectra in the Dataset will have a different color.  
+        """
         fig = plt.figure(figsize = (16,10))
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
         ax0 = plt.subplot(gs[0])
@@ -535,12 +877,34 @@ class Dataset:
         plt.show()          
            
 def max_iter(pars, iter, resid, *args, **kws):
-        if iter > 2500:
-            return True
-        else:
-            return False
+    """Used to stop fitting if the number of iterations is greater that 2500
+    """
+    if iter > 2500:
+        return True
+    else:
+        return False
                    
 def etalon(x, amp, freq, phase):
+    """Etalon definition
+    
+
+    Parameters
+    ----------
+    x : array
+        array of floats used to define the x-axis
+    amp : float
+        amplitude of the etalon.
+    freq : float
+        period of the etalon.
+    phase : float
+        phase of the etalon.
+
+    Returns
+    -------
+    etalon : array
+        etalon as a function of input x-axis, amplitude, period, and phase.
+
+    """
     return amp*np.sin((2*np.pi * freq)*x+ phase)   
 
     
@@ -551,6 +915,72 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
                         natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {}, 
                         nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 10):
+    """allows for a synthetic spectrum to be generated, where the output is a spectrum object that can be used in MATS classes.
+    
+
+    Parameters
+    ----------
+    parameter_linelist : dataframe
+        linelist following the convention of the linelists used for the HTP_from_DF_select.  Note that there will need to be a linemixing column for each nominal temperature, which you will have to do manually (ie y_air_296, y_self_296).
+    wave_min : float
+         minimum wavenumber for the simulation (cm-1)
+    wave_max : float
+        maximum wavenumber for the simulation (cm-1).
+    wave_space : float
+        wavenumber spacing for the simulation (cm-1).
+    wave_error : float, optional
+        absolute error on the wavenumber axis (cm-1) to include in simulations. The default is 0.
+    SNR : float, optional
+        Signal to noise ratio to impose on the simulated spectrum. The default is 10000.
+    baseline_terms : list, optional
+        polynomial baseline coefficients where the index is equal to the coefficient order, ie. [0, 1, 2] would correspond to baseline = 0 + 1*(wavenumber - minimum wavenumber) + 2*(wavenumber - minimum wavenumber)^2. The default is [0].
+    temperature : float, optional
+         temperature for simulation in celsius. The default is 25.
+    temperature_err : dict, optional
+        possible keys include 'bias', 'function', and 'params'. The bias indicates the absolute bias in Celsius of the temperature reading, which will be added to the input temperature. Function can be 'linear' with params 'm' and 'b' or 'sine' with parameters 'amp', 'freq', and 'phase'. These define a function that is added to both the bias and set temperature as a function of the wavenumber. Note: if 'function' key is not equal to None, then there also needs to be a params key to define the function.. The default is {'bias': 0, 'function': None, 'params': {}}.
+    pressure : float, optional
+        pressure for simulation in torr. The default is 760.
+    pressure_err : dict, optional
+        possible keys include bias, function, and params. The bias indicates the percent bias in of the pressure reading, which will be added to the input pressure. Function can be 'linear' with params 'm' and 'b' or 'sine' with parameters 'amp', 'freq', and 'phase'. These define a function that is added to both the bias and set pressure as a function of the wavenumber. Note: if 'function' key is not equal to None, then there also needs to be a params key to define the function.. The default is {'per_bias': 0, 'function': None, 'params': {}}.
+    wing_cutoff : float, optional
+        number of voigt half-widths to simulate on either side of each line. The default is 25.
+    wing_wavenumbers : float, optional
+        number of wavenumbers to simulate on either side of each line. The default is 25.
+    wing_method : str, optional
+        Provides choice between the wing_cutoff and wing_wavenumbers line cut-off options. The default is 'wing_cutoff'.
+    filename : str, optional
+        allows you to pick the output filename for the simulated spectra. The default is 'temp'.
+    molefraction : dict, optional
+        mole fraction of each molecule to be simulated in the spectrum in the format {molec_id: mole fraction (out of 1), molec_id: molefraction, . . . }. The default is {}.
+    molefraction_err : dict, optional
+        percent error in the mole fraction of each molecule to be simulated in the spectrum in the format {molec_id: percent error in mole fraction, molec_id: percent error in mole fraction, . . . }. The default is {}.
+    natural_abundance : bool, optional
+        flag for if the spectrum contains data at natural abundance. The default is True.
+    abundance_ratio_MI : dict, optional
+        if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }. The default is {}.
+    diluent : str, optional
+        sets the diluent for the sample if only using one broadener. The default is 'air'.
+    Diluent : dict, optional
+        sets the diluent for the sample if there are a combination of several. Format {'he': 0.5, 'air': 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.. The default is {}.
+    nominal_temperature : int, optional
+        nominal temperature indicates the approximate temperature of the spectrum. When combining spectra into a dataset this acts as a flag to whether temperature dependence terms should be parameters that can be fit or whether they should act as constants.. The default is 296.
+    etalons : dict, optional
+        Allows you to define etalons by an amplitude and period (1/ frequency in cm-1). Default is no etalons. Input is dictionary with keys being a number and the value being an array with the first index being the amplitude and the second being the period.. The default is {}.
+    x_shift : float, optional
+        value in wavenumbers of the x shift for the spectrum axis.. The default is 0.
+    IntensityThreshold : float, optional
+        minimum line intensity to use in the simulation. The default is 1e-30.
+    num_segments : TYPE, optional
+        Number of segments in the file, which is implemented labeling the segment column into equal sequential se . The default is 10.
+
+    Returns
+    -------
+    spectrum_file : .csv
+        File that contains the simulated wavenumber axis, noisy wavenumber axis, absorbance data, noisy absorbance data, pressure (torr), and temperature (C). The filename will correspond to the filename parameter, which has a default value of temp. The pressure and temperature columns will include whatever functional change there is to the pressure or temperature, but not the bias offset. This is coded to match how this error would manifest in experiments.
+    spectrum_object : object
+        Outputs a Spectrum class object. This makes it so the you can easily switch between reading in an experimental spectrum and simulated a synthetic spectrum by simply switching out whether the spectrum object is defined through the class definition or through the simulate_spectrum function.
+
+    """
     #Checks to make a Diluent dictionary has been assigned    
     if not Diluent:
         Diluent = {diluent:1.}
@@ -646,6 +1076,51 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
                 etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1)
         
 class Generate_FitParam_File:
+    """Class generates the parameter files used in fitting and sets up fit settings.
+    
+    Parameters
+    ----------
+    dataset : object
+        Dataset object to be used in the fits
+    param_linelist : dataframe
+        parameter linelist dataframe name, where the dataframe has the appropriate column headers
+    base_linelist : dataframe
+        baseline parameter dataframe name generated from the dataset.generate_baseline_paramlist() function.
+    lineprofile : str
+        lineprofile to use for the simulation. This sets values in the parameter linelist to 0 and forces them to not vary unless manually changed. Default values is VP, voigt profile. Options are VP, SDVP, NGP, SDNGP, HTP.
+    linemixing : bool
+        If False, then all linemixing parameters are set to 0 and not able to float.  Default is False.
+    threshold_intensity : float
+        This is the minimum line intensity that will be simulated. Default value is 1e-30.
+    fit_intensity  : float
+        This is the minimum line intensity for which parameters will be set to float. This can be overwritten manually. Default value is 1e-26.
+    fit_window : float
+        currently not used
+    sim_window : float
+        This is the region outside of the wavelength region of the dataset that will be simulated for analysis. Default value is 5 cm-1.
+    base_linelist_savename : str
+        filename that the baseline linelist will be saved as. Default is Baseline_LineList
+    param_linelist_savename : str
+        filename that the parameter linelist will be saved as. Default is Parameter_LineList.
+    nu_constrain : bool
+        True indicates that the line centers will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.
+    sw_constrain : bool
+        True indicates that the line intensities will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.
+    gamma0_constrain : bool
+        True indicates that the collisional width will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.
+    delta0_constrain : bool
+        True indicates that the shift will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.
+    aw_constrain : bool
+        True indicates that the speed dependent width will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.
+    as_constrain : bool
+        True indicates that the speed dependent shift will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.
+    nuVC_constrain : bool
+        True indicates that the dicke narrowing term will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.
+    eta_constrain : bool
+        True indicates that the correlation parameter will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.
+    linemixing_constrain : bool
+        True indicates that the first-order linemixing term will be a global variable across all spectra. False generates a new value for each spectrum in the datas
+    """
     def __init__ (self, dataset, param_linelist, base_linelist, 
                   lineprofile = 'VP', linemixing = False, threshold_intensity = 1e-30, fit_intensity = 1e-26, fit_window = 1.5, sim_window = 5, 
                   param_linelist_savename = 'Parameter_LineList', base_linelist_savename = 'Baseline_LineList', 
@@ -677,13 +1152,55 @@ class Generate_FitParam_File:
         return self.param_linelist
     def get_base_linelist(self):
         return self.base_linelist
-    def generate_fit_param_linelist_from_linelist(self, vary_nu = {7:{1:True, 2:False, 3:False}, 1:{1:False}}, vary_sw = {7:{1:True, 2:False, 3:False}},
-                                   vary_gamma0 = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_gamma0 = {}, 
-                                   vary_delta0 = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_delta0 = {}, 
-                                   vary_aw = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_gamma2 = {}, 
+    def generate_fit_param_linelist_from_linelist(self, vary_nu = {}, vary_sw = {},
+                                   vary_gamma0 = {}, vary_n_gamma0 = {}, 
+                                   vary_delta0 = {}, vary_n_delta0 = {}, 
+                                   vary_aw = {}, vary_n_gamma2 = {}, 
                                    vary_as = {}, vary_n_delta2 = {}, 
                                    vary_nuVC = {}, vary_n_nuVC = {},
                                    vary_eta = {}, vary_linemixing = {}):
+        """Generates the actual parameter line list used and updated in fitting.
+               
+        
+
+        Parameters
+        ----------
+        vary_nu : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope line centers should be floated.  Each key in the dictionary corresponds to a molecule, where the values are a dictionary corresponding to local_iso_ids as keys and boolean values acting as boolean flags. True means float the nu for that molecule and isotope. Example vary_nu = {7:{1:True, 2: False, 3: False}, 1:{1:False, 2: False, 3: False}}, would indicate that line centers of all main oxygen isotopes would be floated (if the line intensity is greater than the fit intensity), where the line centers for all other O2 isotopes and all water isotopes would not be varied. If these value are left blank, then all variable would have to be manually switched to float. The default is {}.
+        vary_sw : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope line intensities should be floated.  Follows nu_vary example.  The default is {}.
+        vary_gamma0 : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope collisional half-width should be floated.  Follows nu_vary example.  . The default is {}.
+        vary_n_gamma0 : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope coefficient of the temperature dependence of the half width  should be floated.  Follows nu_vary example.  . The default is {}.
+        vary_delta0 : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope pressure shift should be floated.  Follows nu_vary example.  . The default is {}.
+        vary_n_delta0 : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope coefficient of the temperature dependence of the pressure shift should be floated.  Follows nu_vary example.  . The default is {}.
+        vary_aw : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope ratio of the speed dependent width to the half-width should be floated.  Follows nu_vary example.  . The default is {}.
+        vary_n_gamma2 : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope coefficient of the temperature dependence of the speed dependent width should be floated.  Follows nu_vary example.  . The default is {}.
+        vary_as : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope the ratio of the speed dependent shift to the shift should be floated.  Follows nu_vary example.  . The default is {}.
+        vary_n_delta2 : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope coefficient of the temperature dependence of the speed dependent shift should be floated.  Follows nu_vary example.  . The default is {}.
+        vary_nuVC : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope dicke narrowing should be floated.  Follows nu_vary example.  . The default is {}.
+        vary_n_nuVC : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope  coefficient of the temperature dependence of the dicke narrowing should be floated.  Follows nu_vary example.  . The default is {}.
+        vary_eta : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope correlation parameter for the VC and SD effects should be floated.  Follows nu_vary example.  . The default is {}.
+        vary_linemixing : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope first-order line-mixing should be floated.  Follows nu_vary example.  . The default is {}.
+
+        Returns
+        -------
+        param_linelist_df : dataframe
+            returns dataframe based on parameter line list with addition of a vary and err column for every floatable parameter.  The vary columns are defined by the inputs and the fit_intensity value.  The err columns will be populated from fit results.  The dataframe is also saved as a .csv file.  line intensity will be normalized by the fit_intensity (set to the sw_scale_factor). The term 'sw' is now equal to the normalized value, such that in the simulation 'sw'*sw_scale_factor is used for the line intensity. Because line intensities are so small it is difficult to fit the value without normalization. 
+
+        """
+        
         param_linelist_df = self.get_param_linelist().copy()
         #Intensity Thresholding
         param_linelist_df = param_linelist_df[param_linelist_df['sw'] > self.threshold_intensity] #intensity thresholding
@@ -1057,8 +1574,38 @@ class Generate_FitParam_File:
         param_linelist_df.to_csv(self.param_linelist_savename + '.csv')
         return param_linelist_df 
 
-    def generate_fit_baseline_linelist(self, vary_baseline = True, vary_pressure = False, vary_temperature = False,vary_molefraction = {7:True, 1:False}, vary_xshift = False, 
+    def generate_fit_baseline_linelist(self, vary_baseline = True, vary_pressure = False, vary_temperature = False,vary_molefraction = {}, vary_xshift = False, 
                                       vary_etalon_amp= False, vary_etalon_freq= False, vary_etalon_phase= False):
+        """Generates the actual baseline line list used and updated in fitting.  
+        
+
+        Parameters
+        ----------
+        vary_baseline : bool, optional
+            If True, then sets all baseline parameters for all spectra to float. The default is True.
+        vary_pressure : bool, optional
+            If True, then the pressures for all spectra are floated.  This should be used with caution as the impact these parameters have on other floated parameters might lead to an unstable solution. The default is False.
+        vary_temperature : bool, optional
+            If True, then the temperatures for all spectra are floated. This should be used with caution as the impact these parameters have on other floated parameters might lead to an unstable solution.The default is False.
+        vary_molefraction : dict, optional
+            keys to dictionary correspond to molecule id where the value is boolean flag, which dictates whether to float the mole fraction. The default is {}. Example: {7: True, 1: False}
+        vary_xshift : bool, optional
+            If True, then sets x-shift parameters for all spectra to float. The default is False.
+        vary_etalon_amp : bool, optional
+            If True, then sets etalon amplitude parameters for all spectra to float. The default is False.
+        vary_etalon_freq : bool, optional
+            If True, then sets etalon period parameters for all spectra to float. . The default is False.
+        vary_etalon_phase : bool, optional
+            If True, then sets etalon phase parameters for all spectra to float.. The default is False.
+
+        Returns
+        -------
+        base_linelist_df : dataframe
+            returns dataframe based on baseline line list with addition of a vary and err column for every floatable parameter.  The vary columns are defined by the inputs.  The err columns will be populated from fit results.  The dataframe is also saved as a .csv file..
+
+
+
+        """
         base_linelist_df = self.get_base_linelist().copy()
         parameters =  (list(base_linelist_df))
         for param in parameters:
@@ -1094,6 +1641,19 @@ class Generate_FitParam_File:
         return base_linelist_df
     
 class Edit_Fit_Param_Files:
+    """Allows for the baseline and parameter files to be editted in jupyter notebook.  Can also edit everything in .csv
+    
+    Parameters
+    ----------
+    base_linelist_file : str
+        name of the .csv file containing the baseline parameters generated in format specified in the generate fit parameters class.
+    param_linelist_file : str
+        name of the .csv file containing the linelist parameters generated in format specified in the generate fit parameters class.
+    new_base_linelist_file : str
+        name of the to save the baseline param list as after editing. IF the value is None (default) then it will edit the input.
+    new_param_linelist_file  : str
+        name of the to save the linelist param list as after editing. IF the value is None (default) then it will edit the input.
+    """
     def __init__(self, base_linelist_file, param_linelist_file, new_base_linelist_file = None, new_param_linelist_file = None):
         self.base_linelist_file = base_linelist_file
         self.param_linelist_file = param_linelist_file
@@ -1106,29 +1666,145 @@ class Edit_Fit_Param_Files:
         else:
             self.new_param_linelist_file = new_param_linelist_file
     def edit_generated_baselist(self):
+        """Allows editting of baseline linelist in notebook        
+        """
         base_linelist_df = pd.read_csv(self.base_linelist_file + '.csv', index_col = 0)
         baseline_widget = qgrid.show_grid(base_linelist_df, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 200})
         return baseline_widget
     def save_editted_baselist(self, baseline_widget):
+        """Saves edits of baseline linelist in notebook        
+        """
         base_linelist_df = baseline_widget.get_changed_df()
         base_linelist_df.to_csv(self.new_base_linelist_file + '.csv')
         return base_linelist_df
     def edit_generated_paramlist(self):
+        """Allows editting of parameter linelist in notebook        
+        """
         param_linelist_df = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
         param_widget = qgrid.show_grid(param_linelist_df, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 200})
         return param_widget
     def save_editted_paramlist(self, param_widget):
+        """Saves edits of parameter linelist in notebook        
+        """
         param_linelist_df = param_widget.get_changed_df()
         param_linelist_df.to_csv(self.new_param_linelist_file + '.csv') 
         return param_linelist_df
      
 def hasNumbers(inputString):
+    """Determines whether there are numbers in a string    
+
+    Parameters
+    ----------
+    inputString : str
+        string for analysis
+
+    Returns
+    -------
+    bool
+        DESCRIPTION.
+
+    """
     for char in inputString:
         if char.isdigit():
             return True
     return False
 
 class Fit_DataSet:
+    """Provides the fitting functionality
+        
+
+        Parameters
+        ----------
+        dataset : object
+            Dataset Object.
+        base_linelist_file : str
+            filename for file containing baseline parameters.
+        param_linelist_file : TYPE
+            filename for file containing parmeter parameters..
+        minimum_parameter_fit_intensity : float, optional
+            minimum intensity for parameters to be generated for fitting. NOTE: Even if a value is floated in the param_linelist if it is below this threshold then it won't be a floated.. The default is 1e-27.
+        baseline_limit : bool, optional
+            If True, then impose min/max limits on baseline parameter solutions. The default is False.
+        baseline_limit_factor : float, optional
+            The factor variable describes the multiplicative factor that the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+        pressure_limit : bool, optional
+            If True, then impose min/max limits on pressure solutions. The default is False.
+        pressure_limit_factor : float, optional
+            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+        temperature_limit : bool, optional
+            If True, then impose min/max limits on temperature solutions. The default is False.
+        temperature_limit_factor : float, optional
+            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+        molefraction_limit : bool, optional
+            If True, then impose min/max limits on mole fraction solutions. The default is False.
+        molefraction_limit_factor : float, optional
+            DESCRIPTION. The default is 10.
+        etalon_limit : bool, optional
+            If True, then impose min/max limits on etalon solutions. The default is False.
+        etalon_limit_factor : float, optional
+            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 50. #phase is constrained to +/- 2pi 
+        x_shift_limit : bool, optional
+            If True, then impose min/max limits on x-shift solutions. The default is False.
+        x_shift_limit_magnitude : float, optional
+            The magnitude variables set the +/- range of the variable in cm-1. The default is 0.1.
+        nu_limit : bool, optional
+            If True, then impose min/max limits on line center solutions. The default is False.
+        nu_limit_magnitude : float, optional
+            The magnitude variables set the +/- range of the variable in cm-1. The default is 0.1.
+        sw_limit : bool, optional
+            If True, then impose min/max limits on line intensity solutions. The default is False.
+        sw_limit_factor : float, optional
+            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+        gamma0_limit : bool, optional
+            If True, then impose min/max limits on collisional half-width solutions. The default is False.
+        gamma0_limit_factor : float, optional
+            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+        n_gamma0_limit : bool, optional
+            DESCIf True, then impose min/max limits on temperature exponent for half width solutions. The default is True.
+        n_gamma0_limit_factor : float, optional
+            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+        delta0_limit : bool, optional
+            If True, then impose min/max limits on collisional shift solutions. The default is False.
+        delta0_limit_factor : float, optional
+            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+        n_delta0_limit : bool, optional
+            If True, then impose min/max limits on temperature exponent of the collisional shift solutions. The default is True.
+        n_delta0_limit_factor : float, optional
+            DESCRIPTION. The default is 10.
+        SD_gamma_limit : bool, optional
+            If True, then impose min/max limits on the aw solutions. The default is False.
+        SD_gamma_limit_factor : float, optional
+            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+        n_gamma2_limit : bool, optional
+            If True, then impose min/max limits on temperature exponent of the speed-dependent width solutions. The default is True.
+        n_gamma2_limit_factor : float, optional
+            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+        SD_delta_limit : bool, optional
+            If True, then impose min/max limits on as solutions. The default is True.
+        SD_delta_limit_factor : float, optional
+            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+        n_delta2_limit : bool, optional
+            If True, then impose min/max limits on temperature exponent of the speed-dependent shift solutions. The default is True.
+        n_delta2_limit_factor : float, optional
+            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+        nuVC_limit : bool, optional
+            If True, then impose min/max limits on dicke narrowing solutions. The default is False.
+        nuVC_limit_factor : float, optional
+            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+        n_nuVC_limit : bool, optional
+            If True, then impose min/max limits on temperature exponent of dicke narrowing solutions. The default is True.
+        n_nuVC_limit_factor : float, optional
+            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+        eta_limit : bool, optional
+            If True, then impose min/max limits on correlation parameter solutions.. The default is True.
+        eta_limit_factor : float, optional
+             The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.The default is 10.
+        linemixing_limit : bool, optional
+            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is False.
+        linemixing_limit_factor : float, optional
+            If True, then impose min/max limits on line-mixing solutions.. The default is 10.
+
+        """
     def __init__(self, dataset, base_linelist_file, param_linelist_file, minimum_parameter_fit_intensity = 1e-27,
                 baseline_limit = False, baseline_limit_factor = 10, 
                 pressure_limit = False, pressure_limit_factor = 10,
@@ -1144,6 +1820,7 @@ class Fit_DataSet:
                 SD_delta_limit = True, SD_delta_limit_factor  = 10, n_delta2_limit = True, n_delta2_limit_factor  = 10, 
                 nuVC_limit = False, nuVC_limit_factor  = 10, n_nuVC_limit = True, n_nuVC_limit_factor = 10, 
                 eta_limit = True, eta_limit_factor  = 10, linemixing_limit = False, linemixing_limit_factor  = 10):
+            
         self.dataset = dataset
         self.base_linelist_file = base_linelist_file
         self.baseline_list = pd.read_csv(self.base_linelist_file + '.csv')#, index_col = 0
@@ -1194,6 +1871,15 @@ class Fit_DataSet:
         self.linemixing_limit_factor = linemixing_limit_factor
         
     def generate_params(self):
+        """Generates the lmfit params object that will be used in fitting
+        
+
+        Returns
+        -------
+        params : lmfit parameter object
+            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit
+
+        """
         params = Parameters()
         #Baseline Parameters
         baseline_parameters = []
@@ -1479,6 +2165,36 @@ class Fit_DataSet:
     def constrained_baseline(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
                                     etalon_amp_segment_constrained = True, etalon_freq_segment_constrained = True, etalon_phase_segment_constrained = True, 
                                     pressure_segment_constrained = True, temperature_segment_constrained = True):
+        """Allows you to impose baseline constraints when using multiple segments per spectrum, ie. all baseline parameters can be the same across the entire spectrum except for the etalon phase, which is allowed to vary per segment
+        
+
+        Parameters
+        ----------
+        params : lmfit parameter object
+            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
+        baseline_segment_constrained : bool, optional
+            True means the baseline terms are constrained across each spectrum.. The default is True.
+        xshift_segment_constrained : bool, optional
+            True means the x_shift terms are constrained across each spectrum.. The default is True.
+        molefraction_segment_constrained : bool, optional
+            True means the mole fraction for that molecule is constrained across each spectrum.. The default is True.
+        etalon_amp_segment_constrained : bool, optional
+            True means the etalon amplitude is constrained across each spectrum.. The default is True.
+        etalon_freq_segment_constrained : bool, optional
+            True means the etalon frequency is constrained across each spectrum.. The default is True.
+        etalon_phase_segment_constrained : bool, optional
+            True means the etalon phase is constrained across each spectrum.. The default is True.
+        pressure_segment_constrained : bool, optional
+            True means the pressure is constrained across each spectrum.. The default is True.
+        temperature_segment_constrained : bool, optional
+            True means the temperature is constrained across each spectrum.. The default is True.
+
+        Returns
+        -------
+        params : lmfit parameter object
+            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
+
+        """
         spectrum_segment_min = {}
         for spectrum in self.dataset.spectra:
             spectrum_segment_min[spectrum.spectrum_number] = np.min(list(set(spectrum.segments)))
@@ -1527,6 +2243,26 @@ class Fit_DataSet:
         return params
 
     def simulation_model(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff'):
+        """This is the model that is used for fitting.  It combines the baseline terms (baseline, etalons) and resonant absorption models
+        
+
+        Parameters
+        ----------
+        params : lmfit parameter object
+            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
+        wing_cutoff : float, optional
+            number of voigt half-widths to simulate on either side of each line. The default is 50.
+        wing_wavenumbers : float, optional
+            number of wavenumbers to simulate on either side of each line. The default is 50.
+        wing_method : TYPE, optional
+            Provides choice between the wing_cutoff and wing_wavenumbers line cut-off options. The default is 'wing_cutoff'.
+
+        Returns
+        -------
+        total_residuals : array
+            residuals for all spectra in Dataset.
+
+        """
         total_simulated = []
         total_residuals = []
         baseline_params = []
@@ -1642,10 +2378,48 @@ class Fit_DataSet:
         total_simulated = np.asarray(total_simulated)
         return total_residuals
     def fit_data(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff', xtol = 1e-7, maxfev = 2000, ftol = 1e-7):
+        """Uses the LMFit minimizer to do the fitting through the simulation model function
+        
+
+        Parameters
+        ----------
+        params : lmfit parameter object
+            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
+        wing_cutoff : float, optional
+            number of voigt half-widths to simulate on either side of each line. The default is 50.
+        wing_wavenumbers : float, optional
+            number of wavenumbers to simulate on either side of each line. The default is 50.
+        wing_method : str, optional
+            Provides choice between the wing_cutoff and wing_wavenumbers line cut-off options. The default is 'wing_cutoff'.
+        xtol : float, optional
+             Absolute error in xopt between iterations that is acceptable for convergence. The default is 1e-7.
+        maxfev : float, optional
+            DESCRIPTION. The default is 2000.
+        ftol : The maximum number of calls to the function., optional
+            Absolute error in func(xopt) between iterations that is acceptable for convergence.. The default is 1e-7.
+
+        Returns
+        -------
+        result : LMFit result Object
+            contains all fit results as LMFit results object.
+
+        """
         minner = Minimizer(self.simulation_model, params, xtol =xtol, maxfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
         result = minner.minimize(method = 'leastsq')#'
         return result
     def residual_analysis(self, result, indv_resid_plot = False):
+        """Updates the model and residual arrays in each spectrum object with the results of the fit and gives the option of plotting each spectra with residuals.
+        
+
+        Parameters
+        ----------
+        result : LMFit result Object
+            contains all fit results as LMFit results object.
+        indv_resid_plot : bool, optional
+            True if you want to show residual plots for each spectra.. The default is False.
+
+
+        """
         residual_array = result.residual
         for spectrum in self.dataset.spectra:
             spectrum_residual, residual_array = np.split(residual_array, [len(spectrum.wavenumber)])
@@ -1654,6 +2428,19 @@ class Fit_DataSet:
             if indv_resid_plot:
                 spectrum.plot_model_residuals()
     def update_params(self, result, base_linelist_update_file = None , param_linelist_update_file = None):
+        """Updates the baseline and line parameter files based on fit results with the option to write over the file (default) or save as a new file. It also calculates and add the baseline and etalon terms into a baseline array for the spectrum.
+        
+
+        Parameters
+        ----------
+        result : LMFit result Object
+            contains all fit results as LMFit results object.
+        base_linelist_update_file : str, optional
+            Name of file to save the updated baseline parameters. Default is to override the input. The default is None.
+        param_linelist_update_file : str, optional
+            Name of file to save the updated line parameters. Default is to override the input. The default is None.
+
+        """
         if base_linelist_update_file == None:
             base_linelist_update_file = self.base_linelist_file
         if param_linelist_update_file == None:
