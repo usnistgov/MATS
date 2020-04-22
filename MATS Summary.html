@@ -20,9 +20,10 @@
     <script src="https://code.jquery.com/jquery.1.12.4.min.js"></script>
     <script src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
     <script src="_static/leave_notice.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Generating Pandas Line lists from HITRAN" href="Generating Pandas Line lists from HITRAN.html" />
+    <link rel="next" title="Generating Parameter Line lists" href="Generating Parameter Line lists.html" />
     <link rel="prev" title="Getting Started" href="Getting Started.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -44,8 +45,9 @@
 <h1>MATS Summary<a class="headerlink" href="#mats-summary" title="Permalink to this headline">¶</a></h1>
 <p>In multi-spectrum fitting, there are a collection of spectrum that can be modeled by the same line-by-line spectroscopic parameters, but might vary in pressure, temperature, and sample composition.</p>
 <p>The MATS program is based on <a class="reference internal" href="MATS.html#MATS.Spectrum" title="MATS.Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Spectrum</span></code></a> objects, which are defined by not only their wavenumber and absorption data, but also information on the spectrum pressure, temperature, baseline characteristics, and sample composition.  In addition to utilizing real spectra, there is a <a class="reference internal" href="MATS.html#MATS.simulate_spectrum" title="MATS.simulate_spectrum"><code class="xref py py-func docutils literal notranslate"><span class="pre">MATS.simulate_spectrum()</span></code></a> function, which returns a spectrum object that match input simulation parameters.  This is useful for performing error analysis in the same framework as primary data analysis.  These <a class="reference internal" href="MATS.html#MATS.Spectrum" title="MATS.Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Spectrum</span></code></a> objects are combined to form a <a class="reference internal" href="MATS.html#MATS.Dataset" title="MATS.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Dataset</span></code></a> object, which is the collection of spectra that are being analyzed together in the multi-spectrum analysis.</p>
-<p>There are two files that contain parameters that are fit in this model, one for spectrum dependent parameters (baseline parameters, etalons, sample composition, x-shift) and the other for linelist parameters that are common across all spectra.  These files are saved locally as .csv files with a column for each parameter and with rows corresponding to either the spectrum number or spectral line number.  In addition to the columns for fit parameter, there are two additional columns for each parameter called param_vary and param_err.  The param_vary column is a boolean flag that is toggled to indicate whether a given parameter will be varied in the fit.  The param_err column will be set to zero initially and replaced with the fit error value, if it is floated after fitting.  Calls of the <a class="reference internal" href="MATS.html#MATS.Generate_FitParam_File" title="MATS.Generate_FitParam_File"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Generate_FitParam_File</span></code></a> class not only makes these input files, but also set the lineshape (HTP derivatives) and define initial conditions for whether a parameter should be varied and whether the parameter should be constrained to multi-spectrum fit or allowed to vary by spectrum.  The <a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files" title="MATS.Edit_Fit_Param_Files"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files</span></code></a> class allows for edits to the parameters files in the ipython interface rather than editing in the .csv file.</p>
-<p>Finally, the <a class="reference internal" href="MATS.html#MATS.Fit_DataSet" title="MATS.Fit_DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Fit_DataSet</span></code></a> class fits the data and allows you to impose constraints on the parameters (min and max values), impose simulation and impose convergence criteria, update parameter/parameter line lists, and plot fit results.</p>
+<p>There are two files that contain parameters that are fit in this model, one for spectrum dependent parameters (baseline parameters, etalons, sample composition, x-shift) and the other for linelist parameters that are common across all spectra.  These files are saved locally as .csv files with a column for each parameter and with rows corresponding to either the spectrum number or spectral line number.  In addition to the columns for fit parameters, there are two additional columns for each fittable parameter called param_vary and param_err.  The param_vary column is a boolean flag that is toggled to indicate whether a given parameter will be varied in the fit.  The param_err column will be set to zero initially and replaced with the fit error value, if it is floated after fitting.  Calls of the <a class="reference internal" href="MATS.html#MATS.Generate_FitParam_File" title="MATS.Generate_FitParam_File"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Generate_FitParam_File</span></code></a> class not only make these input files, but also set the lineshape (HTP derivatives) and define initial conditions for whether a parameter should be varied and whether the parameter should be constrained to multi-spectrum fit or allowed to vary by spectrum.  The <a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files" title="MATS.Edit_Fit_Param_Files"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files</span></code></a> class allows for edits to the parameters files in the ipython interface rather than editing in the .csv file.</p>
+<p>Finally, the <a class="reference internal" href="MATS.html#MATS.Fit_DataSet" title="MATS.Fit_DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Fit_DataSet</span></code></a> class fits the data and allows the user to impose constraints on the parameters (min and max values), impose simulation and impose convergence criteria, update parameter/parameter line lists, and plot fit results.</p>
+<p>Below is sparse documentation for each of the classes and main functions in the MATS project with links to the full documentation provided.</p>
 <div class="section" id="spectrum-class-and-objects">
 <h2>Spectrum Class and Objects<a class="headerlink" href="#spectrum-class-and-objects" title="Permalink to this headline">¶</a></h2>
 <table class="longtable docutils align-default">
@@ -241,7 +243,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#fit-dataset-class">Fit Dataset Class</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Generating Pandas Line lists from HITRAN.html">Generating Pandas Line lists from HITRAN</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Generating Parameter Line lists.html">Generating Parameter Line lists</a></li>
 <li class="toctree-l1"><a class="reference internal" href="MATS.html">MATS module</a></li>
 </ul>
 
@@ -250,7 +252,7 @@
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="Getting Started.html" title="previous chapter">Getting Started</a></li>
-      <li>Next: <a href="Generating Pandas Line lists from HITRAN.html" title="next chapter">Generating Pandas Line lists from HITRAN</a></li>
+      <li>Next: <a href="Generating Parameter Line lists.html" title="next chapter">Generating Parameter Line lists</a></li>
   </ul></li>
 </ul>
 </div>

@@ -1,0 +1,376 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Generating Parameter Line lists &#8212; MATS 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css" />
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="https://pages.nist.gov/nist-header-footer/js/jquery-1.9.0.min.js"></script>
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js"></script>
+    <script id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-42404149-54&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+    <script src="https://code.jquery.com/jquery.1.12.4.min.js"></script>
+    <script src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
+    <script src="_static/leave_notice.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MATS module" href="MATS.html" />
+    <link rel="prev" title="MATS Summary" href="MATS Summary.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="generating-parameter-line-lists">
+<h1>Generating Parameter Line lists<a class="headerlink" href="#generating-parameter-line-lists" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="parameter-line-list-overview">
+<h2>Parameter Line list Overview<a class="headerlink" href="#parameter-line-list-overview" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>The MATS program uses a spectroscopic line list that varies from the traditional HITRAN and HAPI format to accomodate the full HTP parameterization including temperature dependences for all parmeters (other than the correlation parameter and nearest neighbor line-mixing).  The linelist format has rows that correspond to each line and columns that correspond to the various line parameters.  The necessary column headers are below, where there needs to be a column for each parameter and each diluent being fit (ie. air, self) and the line-mixing term needs to include the nominal temperature as a suffix.</dt><dd><ul class="simple">
+<li><p>molec_id: HITRAN molecule id number</p></li>
+<li><p>local_iso_id: HITRAN local isotope id number</p></li>
+<li><p>nu: line center (cm-1)</p></li>
+<li><p>sw : spectral line intensity (cm−1/(molecule⋅cm−2)) at Tref=296K</p></li>
+<li><p>elower: The lower-state energy of the transition (cm-1)</p></li>
+<li><p>gamma0_diluent: collisional half-width (cm−1/atm) at Tref=296K and reference pressure pref=1atm for a given diluent</p></li>
+<li><p>n_gamma0_diluent: coefficient of the temperature dependence of the half width</p></li>
+<li><p>delta0_diluent: pressure shift (cm−1/atm) at Tref=296K and pref=1atm of the line position with respect to line center</p></li>
+<li><p>n_delta0_diluent:  the coefficient of the temperature dependence of the pressure shift</p></li>
+<li><p>SD_gamma_diluent: the ratio of the speed dependent width to the collisional half-width at reference temperature and pressure</p></li>
+<li><p>n_gamma2_diluent: the coefficient of the temperature dependence of the speed dependent width NOTE: This is the temperature dependence of the speed dependent width not the ratio of the speed dependence to the half-width</p></li>
+<li><p>SD_delta_diluent:  the ratio of the speed dependent shift to the collisional shift at reference temperature and pressure</p></li>
+<li><p>n_delta2_diluent: he coefficient of the temperature dependence of the speed dependent shift NOTE: This is the temperature dependence of the speed dependent shift not the ratio of the speed dependence to the shift</p></li>
+<li><p>nuVC_diluent: dicke narrowing term at reference temperature and pressure</p></li>
+<li><p>n__nuVC_diluent:  coefficient of the temperature dependence of the dicke narrowing term</p></li>
+<li><p>eta_diluent:  the correlation parameter for the VC and SD effects</p></li>
+<li><p>y_diluent_nominaltemp: linemixing term (as currently written this doesn’t have a temperature dependence, so different column for each nominal temperature)</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="generating-parameter-line-list-from-hitran">
+<h2>Generating Parameter Line list from HITRAN<a class="headerlink" href="#generating-parameter-line-list-from-hitran" title="Permalink to this headline">¶</a></h2>
+<p>The parameter line list .csv file can be generated manually, but <a class="reference external" href="https://github.com/usnistgov/MATS/blob/master/MATS/HITRAN_to_Dataframe.ipynb">this code</a> generates a parameter list using <a class="reference external" href="https://hitran.org/hapi/">HITRAN Application Programming Interface (HAPI)</a>.  The overview below walks through this notebook.</p>
+<div class="section" id="imports">
+<h3>Imports<a class="headerlink" href="#imports" title="Permalink to this headline">¶</a></h3>
+<p>Import the numpy, pandas, os, and sys packages.  Set pandas dataframe to show all of the rows.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s2">&quot;display.max_rows&quot;</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+</pre></div>
+</div>
+<p>Optional imports include matplotlib and seaborn for plotting.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s2">&quot;whitegrid&quot;</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s2">&quot;ticks&quot;</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">set_context</span><span class="p">(</span><span class="s2">&quot;poster&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Add location of hapi.py to system path</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;C:\Users\Documents\Python Scripts\HAPI&#39;</span><span class="p">)</span><span class="c1">#Add hapi.py folder location to system path</span>
+<span class="kn">from</span> <span class="nn">hapi</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>Set Working File Location</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">spec_path</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;C:\Users\Documents\Python Scripts\HAPI&#39;</span> <span class="c1"># Location of the Summary Data File</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">spec_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="molecule-and-isotope-information">
+<h3>Molecule and Isotope Information<a class="headerlink" href="#molecule-and-isotope-information" title="Permalink to this headline">¶</a></h3>
+<p>HAPI provids a dictionary called ISO_ID, where the global isotope id acts as the key, with a sub dictionary containing the molecule id, local isotope id, isotope name, relative abundance, mass, and molecule name.  The following command will generate the dictionary as the output.  This provides the necessary information for interfacing with HAPI to pull-down HITRAN infomation.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">print_iso_id</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">The</span> <span class="n">dictionary</span> <span class="s2">&quot;ISO_ID&quot;</span> <span class="n">contains</span> <span class="n">information</span> <span class="n">on</span> <span class="s2">&quot;global&quot;</span> <span class="n">IDs</span> <span class="n">of</span> <span class="n">isotopologues</span> <span class="ow">in</span> <span class="n">HITRAN</span>
+
+   <span class="nb">id</span>            <span class="n">M</span>    <span class="n">I</span>                    <span class="n">iso_name</span>       <span class="n">abundance</span>       <span class="n">mass</span>        <span class="n">mol_name</span>
+    <span class="mi">1</span>     <span class="p">:</span>      <span class="mi">1</span>    <span class="mi">1</span>                     <span class="n">H2</span><span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.9973170000</span>  <span class="mf">18.010565</span>             <span class="n">H2O</span>
+    <span class="mi">2</span>     <span class="p">:</span>      <span class="mi">1</span>    <span class="mi">2</span>                     <span class="n">H2</span><span class="p">(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0019998300</span>  <span class="mf">20.014811</span>             <span class="n">H2O</span>
+    <span class="mi">3</span>     <span class="p">:</span>      <span class="mi">1</span>    <span class="mi">3</span>                     <span class="n">H2</span><span class="p">(</span><span class="mi">17</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0003720000</span>  <span class="mf">19.014780</span>             <span class="n">H2O</span>
+    <span class="mi">4</span>     <span class="p">:</span>      <span class="mi">1</span>    <span class="mi">4</span>                     <span class="n">HD</span><span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0003106900</span>  <span class="mf">19.016740</span>             <span class="n">H2O</span>
+    <span class="mi">5</span>     <span class="p">:</span>      <span class="mi">1</span>    <span class="mi">5</span>                     <span class="n">HD</span><span class="p">(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0000006230</span>  <span class="mf">21.020985</span>             <span class="n">H2O</span>
+    <span class="mi">6</span>     <span class="p">:</span>      <span class="mi">1</span>    <span class="mi">6</span>                     <span class="n">HD</span><span class="p">(</span><span class="mi">17</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0000001160</span>  <span class="mf">20.020956</span>             <span class="n">H2O</span>
+  <span class="mi">129</span>     <span class="p">:</span>      <span class="mi">1</span>    <span class="mi">7</span>                     <span class="n">D2</span><span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0000000242</span>  <span class="mf">20.022915</span>             <span class="n">H2O</span>
+    <span class="mi">7</span>     <span class="p">:</span>      <span class="mi">2</span>    <span class="mi">1</span>                 <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.9842040000</span>  <span class="mf">43.989830</span>             <span class="n">CO2</span>
+    <span class="mi">8</span>     <span class="p">:</span>      <span class="mi">2</span>    <span class="mi">2</span>                 <span class="p">(</span><span class="mi">13</span><span class="n">C</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.0110570000</span>  <span class="mf">44.993185</span>             <span class="n">CO2</span>
+    <span class="mi">9</span>     <span class="p">:</span>      <span class="mi">2</span>    <span class="mi">3</span>             <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0039471000</span>  <span class="mf">45.994076</span>             <span class="n">CO2</span>
+   <span class="mi">10</span>     <span class="p">:</span>      <span class="mi">2</span>    <span class="mi">4</span>             <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">17</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0007340000</span>  <span class="mf">44.994045</span>             <span class="n">CO2</span>
+   <span class="mi">11</span>     <span class="p">:</span>      <span class="mi">2</span>    <span class="mi">5</span>             <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">13</span><span class="n">C</span><span class="p">)(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0000443400</span>  <span class="mf">46.997431</span>             <span class="n">CO2</span>
+   <span class="mi">12</span>     <span class="p">:</span>      <span class="mi">2</span>    <span class="mi">6</span>             <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">13</span><span class="n">C</span><span class="p">)(</span><span class="mi">17</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0000082500</span>  <span class="mf">45.997400</span>             <span class="n">CO2</span>
+   <span class="mi">13</span>     <span class="p">:</span>      <span class="mi">2</span>    <span class="mi">7</span>                 <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.0000039573</span>  <span class="mf">47.998322</span>             <span class="n">CO2</span>
+   <span class="mi">14</span>     <span class="p">:</span>      <span class="mi">2</span>    <span class="mi">8</span>             <span class="p">(</span><span class="mi">17</span><span class="n">O</span><span class="p">)(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0000014700</span>  <span class="mf">46.998291</span>             <span class="n">CO2</span>
+  <span class="mi">121</span>     <span class="p">:</span>      <span class="mi">2</span>    <span class="mi">9</span>                 <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">17</span><span class="n">O</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.0000001368</span>  <span class="mf">45.998262</span>             <span class="n">CO2</span>
+   <span class="mi">15</span>     <span class="p">:</span>      <span class="mi">2</span>   <span class="mi">10</span>                 <span class="p">(</span><span class="mi">13</span><span class="n">C</span><span class="p">)(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.0000000450</span>  <span class="mf">49.001675</span>             <span class="n">CO2</span>
+  <span class="mi">120</span>     <span class="p">:</span>      <span class="mi">2</span>   <span class="mi">11</span>             <span class="p">(</span><span class="mi">18</span><span class="n">O</span><span class="p">)(</span><span class="mi">13</span><span class="n">C</span><span class="p">)(</span><span class="mi">17</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0000000165</span>  <span class="mf">48.001650</span>             <span class="n">CO2</span>
+  <span class="mi">122</span>     <span class="p">:</span>      <span class="mi">2</span>   <span class="mi">12</span>                 <span class="p">(</span><span class="mi">13</span><span class="n">C</span><span class="p">)(</span><span class="mi">17</span><span class="n">O</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.0000000015</span>  <span class="mf">47.001618</span>             <span class="n">CO2</span>
+   <span class="mi">16</span>     <span class="p">:</span>      <span class="mi">3</span>    <span class="mi">1</span>                      <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="mi">3</span>    <span class="mf">0.9929010000</span>  <span class="mf">47.984745</span>              <span class="n">O3</span>
+   <span class="mi">17</span>     <span class="p">:</span>      <span class="mi">3</span>    <span class="mi">2</span>             <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0039819400</span>  <span class="mf">49.988991</span>              <span class="n">O3</span>
+   <span class="mi">18</span>     <span class="p">:</span>      <span class="mi">3</span>    <span class="mi">3</span>             <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">18</span><span class="n">O</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0019909700</span>  <span class="mf">49.988991</span>              <span class="n">O3</span>
+   <span class="mi">19</span>     <span class="p">:</span>      <span class="mi">3</span>    <span class="mi">4</span>             <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">17</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0007400000</span>  <span class="mf">48.988960</span>              <span class="n">O3</span>
+   <span class="mi">20</span>     <span class="p">:</span>      <span class="mi">3</span>    <span class="mi">5</span>             <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">17</span><span class="n">O</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0003700000</span>  <span class="mf">48.988960</span>              <span class="n">O3</span>
+   <span class="mi">21</span>     <span class="p">:</span>      <span class="mi">4</span>    <span class="mi">1</span>                 <span class="p">(</span><span class="mi">14</span><span class="n">N</span><span class="p">)</span><span class="mi">2</span><span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.9903330000</span>  <span class="mf">44.001062</span>             <span class="n">N2O</span>
+   <span class="mi">22</span>     <span class="p">:</span>      <span class="mi">4</span>    <span class="mi">2</span>             <span class="p">(</span><span class="mi">14</span><span class="n">N</span><span class="p">)(</span><span class="mi">15</span><span class="n">N</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0036409000</span>  <span class="mf">44.998096</span>             <span class="n">N2O</span>
+   <span class="mi">23</span>     <span class="p">:</span>      <span class="mi">4</span>    <span class="mi">3</span>             <span class="p">(</span><span class="mi">15</span><span class="n">N</span><span class="p">)(</span><span class="mi">14</span><span class="n">N</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0036409000</span>  <span class="mf">44.998096</span>             <span class="n">N2O</span>
+   <span class="mi">24</span>     <span class="p">:</span>      <span class="mi">4</span>    <span class="mi">4</span>                 <span class="p">(</span><span class="mi">14</span><span class="n">N</span><span class="p">)</span><span class="mi">2</span><span class="p">(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0019858200</span>  <span class="mf">46.005308</span>             <span class="n">N2O</span>
+   <span class="mi">25</span>     <span class="p">:</span>      <span class="mi">4</span>    <span class="mi">5</span>                 <span class="p">(</span><span class="mi">14</span><span class="n">N</span><span class="p">)</span><span class="mi">2</span><span class="p">(</span><span class="mi">17</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0003690000</span>  <span class="mf">45.005278</span>             <span class="n">N2O</span>
+   <span class="mi">26</span>     <span class="p">:</span>      <span class="mi">5</span>    <span class="mi">1</span>                  <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.9865400000</span>  <span class="mf">27.994915</span>              <span class="n">CO</span>
+   <span class="mi">27</span>     <span class="p">:</span>      <span class="mi">5</span>    <span class="mi">2</span>                  <span class="p">(</span><span class="mi">13</span><span class="n">C</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0110800000</span>  <span class="mf">28.998270</span>              <span class="n">CO</span>
+   <span class="mi">28</span>     <span class="p">:</span>      <span class="mi">5</span>    <span class="mi">3</span>                  <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0019782000</span>  <span class="mf">29.999161</span>              <span class="n">CO</span>
+   <span class="mi">29</span>     <span class="p">:</span>      <span class="mi">5</span>    <span class="mi">4</span>                  <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">17</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0003680000</span>  <span class="mf">28.999130</span>              <span class="n">CO</span>
+   <span class="mi">30</span>     <span class="p">:</span>      <span class="mi">5</span>    <span class="mi">5</span>                  <span class="p">(</span><span class="mi">13</span><span class="n">C</span><span class="p">)(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0000222200</span>  <span class="mf">31.002516</span>              <span class="n">CO</span>
+   <span class="mi">31</span>     <span class="p">:</span>      <span class="mi">5</span>    <span class="mi">6</span>                  <span class="p">(</span><span class="mi">13</span><span class="n">C</span><span class="p">)(</span><span class="mi">17</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0000041300</span>  <span class="mf">30.002485</span>              <span class="n">CO</span>
+   <span class="mi">32</span>     <span class="p">:</span>      <span class="mi">6</span>    <span class="mi">1</span>                     <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="n">H4</span>    <span class="mf">0.9882700000</span>  <span class="mf">16.031300</span>             <span class="n">CH4</span>
+   <span class="mi">33</span>     <span class="p">:</span>      <span class="mi">6</span>    <span class="mi">2</span>                     <span class="p">(</span><span class="mi">13</span><span class="n">C</span><span class="p">)</span><span class="n">H4</span>    <span class="mf">0.0111000000</span>  <span class="mf">17.034655</span>             <span class="n">CH4</span>
+   <span class="mi">34</span>     <span class="p">:</span>      <span class="mi">6</span>    <span class="mi">3</span>                    <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="n">H3D</span>    <span class="mf">0.0006157500</span>  <span class="mf">17.037475</span>             <span class="n">CH4</span>
+   <span class="mi">35</span>     <span class="p">:</span>      <span class="mi">6</span>    <span class="mi">4</span>                    <span class="p">(</span><span class="mi">13</span><span class="n">C</span><span class="p">)</span><span class="n">H3D</span>    <span class="mf">0.0000049203</span>  <span class="mf">18.040830</span>             <span class="n">CH4</span>
+   <span class="mi">36</span>     <span class="p">:</span>      <span class="mi">7</span>    <span class="mi">1</span>                      <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.9952620000</span>  <span class="mf">31.989830</span>              <span class="n">O2</span>
+   <span class="mi">37</span>     <span class="p">:</span>      <span class="mi">7</span>    <span class="mi">2</span>                  <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0039914100</span>  <span class="mf">33.994076</span>              <span class="n">O2</span>
+   <span class="mi">38</span>     <span class="p">:</span>      <span class="mi">7</span>    <span class="mi">3</span>                  <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">17</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0007420000</span>  <span class="mf">32.994045</span>              <span class="n">O2</span>
+   <span class="mi">39</span>     <span class="p">:</span>      <span class="mi">8</span>    <span class="mi">1</span>                  <span class="p">(</span><span class="mi">14</span><span class="n">N</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.9939740000</span>  <span class="mf">29.997989</span>              <span class="n">NO</span>
+   <span class="mi">40</span>     <span class="p">:</span>      <span class="mi">8</span>    <span class="mi">2</span>                  <span class="p">(</span><span class="mi">15</span><span class="n">N</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0036543000</span>  <span class="mf">30.995023</span>              <span class="n">NO</span>
+   <span class="mi">41</span>     <span class="p">:</span>      <span class="mi">8</span>    <span class="mi">3</span>                  <span class="p">(</span><span class="mi">14</span><span class="n">N</span><span class="p">)(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0019931200</span>  <span class="mf">32.002234</span>              <span class="n">NO</span>
+   <span class="mi">42</span>     <span class="p">:</span>      <span class="mi">9</span>    <span class="mi">1</span>                 <span class="p">(</span><span class="mi">32</span><span class="n">S</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.9456800000</span>  <span class="mf">63.961901</span>             <span class="n">SO2</span>
+   <span class="mi">43</span>     <span class="p">:</span>      <span class="mi">9</span>    <span class="mi">2</span>                 <span class="p">(</span><span class="mi">34</span><span class="n">S</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.0419500000</span>  <span class="mf">65.957695</span>             <span class="n">SO2</span>
+   <span class="mi">44</span>     <span class="p">:</span>     <span class="mi">10</span>    <span class="mi">1</span>                 <span class="p">(</span><span class="mi">14</span><span class="n">N</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.9916160000</span>  <span class="mf">45.992904</span>             <span class="n">NO2</span>
+   <span class="mi">45</span>     <span class="p">:</span>     <span class="mi">11</span>    <span class="mi">1</span>                     <span class="p">(</span><span class="mi">14</span><span class="n">N</span><span class="p">)</span><span class="n">H3</span>    <span class="mf">0.9958715000</span>  <span class="mf">17.026549</span>             <span class="n">NH3</span>
+   <span class="mi">46</span>     <span class="p">:</span>     <span class="mi">11</span>    <span class="mi">2</span>                     <span class="p">(</span><span class="mi">15</span><span class="n">N</span><span class="p">)</span><span class="n">H3</span>    <span class="mf">0.0036613000</span>  <span class="mf">18.023583</span>             <span class="n">NH3</span>
+   <span class="mi">47</span>     <span class="p">:</span>     <span class="mi">12</span>    <span class="mi">1</span>                <span class="n">H</span><span class="p">(</span><span class="mi">14</span><span class="n">N</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="mi">3</span>    <span class="mf">0.9891100000</span>  <span class="mf">62.995644</span>            <span class="n">HNO3</span>
+  <span class="mi">117</span>     <span class="p">:</span>     <span class="mi">12</span>    <span class="mi">2</span>                <span class="n">H</span><span class="p">(</span><span class="mi">15</span><span class="n">N</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="mi">3</span>    <span class="mf">0.0036360000</span>  <span class="mf">63.992680</span>            <span class="n">HNO3</span>
+   <span class="mi">48</span>     <span class="p">:</span>     <span class="mi">13</span>    <span class="mi">1</span>                      <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="n">H</span>    <span class="mf">0.9974730000</span>  <span class="mf">17.002740</span>              <span class="n">OH</span>
+   <span class="mi">49</span>     <span class="p">:</span>     <span class="mi">13</span>    <span class="mi">2</span>                      <span class="p">(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span><span class="n">H</span>    <span class="mf">0.0020001400</span>  <span class="mf">19.006986</span>              <span class="n">OH</span>
+   <span class="mi">50</span>     <span class="p">:</span>     <span class="mi">13</span>    <span class="mi">3</span>                      <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="n">D</span>    <span class="mf">0.0001553700</span>  <span class="mf">18.008915</span>              <span class="n">OH</span>
+   <span class="mi">51</span>     <span class="p">:</span>     <span class="mi">14</span>    <span class="mi">1</span>                      <span class="n">H</span><span class="p">(</span><span class="mi">19</span><span class="n">F</span><span class="p">)</span>    <span class="mf">0.9998442500</span>  <span class="mf">20.006229</span>              <span class="n">HF</span>
+  <span class="mi">110</span>     <span class="p">:</span>     <span class="mi">14</span>    <span class="mi">2</span>                      <span class="n">D</span><span class="p">(</span><span class="mi">19</span><span class="n">F</span><span class="p">)</span>    <span class="mf">0.0001150000</span>  <span class="mf">21.012505</span>              <span class="n">HF</span>
+   <span class="mi">52</span>     <span class="p">:</span>     <span class="mi">15</span>    <span class="mi">1</span>                     <span class="n">H</span><span class="p">(</span><span class="mi">35</span><span class="n">Cl</span><span class="p">)</span>    <span class="mf">0.7575870000</span>  <span class="mf">35.976678</span>             <span class="n">HCl</span>
+   <span class="mi">53</span>     <span class="p">:</span>     <span class="mi">15</span>    <span class="mi">2</span>                     <span class="n">H</span><span class="p">(</span><span class="mi">37</span><span class="n">Cl</span><span class="p">)</span>    <span class="mf">0.2422570000</span>  <span class="mf">37.973729</span>             <span class="n">HCl</span>
+  <span class="mi">107</span>     <span class="p">:</span>     <span class="mi">15</span>    <span class="mi">3</span>                     <span class="n">D</span><span class="p">(</span><span class="mi">35</span><span class="n">Cl</span><span class="p">)</span>    <span class="mf">0.0001180050</span>  <span class="mf">36.982954</span>             <span class="n">HCl</span>
+  <span class="mi">108</span>     <span class="p">:</span>     <span class="mi">15</span>    <span class="mi">4</span>                     <span class="n">D</span><span class="p">(</span><span class="mi">37</span><span class="n">Cl</span><span class="p">)</span>    <span class="mf">0.0000377350</span>  <span class="mf">38.980004</span>             <span class="n">HCl</span>
+   <span class="mi">54</span>     <span class="p">:</span>     <span class="mi">16</span>    <span class="mi">1</span>                     <span class="n">H</span><span class="p">(</span><span class="mi">79</span><span class="n">Br</span><span class="p">)</span>    <span class="mf">0.5067800000</span>  <span class="mf">79.926160</span>             <span class="n">HBr</span>
+   <span class="mi">55</span>     <span class="p">:</span>     <span class="mi">16</span>    <span class="mi">2</span>                     <span class="n">H</span><span class="p">(</span><span class="mi">81</span><span class="n">Br</span><span class="p">)</span>    <span class="mf">0.4930600000</span>  <span class="mf">81.924115</span>             <span class="n">HBr</span>
+  <span class="mi">111</span>     <span class="p">:</span>     <span class="mi">16</span>    <span class="mi">3</span>                     <span class="n">D</span><span class="p">(</span><span class="mi">79</span><span class="n">Br</span><span class="p">)</span>    <span class="mf">0.0000582935</span>  <span class="mf">80.932439</span>             <span class="n">HBr</span>
+  <span class="mi">112</span>     <span class="p">:</span>     <span class="mi">16</span>    <span class="mi">4</span>                     <span class="n">D</span><span class="p">(</span><span class="mi">81</span><span class="n">Br</span><span class="p">)</span>    <span class="mf">0.0000567065</span>  <span class="mf">82.930392</span>             <span class="n">HBr</span>
+   <span class="mi">56</span>     <span class="p">:</span>     <span class="mi">17</span>    <span class="mi">1</span>                     <span class="n">H</span><span class="p">(</span><span class="mi">127</span><span class="n">I</span><span class="p">)</span>    <span class="mf">0.9998442500</span> <span class="mf">127.912297</span>              <span class="n">HI</span>
+  <span class="mi">113</span>     <span class="p">:</span>     <span class="mi">17</span>    <span class="mi">2</span>                     <span class="n">D</span><span class="p">(</span><span class="mi">127</span><span class="n">I</span><span class="p">)</span>    <span class="mf">0.0001150000</span> <span class="mf">128.918575</span>              <span class="n">HI</span>
+   <span class="mi">57</span>     <span class="p">:</span>     <span class="mi">18</span>    <span class="mi">1</span>                 <span class="p">(</span><span class="mi">35</span><span class="n">Cl</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.7559100000</span>  <span class="mf">50.963768</span>             <span class="n">ClO</span>
+   <span class="mi">58</span>     <span class="p">:</span>     <span class="mi">18</span>    <span class="mi">2</span>                 <span class="p">(</span><span class="mi">37</span><span class="n">Cl</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.2417200000</span>  <span class="mf">52.960819</span>             <span class="n">ClO</span>
+   <span class="mi">59</span>     <span class="p">:</span>     <span class="mi">19</span>    <span class="mi">1</span>             <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">32</span><span class="n">S</span><span class="p">)</span>    <span class="mf">0.9373900000</span>  <span class="mf">59.966986</span>             <span class="n">OCS</span>
+   <span class="mi">60</span>     <span class="p">:</span>     <span class="mi">19</span>    <span class="mi">2</span>             <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">34</span><span class="n">S</span><span class="p">)</span>    <span class="mf">0.0415800000</span>  <span class="mf">61.962780</span>             <span class="n">OCS</span>
+   <span class="mi">61</span>     <span class="p">:</span>     <span class="mi">19</span>    <span class="mi">3</span>             <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">13</span><span class="n">C</span><span class="p">)(</span><span class="mi">32</span><span class="n">S</span><span class="p">)</span>    <span class="mf">0.0105300000</span>  <span class="mf">60.970341</span>             <span class="n">OCS</span>
+   <span class="mi">62</span>     <span class="p">:</span>     <span class="mi">19</span>    <span class="mi">4</span>             <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">33</span><span class="n">S</span><span class="p">)</span>    <span class="mf">0.0105300000</span>  <span class="mf">60.966371</span>             <span class="n">OCS</span>
+   <span class="mi">63</span>     <span class="p">:</span>     <span class="mi">19</span>    <span class="mi">5</span>             <span class="p">(</span><span class="mi">18</span><span class="n">O</span><span class="p">)(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">32</span><span class="n">S</span><span class="p">)</span>    <span class="mf">0.0018800000</span>  <span class="mf">61.971231</span>             <span class="n">OCS</span>
+   <span class="mi">64</span>     <span class="p">:</span>     <span class="mi">20</span>    <span class="mi">1</span>                <span class="n">H2</span><span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.9862400000</span>  <span class="mf">30.010565</span>            <span class="n">H2CO</span>
+   <span class="mi">65</span>     <span class="p">:</span>     <span class="mi">20</span>    <span class="mi">2</span>                <span class="n">H2</span><span class="p">(</span><span class="mi">13</span><span class="n">C</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0110800000</span>  <span class="mf">31.013920</span>            <span class="n">H2CO</span>
+   <span class="mi">66</span>     <span class="p">:</span>     <span class="mi">20</span>    <span class="mi">3</span>                <span class="n">H2</span><span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">18</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.0019776000</span>  <span class="mf">32.014811</span>            <span class="n">H2CO</span>
+   <span class="mi">67</span>     <span class="p">:</span>     <span class="mi">21</span>    <span class="mi">1</span>                <span class="n">H</span><span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">35</span><span class="n">Cl</span><span class="p">)</span>    <span class="mf">0.7557900000</span>  <span class="mf">51.971593</span>            <span class="n">HOCl</span>
+   <span class="mi">68</span>     <span class="p">:</span>     <span class="mi">21</span>    <span class="mi">2</span>                <span class="n">H</span><span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">37</span><span class="n">Cl</span><span class="p">)</span>    <span class="mf">0.2416800000</span>  <span class="mf">53.968644</span>            <span class="n">HOCl</span>
+   <span class="mi">69</span>     <span class="p">:</span>     <span class="mi">22</span>    <span class="mi">1</span>                      <span class="p">(</span><span class="mi">14</span><span class="n">N</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.9926874000</span>  <span class="mf">28.006147</span>              <span class="n">N2</span>
+  <span class="mi">118</span>     <span class="p">:</span>     <span class="mi">22</span>    <span class="mi">2</span>                  <span class="p">(</span><span class="mi">14</span><span class="n">N</span><span class="p">)(</span><span class="mi">15</span><span class="n">N</span><span class="p">)</span>    <span class="mf">0.0072535000</span>  <span class="mf">29.997989</span>              <span class="n">N2</span>
+   <span class="mi">70</span>     <span class="p">:</span>     <span class="mi">23</span>    <span class="mi">1</span>                 <span class="n">H</span><span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">14</span><span class="n">N</span><span class="p">)</span>    <span class="mf">0.9851100000</span>  <span class="mf">27.010899</span>             <span class="n">HCN</span>
+   <span class="mi">71</span>     <span class="p">:</span>     <span class="mi">23</span>    <span class="mi">2</span>                 <span class="n">H</span><span class="p">(</span><span class="mi">13</span><span class="n">C</span><span class="p">)(</span><span class="mi">14</span><span class="n">N</span><span class="p">)</span>    <span class="mf">0.0110700000</span>  <span class="mf">28.014254</span>             <span class="n">HCN</span>
+   <span class="mi">72</span>     <span class="p">:</span>     <span class="mi">23</span>    <span class="mi">3</span>                 <span class="n">H</span><span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">15</span><span class="n">N</span><span class="p">)</span>    <span class="mf">0.0036217000</span>  <span class="mf">28.007933</span>             <span class="n">HCN</span>
+   <span class="mi">73</span>     <span class="p">:</span>     <span class="mi">24</span>    <span class="mi">1</span>               <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="n">H3</span><span class="p">(</span><span class="mi">35</span><span class="n">Cl</span><span class="p">)</span>    <span class="mf">0.7489400000</span>  <span class="mf">49.992328</span>           <span class="n">CH3Cl</span>
+   <span class="mi">74</span>     <span class="p">:</span>     <span class="mi">24</span>    <span class="mi">2</span>               <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="n">H3</span><span class="p">(</span><span class="mi">37</span><span class="n">Cl</span><span class="p">)</span>    <span class="mf">0.2394900000</span>  <span class="mf">51.989379</span>           <span class="n">CH3Cl</span>
+   <span class="mi">75</span>     <span class="p">:</span>     <span class="mi">25</span>    <span class="mi">1</span>                    <span class="n">H2</span><span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.9949520000</span>  <span class="mf">34.005480</span>            <span class="n">H2O2</span>
+   <span class="mi">76</span>     <span class="p">:</span>     <span class="mi">26</span>    <span class="mi">1</span>                    <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="mi">2</span><span class="n">H2</span>    <span class="mf">0.9776000000</span>  <span class="mf">26.015650</span>            <span class="n">C2H2</span>
+   <span class="mi">77</span>     <span class="p">:</span>     <span class="mi">26</span>    <span class="mi">2</span>                <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">13</span><span class="n">C</span><span class="p">)</span><span class="n">H2</span>    <span class="mf">0.0219700000</span>  <span class="mf">27.019005</span>            <span class="n">C2H2</span>
+  <span class="mi">105</span>     <span class="p">:</span>     <span class="mi">26</span>    <span class="mi">3</span>                    <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="mi">2</span><span class="n">HD</span>    <span class="mf">0.0003045500</span>  <span class="mf">27.021825</span>            <span class="n">C2H2</span>
+   <span class="mi">78</span>     <span class="p">:</span>     <span class="mi">27</span>    <span class="mi">1</span>                    <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="mi">2</span><span class="n">H6</span>    <span class="mf">0.9769900000</span>  <span class="mf">30.046950</span>            <span class="n">C2H6</span>
+  <span class="mi">106</span>     <span class="p">:</span>     <span class="mi">27</span>    <span class="mi">2</span>              <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="n">H3</span><span class="p">(</span><span class="mi">13</span><span class="n">C</span><span class="p">)</span><span class="n">H3</span>    <span class="mf">0.0219526110</span>  <span class="mf">31.050305</span>            <span class="n">C2H6</span>
+   <span class="mi">79</span>     <span class="p">:</span>     <span class="mi">28</span>    <span class="mi">1</span>                     <span class="p">(</span><span class="mi">31</span><span class="n">P</span><span class="p">)</span><span class="n">H3</span>    <span class="mf">0.9995328300</span>  <span class="mf">33.997238</span>             <span class="n">PH3</span>
+   <span class="mi">80</span>     <span class="p">:</span>     <span class="mi">29</span>    <span class="mi">1</span>            <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">19</span><span class="n">F</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.9865400000</span>  <span class="mf">65.991722</span>            <span class="n">COF2</span>
+  <span class="mi">119</span>     <span class="p">:</span>     <span class="mi">29</span>    <span class="mi">2</span>            <span class="p">(</span><span class="mi">13</span><span class="n">C</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">19</span><span class="n">F</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.0110834000</span>  <span class="mf">66.995083</span>            <span class="n">COF2</span>
+  <span class="mi">126</span>     <span class="p">:</span>     <span class="mi">30</span>    <span class="mi">1</span>                 <span class="p">(</span><span class="mi">32</span><span class="n">S</span><span class="p">)(</span><span class="mi">19</span><span class="n">F</span><span class="p">)</span><span class="mi">6</span>    <span class="mf">0.9501800000</span> <span class="mf">145.962492</span>             <span class="n">SF6</span>
+   <span class="mi">81</span>     <span class="p">:</span>     <span class="mi">31</span>    <span class="mi">1</span>                     <span class="n">H2</span><span class="p">(</span><span class="mi">32</span><span class="n">S</span><span class="p">)</span>    <span class="mf">0.9498800000</span>  <span class="mf">33.987721</span>             <span class="n">H2S</span>
+   <span class="mi">82</span>     <span class="p">:</span>     <span class="mi">31</span>    <span class="mi">2</span>                     <span class="n">H2</span><span class="p">(</span><span class="mi">34</span><span class="n">S</span><span class="p">)</span>    <span class="mf">0.0421400000</span>  <span class="mf">35.983515</span>             <span class="n">H2S</span>
+   <span class="mi">83</span>     <span class="p">:</span>     <span class="mi">31</span>    <span class="mi">3</span>                     <span class="n">H2</span><span class="p">(</span><span class="mi">33</span><span class="n">S</span><span class="p">)</span>    <span class="mf">0.0074980000</span>  <span class="mf">34.987105</span>             <span class="n">H2S</span>
+   <span class="mi">84</span>     <span class="p">:</span>     <span class="mi">32</span>    <span class="mi">1</span>           <span class="n">H</span><span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="n">H</span>    <span class="mf">0.9838980000</span>  <span class="mf">46.005480</span>           <span class="n">HCOOH</span>
+   <span class="mi">85</span>     <span class="p">:</span>     <span class="mi">33</span>    <span class="mi">1</span>                     <span class="n">H</span><span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.9951070000</span>  <span class="mf">32.997655</span>             <span class="n">HO2</span>
+   <span class="mi">86</span>     <span class="p">:</span>     <span class="mi">34</span>    <span class="mi">1</span>                       <span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span>    <span class="mf">0.9976280000</span>  <span class="mf">15.994915</span>               <span class="n">O</span>
+   <span class="mi">87</span>     <span class="p">:</span>     <span class="mi">36</span>    <span class="mi">1</span>                 <span class="p">(</span><span class="mi">14</span><span class="n">N</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="o">+</span>    <span class="mf">0.9939740000</span>  <span class="mf">29.997989</span>             <span class="n">NOp</span>
+   <span class="mi">88</span>     <span class="p">:</span>     <span class="mi">37</span>    <span class="mi">1</span>                <span class="n">H</span><span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">79</span><span class="n">Br</span><span class="p">)</span>    <span class="mf">0.5056000000</span>  <span class="mf">95.921076</span>            <span class="n">HOBr</span>
+   <span class="mi">89</span>     <span class="p">:</span>     <span class="mi">37</span>    <span class="mi">2</span>                <span class="n">H</span><span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">81</span><span class="n">Br</span><span class="p">)</span>    <span class="mf">0.4919000000</span>  <span class="mf">97.919027</span>            <span class="n">HOBr</span>
+   <span class="mi">90</span>     <span class="p">:</span>     <span class="mi">38</span>    <span class="mi">1</span>                    <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="mi">2</span><span class="n">H4</span>    <span class="mf">0.9773000000</span>  <span class="mf">28.031300</span>            <span class="n">C2H4</span>
+   <span class="mi">91</span>     <span class="p">:</span>     <span class="mi">38</span>    <span class="mi">2</span>              <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="n">H2</span><span class="p">(</span><span class="mi">13</span><span class="n">C</span><span class="p">)</span><span class="n">H2</span>    <span class="mf">0.0219600000</span>  <span class="mf">29.034655</span>            <span class="n">C2H4</span>
+   <span class="mi">92</span>     <span class="p">:</span>     <span class="mi">39</span>    <span class="mi">1</span>               <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="n">H3</span><span class="p">(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="n">H</span>    <span class="mf">0.9859300000</span>  <span class="mf">32.026215</span>           <span class="n">CH3OH</span>
+   <span class="mi">93</span>     <span class="p">:</span>     <span class="mi">40</span>    <span class="mi">1</span>               <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="n">H3</span><span class="p">(</span><span class="mi">79</span><span class="n">Br</span><span class="p">)</span>    <span class="mf">0.5013000000</span>  <span class="mf">93.941811</span>           <span class="n">CH3Br</span>
+   <span class="mi">94</span>     <span class="p">:</span>     <span class="mi">40</span>    <span class="mi">2</span>               <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="n">H3</span><span class="p">(</span><span class="mi">81</span><span class="n">Br</span><span class="p">)</span>    <span class="mf">0.4876600000</span>  <span class="mf">95.939764</span>           <span class="n">CH3Br</span>
+   <span class="mi">95</span>     <span class="p">:</span>     <span class="mi">41</span>    <span class="mi">1</span>           <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="n">H3</span><span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">14</span><span class="n">N</span><span class="p">)</span>    <span class="mf">0.9748200000</span>  <span class="mf">41.026549</span>           <span class="n">CH3CN</span>
+   <span class="mi">96</span>     <span class="p">:</span>     <span class="mi">42</span>    <span class="mi">1</span>                 <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">19</span><span class="n">F</span><span class="p">)</span><span class="mi">4</span>    <span class="mf">0.9893000000</span>  <span class="mf">87.993616</span>             <span class="n">CF4</span>
+  <span class="mi">116</span>     <span class="p">:</span>     <span class="mi">43</span>    <span class="mi">1</span>                    <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="mi">4</span><span class="n">H2</span>    <span class="mf">0.9559980000</span>  <span class="mf">50.015650</span>            <span class="n">C4H2</span>
+  <span class="mi">109</span>     <span class="p">:</span>     <span class="mi">44</span>    <span class="mi">1</span>                <span class="n">H</span><span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="mi">3</span><span class="p">(</span><span class="mi">14</span><span class="n">N</span><span class="p">)</span>    <span class="mf">0.9646069000</span>  <span class="mf">51.010899</span>            <span class="n">HC3N</span>
+  <span class="mi">103</span>     <span class="p">:</span>     <span class="mi">45</span>    <span class="mi">1</span>                          <span class="n">H2</span>    <span class="mf">0.9996880000</span>   <span class="mf">2.015650</span>              <span class="n">H2</span>
+  <span class="mi">115</span>     <span class="p">:</span>     <span class="mi">45</span>    <span class="mi">2</span>                          <span class="n">HD</span>    <span class="mf">0.0003114320</span>   <span class="mf">3.021825</span>              <span class="n">H2</span>
+   <span class="mi">97</span>     <span class="p">:</span>     <span class="mi">46</span>    <span class="mi">1</span>                  <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">32</span><span class="n">S</span><span class="p">)</span>    <span class="mf">0.9396240000</span>  <span class="mf">43.971036</span>              <span class="n">CS</span>
+   <span class="mi">98</span>     <span class="p">:</span>     <span class="mi">46</span>    <span class="mi">2</span>                  <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">34</span><span class="n">S</span><span class="p">)</span>    <span class="mf">0.0416817000</span>  <span class="mf">45.966787</span>              <span class="n">CS</span>
+   <span class="mi">99</span>     <span class="p">:</span>     <span class="mi">46</span>    <span class="mi">3</span>                  <span class="p">(</span><span class="mi">13</span><span class="n">C</span><span class="p">)(</span><span class="mi">32</span><span class="n">S</span><span class="p">)</span>    <span class="mf">0.0105565000</span>  <span class="mf">44.974368</span>              <span class="n">CS</span>
+  <span class="mi">100</span>     <span class="p">:</span>     <span class="mi">46</span>    <span class="mi">4</span>                  <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">33</span><span class="n">S</span><span class="p">)</span>    <span class="mf">0.0074166800</span>  <span class="mf">44.970399</span>              <span class="n">CS</span>
+  <span class="mi">114</span>     <span class="p">:</span>     <span class="mi">47</span>    <span class="mi">1</span>                 <span class="p">(</span><span class="mi">32</span><span class="n">S</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)</span><span class="mi">3</span>    <span class="mf">0.9423964000</span>  <span class="mf">79.956820</span>             <span class="n">SO3</span>
+  <span class="mi">123</span>     <span class="p">:</span>     <span class="mi">48</span>    <span class="mi">1</span>                <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)</span><span class="mi">2</span><span class="p">(</span><span class="mi">14</span><span class="n">N</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.9707524330</span>  <span class="mf">52.006148</span>            <span class="n">C2N2</span>
+  <span class="mi">124</span>     <span class="p">:</span>     <span class="mi">49</span>    <span class="mi">1</span>           <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">35</span><span class="n">Cl</span><span class="p">)</span><span class="mi">2</span>    <span class="mf">0.5663917610</span>  <span class="mf">97.932620</span>           <span class="n">COCl2</span>
+  <span class="mi">125</span>     <span class="p">:</span>     <span class="mi">49</span>    <span class="mi">2</span>      <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">35</span><span class="n">Cl</span><span class="p">)(</span><span class="mi">37</span><span class="n">Cl</span><span class="p">)</span>    <span class="mf">0.3622352780</span>  <span class="mf">99.929670</span>           <span class="n">COCl2</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="set-up-variables-for-line-list">
+<h3>Set-Up Variables for Line list<a class="headerlink" href="#set-up-variables-for-line-list" title="Permalink to this headline">¶</a></h3>
+<p>To generate a line list you will need to provide a tablename (str), an array containing the global isotope numbers of the molecules/isotopes that you are interested in, the minimum and maximum wavenumbers, and the minimum line intensity of interested. The example below would generate a HITRAN table named ‘CO’ that contains the all CO isotopes and the most abundant CO2 isotope in the spectral region between 6200 and 6500 cm-1 that have line intensities greater than 1e-30.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tablename</span> <span class="o">=</span> <span class="s1">&#39;CO&#39;</span>
+<span class="n">global_isotopes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">26</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span><span class="mi">31</span><span class="p">,</span><span class="mi">7</span><span class="p">]</span>
+<span class="n">wave_min</span> <span class="o">=</span> <span class="mi">6200</span> <span class="c1">#7903.5#cm-1</span>
+<span class="n">wave_max</span> <span class="o">=</span> <span class="mi">6500</span> <span class="c1">#7904.5 #cm-1</span>
+<span class="n">intensity_cutoff</span> <span class="o">=</span> <span class="mf">1e-30</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="generate-hitran-and-initial-guess-line-lists-from-hapi-call">
+<h3>Generate HITRAN and Initial Guess Line lists from HAPI Call<a class="headerlink" href="#generate-hitran-and-initial-guess-line-lists-from-hapi-call" title="Permalink to this headline">¶</a></h3>
+<p>The next section of the example contains a function and function call teh output a MATS compatible line list.  NOTE: The line mixing term that the fitting script wants has a subscript with the nominal temperatures included in the dataset. I have been adding these columns by hand to the .csv by copying and pasting. Code can be updated to do this manually.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">HITRANlinelist_to_csv</span><span class="p">(</span><span class="n">isotopes</span><span class="p">,</span> <span class="n">minimum_wavenumber</span><span class="p">,</span> <span class="n">maximum_wavenumber</span><span class="p">,</span> <span class="n">tablename</span> <span class="o">=</span> <span class="s1">&#39;tmp&#39;</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="n">tablename</span><span class="p">,</span> <span class="n">temperature</span> <span class="o">=</span> <span class="mi">296</span><span class="p">):</span>
+
+             <span class="sd">&quot;&quot;&quot;Generates two .csv files generated information available from HTIRAN.  The first line list matches the information available from HITRAN (_HITRAN.csv) and the second supplements the HITRAN information with theoretical values and translates into MATS input format (_initguess.csv)</span>
+
+<span class="sd">             Outline</span>
+
+<span class="sd">             1. Gets a line list from HITRAN and saves all available parameters to filename_HITRAN.csv</span>
+<span class="sd">             2. Goes through the data provided from HITRAN and collects the highest order line shape information.</span>
+<span class="sd">             3.  Where there is missing information for the complete HTP linelist set to 0 or make the following substitutions</span>
+<span class="sd">                     - for missing diluent information fill values with air</span>
+<span class="sd">                     - set missing shift temperature dependences equal to 0 (linear temperature dependence)</span>
+<span class="sd">                     - calculate the SD_gamma based on theory</span>
+<span class="sd">                     - set the gamma_2 temperature exponent equal to the gamma0 temperature exponent</span>
+<span class="sd">                     - set the delta_2 temperature exponent equal to the delta0 temperature exponent</span>
+<span class="sd">                     - set the dicke narrowing temperature exponent to 1</span>
+<span class="sd">             4. Save the supplemented and MATS formatted HITRAN information as filename_initguess.csv</span>
+
+
+<span class="sd">             Parameters</span>
+<span class="sd">             ----------</span>
+<span class="sd">             isotopes : list</span>
+<span class="sd">                     list of the HITRAN global isotope numbers to include in the HAPI call</span>
+<span class="sd">             minimum_wavenumber : float</span>
+<span class="sd">                     minimum line center (cm-1) to include in the HAPI call.</span>
+<span class="sd">             maximum_wavenumber : float</span>
+<span class="sd">                     maximum line center (cm-1) to include in the HAPI call.</span>
+<span class="sd">             tablename : str, optional</span>
+<span class="sd">                     desired name for table generated from HAPI call. The default is &#39;tmp&#39;.</span>
+<span class="sd">             filename : str, optional</span>
+<span class="sd">                     acts as a base filename for the .csv files generated. The default is tablename.</span>
+<span class="sd">             temperature : float, optional</span>
+<span class="sd">                     Nominal temperature of interest.  HITRAN breaks-up the HTP line parameters into temperature regimes.  This allows for selection of the most approriate parameter information. The default is 296.</span>
+
+<span class="sd">             Returns</span>
+<span class="sd">             -------</span>
+<span class="sd">             linelist_select : dataframe</span>
+<span class="sd">                     pandas dataframe corresponding to the HITRAN information supplemented by theoretical values/assumptions.</span>
+<span class="sd">             filename_HITRAN.csv : .csv file</span>
+<span class="sd">                     file corresponding to available HITRAN information</span>
+<span class="sd">             filename_initguess.csv : .csv file</span>
+<span class="sd">                     file corresponding to available HITRAN information supplemented by theory and assumptions in MATS format</span>
+
+<span class="sd">             &quot;&quot;&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">MATS</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Getting Started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MATS Summary.html">MATS Summary</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Generating Parameter Line lists</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#parameter-line-list-overview">Parameter Line list Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#generating-parameter-line-list-from-hitran">Generating Parameter Line list from HITRAN</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MATS.html">MATS module</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="MATS Summary.html" title="previous chapter">MATS Summary</a></li>
+      <li>Next: <a href="MATS.html" title="next chapter">MATS module</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+      
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/Generating Parameter Line lists.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

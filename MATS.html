@@ -20,9 +20,10 @@
     <script src="https://code.jquery.com/jquery.1.12.4.min.js"></script>
     <script src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
     <script src="_static/leave_notice.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Generating Pandas Line lists from HITRAN" href="Generating Pandas Line lists from HITRAN.html" />
+    <link rel="prev" title="MATS Example using Experimental and Synthetic Data" href="MATS Example using Experimental and Synthetic Data.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -655,12 +656,12 @@ that is the appropriate ratio of each diluent species corrected for pressure and
 <p>n_delta0_species = the coefficient of the temperature dependence of the pressure shift</p>
 <p>SD_gamma_species = the ratio of the speed dependent width to the half-width at reference temperature and pressure</p>
 <p>n_gamma2_species = the coefficient of the temperature dependence of the speed dependent width NOTE: This is the temperature dependence of the speed dependent width not the ratio of the speed dependence to the half-width</p>
-<p>SD_delta_species = the ratio of the speed dependent shift to the half-width at reference temperature and pressure</p>
+<p>SD_delta_species = the ratio of the speed dependent shift to the collisional shift at reference temperature and pressure</p>
 <p>n_delta2_species = the coefficient of the temperature dependence of the speed dependent shift NOTE: This is the temperature dependence of the speed dependent shift not the ratio of the speed dependence to the shift</p>
 <p>nuVC_species = dicke narrowing term at reference temperature</p>
 <p>n_nuVC_species = coefficient of the temperature dependence of the dicke narrowing term</p>
 <p>eta_species = the correlation parameter for the VC and SD effects</p>
-<p>y_species_nominaltemperature = linemixing term (as currently written this doens’t have a temperature dependence, so read in a different column for each nominal temperature)</p>
+<p>y_species_nominaltemperature = linemixing term (as currently written this doesn’t have a temperature dependence, so read in a different column for each nominal temperature)</p>
 </dd>
 </dl>
 </p></li>
@@ -1040,7 +1041,7 @@ Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)</p>
 
 <dl class="function">
 <dt id="MATS.simulate_spectrum">
-<code class="sig-prename descclassname">MATS.</code><code class="sig-name descname">simulate_spectrum</code><span class="sig-paren">(</span><em class="sig-param">parameter_linelist, wave_min, wave_max, wave_space, wave_error=0, SNR=10000, baseline_terms=[0], temperature=25, temperature_err={'bias': 0, 'function': None, 'params': {}}, pressure=760, pressure_err={'function': None, 'params': {}, 'per_bias': 0}, wing_cutoff=25, wing_wavenumbers=25, wing_method='wing_cutoff', filename='temp', molefraction={}, molefraction_err={}, natural_abundance=True, abundance_ratio_MI={}, diluent='air', Diluent={}, nominal_temperature=296, etalons={}, x_shift=0, IntensityThreshold=1e-30, num_segments=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#simulate_spectrum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.simulate_spectrum" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MATS.</code><code class="sig-name descname">simulate_spectrum</code><span class="sig-paren">(</span><em class="sig-param">parameter_linelist, wave_min, wave_max, wave_space, wave_error=0, SNR=None, baseline_terms=[0], temperature=25, temperature_err={'bias': 0, 'function': None, 'params': {}}, pressure=760, pressure_err={'function': None, 'params': {}, 'per_bias': 0}, wing_cutoff=25, wing_wavenumbers=25, wing_method='wing_cutoff', filename='temp', molefraction={}, molefraction_err={}, natural_abundance=True, abundance_ratio_MI={}, diluent='air', Diluent={}, nominal_temperature=296, etalons={}, x_shift=0, IntensityThreshold=1e-30, num_segments=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#simulate_spectrum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.simulate_spectrum" title="Permalink to this definition">¶</a></dt>
 <dd><p>allows for a synthetic spectrum to be generated, where the output is a spectrum object that can be used in MATS classes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1050,7 +1051,7 @@ Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)</p>
 <li><p><strong>wave_max</strong> (<em>float</em>) – maximum wavenumber for the simulation (cm-1).</p></li>
 <li><p><strong>wave_space</strong> (<em>float</em>) – wavenumber spacing for the simulation (cm-1).</p></li>
 <li><p><strong>wave_error</strong> (<em>float</em><em>, </em><em>optional</em>) – absolute error on the wavenumber axis (cm-1) to include in simulations. The default is 0.</p></li>
-<li><p><strong>SNR</strong> (<em>float</em><em>, </em><em>optional</em>) – Signal to noise ratio to impose on the simulated spectrum. The default is 10000.</p></li>
+<li><p><strong>SNR</strong> (<em>float</em><em>, </em><em>optional</em>) – Signal to noise ratio to impose on the simulated spectrum. The default is None.  If SNR is none there is no noise on the simulation.</p></li>
 <li><p><strong>baseline_terms</strong> (<em>list</em><em>, </em><em>optional</em>) – polynomial baseline coefficients where the index is equal to the coefficient order, ie. [0, 1, 2] would correspond to baseline = 0 + 1*(wavenumber - minimum wavenumber) + 2*(wavenumber - minimum wavenumber)^2. The default is [0].</p></li>
 <li><p><strong>temperature</strong> (<em>float</em><em>, </em><em>optional</em>) – temperature for simulation in celsius. The default is 25.</p></li>
 <li><p><strong>temperature_err</strong> (<em>dict</em><em>, </em><em>optional</em>) – possible keys include ‘bias’, ‘function’, and ‘params’. The bias indicates the absolute bias in Celsius of the temperature reading, which will be added to the input temperature. Function can be ‘linear’ with params ‘m’ and ‘b’ or ‘sine’ with parameters ‘amp’, ‘freq’, and ‘phase’. These define a function that is added to both the bias and set temperature as a function of the wavenumber. Note: if ‘function’ key is not equal to None, then there also needs to be a params key to define the function.. The default is {‘bias’: 0, ‘function’: None, ‘params’: {}}.</p></li>
@@ -1104,8 +1105,9 @@ Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)</p>
 <h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="Getting Started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Spectrum Class.html">Spectrum Class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Generating Pandas Line lists from HITRAN.html">Generating Pandas Line lists from HITRAN</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MATS Summary.html">MATS Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Generating Parameter Line lists.html">Generating Parameter Line lists</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MATS Example using Experimental and Synthetic Data.html">MATS Example using Experimental and Synthetic Data</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MATS module</a></li>
 </ul>
 
@@ -1113,7 +1115,7 @@ Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)</p>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="Generating Pandas Line lists from HITRAN.html" title="previous chapter">Generating Pandas Line lists from HITRAN</a></li>
+      <li>Previous: <a href="MATS Example using Experimental and Synthetic Data.html" title="previous chapter">MATS Example using Experimental and Synthetic Data</a></li>
   </ul></li>
 </ul>
 </div>

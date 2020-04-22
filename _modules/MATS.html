@@ -20,6 +20,7 @@
     <script src="https://code.jquery.com/jquery.1.12.4.min.js"></script>
     <script src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
     <script src="../_static/leave_notice.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
    
@@ -54,8 +55,6 @@
 <span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s2">&quot;whitegrid&quot;</span><span class="p">)</span>
 <span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s2">&quot;ticks&quot;</span><span class="p">)</span>
 <span class="n">sns</span><span class="o">.</span><span class="n">set_context</span><span class="p">(</span><span class="s2">&quot;poster&quot;</span><span class="p">)</span>
-<span class="c1"># Set HAPI location and upload necessary portions</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;C:\Users\ema3\Documents\Python Scripts\HAPI&#39;</span><span class="p">)</span><span class="c1">#Add hapi.py folder location to system path</span>
 <span class="kn">from</span> <span class="nn">hapi</span> <span class="kn">import</span> <span class="n">EnvironmentDependency_Intensity</span><span class="p">,</span> <span class="n">PYTIPS2017</span><span class="p">,</span> <span class="n">molecularMass</span><span class="p">,</span> <span class="n">pcqsdhc</span><span class="p">,</span> <span class="n">ISO</span>
 
 
@@ -106,7 +105,7 @@
 <span class="sd">            </span>
 <span class="sd">            n_gamma2_species = the coefficient of the temperature dependence of the speed dependent width NOTE: This is the temperature dependence of the speed dependent width not the ratio of the speed dependence to the half-width</span>
 <span class="sd">            </span>
-<span class="sd">            SD_delta_species = the ratio of the speed dependent shift to the half-width at reference temperature and pressure</span>
+<span class="sd">            SD_delta_species = the ratio of the speed dependent shift to the collisional shift at reference temperature and pressure</span>
 <span class="sd">            </span>
 <span class="sd">            n_delta2_species = the coefficient of the temperature dependence of the speed dependent shift NOTE: This is the temperature dependence of the speed dependent shift not the ratio of the speed dependence to the shift</span>
 <span class="sd">            </span>
@@ -116,7 +115,7 @@
 <span class="sd">            </span>
 <span class="sd">            eta_species = the correlation parameter for the VC and SD effects</span>
 <span class="sd">            </span>
-<span class="sd">            y_species_nominaltemperature = linemixing term (as currently written this doens&#39;t have a temperature dependence, so read in a different column for each nominal temperature)</span>
+<span class="sd">            y_species_nominaltemperature = linemixing term (as currently written this doesn&#39;t have a temperature dependence, so read in a different column for each nominal temperature)</span>
 <span class="sd">    waves : array</span>
 <span class="sd">        1-D array comprised of wavenumbers (cm-1) to use as x-axis for simulation.</span>
 <span class="sd">    wing_cutoff : float, optional</span>
@@ -951,7 +950,7 @@
     
         
 <div class="viewcode-block" id="simulate_spectrum"><a class="viewcode-back" href="../MATS.html#MATS.simulate_spectrum">[docs]</a><span class="k">def</span> <span class="nf">simulate_spectrum</span><span class="p">(</span><span class="n">parameter_linelist</span><span class="p">,</span> <span class="n">wave_min</span><span class="p">,</span> <span class="n">wave_max</span><span class="p">,</span> <span class="n">wave_space</span><span class="p">,</span> <span class="n">wave_error</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> 
-                        <span class="n">SNR</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span> <span class="n">baseline_terms</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">temperature</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">temperature_err</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bias&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="p">{}},</span> <span class="n">pressure</span> <span class="o">=</span> <span class="mi">760</span><span class="p">,</span> 
+                        <span class="n">SNR</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">baseline_terms</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">temperature</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">temperature_err</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bias&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="p">{}},</span> <span class="n">pressure</span> <span class="o">=</span> <span class="mi">760</span><span class="p">,</span> 
                         <span class="n">pressure_err</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;per_bias&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="p">{}},</span> 
                         <span class="n">wing_cutoff</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">wing_wavenumbers</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">wing_method</span> <span class="o">=</span> <span class="s1">&#39;wing_cutoff&#39;</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="n">molefraction</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">molefraction_err</span> <span class="o">=</span> <span class="p">{},</span>
                         <span class="n">natural_abundance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">abundance_ratio_MI</span> <span class="o">=</span> <span class="p">{},</span><span class="n">diluent</span> <span class="o">=</span> <span class="s1">&#39;air&#39;</span><span class="p">,</span> <span class="n">Diluent</span> <span class="o">=</span> <span class="p">{},</span> 
@@ -972,7 +971,7 @@
 <span class="sd">    wave_error : float, optional</span>
 <span class="sd">        absolute error on the wavenumber axis (cm-1) to include in simulations. The default is 0.</span>
 <span class="sd">    SNR : float, optional</span>
-<span class="sd">        Signal to noise ratio to impose on the simulated spectrum. The default is 10000.</span>
+<span class="sd">        Signal to noise ratio to impose on the simulated spectrum. The default is None.  If SNR is none there is no noise on the simulation.</span>
 <span class="sd">    baseline_terms : list, optional</span>
 <span class="sd">        polynomial baseline coefficients where the index is equal to the coefficient order, ie. [0, 1, 2] would correspond to baseline = 0 + 1*(wavenumber - minimum wavenumber) + 2*(wavenumber - minimum wavenumber)^2. The default is [0].</span>
 <span class="sd">    temperature : float, optional</span>
@@ -1097,7 +1096,10 @@
         <span class="n">x</span> <span class="o">=</span> <span class="n">wavenumbers</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">)</span>
         <span class="n">etalon_model</span> <span class="o">+=</span> <span class="n">amp</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">freq</span><span class="p">)</span><span class="o">*</span><span class="n">x</span><span class="o">+</span> <span class="n">phase</span><span class="p">)</span> 
     <span class="c1">#Calculate Noisy Spectrum</span>
-    <span class="n">alpha_noise</span> <span class="o">=</span> <span class="n">alpha_array</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">alpha_array</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">alpha_array</span><span class="p">))</span><span class="o">*</span><span class="mi">1</span><span class="o">/</span><span class="n">SNR</span>
+    <span class="k">if</span> <span class="n">SNR</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">alpha_noise</span> <span class="o">=</span> <span class="n">alpha_array</span>
+    <span class="k">else</span><span class="p">:</span>   
+        <span class="n">alpha_noise</span> <span class="o">=</span> <span class="n">alpha_array</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">alpha_array</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">alpha_array</span><span class="p">))</span><span class="o">*</span><span class="mi">1</span><span class="o">/</span><span class="n">SNR</span>
     <span class="n">alpha_noise</span> <span class="o">+=</span> <span class="p">(</span><span class="n">baseline</span> <span class="o">+</span> <span class="n">etalon_model</span><span class="p">)</span> 
     <span class="c1">#Generate and save Simulated Spectrum File</span>
     <span class="n">spectrum</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
@@ -2570,7 +2572,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../Getting Started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../MATS Summary.html">MATS Summary</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Generating Pandas Line lists from HITRAN.html">Generating Pandas Line lists from HITRAN</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Generating Parameter Line lists.html">Generating Parameter Line lists</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MATS Example using Experimental and Synthetic Data.html">MATS Example using Experimental and Synthetic Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../MATS.html">MATS module</a></li>
 </ul>
 
