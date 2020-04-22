@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <title>MATS module &#8212; MATS 1.0 documentation</title>
-    <link rel="stylesheet" href="_static/agogo.css" type="text/css" />
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css" />
     <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
@@ -25,25 +25,23 @@
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="MATS Example using Experimental and Synthetic Data" href="MATS Example using Experimental and Synthetic Data.html" /> 
   </head><body>
-    <div class="header-wrapper" role="banner">
-      <div class="header">
-        <div class="headertitle"><a
-          href="index.html">MATS 1.0 documentation</a></div>
-        <div class="rel" role="navigation" aria-label="related navigation">
-          <a href="MATS Example using Experimental and Synthetic Data.html" title="MATS Example using Experimental and Synthetic Data"
-             accesskey="P">previous</a> |
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
-             accesskey="I">index</a>
-        </div>
-       </div>
-    </div>
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="MATS Example using Experimental and Synthetic Data.html" title="MATS Example using Experimental and Synthetic Data"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
 
-    <div class="content-wrapper">
-      <div class="content">
-        <div class="document">
-            
+    <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body" role="main">
@@ -53,14 +51,14 @@
 <dl class="class">
 <dt id="MATS.Dataset">
 <em class="property">class </em><code class="sig-prename descclassname">MATS.</code><code class="sig-name descname">Dataset</code><span class="sig-paren">(</span><em class="sig-param">spectra</em>, <em class="sig-param">dataset_name</em>, <em class="sig-param">baseline_order=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Combines spectrum objects into a Dataset object to enable multi-spectrum fitting</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>spectra</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – list of spectrum objects to be included in the Dataset. Example [spectrum_1, spectrum_2, …]</p></li>
-<li><p><strong>dataset_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Used to provide a name for the Dataset to use when saving files</p></li>
-<li><p><strong>baseline_order</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – sets the baseline order for all spectra in the dataset.  This will automaticall be set to the maximum baseline order across all spectrum included in the Dataset.</p></li>
+<li><p><strong>spectra</strong> (<em>list</em>) – list of spectrum objects to be included in the Dataset. Example [spectrum_1, spectrum_2, …]</p></li>
+<li><p><strong>dataset_name</strong> (<em>str</em>) – Used to provide a name for the Dataset to use when saving files</p></li>
+<li><p><strong>baseline_order</strong> (<em>int</em>) – sets the baseline order for all spectra in the dataset.  This will automaticall be set to the maximum baseline order across all spectrum included in the Dataset.</p></li>
 </ul>
 </dd>
 </dl>
@@ -73,7 +71,7 @@
 <dd class="field-odd"><p><strong>average_QF</strong> – average QF of all spectra in dataset</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)">float</a></p>
+<dd class="field-even"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -111,7 +109,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dd><p>Generates a summary file combining spectral information from all spectra in the Dataset</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>save_file</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then a .csv is generated in addition to the dataframe. The default is False.</p>
+<dd class="field-odd"><p><strong>save_file</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then a .csv is generated in addition to the dataframe. The default is False.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>summary_file</strong> – Summary dataframe comprised of spectral information inculding model and residuals for all spectra in Dataset.</p>
@@ -141,7 +139,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dd class="field-odd"><p><strong>dataset_etalon_list</strong> – etalon keys across spectra</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)">list</a></p>
+<dd class="field-even"><p>list</p>
 </dd>
 </dl>
 </dd></dl>
@@ -155,7 +153,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dd class="field-odd"><p><strong>spec_num_list</strong> – list of all spectrum numbers used in the dataset.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)">list</a></p>
+<dd class="field-even"><p>list</p>
 </dd>
 </dl>
 </dd></dl>
@@ -169,7 +167,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dd class="field-odd"><p><strong>dataset_molecule_list</strong> – list of molecules in spectra</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)">list</a></p>
+<dd class="field-even"><p>list</p>
 </dd>
 </dl>
 </dd></dl>
@@ -223,7 +221,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dd class="field-odd"><p><strong>extreme_dictionary</strong> – Dictionary where the key corresponds to the spectrum_num with the value equal to a list where list[0] = minimum wavenumber in spectrum and list[1] = maximum wavenumber in spectrum</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a></p>
+<dd class="field-even"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -234,13 +232,13 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dd><p>Gets spectrum filename for spectrum in Dataset</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>spectrum_num</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Integer assigned to a given spectrum.</p>
+<dd class="field-odd"><p><strong>spectrum_num</strong> (<em>int</em>) – Integer assigned to a given spectrum.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>filename</strong> – if spectrum_num in Dataset then the filename for that the spectrum_number is returned</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></p>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -251,13 +249,13 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dd><p>Gets spectrum pressure for spectrum in Dataset</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>spectrum_num</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Integer assigned to a given spectrum.</p>
+<dd class="field-odd"><p><strong>spectrum_num</strong> (<em>int</em>) – Integer assigned to a given spectrum.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>pressure</strong> – if spectrum_num in Dataset then the pressure (torr) for that the spectrum_number is returned.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)">float</a></p>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -268,13 +266,13 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dd><p>Gets spectrum temperature for spectrum in Dataset</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>spectrum_num</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Integer assigned to a given spectrum.</p>
+<dd class="field-odd"><p><strong>spectrum_num</strong> (<em>int</em>) – Integer assigned to a given spectrum.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>temperature</strong> – if spectrum_num in Dataset then the temperature (K) for that the spectrum_number is returned.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)">float</a></p>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -317,15 +315,15 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="class">
 <dt id="MATS.Edit_Fit_Param_Files">
 <em class="property">class </em><code class="sig-prename descclassname">MATS.</code><code class="sig-name descname">Edit_Fit_Param_Files</code><span class="sig-paren">(</span><em class="sig-param">base_linelist_file</em>, <em class="sig-param">param_linelist_file</em>, <em class="sig-param">new_base_linelist_file=None</em>, <em class="sig-param">new_param_linelist_file=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Edit_Fit_Param_Files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Edit_Fit_Param_Files" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Allows for the baseline and parameter files to be editted in jupyter notebook.  Can also edit everything in .csv</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_linelist_file</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – name of the .csv file containing the baseline parameters generated in format specified in the generate fit parameters class.</p></li>
-<li><p><strong>param_linelist_file</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – name of the .csv file containing the linelist parameters generated in format specified in the generate fit parameters class.</p></li>
-<li><p><strong>new_base_linelist_file</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – name of the to save the baseline param list as after editing. IF the value is None (default) then it will edit the input.</p></li>
-<li><p><strong>new_param_linelist_file</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – name of the to save the linelist param list as after editing. IF the value is None (default) then it will edit the input.</p></li>
+<li><p><strong>base_linelist_file</strong> (<em>str</em>) – name of the .csv file containing the baseline parameters generated in format specified in the generate fit parameters class.</p></li>
+<li><p><strong>param_linelist_file</strong> (<em>str</em>) – name of the .csv file containing the linelist parameters generated in format specified in the generate fit parameters class.</p></li>
+<li><p><strong>new_base_linelist_file</strong> (<em>str</em>) – name of the to save the baseline param list as after editing. IF the value is None (default) then it will edit the input.</p></li>
+<li><p><strong>new_param_linelist_file</strong> (<em>str</em>) – name of the to save the linelist param list as after editing. IF the value is None (default) then it will edit the input.</p></li>
 </ul>
 </dd>
 </dl>
@@ -358,55 +356,55 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="class">
 <dt id="MATS.Fit_DataSet">
 <em class="property">class </em><code class="sig-prename descclassname">MATS.</code><code class="sig-name descname">Fit_DataSet</code><span class="sig-paren">(</span><em class="sig-param">dataset</em>, <em class="sig-param">base_linelist_file</em>, <em class="sig-param">param_linelist_file</em>, <em class="sig-param">minimum_parameter_fit_intensity=1e-27</em>, <em class="sig-param">baseline_limit=False</em>, <em class="sig-param">baseline_limit_factor=10</em>, <em class="sig-param">pressure_limit=False</em>, <em class="sig-param">pressure_limit_factor=10</em>, <em class="sig-param">temperature_limit=False</em>, <em class="sig-param">temperature_limit_factor=10</em>, <em class="sig-param">molefraction_limit=False</em>, <em class="sig-param">molefraction_limit_factor=10</em>, <em class="sig-param">etalon_limit=False</em>, <em class="sig-param">etalon_limit_factor=50</em>, <em class="sig-param">x_shift_limit=False</em>, <em class="sig-param">x_shift_limit_magnitude=0.1</em>, <em class="sig-param">nu_limit=False</em>, <em class="sig-param">nu_limit_magnitude=0.1</em>, <em class="sig-param">sw_limit=False</em>, <em class="sig-param">sw_limit_factor=10</em>, <em class="sig-param">gamma0_limit=False</em>, <em class="sig-param">gamma0_limit_factor=10</em>, <em class="sig-param">n_gamma0_limit=True</em>, <em class="sig-param">n_gamma0_limit_factor=10</em>, <em class="sig-param">delta0_limit=False</em>, <em class="sig-param">delta0_limit_factor=10</em>, <em class="sig-param">n_delta0_limit=True</em>, <em class="sig-param">n_delta0_limit_factor=10</em>, <em class="sig-param">SD_gamma_limit=False</em>, <em class="sig-param">SD_gamma_limit_factor=10</em>, <em class="sig-param">n_gamma2_limit=True</em>, <em class="sig-param">n_gamma2_limit_factor=10</em>, <em class="sig-param">SD_delta_limit=True</em>, <em class="sig-param">SD_delta_limit_factor=10</em>, <em class="sig-param">n_delta2_limit=True</em>, <em class="sig-param">n_delta2_limit_factor=10</em>, <em class="sig-param">nuVC_limit=False</em>, <em class="sig-param">nuVC_limit_factor=10</em>, <em class="sig-param">n_nuVC_limit=True</em>, <em class="sig-param">n_nuVC_limit_factor=10</em>, <em class="sig-param">eta_limit=True</em>, <em class="sig-param">eta_limit_factor=10</em>, <em class="sig-param">linemixing_limit=False</em>, <em class="sig-param">linemixing_limit_factor=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Fit_DataSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Fit_DataSet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Provides the fitting functionality</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><em>object</em></a>) – Dataset Object.</p></li>
-<li><p><strong>base_linelist_file</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – filename for file containing baseline parameters.</p></li>
+<li><p><strong>dataset</strong> (<em>object</em>) – Dataset Object.</p></li>
+<li><p><strong>base_linelist_file</strong> (<em>str</em>) – filename for file containing baseline parameters.</p></li>
 <li><p><strong>param_linelist_file</strong> (<em>TYPE</em>) – filename for file containing parmeter parameters..</p></li>
-<li><p><strong>minimum_parameter_fit_intensity</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – minimum intensity for parameters to be generated for fitting. NOTE: Even if a value is floated in the param_linelist if it is below this threshold then it won’t be a floated.. The default is 1e-27.</p></li>
-<li><p><strong>baseline_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on baseline parameter solutions. The default is False.</p></li>
-<li><p><strong>baseline_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor that the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
-<li><p><strong>pressure_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on pressure solutions. The default is False.</p></li>
-<li><p><strong>pressure_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
-<li><p><strong>temperature_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on temperature solutions. The default is False.</p></li>
-<li><p><strong>temperature_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
-<li><p><strong>molefraction_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on mole fraction solutions. The default is False.</p></li>
-<li><p><strong>molefraction_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – DESCRIPTION. The default is 10.</p></li>
-<li><p><strong>etalon_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on etalon solutions. The default is False.</p></li>
-<li><p><strong>etalon_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 50. #phase is constrained to +/- 2pi</p></li>
-<li><p><strong>x_shift_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on x-shift solutions. The default is False.</p></li>
-<li><p><strong>x_shift_limit_magnitude</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The magnitude variables set the +/- range of the variable in cm-1. The default is 0.1.</p></li>
-<li><p><strong>nu_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on line center solutions. The default is False.</p></li>
-<li><p><strong>nu_limit_magnitude</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The magnitude variables set the +/- range of the variable in cm-1. The default is 0.1.</p></li>
-<li><p><strong>sw_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on line intensity solutions. The default is False.</p></li>
-<li><p><strong>sw_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
-<li><p><strong>gamma0_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on collisional half-width solutions. The default is False.</p></li>
-<li><p><strong>gamma0_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
-<li><p><strong>n_gamma0_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – DESCIf True, then impose min/max limits on temperature exponent for half width solutions. The default is True.</p></li>
-<li><p><strong>n_gamma0_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
-<li><p><strong>delta0_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on collisional shift solutions. The default is False.</p></li>
-<li><p><strong>delta0_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
-<li><p><strong>n_delta0_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on temperature exponent of the collisional shift solutions. The default is True.</p></li>
-<li><p><strong>n_delta0_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – DESCRIPTION. The default is 10.</p></li>
-<li><p><strong>SD_gamma_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on the aw solutions. The default is False.</p></li>
-<li><p><strong>SD_gamma_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
-<li><p><strong>n_gamma2_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on temperature exponent of the speed-dependent width solutions. The default is True.</p></li>
-<li><p><strong>n_gamma2_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
-<li><p><strong>SD_delta_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on as solutions. The default is True.</p></li>
-<li><p><strong>SD_delta_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
-<li><p><strong>n_delta2_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on temperature exponent of the speed-dependent shift solutions. The default is True.</p></li>
-<li><p><strong>n_delta2_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
-<li><p><strong>nuVC_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on dicke narrowing solutions. The default is False.</p></li>
-<li><p><strong>nuVC_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
-<li><p><strong>n_nuVC_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on temperature exponent of dicke narrowing solutions. The default is True.</p></li>
-<li><p><strong>n_nuVC_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
-<li><p><strong>eta_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on correlation parameter solutions.. The default is True.</p></li>
-<li><p><strong>eta_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.The default is 10.</p></li>
-<li><p><strong>linemixing_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is False.</p></li>
-<li><p><strong>linemixing_limit_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – If True, then impose min/max limits on line-mixing solutions.. The default is 10.</p></li>
+<li><p><strong>minimum_parameter_fit_intensity</strong> (<em>float</em><em>, </em><em>optional</em>) – minimum intensity for parameters to be generated for fitting. NOTE: Even if a value is floated in the param_linelist if it is below this threshold then it won’t be a floated.. The default is 1e-27.</p></li>
+<li><p><strong>baseline_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on baseline parameter solutions. The default is False.</p></li>
+<li><p><strong>baseline_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor that the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
+<li><p><strong>pressure_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on pressure solutions. The default is False.</p></li>
+<li><p><strong>pressure_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
+<li><p><strong>temperature_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on temperature solutions. The default is False.</p></li>
+<li><p><strong>temperature_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
+<li><p><strong>molefraction_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on mole fraction solutions. The default is False.</p></li>
+<li><p><strong>molefraction_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is 10.</p></li>
+<li><p><strong>etalon_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on etalon solutions. The default is False.</p></li>
+<li><p><strong>etalon_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 50. #phase is constrained to +/- 2pi</p></li>
+<li><p><strong>x_shift_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on x-shift solutions. The default is False.</p></li>
+<li><p><strong>x_shift_limit_magnitude</strong> (<em>float</em><em>, </em><em>optional</em>) – The magnitude variables set the +/- range of the variable in cm-1. The default is 0.1.</p></li>
+<li><p><strong>nu_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on line center solutions. The default is False.</p></li>
+<li><p><strong>nu_limit_magnitude</strong> (<em>float</em><em>, </em><em>optional</em>) – The magnitude variables set the +/- range of the variable in cm-1. The default is 0.1.</p></li>
+<li><p><strong>sw_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on line intensity solutions. The default is False.</p></li>
+<li><p><strong>sw_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
+<li><p><strong>gamma0_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on collisional half-width solutions. The default is False.</p></li>
+<li><p><strong>gamma0_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
+<li><p><strong>n_gamma0_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – DESCIf True, then impose min/max limits on temperature exponent for half width solutions. The default is True.</p></li>
+<li><p><strong>n_gamma0_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
+<li><p><strong>delta0_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on collisional shift solutions. The default is False.</p></li>
+<li><p><strong>delta0_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
+<li><p><strong>n_delta0_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on temperature exponent of the collisional shift solutions. The default is True.</p></li>
+<li><p><strong>n_delta0_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is 10.</p></li>
+<li><p><strong>SD_gamma_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on the aw solutions. The default is False.</p></li>
+<li><p><strong>SD_gamma_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
+<li><p><strong>n_gamma2_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on temperature exponent of the speed-dependent width solutions. The default is True.</p></li>
+<li><p><strong>n_gamma2_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
+<li><p><strong>SD_delta_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on as solutions. The default is True.</p></li>
+<li><p><strong>SD_delta_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
+<li><p><strong>n_delta2_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on temperature exponent of the speed-dependent shift solutions. The default is True.</p></li>
+<li><p><strong>n_delta2_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
+<li><p><strong>nuVC_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on dicke narrowing solutions. The default is False.</p></li>
+<li><p><strong>nuVC_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
+<li><p><strong>n_nuVC_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on temperature exponent of dicke narrowing solutions. The default is True.</p></li>
+<li><p><strong>n_nuVC_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is 10.</p></li>
+<li><p><strong>eta_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on correlation parameter solutions.. The default is True.</p></li>
+<li><p><strong>eta_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.The default is 10.</p></li>
+<li><p><strong>linemixing_limit</strong> (<em>bool</em><em>, </em><em>optional</em>) – The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren’t imposed because 1) then it would constrain the fit to 0 and 2) LMfit won’t let you set min = max.. The default is False.</p></li>
+<li><p><strong>linemixing_limit_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – If True, then impose min/max limits on line-mixing solutions.. The default is 10.</p></li>
 </ul>
 </dd>
 </dl>
@@ -418,14 +416,14 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>params</strong> (<em>lmfit parameter object</em>) – the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.</p></li>
-<li><p><strong>baseline_segment_constrained</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – True means the baseline terms are constrained across each spectrum.. The default is True.</p></li>
-<li><p><strong>xshift_segment_constrained</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – True means the x_shift terms are constrained across each spectrum.. The default is True.</p></li>
-<li><p><strong>molefraction_segment_constrained</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – True means the mole fraction for that molecule is constrained across each spectrum.. The default is True.</p></li>
-<li><p><strong>etalon_amp_segment_constrained</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – True means the etalon amplitude is constrained across each spectrum.. The default is True.</p></li>
-<li><p><strong>etalon_freq_segment_constrained</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – True means the etalon frequency is constrained across each spectrum.. The default is True.</p></li>
-<li><p><strong>etalon_phase_segment_constrained</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – True means the etalon phase is constrained across each spectrum.. The default is True.</p></li>
-<li><p><strong>pressure_segment_constrained</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – True means the pressure is constrained across each spectrum.. The default is True.</p></li>
-<li><p><strong>temperature_segment_constrained</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – True means the temperature is constrained across each spectrum.. The default is True.</p></li>
+<li><p><strong>baseline_segment_constrained</strong> (<em>bool</em><em>, </em><em>optional</em>) – True means the baseline terms are constrained across each spectrum.. The default is True.</p></li>
+<li><p><strong>xshift_segment_constrained</strong> (<em>bool</em><em>, </em><em>optional</em>) – True means the x_shift terms are constrained across each spectrum.. The default is True.</p></li>
+<li><p><strong>molefraction_segment_constrained</strong> (<em>bool</em><em>, </em><em>optional</em>) – True means the mole fraction for that molecule is constrained across each spectrum.. The default is True.</p></li>
+<li><p><strong>etalon_amp_segment_constrained</strong> (<em>bool</em><em>, </em><em>optional</em>) – True means the etalon amplitude is constrained across each spectrum.. The default is True.</p></li>
+<li><p><strong>etalon_freq_segment_constrained</strong> (<em>bool</em><em>, </em><em>optional</em>) – True means the etalon frequency is constrained across each spectrum.. The default is True.</p></li>
+<li><p><strong>etalon_phase_segment_constrained</strong> (<em>bool</em><em>, </em><em>optional</em>) – True means the etalon phase is constrained across each spectrum.. The default is True.</p></li>
+<li><p><strong>pressure_segment_constrained</strong> (<em>bool</em><em>, </em><em>optional</em>) – True means the pressure is constrained across each spectrum.. The default is True.</p></li>
+<li><p><strong>temperature_segment_constrained</strong> (<em>bool</em><em>, </em><em>optional</em>) – True means the temperature is constrained across each spectrum.. The default is True.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -445,11 +443,11 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>params</strong> (<em>lmfit parameter object</em>) – the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.</p></li>
-<li><p><strong>wing_cutoff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – number of voigt half-widths to simulate on either side of each line. The default is 50.</p></li>
-<li><p><strong>wing_wavenumbers</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – number of wavenumbers to simulate on either side of each line. The default is 50.</p></li>
-<li><p><strong>wing_method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Provides choice between the wing_cutoff and wing_wavenumbers line cut-off options. The default is ‘wing_cutoff’.</p></li>
-<li><p><strong>xtol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – Absolute error in xopt between iterations that is acceptable for convergence. The default is 1e-7.</p></li>
-<li><p><strong>maxfev</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – DESCRIPTION. The default is 2000.</p></li>
+<li><p><strong>wing_cutoff</strong> (<em>float</em><em>, </em><em>optional</em>) – number of voigt half-widths to simulate on either side of each line. The default is 50.</p></li>
+<li><p><strong>wing_wavenumbers</strong> (<em>float</em><em>, </em><em>optional</em>) – number of wavenumbers to simulate on either side of each line. The default is 50.</p></li>
+<li><p><strong>wing_method</strong> (<em>str</em><em>, </em><em>optional</em>) – Provides choice between the wing_cutoff and wing_wavenumbers line cut-off options. The default is ‘wing_cutoff’.</p></li>
+<li><p><strong>xtol</strong> (<em>float</em><em>, </em><em>optional</em>) – Absolute error in xopt between iterations that is acceptable for convergence. The default is 1e-7.</p></li>
+<li><p><strong>maxfev</strong> (<em>float</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is 2000.</p></li>
 <li><p><strong>ftol</strong> (<em>The maximum number of calls to the function.</em><em>, </em><em>optional</em>) – Absolute error in func(xopt) between iterations that is acceptable for convergence.. The default is 1e-7.</p></li>
 </ul>
 </dd>
@@ -484,7 +482,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>result</strong> (<em>LMFit result Object</em>) – contains all fit results as LMFit results object.</p></li>
-<li><p><strong>indv_resid_plot</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – True if you want to show residual plots for each spectra.. The default is False.</p></li>
+<li><p><strong>indv_resid_plot</strong> (<em>bool</em><em>, </em><em>optional</em>) – True if you want to show residual plots for each spectra.. The default is False.</p></li>
 </ul>
 </dd>
 </dl>
@@ -498,8 +496,8 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>params</strong> (<em>lmfit parameter object</em>) – the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.</p></li>
-<li><p><strong>wing_cutoff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – number of voigt half-widths to simulate on either side of each line. The default is 50.</p></li>
-<li><p><strong>wing_wavenumbers</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – number of wavenumbers to simulate on either side of each line. The default is 50.</p></li>
+<li><p><strong>wing_cutoff</strong> (<em>float</em><em>, </em><em>optional</em>) – number of voigt half-widths to simulate on either side of each line. The default is 50.</p></li>
+<li><p><strong>wing_wavenumbers</strong> (<em>float</em><em>, </em><em>optional</em>) – number of wavenumbers to simulate on either side of each line. The default is 50.</p></li>
 <li><p><strong>wing_method</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – Provides choice between the wing_cutoff and wing_wavenumbers line cut-off options. The default is ‘wing_cutoff’.</p></li>
 </ul>
 </dd>
@@ -520,8 +518,8 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>result</strong> (<em>LMFit result Object</em>) – contains all fit results as LMFit results object.</p></li>
-<li><p><strong>base_linelist_update_file</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Name of file to save the updated baseline parameters. Default is to override the input. The default is None.</p></li>
-<li><p><strong>param_linelist_update_file</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Name of file to save the updated line parameters. Default is to override the input. The default is None.</p></li>
+<li><p><strong>base_linelist_update_file</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of file to save the updated baseline parameters. Default is to override the input. The default is None.</p></li>
+<li><p><strong>param_linelist_update_file</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of file to save the updated line parameters. Default is to override the input. The default is None.</p></li>
 </ul>
 </dd>
 </dl>
@@ -532,31 +530,31 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="class">
 <dt id="MATS.Generate_FitParam_File">
 <em class="property">class </em><code class="sig-prename descclassname">MATS.</code><code class="sig-name descname">Generate_FitParam_File</code><span class="sig-paren">(</span><em class="sig-param">dataset</em>, <em class="sig-param">param_linelist</em>, <em class="sig-param">base_linelist</em>, <em class="sig-param">lineprofile='VP'</em>, <em class="sig-param">linemixing=False</em>, <em class="sig-param">threshold_intensity=1e-30</em>, <em class="sig-param">fit_intensity=1e-26</em>, <em class="sig-param">fit_window=1.5</em>, <em class="sig-param">sim_window=5</em>, <em class="sig-param">param_linelist_savename='Parameter_LineList'</em>, <em class="sig-param">base_linelist_savename='Baseline_LineList'</em>, <em class="sig-param">nu_constrain=True</em>, <em class="sig-param">sw_constrain=True</em>, <em class="sig-param">gamma0_constrain=True</em>, <em class="sig-param">delta0_constrain=True</em>, <em class="sig-param">aw_constrain=True</em>, <em class="sig-param">as_constrain=True</em>, <em class="sig-param">nuVC_constrain=True</em>, <em class="sig-param">eta_constrain=True</em>, <em class="sig-param">linemixing_constrain=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Generate_FitParam_File"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Generate_FitParam_File" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class generates the parameter files used in fitting and sets up fit settings.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><em>object</em></a>) – Dataset object to be used in the fits</p></li>
+<li><p><strong>dataset</strong> (<em>object</em>) – Dataset object to be used in the fits</p></li>
 <li><p><strong>param_linelist</strong> (<em>dataframe</em>) – parameter linelist dataframe name, where the dataframe has the appropriate column headers</p></li>
 <li><p><strong>base_linelist</strong> (<em>dataframe</em>) – baseline parameter dataframe name generated from the dataset.generate_baseline_paramlist() function.</p></li>
-<li><p><strong>lineprofile</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – lineprofile to use for the simulation. This sets values in the parameter linelist to 0 and forces them to not vary unless manually changed. Default values is VP, voigt profile. Options are VP, SDVP, NGP, SDNGP, HTP.</p></li>
-<li><p><strong>linemixing</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – If False, then all linemixing parameters are set to 0 and not able to float.  Default is False.</p></li>
-<li><p><strong>threshold_intensity</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – This is the minimum line intensity that will be simulated. Default value is 1e-30.</p></li>
-<li><p><strong>fit_intensity</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – This is the minimum line intensity for which parameters will be set to float. This can be overwritten manually. Default value is 1e-26.</p></li>
-<li><p><strong>fit_window</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – currently not used</p></li>
-<li><p><strong>sim_window</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – This is the region outside of the wavelength region of the dataset that will be simulated for analysis. Default value is 5 cm-1.</p></li>
-<li><p><strong>base_linelist_savename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – filename that the baseline linelist will be saved as. Default is Baseline_LineList</p></li>
-<li><p><strong>param_linelist_savename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – filename that the parameter linelist will be saved as. Default is Parameter_LineList.</p></li>
-<li><p><strong>nu_constrain</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – True indicates that the line centers will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
-<li><p><strong>sw_constrain</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – True indicates that the line intensities will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
-<li><p><strong>gamma0_constrain</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – True indicates that the collisional width will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
-<li><p><strong>delta0_constrain</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – True indicates that the shift will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
-<li><p><strong>aw_constrain</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – True indicates that the speed dependent width will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
-<li><p><strong>as_constrain</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – True indicates that the speed dependent shift will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
-<li><p><strong>nuVC_constrain</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – True indicates that the dicke narrowing term will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
-<li><p><strong>eta_constrain</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – True indicates that the correlation parameter will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
-<li><p><strong>linemixing_constrain</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – True indicates that the first-order linemixing term will be a global variable across all spectra. False generates a new value for each spectrum in the datas</p></li>
+<li><p><strong>lineprofile</strong> (<em>str</em>) – lineprofile to use for the simulation. This sets values in the parameter linelist to 0 and forces them to not vary unless manually changed. Default values is VP, voigt profile. Options are VP, SDVP, NGP, SDNGP, HTP.</p></li>
+<li><p><strong>linemixing</strong> (<em>bool</em>) – If False, then all linemixing parameters are set to 0 and not able to float.  Default is False.</p></li>
+<li><p><strong>threshold_intensity</strong> (<em>float</em>) – This is the minimum line intensity that will be simulated. Default value is 1e-30.</p></li>
+<li><p><strong>fit_intensity</strong> (<em>float</em>) – This is the minimum line intensity for which parameters will be set to float. This can be overwritten manually. Default value is 1e-26.</p></li>
+<li><p><strong>fit_window</strong> (<em>float</em>) – currently not used</p></li>
+<li><p><strong>sim_window</strong> (<em>float</em>) – This is the region outside of the wavelength region of the dataset that will be simulated for analysis. Default value is 5 cm-1.</p></li>
+<li><p><strong>base_linelist_savename</strong> (<em>str</em>) – filename that the baseline linelist will be saved as. Default is Baseline_LineList</p></li>
+<li><p><strong>param_linelist_savename</strong> (<em>str</em>) – filename that the parameter linelist will be saved as. Default is Parameter_LineList.</p></li>
+<li><p><strong>nu_constrain</strong> (<em>bool</em>) – True indicates that the line centers will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
+<li><p><strong>sw_constrain</strong> (<em>bool</em>) – True indicates that the line intensities will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
+<li><p><strong>gamma0_constrain</strong> (<em>bool</em>) – True indicates that the collisional width will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
+<li><p><strong>delta0_constrain</strong> (<em>bool</em>) – True indicates that the shift will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
+<li><p><strong>aw_constrain</strong> (<em>bool</em>) – True indicates that the speed dependent width will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
+<li><p><strong>as_constrain</strong> (<em>bool</em>) – True indicates that the speed dependent shift will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
+<li><p><strong>nuVC_constrain</strong> (<em>bool</em>) – True indicates that the dicke narrowing term will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
+<li><p><strong>eta_constrain</strong> (<em>bool</em>) – True indicates that the correlation parameter will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.</p></li>
+<li><p><strong>linemixing_constrain</strong> (<em>bool</em>) – True indicates that the first-order linemixing term will be a global variable across all spectra. False generates a new value for each spectrum in the datas</p></li>
 </ul>
 </dd>
 </dl>
@@ -567,14 +565,14 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>vary_baseline</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then sets all baseline parameters for all spectra to float. The default is True.</p></li>
-<li><p><strong>vary_pressure</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then the pressures for all spectra are floated.  This should be used with caution as the impact these parameters have on other floated parameters might lead to an unstable solution. The default is False.</p></li>
-<li><p><strong>vary_temperature</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then the temperatures for all spectra are floated. This should be used with caution as the impact these parameters have on other floated parameters might lead to an unstable solution.The default is False.</p></li>
-<li><p><strong>vary_molefraction</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – keys to dictionary correspond to molecule id where the value is boolean flag, which dictates whether to float the mole fraction. The default is {}. Example: {7: True, 1: False}</p></li>
-<li><p><strong>vary_xshift</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then sets x-shift parameters for all spectra to float. The default is False.</p></li>
-<li><p><strong>vary_etalon_amp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then sets etalon amplitude parameters for all spectra to float. The default is False.</p></li>
-<li><p><strong>vary_etalon_freq</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then sets etalon period parameters for all spectra to float. . The default is False.</p></li>
-<li><p><strong>vary_etalon_phase</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then sets etalon phase parameters for all spectra to float.. The default is False.</p></li>
+<li><p><strong>vary_baseline</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then sets all baseline parameters for all spectra to float. The default is True.</p></li>
+<li><p><strong>vary_pressure</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then the pressures for all spectra are floated.  This should be used with caution as the impact these parameters have on other floated parameters might lead to an unstable solution. The default is False.</p></li>
+<li><p><strong>vary_temperature</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then the temperatures for all spectra are floated. This should be used with caution as the impact these parameters have on other floated parameters might lead to an unstable solution.The default is False.</p></li>
+<li><p><strong>vary_molefraction</strong> (<em>dict</em><em>, </em><em>optional</em>) – keys to dictionary correspond to molecule id where the value is boolean flag, which dictates whether to float the mole fraction. The default is {}. Example: {7: True, 1: False}</p></li>
+<li><p><strong>vary_xshift</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then sets x-shift parameters for all spectra to float. The default is False.</p></li>
+<li><p><strong>vary_etalon_amp</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then sets etalon amplitude parameters for all spectra to float. The default is False.</p></li>
+<li><p><strong>vary_etalon_freq</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then sets etalon period parameters for all spectra to float. . The default is False.</p></li>
+<li><p><strong>vary_etalon_phase</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then sets etalon phase parameters for all spectra to float.. The default is False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -593,20 +591,20 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>vary_nu</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope line centers should be floated.  Each key in the dictionary corresponds to a molecule, where the values are a dictionary corresponding to local_iso_ids as keys and boolean values acting as boolean flags. True means float the nu for that molecule and isotope. Example vary_nu = {7:{1:True, 2: False, 3: False}, 1:{1:False, 2: False, 3: False}}, would indicate that line centers of all main oxygen isotopes would be floated (if the line intensity is greater than the fit intensity), where the line centers for all other O2 isotopes and all water isotopes would not be varied. If these value are left blank, then all variable would have to be manually switched to float. The default is {}.</p></li>
-<li><p><strong>vary_sw</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope line intensities should be floated.  Follows nu_vary example.  The default is {}.</p></li>
-<li><p><strong>vary_gamma0</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope collisional half-width should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
-<li><p><strong>vary_n_gamma0</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope coefficient of the temperature dependence of the half width  should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
-<li><p><strong>vary_delta0</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope pressure shift should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
-<li><p><strong>vary_n_delta0</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope coefficient of the temperature dependence of the pressure shift should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
-<li><p><strong>vary_aw</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope ratio of the speed dependent width to the half-width should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
-<li><p><strong>vary_n_gamma2</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope coefficient of the temperature dependence of the speed dependent width should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
-<li><p><strong>vary_as</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope the ratio of the speed dependent shift to the shift should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
-<li><p><strong>vary_n_delta2</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope coefficient of the temperature dependence of the speed dependent shift should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
-<li><p><strong>vary_nuVC</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope dicke narrowing should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
-<li><p><strong>vary_n_nuVC</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope  coefficient of the temperature dependence of the dicke narrowing should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
-<li><p><strong>vary_eta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope correlation parameter for the VC and SD effects should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
-<li><p><strong>vary_linemixing</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope first-order line-mixing should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
+<li><p><strong>vary_nu</strong> (<em>bool</em><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope line centers should be floated.  Each key in the dictionary corresponds to a molecule, where the values are a dictionary corresponding to local_iso_ids as keys and boolean values acting as boolean flags. True means float the nu for that molecule and isotope. Example vary_nu = {7:{1:True, 2: False, 3: False}, 1:{1:False, 2: False, 3: False}}, would indicate that line centers of all main oxygen isotopes would be floated (if the line intensity is greater than the fit intensity), where the line centers for all other O2 isotopes and all water isotopes would not be varied. If these value are left blank, then all variable would have to be manually switched to float. The default is {}.</p></li>
+<li><p><strong>vary_sw</strong> (<em>bool</em><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope line intensities should be floated.  Follows nu_vary example.  The default is {}.</p></li>
+<li><p><strong>vary_gamma0</strong> (<em>bool</em><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope collisional half-width should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
+<li><p><strong>vary_n_gamma0</strong> (<em>bool</em><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope coefficient of the temperature dependence of the half width  should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
+<li><p><strong>vary_delta0</strong> (<em>bool</em><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope pressure shift should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
+<li><p><strong>vary_n_delta0</strong> (<em>bool</em><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope coefficient of the temperature dependence of the pressure shift should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
+<li><p><strong>vary_aw</strong> (<em>bool</em><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope ratio of the speed dependent width to the half-width should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
+<li><p><strong>vary_n_gamma2</strong> (<em>bool</em><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope coefficient of the temperature dependence of the speed dependent width should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
+<li><p><strong>vary_as</strong> (<em>bool</em><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope the ratio of the speed dependent shift to the shift should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
+<li><p><strong>vary_n_delta2</strong> (<em>bool</em><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope coefficient of the temperature dependence of the speed dependent shift should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
+<li><p><strong>vary_nuVC</strong> (<em>bool</em><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope dicke narrowing should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
+<li><p><strong>vary_n_nuVC</strong> (<em>bool</em><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope  coefficient of the temperature dependence of the dicke narrowing should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
+<li><p><strong>vary_eta</strong> (<em>bool</em><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope correlation parameter for the VC and SD effects should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
+<li><p><strong>vary_linemixing</strong> (<em>bool</em><em>, </em><em>optional</em>) – Dictionary of dictionaries setting whether the molecule and isotope first-order line-mixing should be floated.  Follows nu_vary example.  . The default is {}.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -674,17 +672,17 @@ that is the appropriate ratio of each diluent species corrected for pressure and
 </dl>
 </p></li>
 <li><p><strong>waves</strong> (<em>array</em>) – 1-D array comprised of wavenumbers (cm-1) to use as x-axis for simulation.</p></li>
-<li><p><strong>wing_cutoff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – number of half-widths for each line to be calculated for. The default is 50.</p></li>
-<li><p><strong>wing_wavenumbers</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – number of wavenumber for each line to be calculated. The default is 50.</p></li>
-<li><p><strong>wing_method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – defines which wing cut-off option to use.  Options are wing_cutoff or wing_wavenumbers The default is ‘wing_cutoff’.</p></li>
-<li><p><strong>p</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – pressure for simulation in atmospheres. The default is 1.</p></li>
-<li><p><strong>T</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – temperature for simulation in kelvin. The default is 296.</p></li>
-<li><p><strong>molefraction</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – takes the form {molecule_id : mole fraction, molecule_id: mole fraction, …}. The default is {}.</p></li>
-<li><p><strong>natural_abundance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – True indicates the sample is at natural abundance. The default is True.</p></li>
+<li><p><strong>wing_cutoff</strong> (<em>float</em><em>, </em><em>optional</em>) – number of half-widths for each line to be calculated for. The default is 50.</p></li>
+<li><p><strong>wing_wavenumbers</strong> (<em>float</em><em>, </em><em>optional</em>) – number of wavenumber for each line to be calculated. The default is 50.</p></li>
+<li><p><strong>wing_method</strong> (<em>str</em><em>, </em><em>optional</em>) – defines which wing cut-off option to use.  Options are wing_cutoff or wing_wavenumbers The default is ‘wing_cutoff’.</p></li>
+<li><p><strong>p</strong> (<em>float</em><em>, </em><em>optional</em>) – pressure for simulation in atmospheres. The default is 1.</p></li>
+<li><p><strong>T</strong> (<em>float</em><em>, </em><em>optional</em>) – temperature for simulation in kelvin. The default is 296.</p></li>
+<li><p><strong>molefraction</strong> (<em>dict</em><em>, </em><em>optional</em>) – takes the form {molecule_id : mole fraction, molecule_id: mole fraction, …}. The default is {}.</p></li>
+<li><p><strong>natural_abundance</strong> (<em>bool</em><em>, </em><em>optional</em>) – True indicates the sample is at natural abundance. The default is True.</p></li>
 <li><p><strong>abundance_ratio_MI</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – If sample is not at natural abundance, then the natural abundance defines the enrichment factor compared to natural abundance(ie a sample where the main isotope is the only isotope would have a 1/natural abundance as the enrichment factor). Defined as {M:{I:enrichment factor, I: enrichment factor, I: enrichment factor}, … }. The default is {}.</p></li>
-<li><p><strong>Diluent</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – contains the species as the key with the value being the abundance of that diluent in the sample, ie {‘He’:0.5, ‘self’:0.5}. The default is {}.</p></li>
-<li><p><strong>diluent</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – If Diluent = {}, then this value will be used to set the only diluent to be equal to this diluent. The default is ‘air’.</p></li>
-<li><p><strong>IntensityThreshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – minimum line intensity that will be simulated. The default is 1e-30.</p></li>
+<li><p><strong>Diluent</strong> (<em>dict</em><em>, </em><em>optional</em>) – contains the species as the key with the value being the abundance of that diluent in the sample, ie {‘He’:0.5, ‘self’:0.5}. The default is {}.</p></li>
+<li><p><strong>diluent</strong> (<em>str</em><em>, </em><em>optional</em>) – If Diluent = {}, then this value will be used to set the only diluent to be equal to this diluent. The default is ‘air’.</p></li>
+<li><p><strong>IntensityThreshold</strong> (<em>float</em><em>, </em><em>optional</em>) – minimum line intensity that will be simulated. The default is 1e-30.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -700,30 +698,30 @@ that is the appropriate ratio of each diluent species corrected for pressure and
 <dl class="class">
 <dt id="MATS.Spectrum">
 <em class="property">class </em><code class="sig-prename descclassname">MATS.</code><code class="sig-name descname">Spectrum</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">molefraction={}</em>, <em class="sig-param">natural_abundance=True</em>, <em class="sig-param">diluent='air'</em>, <em class="sig-param">Diluent={}</em>, <em class="sig-param">abundance_ratio_MI={}</em>, <em class="sig-param">spectrum_number=1</em>, <em class="sig-param">input_freq=True</em>, <em class="sig-param">input_tau=True</em>, <em class="sig-param">pressure_column='Cavity Pressure /Torr'</em>, <em class="sig-param">temperature_column='Cavity Temperature Side 2 /C'</em>, <em class="sig-param">frequency_column='Total Frequency /MHz'</em>, <em class="sig-param">tau_column='Mean tau/us'</em>, <em class="sig-param">tau_stats_column=None</em>, <em class="sig-param">segment_column=None</em>, <em class="sig-param">etalons={}</em>, <em class="sig-param">nominal_temperature=296</em>, <em class="sig-param">x_shift=0</em>, <em class="sig-param">baseline_order=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Spectrum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Spectrum" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Spectrum class provides all information describing experimental or simulated spectrum necessary for fitting.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – file containing spectrum with .csv extension. File extension is not included in the name</p></li>
-<li><p><strong>molefraction</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a>) – mole fraction of each molecule in spectra in the format {molec_id: mole fraction (out of 1), molec_id: molefraction, … }</p></li>
-<li><p><strong>natural_abundance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – flag for if the spectrum contains data at natural abundance</p></li>
-<li><p><strong>abundance_ratio_MI</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, … }</p></li>
-<li><p><strong>diluent</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – sets the diluent for the sample.  Default = ‘air’</p></li>
-<li><p><strong>Diluent</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – sets the diluent for the sample if there are a combination of several. Format {‘he’: 0.5, ‘air’: 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.</p></li>
-<li><p><strong>spectrum_number</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – sets a number for the spectrum that will correspond to fit parameters. This is set in the Dataset class, so should not need to be defined manually</p></li>
-<li><p><strong>input_freq</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – True indicates that the frequency_column is in MHz. False indicates that the frequency column is in wavenumbers.</p></li>
-<li><p><strong>input_tau</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – True indicates that the tau_column is in us. False indicates that the tau column is in 1/c*tau (ppm/cm).</p></li>
-<li><p><strong>pressure_column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the pressure column in input file. Column should be in torr. Default is Cavity Pressure /Torr.</p></li>
-<li><p><strong>temperature_column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the temperature column in input file. Column should be in celsius. Default is Cavity Temperature Side 2 /C.</p></li>
-<li><p><strong>frequency_column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the frequency column in input file. Column should be in MHz or Wavenumbers (with appropriate flag for input_freq). NOTE: This is not a detuning axis. Default is Total Frequency /MHz.</p></li>
-<li><p><strong>tau_column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the tau column in input file. Column should be in us or in 1/ctau (ppm/cm) (with appropriate flag for input_tau). Default is Mean tau/us.</p></li>
-<li><p><strong>tau_stats_column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the tau stats column in input file. Default is ‘tau rel. std. dev./%</p></li>
-<li><p><strong>segment_column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Name of column with segment numbers in input file. This column allows spectrum background parameters to be treated in segments across the spectrum. If None then the entire spectrum will share the same segment.</p></li>
-<li><p><strong>etalons</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – Allows you to define etalons by an amplitude and period (1/ frequency in cm-1). Default is no etalons. Input is dictionary with keys being a number and the value being an array with the first index being the amplitude and the second being the period.</p></li>
-<li><p><strong>nominal_temperature</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – nominal temperature indicates the approximate temperature of the spectrum. When combining spectra into a dataset this acts as a flag to whether temperature dependence terms should be parameters that can be fit or whether they should act as constants.  Default = 296</p></li>
-<li><p><strong>x_shift</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – value in wavenumbers of the x shift for the spectrum axis. This is a fittable parameter. Be careful in using this parameter as floating multiple parameters with similar effects cause fits to not converge (ie. unconstrained line centers + x_shift or fits with line center, shifts, and x_shifts terms without enough lines per spectrum to isolate the different effects). Floating this term works best if you have a good initial guess. Default = 0</p></li>
-<li><p><strong>baseline_order</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – sets the baseline order for this spectrum. Allows you to change the baseline order across the broader dataset.()</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – file containing spectrum with .csv extension. File extension is not included in the name</p></li>
+<li><p><strong>molefraction</strong> (<em>dict</em>) – mole fraction of each molecule in spectra in the format {molec_id: mole fraction (out of 1), molec_id: molefraction, … }</p></li>
+<li><p><strong>natural_abundance</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for if the spectrum contains data at natural abundance</p></li>
+<li><p><strong>abundance_ratio_MI</strong> (<em>dict</em><em>, </em><em>optional</em>) – if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, … }</p></li>
+<li><p><strong>diluent</strong> (<em>str</em><em>, </em><em>optional</em>) – sets the diluent for the sample.  Default = ‘air’</p></li>
+<li><p><strong>Diluent</strong> (<em>dict</em><em>, </em><em>optional</em>) – sets the diluent for the sample if there are a combination of several. Format {‘he’: 0.5, ‘air’: 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.</p></li>
+<li><p><strong>spectrum_number</strong> (<em>int</em><em>, </em><em>optional</em>) – sets a number for the spectrum that will correspond to fit parameters. This is set in the Dataset class, so should not need to be defined manually</p></li>
+<li><p><strong>input_freq</strong> (<em>bool</em><em>, </em><em>optional</em>) – True indicates that the frequency_column is in MHz. False indicates that the frequency column is in wavenumbers.</p></li>
+<li><p><strong>input_tau</strong> (<em>bool</em><em>, </em><em>optional</em>) – True indicates that the tau_column is in us. False indicates that the tau column is in 1/c*tau (ppm/cm).</p></li>
+<li><p><strong>pressure_column</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the pressure column in input file. Column should be in torr. Default is Cavity Pressure /Torr.</p></li>
+<li><p><strong>temperature_column</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the temperature column in input file. Column should be in celsius. Default is Cavity Temperature Side 2 /C.</p></li>
+<li><p><strong>frequency_column</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the frequency column in input file. Column should be in MHz or Wavenumbers (with appropriate flag for input_freq). NOTE: This is not a detuning axis. Default is Total Frequency /MHz.</p></li>
+<li><p><strong>tau_column</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the tau column in input file. Column should be in us or in 1/ctau (ppm/cm) (with appropriate flag for input_tau). Default is Mean tau/us.</p></li>
+<li><p><strong>tau_stats_column</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the tau stats column in input file. Default is ‘tau rel. std. dev./%</p></li>
+<li><p><strong>segment_column</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of column with segment numbers in input file. This column allows spectrum background parameters to be treated in segments across the spectrum. If None then the entire spectrum will share the same segment.</p></li>
+<li><p><strong>etalons</strong> (<em>dict</em><em>, </em><em>optional</em>) – Allows you to define etalons by an amplitude and period (1/ frequency in cm-1). Default is no etalons. Input is dictionary with keys being a number and the value being an array with the first index being the amplitude and the second being the period.</p></li>
+<li><p><strong>nominal_temperature</strong> (<em>int</em><em>, </em><em>optional</em>) – nominal temperature indicates the approximate temperature of the spectrum. When combining spectra into a dataset this acts as a flag to whether temperature dependence terms should be parameters that can be fit or whether they should act as constants.  Default = 296</p></li>
+<li><p><strong>x_shift</strong> (<em>float</em><em>, </em><em>optional</em>) – value in wavenumbers of the x shift for the spectrum axis. This is a fittable parameter. Be careful in using this parameter as floating multiple parameters with similar effects cause fits to not converge (ie. unconstrained line centers + x_shift or fits with line center, shifts, and x_shifts terms without enough lines per spectrum to isolate the different effects). Floating this term works best if you have a good initial guess. Default = 0</p></li>
+<li><p><strong>baseline_order</strong> (<em>int</em><em>, </em><em>optional</em>) – sets the baseline order for this spectrum. Allows you to change the baseline order across the broader dataset.()</p></li>
 </ul>
 </dd>
 </dl>
@@ -737,7 +735,7 @@ that is the appropriate ratio of each diluent species corrected for pressure and
 <dd class="field-odd"><p>QF.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)">float</a></p>
+<dd class="field-even"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -751,7 +749,7 @@ that is the appropriate ratio of each diluent species corrected for pressure and
 <dd class="field-odd"><p>Warning if the diluents don’t sum to one</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></p>
+<dd class="field-even"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -893,7 +891,7 @@ Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)</p>
 <dd><p>Saves spectrum information to a pandas dataframe with option to also save as .csv</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>save_file</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If False, then only a dataframe is created. If True, then a csv file will be generated with the name filename + ‘_saved.csv’. The default is False.</p>
+<dd class="field-odd"><p><strong>save_file</strong> (<em>bool</em><em>, </em><em>optional</em>) – If False, then only a dataframe is created. If True, then a csv file will be generated with the name filename + ‘_saved.csv’. The default is False.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>new_file</strong> – returns a pandas dataframe with columns related to the spectrum information</p>
@@ -1010,9 +1008,9 @@ Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x</strong> (<em>array</em>) – array of floats used to define the x-axis</p></li>
-<li><p><strong>amp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – amplitude of the etalon.</p></li>
-<li><p><strong>freq</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – period of the etalon.</p></li>
-<li><p><strong>phase</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – phase of the etalon.</p></li>
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the etalon.</p></li>
+<li><p><strong>freq</strong> (<em>float</em>) – period of the etalon.</p></li>
+<li><p><strong>phase</strong> (<em>float</em>) – phase of the etalon.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1030,13 +1028,13 @@ Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)</p>
 <dd><p>Determines whether there are numbers in a string</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>inputString</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – string for analysis</p>
+<dd class="field-odd"><p><strong>inputString</strong> (<em>str</em>) – string for analysis</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>DESCRIPTION.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></p>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1055,30 +1053,30 @@ Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>parameter_linelist</strong> (<em>dataframe</em>) – linelist following the convention of the linelists used for the HTP_from_DF_select.  Note that there will need to be a linemixing column for each nominal temperature, which you will have to do manually (ie y_air_296, y_self_296).</p></li>
-<li><p><strong>wave_min</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – minimum wavenumber for the simulation (cm-1)</p></li>
-<li><p><strong>wave_max</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – maximum wavenumber for the simulation (cm-1).</p></li>
-<li><p><strong>wave_space</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – wavenumber spacing for the simulation (cm-1).</p></li>
-<li><p><strong>wave_error</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – absolute error on the wavenumber axis (cm-1) to include in simulations. The default is 0.</p></li>
-<li><p><strong>SNR</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – Signal to noise ratio to impose on the simulated spectrum. The default is None.  If SNR is none there is no noise on the simulation.</p></li>
-<li><p><strong>baseline_terms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>, </em><em>optional</em>) – polynomial baseline coefficients where the index is equal to the coefficient order, ie. [0, 1, 2] would correspond to baseline = 0 + 1*(wavenumber - minimum wavenumber) + 2*(wavenumber - minimum wavenumber)^2. The default is [0].</p></li>
-<li><p><strong>temperature</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – temperature for simulation in celsius. The default is 25.</p></li>
-<li><p><strong>temperature_err</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – possible keys include ‘bias’, ‘function’, and ‘params’. The bias indicates the absolute bias in Celsius of the temperature reading, which will be added to the input temperature. Function can be ‘linear’ with params ‘m’ and ‘b’ or ‘sine’ with parameters ‘amp’, ‘freq’, and ‘phase’. These define a function that is added to both the bias and set temperature as a function of the wavenumber. Note: if ‘function’ key is not equal to None, then there also needs to be a params key to define the function.. The default is {‘bias’: 0, ‘function’: None, ‘params’: {}}.</p></li>
-<li><p><strong>pressure</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – pressure for simulation in torr. The default is 760.</p></li>
-<li><p><strong>pressure_err</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – possible keys include bias, function, and params. The bias indicates the percent bias in of the pressure reading, which will be added to the input pressure. Function can be ‘linear’ with params ‘m’ and ‘b’ or ‘sine’ with parameters ‘amp’, ‘freq’, and ‘phase’. These define a function that is added to both the bias and set pressure as a function of the wavenumber. Note: if ‘function’ key is not equal to None, then there also needs to be a params key to define the function.. The default is {‘per_bias’: 0, ‘function’: None, ‘params’: {}}.</p></li>
-<li><p><strong>wing_cutoff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – number of voigt half-widths to simulate on either side of each line. The default is 25.</p></li>
-<li><p><strong>wing_wavenumbers</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – number of wavenumbers to simulate on either side of each line. The default is 25.</p></li>
-<li><p><strong>wing_method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Provides choice between the wing_cutoff and wing_wavenumbers line cut-off options. The default is ‘wing_cutoff’.</p></li>
-<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – allows you to pick the output filename for the simulated spectra. The default is ‘temp’.</p></li>
-<li><p><strong>molefraction</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – mole fraction of each molecule to be simulated in the spectrum in the format {molec_id: mole fraction (out of 1), molec_id: molefraction, … }. The default is {}.</p></li>
-<li><p><strong>molefraction_err</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – percent error in the mole fraction of each molecule to be simulated in the spectrum in the format {molec_id: percent error in mole fraction, molec_id: percent error in mole fraction, … }. The default is {}.</p></li>
-<li><p><strong>natural_abundance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – flag for if the spectrum contains data at natural abundance. The default is True.</p></li>
-<li><p><strong>abundance_ratio_MI</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, … }. The default is {}.</p></li>
-<li><p><strong>diluent</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – sets the diluent for the sample if only using one broadener. The default is ‘air’.</p></li>
-<li><p><strong>Diluent</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – sets the diluent for the sample if there are a combination of several. Format {‘he’: 0.5, ‘air’: 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.. The default is {}.</p></li>
-<li><p><strong>nominal_temperature</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – nominal temperature indicates the approximate temperature of the spectrum. When combining spectra into a dataset this acts as a flag to whether temperature dependence terms should be parameters that can be fit or whether they should act as constants.. The default is 296.</p></li>
-<li><p><strong>etalons</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – Allows you to define etalons by an amplitude and period (1/ frequency in cm-1). Default is no etalons. Input is dictionary with keys being a number and the value being an array with the first index being the amplitude and the second being the period.. The default is {}.</p></li>
-<li><p><strong>x_shift</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – value in wavenumbers of the x shift for the spectrum axis.. The default is 0.</p></li>
-<li><p><strong>IntensityThreshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – minimum line intensity to use in the simulation. The default is 1e-30.</p></li>
+<li><p><strong>wave_min</strong> (<em>float</em>) – minimum wavenumber for the simulation (cm-1)</p></li>
+<li><p><strong>wave_max</strong> (<em>float</em>) – maximum wavenumber for the simulation (cm-1).</p></li>
+<li><p><strong>wave_space</strong> (<em>float</em>) – wavenumber spacing for the simulation (cm-1).</p></li>
+<li><p><strong>wave_error</strong> (<em>float</em><em>, </em><em>optional</em>) – absolute error on the wavenumber axis (cm-1) to include in simulations. The default is 0.</p></li>
+<li><p><strong>SNR</strong> (<em>float</em><em>, </em><em>optional</em>) – Signal to noise ratio to impose on the simulated spectrum. The default is None.  If SNR is none there is no noise on the simulation.</p></li>
+<li><p><strong>baseline_terms</strong> (<em>list</em><em>, </em><em>optional</em>) – polynomial baseline coefficients where the index is equal to the coefficient order, ie. [0, 1, 2] would correspond to baseline = 0 + 1*(wavenumber - minimum wavenumber) + 2*(wavenumber - minimum wavenumber)^2. The default is [0].</p></li>
+<li><p><strong>temperature</strong> (<em>float</em><em>, </em><em>optional</em>) – temperature for simulation in celsius. The default is 25.</p></li>
+<li><p><strong>temperature_err</strong> (<em>dict</em><em>, </em><em>optional</em>) – possible keys include ‘bias’, ‘function’, and ‘params’. The bias indicates the absolute bias in Celsius of the temperature reading, which will be added to the input temperature. Function can be ‘linear’ with params ‘m’ and ‘b’ or ‘sine’ with parameters ‘amp’, ‘freq’, and ‘phase’. These define a function that is added to both the bias and set temperature as a function of the wavenumber. Note: if ‘function’ key is not equal to None, then there also needs to be a params key to define the function.. The default is {‘bias’: 0, ‘function’: None, ‘params’: {}}.</p></li>
+<li><p><strong>pressure</strong> (<em>float</em><em>, </em><em>optional</em>) – pressure for simulation in torr. The default is 760.</p></li>
+<li><p><strong>pressure_err</strong> (<em>dict</em><em>, </em><em>optional</em>) – possible keys include bias, function, and params. The bias indicates the percent bias in of the pressure reading, which will be added to the input pressure. Function can be ‘linear’ with params ‘m’ and ‘b’ or ‘sine’ with parameters ‘amp’, ‘freq’, and ‘phase’. These define a function that is added to both the bias and set pressure as a function of the wavenumber. Note: if ‘function’ key is not equal to None, then there also needs to be a params key to define the function.. The default is {‘per_bias’: 0, ‘function’: None, ‘params’: {}}.</p></li>
+<li><p><strong>wing_cutoff</strong> (<em>float</em><em>, </em><em>optional</em>) – number of voigt half-widths to simulate on either side of each line. The default is 25.</p></li>
+<li><p><strong>wing_wavenumbers</strong> (<em>float</em><em>, </em><em>optional</em>) – number of wavenumbers to simulate on either side of each line. The default is 25.</p></li>
+<li><p><strong>wing_method</strong> (<em>str</em><em>, </em><em>optional</em>) – Provides choice between the wing_cutoff and wing_wavenumbers line cut-off options. The default is ‘wing_cutoff’.</p></li>
+<li><p><strong>filename</strong> (<em>str</em><em>, </em><em>optional</em>) – allows you to pick the output filename for the simulated spectra. The default is ‘temp’.</p></li>
+<li><p><strong>molefraction</strong> (<em>dict</em><em>, </em><em>optional</em>) – mole fraction of each molecule to be simulated in the spectrum in the format {molec_id: mole fraction (out of 1), molec_id: molefraction, … }. The default is {}.</p></li>
+<li><p><strong>molefraction_err</strong> (<em>dict</em><em>, </em><em>optional</em>) – percent error in the mole fraction of each molecule to be simulated in the spectrum in the format {molec_id: percent error in mole fraction, molec_id: percent error in mole fraction, … }. The default is {}.</p></li>
+<li><p><strong>natural_abundance</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for if the spectrum contains data at natural abundance. The default is True.</p></li>
+<li><p><strong>abundance_ratio_MI</strong> (<em>dict</em><em>, </em><em>optional</em>) – if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, … }. The default is {}.</p></li>
+<li><p><strong>diluent</strong> (<em>str</em><em>, </em><em>optional</em>) – sets the diluent for the sample if only using one broadener. The default is ‘air’.</p></li>
+<li><p><strong>Diluent</strong> (<em>dict</em><em>, </em><em>optional</em>) – sets the diluent for the sample if there are a combination of several. Format {‘he’: 0.5, ‘air’: 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.. The default is {}.</p></li>
+<li><p><strong>nominal_temperature</strong> (<em>int</em><em>, </em><em>optional</em>) – nominal temperature indicates the approximate temperature of the spectrum. When combining spectra into a dataset this acts as a flag to whether temperature dependence terms should be parameters that can be fit or whether they should act as constants.. The default is 296.</p></li>
+<li><p><strong>etalons</strong> (<em>dict</em><em>, </em><em>optional</em>) – Allows you to define etalons by an amplitude and period (1/ frequency in cm-1). Default is no etalons. Input is dictionary with keys being a number and the value being an array with the first index being the amplitude and the second being the period.. The default is {}.</p></li>
+<li><p><strong>x_shift</strong> (<em>float</em><em>, </em><em>optional</em>) – value in wavenumbers of the x shift for the spectrum axis.. The default is 0.</p></li>
+<li><p><strong>IntensityThreshold</strong> (<em>float</em><em>, </em><em>optional</em>) – minimum line intensity to use in the simulation. The default is 1e-30.</p></li>
 <li><p><strong>num_segments</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – Number of segments in the file, which is implemented labeling the segment column into equal sequential se . The default is 10.</p></li>
 </ul>
 </dd>
@@ -1098,58 +1096,42 @@ Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)</p>
           </div>
         </div>
       </div>
-        </div>
-        <div class="sidebar">
-          
-          <h3>Table of Contents</h3>
-          <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="Getting Started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="MATS Summary.html">MATS Summary</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Generating Parameter Line lists.html">Generating Parameter Line lists</a></li>
-<li class="toctree-l1"><a class="reference internal" href="MATS Example using Experimental and Synthetic Data.html">MATS Example using Experimental and Synthetic Data</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">MATS module</a></li>
-</ul>
-
-          <div role="search">
-            <h3 style="margin-top: 1.5em;">Search</h3>
-            <form class="search" action="search.html" method="get">
-                <input type="text" name="q" />
-                <input type="submit" value="Go" />
-            </form>
-          </div>
-
-        </div>
-        <div class="clearer"></div>
-      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="MATS Example using Experimental and Synthetic Data.html"
+                        title="previous chapter">MATS Example using Experimental and Synthetic Data</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
     </div>
-
-    <div class="footer-wrapper">
-      <div class="footer">
-        <div class="left">
-          <div role="navigation" aria-label="related navigaton">
-            <a href="MATS Example using Experimental and Synthetic Data.html" title="MATS Example using Experimental and Synthetic Data"
-              >previous</a> |
-            <a href="py-modindex.html" title="Python Module Index"
-              >modules</a> |
-            <a href="genindex.html" title="General Index"
-              >index</a>
-          </div>
-          <div role="note" aria-label="source link">
-              <br/>
-              <a href="_sources/MATS.rst.txt"
-                rel="nofollow">Show Source</a>
-          </div>
+</div>
+<script>$('#searchbox').show(0);</script>
         </div>
-
-        <div class="right">
-          
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="MATS Example using Experimental and Synthetic Data.html" title="MATS Example using Experimental and Synthetic Data"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
     <div class="footer" role="contentinfo">
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
     </div>
-        </div>
-        <div class="clearer"></div>
-      </div>
-    </div>
-
   </body>
 </html>
