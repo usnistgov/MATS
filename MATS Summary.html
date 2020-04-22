@@ -1,0 +1,296 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>MATS Summary &#8212; MATS 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/agogo.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css" />
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="https://pages.nist.gov/nist-header-footer/js/jquery-1.9.0.min.js"></script>
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js"></script>
+    <script id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-42404149-54&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+    <script src="https://code.jquery.com/jquery.1.12.4.min.js"></script>
+    <script src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
+    <script src="_static/leave_notice.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Generating Parameter Line lists" href="Generating Parameter Line lists.html" />
+    <link rel="prev" title="Getting Started" href="Getting Started.html" /> 
+  </head><body>
+    <div class="header-wrapper" role="banner">
+      <div class="header">
+        <div class="headertitle"><a
+          href="index.html">MATS 1.0 documentation</a></div>
+        <div class="rel" role="navigation" aria-label="related navigation">
+          <a href="Getting Started.html" title="Getting Started"
+             accesskey="P">previous</a> |
+          <a href="Generating Parameter Line lists.html" title="Generating Parameter Line lists"
+             accesskey="N">next</a> |
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a>
+        </div>
+       </div>
+    </div>
+
+    <div class="content-wrapper">
+      <div class="content">
+        <div class="document">
+            
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="mats-summary">
+<h1>MATS Summary<a class="headerlink" href="#mats-summary" title="Permalink to this headline">¶</a></h1>
+<p>In multi-spectrum fitting, there are a collection of spectrum that can be modeled by the same line-by-line spectroscopic parameters, but might vary in pressure, temperature, and sample composition.</p>
+<p>The MATS program is based on <a class="reference internal" href="MATS.html#MATS.Spectrum" title="MATS.Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Spectrum</span></code></a> objects, which are defined by not only their wavenumber and absorption data, but also information on the spectrum pressure, temperature, baseline characteristics, and sample composition.  In addition to utilizing real spectra, there is a <a class="reference internal" href="MATS.html#MATS.simulate_spectrum" title="MATS.simulate_spectrum"><code class="xref py py-func docutils literal notranslate"><span class="pre">MATS.simulate_spectrum()</span></code></a> function, which returns a spectrum object that match input simulation parameters.  This is useful for performing error analysis in the same framework as primary data analysis.  These <a class="reference internal" href="MATS.html#MATS.Spectrum" title="MATS.Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Spectrum</span></code></a> objects are combined to form a <a class="reference internal" href="MATS.html#MATS.Dataset" title="MATS.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Dataset</span></code></a> object, which is the collection of spectra that are being analyzed together in the multi-spectrum analysis.</p>
+<p>There are two files that contain parameters that are fit in this model, one for spectrum dependent parameters (baseline parameters, etalons, sample composition, x-shift) and the other for linelist parameters that are common across all spectra.  These files are saved locally as .csv files with a column for each parameter and with rows corresponding to either the spectrum number or spectral line number.  In addition to the columns for fit parameters, there are two additional columns for each fittable parameter called param_vary and param_err.  The param_vary column is a boolean flag that is toggled to indicate whether a given parameter will be varied in the fit.  The param_err column will be set to zero initially and replaced with the fit error value, if it is floated after fitting.  Calls of the <a class="reference internal" href="MATS.html#MATS.Generate_FitParam_File" title="MATS.Generate_FitParam_File"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Generate_FitParam_File</span></code></a> class not only make these input files, but also set the lineshape (HTP derivatives) and define initial conditions for whether a parameter should be varied and whether the parameter should be constrained to multi-spectrum fit or allowed to vary by spectrum.  The <a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files" title="MATS.Edit_Fit_Param_Files"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files</span></code></a> class allows for edits to the parameters files in the ipython interface rather than editing in the .csv file.</p>
+<p>Finally, the <a class="reference internal" href="MATS.html#MATS.Fit_DataSet" title="MATS.Fit_DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Fit_DataSet</span></code></a> class fits the data and allows the user to impose constraints on the parameters (min and max values), impose simulation and impose convergence criteria, update parameter/parameter line lists, and plot fit results.</p>
+<p>Below is sparse documentation for each of the classes and main functions in the MATS project with links to the full documentation provided.</p>
+<div class="section" id="spectrum-class-and-objects">
+<h2>Spectrum Class and Objects<a class="headerlink" href="#spectrum-class-and-objects" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum" title="MATS.Spectrum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum</span></code></a>(filename[, molefraction, …])</p></td>
+<td><p>Spectrum class provides all information describing experimental or simulated spectrum necessary for fitting.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.simulate_spectrum" title="MATS.simulate_spectrum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.simulate_spectrum</span></code></a>(parameter_linelist, …)</p></td>
+<td><p>allows for a synthetic spectrum to be generated, where the output is a spectrum object that can be used in MATS classes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum.calculate_QF" title="MATS.Spectrum.calculate_QF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum.calculate_QF</span></code></a>()</p></td>
+<td><p>Calculates the quality of fit factor (QF) for spectrum</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum.fft_spectrum" title="MATS.Spectrum.fft_spectrum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum.fft_spectrum</span></code></a>()</p></td>
+<td><p>Takes the FFT of the residuals of the spectrum Prints a dataframe with the 20 highest amplitude frequencies with the FFT frequency (period), amplitude, FFT phase, and frequency (cm-1).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum.plot_freq_tau" title="MATS.Spectrum.plot_freq_tau"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum.plot_freq_tau</span></code></a>()</p></td>
+<td><p>Generates a plot of Tau (us) as a function of Frequency (MHz)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum.plot_model_residuals" title="MATS.Spectrum.plot_model_residuals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum.plot_model_residuals</span></code></a>()</p></td>
+<td><p>Generates a plot of the alpha and model (ppm/cm) as a function of Wavenumber (cm-1) and on lower plot shows the residuals (ppm/cm) as a function of wavenumber (cm-1)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum.plot_wave_alpha" title="MATS.Spectrum.plot_wave_alpha"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum.plot_wave_alpha</span></code></a>()</p></td>
+<td><p>Generates a plot of alpha (ppm/cm) as a function of Wavenumber (cm-1)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum.save_spectrum_info" title="MATS.Spectrum.save_spectrum_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum.save_spectrum_info</span></code></a>([save_file])</p></td>
+<td><p>Saves spectrum information to a pandas dataframe with option to also save as .csv</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum.segment_wave_alpha" title="MATS.Spectrum.segment_wave_alpha"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum.segment_wave_alpha</span></code></a>()</p></td>
+<td><p>Defines the wavenumber, alpha, and indices of spectrum that correspond to a given spectrum segment</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="line-by-line-model-and-etalon-models">
+<h2>Line-by-line Model and Etalon Models<a class="headerlink" href="#line-by-line-model-and-etalon-models" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.HTP_from_DF_select" title="MATS.HTP_from_DF_select"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.HTP_from_DF_select</span></code></a>(linelist, waves[, …])</p></td>
+<td><p>Simulates the absorbance based on input line list, wavenumbers, and sample parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.etalon" title="MATS.etalon"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.etalon</span></code></a>(x, amp, freq, phase)</p></td>
+<td><p>Etalon definition</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="dataset-class">
+<h2>Dataset Class<a class="headerlink" href="#dataset-class" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Dataset" title="MATS.Dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Dataset</span></code></a>(spectra, dataset_name[, …])</p></td>
+<td><p>Combines spectrum objects into a Dataset object to enable multi-spectrum fitting</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Dataset.generate_baseline_paramlist" title="MATS.Dataset.generate_baseline_paramlist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Dataset.generate_baseline_paramlist</span></code></a>()</p></td>
+<td><p>Generates a .csv file called dataset_name + _baseline_paramlist.csv.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Dataset.generate_summary_file" title="MATS.Dataset.generate_summary_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Dataset.generate_summary_file</span></code></a>([save_file])</p></td>
+<td><p>Generates a summary file combining spectral information from all spectra in the Dataset</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Dataset.get_spectra_extremes" title="MATS.Dataset.get_spectra_extremes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Dataset.get_spectra_extremes</span></code></a>()</p></td>
+<td><p>Gets the minimum and maximum wavenumber for the entire Dataset</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Dataset.get_spectrum_extremes" title="MATS.Dataset.get_spectrum_extremes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Dataset.get_spectrum_extremes</span></code></a>()</p></td>
+<td><p>Gets the minimum and maximum wavenumber for each spectrum in the Dataset</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Dataset.average_QF" title="MATS.Dataset.average_QF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Dataset.average_QF</span></code></a>()</p></td>
+<td><p>Calculates the Average QF from all spectrum</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Dataset.plot_model_residuals" title="MATS.Dataset.plot_model_residuals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Dataset.plot_model_residuals</span></code></a>()</p></td>
+<td><p>Generates a plot showing both the model and experimental data as a function of wavenumber in the main plot.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="generate-fitparam-file-class">
+<h2>Generate FitParam File Class<a class="headerlink" href="#generate-fitparam-file-class" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Generate_FitParam_File" title="MATS.Generate_FitParam_File"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Generate_FitParam_File</span></code></a>(dataset, …[, …])</p></td>
+<td><p>Class generates the parameter files used in fitting and sets up fit settings.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Generate_FitParam_File.generate_fit_baseline_linelist" title="MATS.Generate_FitParam_File.generate_fit_baseline_linelist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Generate_FitParam_File.generate_fit_baseline_linelist</span></code></a>([…])</p></td>
+<td><p>Generates the actual baseline line list used and updated in fitting.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Generate_FitParam_File.generate_fit_param_linelist_from_linelist" title="MATS.Generate_FitParam_File.generate_fit_param_linelist_from_linelist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Generate_FitParam_File.generate_fit_param_linelist_from_linelist</span></code></a>([…])</p></td>
+<td><p>Generates the actual parameter line list used and updated in fitting.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="edit-fit-param-files-class">
+<h2>Edit Fit Param Files Class<a class="headerlink" href="#edit-fit-param-files-class" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files" title="MATS.Edit_Fit_Param_Files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files</span></code></a>(…[, …])</p></td>
+<td><p>Allows for the baseline and parameter files to be editted in jupyter notebook.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files.edit_generated_baselist" title="MATS.Edit_Fit_Param_Files.edit_generated_baselist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files.edit_generated_baselist</span></code></a>()</p></td>
+<td><p>Allows editting of baseline linelist in notebook</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files.edit_generated_paramlist" title="MATS.Edit_Fit_Param_Files.edit_generated_paramlist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files.edit_generated_paramlist</span></code></a>()</p></td>
+<td><p>Allows editting of parameter linelist in notebook</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files.save_editted_baselist" title="MATS.Edit_Fit_Param_Files.save_editted_baselist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files.save_editted_baselist</span></code></a>(…)</p></td>
+<td><p>Saves edits of baseline linelist in notebook</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files.save_editted_paramlist" title="MATS.Edit_Fit_Param_Files.save_editted_paramlist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files.save_editted_paramlist</span></code></a>(…)</p></td>
+<td><p>Saves edits of parameter linelist in notebook</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="fit-dataset-class">
+<h2>Fit Dataset Class<a class="headerlink" href="#fit-dataset-class" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Fit_DataSet" title="MATS.Fit_DataSet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Fit_DataSet</span></code></a>(dataset, …[, …])</p></td>
+<td><p>Provides the fitting functionality</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Fit_DataSet.constrained_baseline" title="MATS.Fit_DataSet.constrained_baseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Fit_DataSet.constrained_baseline</span></code></a>(params)</p></td>
+<td><p>Allows you to impose baseline constraints when using multiple segments per spectrum, ie.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Fit_DataSet.fit_data" title="MATS.Fit_DataSet.fit_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Fit_DataSet.fit_data</span></code></a>(params[, …])</p></td>
+<td><p>Uses the LMFit minimizer to do the fitting through the simulation model function</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Fit_DataSet.generate_params" title="MATS.Fit_DataSet.generate_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Fit_DataSet.generate_params</span></code></a>()</p></td>
+<td><p>Generates the lmfit params object that will be used in fitting</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Fit_DataSet.residual_analysis" title="MATS.Fit_DataSet.residual_analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Fit_DataSet.residual_analysis</span></code></a>(result[, …])</p></td>
+<td><p>Updates the model and residual arrays in each spectrum object with the results of the fit and gives the option of plotting each spectra with residuals.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Fit_DataSet.simulation_model" title="MATS.Fit_DataSet.simulation_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Fit_DataSet.simulation_model</span></code></a>(params[, …])</p></td>
+<td><p>This is the model that is used for fitting.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Fit_DataSet.update_params" title="MATS.Fit_DataSet.update_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Fit_DataSet.update_params</span></code></a>(result[, …])</p></td>
+<td><p>Updates the baseline and line parameter files based on fit results with the option to write over the file (default) or save as a new file.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+        </div>
+        <div class="sidebar">
+          
+          <h3>Table of Contents</h3>
+          <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Getting Started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MATS Summary</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#spectrum-class-and-objects">Spectrum Class and Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#line-by-line-model-and-etalon-models">Line-by-line Model and Etalon Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dataset-class">Dataset Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#generate-fitparam-file-class">Generate FitParam File Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#edit-fit-param-files-class">Edit Fit Param Files Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fit-dataset-class">Fit Dataset Class</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Generating Parameter Line lists.html">Generating Parameter Line lists</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MATS Example using Experimental and Synthetic Data.html">MATS Example using Experimental and Synthetic Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MATS.html">MATS module</a></li>
+</ul>
+
+          <div role="search">
+            <h3 style="margin-top: 1.5em;">Search</h3>
+            <form class="search" action="search.html" method="get">
+                <input type="text" name="q" />
+                <input type="submit" value="Go" />
+            </form>
+          </div>
+
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+    <div class="footer-wrapper">
+      <div class="footer">
+        <div class="left">
+          <div role="navigation" aria-label="related navigaton">
+            <a href="Getting Started.html" title="Getting Started"
+              >previous</a> |
+            <a href="Generating Parameter Line lists.html" title="Generating Parameter Line lists"
+              >next</a> |
+            <a href="py-modindex.html" title="Python Module Index"
+              >modules</a> |
+            <a href="genindex.html" title="General Index"
+              >index</a>
+          </div>
+          <div role="note" aria-label="source link">
+              <br/>
+              <a href="_sources/MATS Summary.rst.txt"
+                rel="nofollow">Show Source</a>
+          </div>
+        </div>
+
+        <div class="right">
+          
+    <div class="footer" role="contentinfo">
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
+    </div>
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+  </body>
+</html>
