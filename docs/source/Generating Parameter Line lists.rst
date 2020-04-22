@@ -226,7 +226,9 @@ The next section of the example contains a function and function call teh output
 
    def HITRANlinelist_to_csv(isotopes, minimum_wavenumber, maximum_wavenumber, tablename = 'tmp', filename = tablename, temperature = 296): 
 		
-		"""Generates two .csv files generated information available from HTIRAN.  The first line list matches the information available from HITRAN (_HITRAN.csv) and the second supplements the HITRAN information with theoretical values and translates into MATS input format (_initguess.csv)
+		"""Generates two .csv files generated information available from HTIRAN.  
+		The first line list matches the information available from HITRAN (_HITRAN.csv) 
+		and the second supplements the HITRAN information with theoretical values and translates into MATS input format (_initguess.csv)
 
 		Outline
 
@@ -255,7 +257,8 @@ The next section of the example contains a function and function call teh output
 		filename : str, optional
 			acts as a base filename for the .csv files generated. The default is tablename.
 		temperature : float, optional
-			Nominal temperature of interest.  HITRAN breaks-up the HTP line parameters into temperature regimes.  This allows for selection of the most approriate parameter information. The default is 296.
+			Nominal temperature of interest.  HITRAN breaks-up the HTP line parameters into temperature regimes.  
+			This allows for selection of the most approriate parameter information. The default is 296.
 
 		Returns
 		-------
