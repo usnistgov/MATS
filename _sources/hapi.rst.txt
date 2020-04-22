@@ -1,7 +1,0 @@
-hapi module
-===========
-
-.. automodule:: hapi
-   :members:
-   :undoc-members:
-   :show-inheritance:
