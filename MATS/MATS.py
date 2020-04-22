@@ -908,7 +908,7 @@ def etalon(x, amp, freq, phase):
     
         
 def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_error = 0, 
-                        SNR = 10000, baseline_terms = [0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760, 
+                        SNR = None, baseline_terms = [0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760, 
                         pressure_err = {'per_bias': 0, 'function': None, 'params': {}}, 
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
                         natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {}, 
@@ -929,7 +929,7 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
     wave_error : float, optional
         absolute error on the wavenumber axis (cm-1) to include in simulations. The default is 0.
     SNR : float, optional
-        Signal to noise ratio to impose on the simulated spectrum. The default is 10000.
+        Signal to noise ratio to impose on the simulated spectrum. The default is None.  If SNR is none there is no noise on the simulation.
     baseline_terms : list, optional
         polynomial baseline coefficients where the index is equal to the coefficient order, ie. [0, 1, 2] would correspond to baseline = 0 + 1*(wavenumber - minimum wavenumber) + 2*(wavenumber - minimum wavenumber)^2. The default is [0].
     temperature : float, optional
@@ -1054,7 +1054,10 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
         x = wavenumbers - np.min(wavenumbers)
         etalon_model += amp*np.sin((2*np.pi * freq)*x+ phase) 
     #Calculate Noisy Spectrum
-    alpha_noise = alpha_array + np.max(alpha_array)*np.random.normal(loc = 0, scale =1, size = len(alpha_array))*1/SNR
+    if SNR == None:
+        alpha_noise = alpha_array
+    else:   
+        alpha_noise = alpha_array + np.max(alpha_array)*np.random.normal(loc = 0, scale =1, size = len(alpha_array))*1/SNR
     alpha_noise += (baseline + etalon_model) 
     #Generate and save Simulated Spectrum File
     spectrum = pd.DataFrame()
