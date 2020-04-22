@@ -1,0 +1,95 @@
+MATS Summary
+============
+
+In multi-spectrum fitting, there are a collection of spectrum that can be modeled by the same line-by-line spectroscopic parameters, but might vary in pressure, temperature, and sample composition.  
+
+The MATS program is based on :py:class:`MATS.Spectrum` objects, which are defined by not only their wavenumber and absorption data, but also information on the spectrum pressure, temperature, baseline characteristics, and sample composition.  In addition to utilizing real spectra, there is a :py:func:`MATS.simulate_spectrum` function, which returns a spectrum object that match input simulation parameters.  This is useful for performing error analysis in the same framework as primary data analysis.  These :py:class:`MATS.Spectrum` objects are combined to form a :py:class:`MATS.Dataset` object, which is the collection of spectra that are being analyzed together in the multi-spectrum analysis.  
+
+There are two files that contain parameters that are fit in this model, one for spectrum dependent parameters (baseline parameters, etalons, sample composition, x-shift) and the other for linelist parameters that are common across all spectra.  These files are saved locally as .csv files with a column for each parameter and with rows corresponding to either the spectrum number or spectral line number.  In addition to the columns for fit parameters, there are two additional columns for each fittable parameter called param_vary and param_err.  The param_vary column is a boolean flag that is toggled to indicate whether a given parameter will be varied in the fit.  The param_err column will be set to zero initially and replaced with the fit error value, if it is floated after fitting.  Calls of the :py:class:`MATS.Generate_FitParam_File` class not only make these input files, but also set the lineshape (HTP derivatives) and define initial conditions for whether a parameter should be varied and whether the parameter should be constrained to multi-spectrum fit or allowed to vary by spectrum.  The :py:class:`MATS.Edit_Fit_Param_Files` class allows for edits to the parameters files in the ipython interface rather than editing in the .csv file. 
+
+Finally, the :py:class:`MATS.Fit_DataSet` class fits the data and allows the user to impose constraints on the parameters (min and max values), impose simulation and impose convergence criteria, update parameter/parameter line lists, and plot fit results.  
+
+Below is sparse documentation for each of the classes and main functions in the MATS project with links to the full documentation provided.
+
+Spectrum Class and Objects
+++++++++++++++++++++++++++
+
+.. currentmodule:: MATS.Spectrum
+
+
+
+.. autosummary::
+   MATS.Spectrum
+   MATS.simulate_spectrum
+   MATS.Spectrum.calculate_QF
+   MATS.Spectrum.fft_spectrum
+   MATS.Spectrum.plot_freq_tau
+   MATS.Spectrum.plot_model_residuals
+   MATS.Spectrum.plot_wave_alpha
+   MATS.Spectrum.save_spectrum_info
+   MATS.Spectrum.segment_wave_alpha
+   
+   
+
+   
+Line-by-line Model and Etalon Models
+++++++++++++++++++++++++++++++++++++
+.. currentmodule:: MATS.HTP_from_DF_select
+
+.. autosummary::
+   MATS.HTP_from_DF_select
+   MATS.etalon
+
+
+   
+Dataset Class
+++++++++++++++
+
+.. currentmodule:: MATS.Dataset
+
+.. autosummary::
+   MATS.Dataset
+   MATS.Dataset.generate_baseline_paramlist
+   MATS.Dataset.generate_summary_file
+   MATS.Dataset.get_spectra_extremes
+   MATS.Dataset.get_spectrum_extremes
+   MATS.Dataset.average_QF
+   MATS.Dataset.plot_model_residuals
+   
+Generate FitParam File Class
+++++++++++++++++++++++++++++
+.. currentmodule:: MATS.Generate_FitParam_File
+
+.. autosummary::
+   MATS.Generate_FitParam_File
+   MATS.Generate_FitParam_File.generate_fit_baseline_linelist 
+   MATS.Generate_FitParam_File.generate_fit_param_linelist_from_linelist
+  
+
+
+Edit Fit Param Files Class
+++++++++++++++++++++++++++
+.. currentmodule:: MATS.Edit_Fit_Param_Files
+
+.. autosummary::
+   MATS.Edit_Fit_Param_Files
+   MATS.Edit_Fit_Param_Files.edit_generated_baselist 
+   MATS.Edit_Fit_Param_Files.edit_generated_paramlist
+   MATS.Edit_Fit_Param_Files.save_editted_baselist
+   MATS.Edit_Fit_Param_Files.save_editted_paramlist
+   
+   
+Fit Dataset Class
++++++++++++++++++
+
+.. currentmodule:: MATS.Fit_DataSet
+
+.. autosummary::
+   MATS.Fit_DataSet
+   MATS.Fit_DataSet.constrained_baseline 
+   MATS.Fit_DataSet.fit_data
+   MATS.Fit_DataSet.generate_params
+   MATS.Fit_DataSet.residual_analysis
+   MATS.Fit_DataSet.simulation_model
+   MATS.Fit_DataSet.update_params
+   

@@ -9,24 +9,22 @@ MATS: Multi-spectrum Analysis Tool for Spectroscopy
 
 `This software is available on GitHub <https://github.com/usnistgov/MATS>`_
 
-The purpose of the MATS project is to develop a NIST-based multi-spectrum fitting and analysis tool for spectroscopic data that allows the flexibility to test and adapt to experimental/data-driven needs.  This software allows for the use of several commonly-used spectroscopic line profiles (Voigt, Nelkin-Ghatak, speed-dependent Voigt, speed-dependent Nelkin-Ghatak, and Hartmann-Tran) and allows for pressure, temperature, and sample composition constraints to be imposed on solutions.  In addition to fitting experimental spectra, MATS can generate simulated spectram, which allows for its use as an error analysis tool.  
+**The purpose of the MATS project is to develop a NIST-based multi-spectrum fitting and analysis tool for spectroscopic data that allows the flexibility to test and adapt to experimental/data-driven needs.  This software allows for the use of several commonly-used spectroscopic line profiles (Voigt, Nelkin-Ghatak, speed-dependent Voigt, speed-dependent Nelkin-Ghatak, and Hartmann-Tran) and allows for pressure, temperature, and sample composition constraints to be imposed on solutions.  In addition to fitting experimental spectra, MATS can generate simulated spectram, which allows for its use as an error analysis tool.**
+
+
 
 Contents
 ++++++++
 
 .. toctree::
    :maxdepth: 2
-
-   MATS Overview
-   Set-Up and Load Packages
-   Generating Pandas Line lists from HITRAN
-   Spectrum Class
-   Simulate Spectrum
-   Dataset Class
-   Generate Fit Parameters File Class
-   Edit Fit Parameters File Class
-   Fit Dataset Class
+   
+   Getting Started
+   MATS Summary
+   Generating Parameter Line lists
+   MATS Example using Experimental and Synthetic Data
    MATS
+   
 
 
 Legal
