@@ -13,8 +13,6 @@ import seaborn as sns
 sns.set_style("whitegrid")
 sns.set_style("ticks")
 sns.set_context("poster")
-# Set HAPI location and upload necessary portions
-sys.path.append(r'C:\Users\ema3\Documents\Python Scripts\HAPI')#Add hapi.py folder location to system path
 from hapi import EnvironmentDependency_Intensity, PYTIPS2017, molecularMass, pcqsdhc, ISO
 
 
@@ -65,7 +63,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
             
             n_gamma2_species = the coefficient of the temperature dependence of the speed dependent width NOTE: This is the temperature dependence of the speed dependent width not the ratio of the speed dependence to the half-width
             
-            SD_delta_species = the ratio of the speed dependent shift to the half-width at reference temperature and pressure
+            SD_delta_species = the ratio of the speed dependent shift to the collisional shift at reference temperature and pressure
             
             n_delta2_species = the coefficient of the temperature dependence of the speed dependent shift NOTE: This is the temperature dependence of the speed dependent shift not the ratio of the speed dependence to the shift
             
@@ -75,7 +73,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
             
             eta_species = the correlation parameter for the VC and SD effects
             
-            y_species_nominaltemperature = linemixing term (as currently written this doens't have a temperature dependence, so read in a different column for each nominal temperature)
+            y_species_nominaltemperature = linemixing term (as currently written this doesn't have a temperature dependence, so read in a different column for each nominal temperature)
     waves : array
         1-D array comprised of wavenumbers (cm-1) to use as x-axis for simulation.
     wing_cutoff : float, optional
