@@ -656,7 +656,7 @@ class Dataset:
                     line['etalon_' + str(etalon_name) + '_phase'] = 0
                 baseline_paramlist  = baseline_paramlist.append(line, ignore_index=True)
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
-        baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv', index = False)
+        baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv', index = True)
         return baseline_paramlist
     def generate_CIA_paramlist(self):
         if self.CIA_model == None:
@@ -1298,8 +1298,8 @@ class Generate_FitParam_File:
             if 'phase' in param:
                 base_linelist_df.loc[base_linelist_df[param.replace("phase", "freq")]!=0, param + '_vary'] = (vary_etalon_phase)
         base_linelist_df.drop(['Baseline Order'], axis=1, inplace = True)
-        base_linelist_df = base_linelist_df.reindex(sorted(base_linelist_df.columns), axis=1)
-        base_linelist_df.to_csv(self.base_linelist_savename + '.csv', index = False)
+        #base_linelist_df = base_linelist_df.reindex(sorted(base_linelist_df.columns), axis=1)
+        base_linelist_df.to_csv(self.base_linelist_savename + '.csv', index = True)
         return base_linelist_df
         
     def generate_fit_KarmanCIA_linelist(self, vary_EXCH_scalar = False, vary_EXCH_gamma = False, vary_EXCH_l = False, 
