@@ -729,7 +729,7 @@ def etalon(x, amp, freq, phase):
    
         
 def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_error = 0, 
-                        SNR = 10000, baseline_terms = [0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760, 
+                        SNR = None, baseline_terms = [0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760, 
                         pressure_err = {'per_bias': 0, 'function': None, 'params': {}}, 
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
                         natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {}, 
@@ -821,7 +821,10 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
         x = wavenumbers - np.min(wavenumbers)
         etalon_model += amp*np.sin((2*np.pi * freq)*x+ phase) 
     #Calculate Noisy Spectrum
-    alpha_noise = alpha_array + np.max(alpha_array)*np.random.normal(loc = 0, scale =1, size = len(alpha_array))*1/SNR
+    if SNR == None:
+        alpha_noise = alpha_array
+    else:   
+        alpha_noise = alpha_array + np.max(alpha_array)*np.random.normal(loc = 0, scale =1, size = len(alpha_array))*1/SNR
     alpha_noise += (baseline + etalon_model) 
     #Generate and save Simulated Spectrum File
     spectrum = pd.DataFrame()
