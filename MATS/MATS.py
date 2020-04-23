@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 from bisect import bisect
-import sys
+#import sys
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import re
@@ -13,9 +13,12 @@ import seaborn as sns
 sns.set_style("whitegrid")
 sns.set_style("ticks")
 sns.set_context("poster")
-# Set HAPI location and upload necessary portions
-sys.path.append(r'C:\Users\ema3\Documents\Python Scripts\HAPI')#Add hapi.py folder location to system path
+#Files that should be in the same folder
 from hapi import EnvironmentDependency_Intensity, PYTIPS2017, molecularMass, pcqsdhc, ISO
+from Karman_CIA import Karman_CIA_Model
+
+
+
 
 
 def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff',
@@ -285,6 +288,7 @@ class Spectrum:
         self.model = len(self.alpha)*[0]
         self.residuals = self.alpha - self.model
         self.background = len(self.alpha)*[0]
+        self.cia = len(self.alpha)*[0]
     
     def diluent_sum_check(self):
         diluent_sum = 0
@@ -345,6 +349,8 @@ class Spectrum:
         return self.residuals
     def get_background(self):
         return self.background
+    def get_cia(self):
+        return self.cia
     def get_nominal_temperature(self):
         return self.nominal_temperature
 
@@ -399,6 +405,8 @@ class Spectrum:
         self.residuals = new_residuals     
     def set_background(self, new_background):
         self.background = new_background
+    def set_cia(self, new_cia):
+        self.cia = new_cia
     def set_nominal_temperature(self, new_nominal_temperature):
         self.nominal_temperature = new_nominal_temperature 
 
@@ -452,6 +460,7 @@ class Spectrum:
         new_file['Residuals (ppm/cm)'] = self.residuals
         new_file['QF'] = [self.calculate_QF()]*len(new_file)
         new_file['Background'] = self.background
+        new_file['CIA (ppm/cm)'] = self.cia 
         if save_file:
             new_file.to_csv(self.filename + '_saved.csv', index = False)
         return (new_file)
@@ -480,14 +489,16 @@ class Spectrum:
         plt.show()
 
 class Dataset:
-    def __init__(self, spectra, dataset_name, baseline_order = 1):
+    def __init__(self, spectra, dataset_name, baseline_order = 1, CIA_model = None):
         self.spectra = spectra
         self.dataset_name = dataset_name
         self.baseline_order = baseline_order
+        self.CIA_model = CIA_model
         self.renumber_spectra()
-        self.correct_component_list()
+        self.molecule_list = self.correct_component_list()
         self.correct_etalon_list()
         self.max_baseline_order()
+        self.broadener_list = self.get_broadener_list()
         
     def renumber_spectra(self):
         count = 1
@@ -512,6 +523,16 @@ class Dataset:
                 if molecule not in spectrum_molefraction_dictionary:
                     spectrum_molefraction_dictionary[molecule] = 0
             spectrum.set_molefraction(spectrum_molefraction_dictionary)
+        return dataset_molecule_list
+    
+    def get_broadener_list(self):
+        dataset_broadener_list = []
+        for spectrum in self.spectra:
+            dataset_broadener_list += spectrum.Diluent.keys()
+        dataset_broadener_list = list(set(dataset_broadener_list))
+        return dataset_broadener_list
+            
+
 
     def correct_etalon_list(self):
         dataset_etalon_list = []
@@ -524,6 +545,7 @@ class Dataset:
                 if etalon_number not in spectrum_etalon_dictionary:
                     spectrum_etalon_dictionary[etalon_number] = [0,0]
             spectrum.set_etalons(spectrum_etalon_dictionary)
+
 
     def get_etalons(self):
         dataset_etalon_list = []
@@ -634,8 +656,38 @@ class Dataset:
                     line['etalon_' + str(etalon_name) + '_phase'] = 0
                 baseline_paramlist  = baseline_paramlist.append(line, ignore_index=True)
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
-        baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv')
+        baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv', index = False)
         return baseline_paramlist
+    def generate_CIA_paramlist(self):
+        if self.CIA_model == None:
+            return None
+        elif self.CIA_model == 'Karman':
+            CIA_paramlist = pd.DataFrame()
+            CIA_list = []
+            for molecule in self.molecule_list:
+                molecule_name = ISO[(molecule, 1)][4]
+                for broadener in self.broadener_list:
+                    if broadener == 'self':
+                        if molecule_name + '_' + molecule_name not in CIA_list:
+                            CIA_list.append(molecule_name + '_' + molecule_name)
+                    else:
+                        if (molecule_name + '_' + broadener not in CIA_list) & (broadener + '_' + molecule_name not in CIA_list):
+                            CIA_list.append(molecule_name + '_' + broadener)
+                        
+            CIA_paramlist['CIA Pair'] = CIA_list
+            CIA_paramlist['EXCH_scalar'] = [0]*len(CIA_list)
+            CIA_paramlist['EXCH_gamma'] = [3]*len(CIA_list)
+            CIA_paramlist['EXCH_l'] = [2]*len(CIA_list)
+            CIA_paramlist['SO_scalar'] = [0]*len(CIA_list)
+            CIA_paramlist['SO_ahard'] = [7]*len(CIA_list)
+            CIA_paramlist['SO_l'] = [2]*len(CIA_list)
+            CIA_paramlist['bandcenter'] = [13122]*len(CIA_list)
+            CIA_paramlist['Nmax'] = [31]*len(CIA_list)
+            #index definition?            
+            CIA_paramlist.to_csv(self.dataset_name + '_CIA_paramlist.csv', index = False) 
+            return CIA_paramlist
+        else:
+            return None
 
     def generate_summary_file(self, save_file = False):
         summary_file = pd.DataFrame()
@@ -674,7 +726,7 @@ def max_iter(pars, iter, resid, *args, **kws):
 def etalon(x, amp, freq, phase):
     return amp*np.sin((2*np.pi * freq)*x+ phase)   
 
-    
+   
         
 def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_error = 0, 
                         SNR = 10000, baseline_terms = [0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760, 
@@ -789,14 +841,21 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
                 etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1)
         
 class Generate_FitParam_File:
-    def __init__ (self, dataset, param_linelist, base_linelist, 
+    def __init__ (self, dataset, param_linelist, base_linelist, CIA_linelist = None, 
                   lineprofile = 'VP', linemixing = False, threshold_intensity = 1e-30, fit_intensity = 1e-26, fit_window = 1.5, sim_window = 5, 
-                  param_linelist_savename = 'Parameter_LineList', base_linelist_savename = 'Baseline_LineList', 
+                  param_linelist_savename = 'Parameter_LineList', base_linelist_savename = 'Baseline_LineList', CIA_linelist_savename = 'CIA_LineList', 
                  nu_constrain = True, sw_constrain = True, gamma0_constrain = True, delta0_constrain = True, aw_constrain = True, as_constrain = True, 
                  nuVC_constrain = True, eta_constrain =True, linemixing_constrain = True):
         self.dataset = dataset
         self.param_linelist = param_linelist
         self.base_linelist = base_linelist
+        if self.dataset.CIA_model == None:
+            self.CIA_linelist = None
+            self.CIA_linelist_savename = None
+        else:
+            self.CIA_linelist = CIA_linelist
+            self.CIA_linelist_savename = CIA_linelist_savename
+
         self.lineprofile = lineprofile
         self.linemixing = linemixing
         self.threshold_intensity = threshold_intensity
@@ -820,6 +879,8 @@ class Generate_FitParam_File:
         return self.param_linelist
     def get_base_linelist(self):
         return self.base_linelist
+    def get_CIA_linelist(self):
+        return self.CIA_linelist
     def generate_fit_param_linelist_from_linelist(self, vary_nu = {7:{1:True, 2:False, 3:False}, 1:{1:False}}, vary_sw = {7:{1:True, 2:False, 3:False}},
                                    vary_gamma0 = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_gamma0 = {}, 
                                    vary_delta0 = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_delta0 = {}, 
@@ -1197,13 +1258,15 @@ class Generate_FitParam_File:
             ordered_list.append(item + '_err')
             ordered_list.append(item + '_vary')
         param_linelist_df = param_linelist_df[ordered_list]
-        param_linelist_df.to_csv(self.param_linelist_savename + '.csv')
+        param_linelist_df.to_csv(self.param_linelist_savename + '.csv') #
         return param_linelist_df 
 
     def generate_fit_baseline_linelist(self, vary_baseline = True, vary_pressure = False, vary_temperature = False,vary_molefraction = {7:True, 1:False}, vary_xshift = False, 
                                       vary_etalon_amp= False, vary_etalon_freq= False, vary_etalon_phase= False):
         base_linelist_df = self.get_base_linelist().copy()
         parameters =  (list(base_linelist_df))
+
+        #Generate Fit Baseline file
         for param in parameters:
             if ('Baseline Order' != param) and ('Segment Number' != param):
                 base_linelist_df[param + '_err'] = 0
@@ -1233,8 +1296,83 @@ class Generate_FitParam_File:
                 base_linelist_df.loc[base_linelist_df[param.replace("phase", "freq")]!=0, param + '_vary'] = (vary_etalon_phase)
         base_linelist_df.drop(['Baseline Order'], axis=1, inplace = True)
         base_linelist_df = base_linelist_df.reindex(sorted(base_linelist_df.columns), axis=1)
-        base_linelist_df.to_csv(self.base_linelist_savename + '.csv')
+        base_linelist_df.to_csv(self.base_linelist_savename + '.csv', index = False)
         return base_linelist_df
+        
+    def generate_fit_KarmanCIA_linelist(self, vary_EXCH_scalar = False, vary_EXCH_gamma = False, vary_EXCH_l = False, 
+                                  vary_SO_scalar = False, vary_SO_ahard = False, vary_SO_l = False, vary_bandcenter = False, vary_Nmax = False, wave_step = 5):
+        CIA_linelist_df = self.get_CIA_linelist().copy()
+        parameters =  (list(CIA_linelist_df))
+        #Initial Calculation of the Karman CIA based on initial guesses and application to spectra
+        if self.dataset.CIA_model == 'Karman':
+            CIA_pairs = CIA_linelist_df['CIA Pair'].unique()
+            for spectrum in self.dataset.spectra:
+                CIA = len(spectrum.wavenumber)*[0]
+                for CIA_pair in CIA_pairs:
+                    for molecule in self.dataset.molecule_list:
+                        molecule_name = ISO[(molecule, 1)][4]
+                        for broadener in self.dataset.broadener_list:
+                            try:
+                                broadener_composition = spectrum.Diluent[broadener]['composition']
+                            except:
+                                broadener_composition = 0
+                            if broadener == 'self':
+                                broadener = molecule_name
+                            if (molecule_name in CIA_pair) and (broadener in CIA_pair):
+                                CIA_select = CIA_linelist_df[CIA_linelist_df['CIA Pair'] == CIA_pair]
+                                CIA += broadener_composition*Karman_CIA_Model(spectrum.wavenumber, spectrum.get_pressure_torr(), spectrum.get_temperature_C(), wave_step = wave_step,
+                                     EXCH_scalar = CIA_select['EXCH_scalar'].values[0], EXCH_gamma = CIA_select['EXCH_gamma'].values[0], EXCH_l = CIA_select['EXCH_l'].values[0],
+                                     SO_scalar = CIA_select['SO_scalar'].values[0], SO_ahard = CIA_select['SO_ahard'].values[0], SO_l = CIA_select['SO_l'].values[0],
+                                     bandcenter = CIA_select['bandcenter'].values[0], Nmax = CIA_select['Nmax'].values[0])                  
+                spectrum.set_cia(CIA)
+
+            # Set parameter floats
+            for param in parameters:
+                if ('CIA Pair' != param):
+                    CIA_linelist_df[param + '_err'] = 0
+                    CIA_linelist_df[param + '_vary']= False
+                if 'EXCH_scalar' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_EXCH_scalar)]
+                if 'EXCH_gamma' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_EXCH_gamma)]
+                    if vary_EXCH_gamma:
+                        print ('USE CAUTION WHEN FLOATING EXCH_GAMMA')
+                if 'EXCH_l' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_EXCH_l)]
+                    if vary_EXCH_l:
+                        print ('USE CAUTION WHEN FLOATING EXCH_L')
+                if 'SO_scalar' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_SO_scalar)]
+                if 'SO_ahard' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_SO_ahard)]
+                    if vary_SO_ahard:
+                        print ('USE CAUTION WHEN FLOATING SO_AHARD')
+                if 'SO_l' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_SO_l)] 
+                    if vary_SO_l:
+                        print ('USE CAUTION WHEN FLOATING SO_L')
+                if 'bandcenter' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_bandcenter)]   
+                if 'Nmax' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_Nmax)] 
+                    if vary_Nmax:
+                        print ('USE CAUTION WHEN FLOATING NMAX')
+            CIA_linelist_df = CIA_linelist_df[['CIA Pair', 
+                      'EXCH_scalar', 'EXCH_scalar_err', 'EXCH_scalar_vary', 
+                      'EXCH_gamma', 'EXCH_gamma_err', 'EXCH_gamma_vary',
+                      'EXCH_l', 'EXCH_l_err', 'EXCH_l_vary', 
+                      'SO_scalar', 'SO_scalar_err', 'SO_scalar_vary', 
+                      'SO_ahard', 'SO_ahard_err', 'SO_ahard_vary',
+                      'SO_l', 'SO_l_err','SO_l_vary',
+                      'bandcenter','bandcenter_err', 'bandcenter_vary', 
+                      'Nmax', 'Nmax_err', 'Nmax_vary']]
+            CIA_linelist_df.to_csv(self.CIA_linelist_savename + '.csv', index = False)
+            return CIA_linelist_df
+        else:
+            print ('Generate_fit_KarmanCIA_linelist only applies to the CIA files generated for the Karman CIA model')
+            return None
+            
+
     
 class Edit_Fit_Param_Files:
     def __init__(self, base_linelist_file, param_linelist_file, new_base_linelist_file = None, new_param_linelist_file = None):
@@ -1254,7 +1392,7 @@ class Edit_Fit_Param_Files:
         return baseline_widget
     def save_editted_baselist(self, baseline_widget):
         base_linelist_df = baseline_widget.get_changed_df()
-        base_linelist_df.to_csv(self.new_base_linelist_file + '.csv')
+        base_linelist_df.to_csv(self.new_base_linelist_file + '.csv', index = False)
         return base_linelist_df
     def edit_generated_paramlist(self):
         param_linelist_df = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
@@ -1272,7 +1410,8 @@ def hasNumbers(inputString):
     return False
 
 class Fit_DataSet:
-    def __init__(self, dataset, base_linelist_file, param_linelist_file, minimum_parameter_fit_intensity = 1e-27,
+    def __init__(self, dataset, base_linelist_file, param_linelist_file, CIA_linelist_file = None,
+                minimum_parameter_fit_intensity = 1e-27,
                 baseline_limit = False, baseline_limit_factor = 10, 
                 pressure_limit = False, pressure_limit_factor = 10,
                 temperature_limit = False, temperature_limit_factor = 10,
@@ -1286,13 +1425,21 @@ class Fit_DataSet:
                 SD_gamma_limit = False, SD_gamma_limit_factor  = 10, n_gamma2_limit = True, n_gamma2_limit_factor  = 10, 
                 SD_delta_limit = True, SD_delta_limit_factor  = 10, n_delta2_limit = True, n_delta2_limit_factor  = 10, 
                 nuVC_limit = False, nuVC_limit_factor  = 10, n_nuVC_limit = True, n_nuVC_limit_factor = 10, 
-                eta_limit = True, eta_limit_factor  = 10, linemixing_limit = False, linemixing_limit_factor  = 10, 
-                beta_formalism = False):
+                eta_limit = True, eta_limit_factor  = 10, 
+                linemixing_limit = False, linemixing_limit_factor  = 10, 
+                beta_formalism = False, 
+                CIA_calculate = False, CIA_model = None, CIA_wavestep = 5):
         self.dataset = dataset
         self.base_linelist_file = base_linelist_file
         self.baseline_list = pd.read_csv(self.base_linelist_file + '.csv')#, index_col = 0
         self.param_linelist_file = param_linelist_file
         self.lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
+        self.CIA_linelist_file = CIA_linelist_file
+        if self.CIA_linelist_file != None:
+            self.CIA_linelist_file = CIA_linelist_file
+            self.CIAparam_list = pd.read_csv(self.CIA_linelist_file + '.csv')
+        else:
+            self.CIAparam_list = None
         self.minimum_parameter_fit_intensity = minimum_parameter_fit_intensity
         self.baseline_limit = baseline_limit
         self.baseline_limit_factor  = baseline_limit_factor
@@ -1337,6 +1484,9 @@ class Fit_DataSet:
         self.linemixing_limit = linemixing_limit
         self.linemixing_limit_factor = linemixing_limit_factor
         self.beta_formalism = beta_formalism
+        self.CIA_calculate = CIA_calculate
+        self.CIA_model = CIA_model
+        self.CIA_wavestep = CIA_wavestep
         
     def generate_params(self):
         params = Parameters()
@@ -1380,7 +1530,19 @@ class Fit_DataSet:
                               max = self.x_shift_limit_magnitude + self.baseline_list.loc[index][base_param])   
                 else:
                     params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'])
-        
+        # CIA parameters
+        if self.CIA_calculate & (self.CIA_linelist_file != None):
+            if (self.CIA_model != None):
+                CIA_parameters = []
+                for CIA_param in list(self.CIAparam_list):
+                    if ('_vary' not in CIA_param) and ('_err' not in CIA_param) and ('CIA Pair' not in CIA_param):
+                        CIA_parameters.append(CIA_param)
+                for index in self.CIAparam_list.index.values:
+                    CIA_pair = self.CIAparam_list.iloc[index]['CIA Pair']
+                    for CIA_param in CIA_parameters:
+                        params.add(CIA_param + '_'+ CIA_pair, self.CIAparam_list.loc[index][CIA_param], self.CIAparam_list.loc[index][CIA_param + '_vary'])
+
+            
         #Lineshape parameters
         linelist_params = []
         for line_param in list(self.lineparam_list):
@@ -1682,11 +1844,14 @@ class Fit_DataSet:
         total_residuals = []
         baseline_params = []
         linelist_params = []
+        CIA_params = []
         
         # Set-up Baseline Parameters
         for param in (list(params.valuesdict().keys())):
             if ('molefraction' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param) or ('Pressure' in param) or ('Temperature' in param):
                 baseline_params.append(param)
+            elif ('EXCH_scalar' in param) or ('EXCH_gamma' in param) or ('EXCH_l' in param) or ('SO_scalar' in param) or ('SO_ahard' in param) or ('SO_ahard' in param) or ('SO_l' in param) or ('bandcenter' in param) or ('Nmax' in param):
+                CIA_params.append(param)
             else:
                 linelist_params.append(param)
 
@@ -1764,6 +1929,31 @@ class Fit_DataSet:
                             p = p, T = T, molefraction = fit_molefraction, 
                             natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
                 fit_coef = fit_coef * 1e6
+                ## CIA Calculation
+                if self.CIA_calculate and self.CIA_model == 'Karman':
+                    CIA_pairs = []
+                    for param in CIA_params:
+                        if 'EXCH_scalar' in param:
+                            CIA_pairs.append(param.replace('EXCH_scalar_', ''))
+                    CIA = len(wavenumbers)*[0]
+                    for CIA_pair in CIA_pairs:
+                        for molecule in self.dataset.molecule_list:
+                            molecule_name = ISO[(molecule, 1)][4]
+                            for broadener in self.dataset.broadener_list:
+                                try:
+                                    broadener_composition = spectrum.Diluent[broadener]['composition']
+                                except:
+                                    broadener_composition = 0
+                                if broadener == 'self':
+                                    broadener = molecule_name
+                            if (molecule_name in CIA_pair) and (broadener in CIA_pair):
+                                CIA += broadener_composition*Karman_CIA_Model(wavenumbers, p*760, T-273.15, wave_step = self.CIA_wavestep,
+                                     EXCH_scalar = params['EXCH_scalar' + '_' + CIA_pair], EXCH_gamma = params['EXCH_gamma' + '_' + CIA_pair], EXCH_l = params['EXCH_l' + '_' + CIA_pair],
+                                     SO_scalar = params['SO_scalar' + '_' + CIA_pair], SO_ahard = params['SO_ahard' + '_' + CIA_pair], SO_l = params['SO_l' + '_' + CIA_pair],
+                                     bandcenter = params['bandcenter' + '_' + CIA_pair], Nmax = params['Nmax' + '_' + CIA_pair])
+                else:
+                    CIA = spectrum.cia[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]
+
                 ## Baseline Calculation
                 baseline_param_array = [0]*(self.dataset.baseline_order+1)
                 for param in baseline_params:
@@ -1791,8 +1981,8 @@ class Fit_DataSet:
                 etalons = len(wavenumbers)*[0]
                 for i in range(1, len(spectrum.etalons)+1):
                     etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['freq'], fit_etalon_parameters[i]['phase']) 
-                simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = (baseline + etalons + fit_coef)
-                residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = (baseline + etalons + fit_coef) - alpha_segments[segment]
+                simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = (baseline + etalons + fit_coef + CIA)
+                residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = (baseline + etalons + fit_coef + CIA) - alpha_segments[segment]
             total_simulated = np.append(total_simulated, simulated_spectra)
             total_residuals = np.append(total_residuals, residuals)
         total_residuals = np.asarray(total_residuals)
@@ -1810,11 +2000,13 @@ class Fit_DataSet:
             spectrum.set_model(spectrum_residual + spectrum.alpha)
             if indv_resid_plot:
                 spectrum.plot_model_residuals()
-    def update_params(self, result, base_linelist_update_file = None , param_linelist_update_file = None):
+    def update_params(self, result, base_linelist_update_file = None , param_linelist_update_file = None, CIA_linelist_update_file = None):
         if base_linelist_update_file == None:
             base_linelist_update_file = self.base_linelist_file
         if param_linelist_update_file == None:
             param_linelist_update_file = self.param_linelist_file
+        if CIA_linelist_update_file == None:
+            CIA_linelist_update_file = self.CIA_linelist_file
         for key, par in result.params.items():
             if ('Pressure' in par.name) or ('Temperature' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
@@ -1841,6 +2033,22 @@ class Fit_DataSet:
                 self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
                 if par.vary:
                     self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
+            elif ('EXCH_scalar' in par.name) or ('EXCH_gamma' in par.name) or ('EXCH_l' in par.name) or ('SO_scalar' in par.name) or ('SO_ahard' in par.name) or ('SO_l' in par.name):
+                if self.CIA_calculate and self.CIA_model == 'Karman':
+                    indices = [m.start() for m in re.finditer('_', par.name)]
+                    parameter = (par.name[:indices[1]])
+                    CIA_pair = (par.name[indices[1] + 1:])
+                    self.CIAparam_list.loc[(self.CIAparam_list['CIA Pair'] == CIA_pair), parameter] = par.value
+                    if par.vary:
+                        self.CIAparam_list.loc[(self.CIAparam_list['CIA Pair'] == CIA_pair), parameter + '_err'] = par.stderr
+            elif ('bandcenter' in par.name) or ('Nmax' in par.name):
+                if self.CIA_calculate and self.CIA_model == 'Karman':
+                    indices = [m.start() for m in re.finditer('_', par.name)]
+                    parameter = (par.name[:indices[0]])
+                    CIA_pair = (par.name[indices[0] + 1:indices[1]])
+                    self.CIAparam_list.loc[(self.CIAparam_list['CIA Pair'] == CIA_pair), parameter] = par.value
+                    if par.vary:
+                        self.CIAparam_list.loc[(self.CIAparam_list['CIA Pair'] == CIA_pair), parameter + '_err'] = par.stderr
             else:
                 parameter = par.name[:par.name.find('_line')]
                 line = int(par.name[par.name.find('_line')+6:])
@@ -1848,7 +2056,34 @@ class Fit_DataSet:
                 if par.vary:
                     self.lineparam_list.loc[line, parameter + '_err'] = par.stderr
         self.baseline_list.to_csv(base_linelist_update_file + '.csv', index = False)
+        if CIA_linelist_update_file != None:
+            self.CIAparam_list.to_csv(CIA_linelist_update_file + '.csv', index = False)
         self.lineparam_list.to_csv(param_linelist_update_file + '.csv')
+        #Calculated CIA and add to the CIA term for each spectra
+        if self.CIA_calculate and self.CIA_model == 'Karman':
+            for spectrum in self.dataset.spectra:
+                CIA_pairs = self.CIAparam_list['CIA Pair'].unique()
+                for spectrum in self.dataset.spectra:
+                    CIA = len(spectrum.wavenumber)*[0]
+                    for CIA_pair in CIA_pairs:
+                        for molecule in self.dataset.molecule_list:
+                            molecule_name = ISO[(molecule, 1)][4]
+                            for broadener in self.dataset.broadener_list:
+                                try:
+                                    broadener_composition = spectrum.Diluent[broadener]['composition']
+                                except:
+                                    broadener_composition = 0
+                                if broadener == 'self':
+                                    broadener = molecule_name
+                                if (molecule_name in CIA_pair) and (broadener in CIA_pair):
+                                    CIA_select = self.CIAparam_list[self.CIAparam_list['CIA Pair'] == CIA_pair]
+                                    CIA += broadener_composition*Karman_CIA_Model(spectrum.wavenumber, spectrum.get_pressure_torr(), spectrum.get_temperature_C(), wave_step = self.CIA_wavestep,
+                                         EXCH_scalar = CIA_select['EXCH_scalar'].values[0], EXCH_gamma = CIA_select['EXCH_gamma'].values[0], EXCH_l = CIA_select['EXCH_l'].values[0],
+                                         SO_scalar = CIA_select['SO_scalar'].values[0], SO_ahard = CIA_select['SO_ahard'].values[0], SO_l = CIA_select['SO_l'].values[0],
+                                         bandcenter = CIA_select['bandcenter'].values[0], Nmax = CIA_select['Nmax'].values[0])                  
+                    spectrum.set_cia(CIA)
+                
+        
         #Calculate Baseline + Etalons and add to the Baseline term for each spectra
         for spectrum in self.dataset.spectra:
             wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
