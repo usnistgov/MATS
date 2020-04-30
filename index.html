@@ -1,28 +1,163 @@
 
-<link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
-  <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
-  <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>MATS: Multi-spectrum Analysis Tool for Spectroscopy &#8212; MATS 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css" />
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="https://pages.nist.gov/nist-header-footer/js/jquery-1.9.0.min.js"></script>
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js"></script>
+    <script src="https://code.jquery.com/jquery.1.12.4.min.js"></script>
+    <script src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
+    <script src="_static/leave_notice.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting Started" href="Getting Started.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Getting Started.html" title="Getting Started"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">MATS 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="mats-multi-spectrum-analysis-tool-for-spectroscopy">
+<h1>MATS: Multi-spectrum Analysis Tool for Spectroscopy<a class="headerlink" href="#mats-multi-spectrum-analysis-tool-for-spectroscopy" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="mailto:erin&#46;adkins&#37;&#52;&#48;nist&#46;gov">Erin M<span>&#46;</span> Adkins</a></p>
+<p><em>National Institute of Standards and Technology</em></p>
+<p><em>Last Revision</em> Apr 30, 2020</p>
+<p><a class="reference external" href="https://github.com/usnistgov/MATS">This software is available on GitHub</a></p>
+<p><strong>The purpose of the MATS project is to develop a NIST-based multi-spectrum fitting and analysis tool for spectroscopic data that allows the flexibility to test and adapt to experimental/data-driven needs.  This software allows for the use of several commonly-used spectroscopic line profiles (Voigt, Nelkin-Ghatak, speed-dependent Voigt, speed-dependent Nelkin-Ghatak, and Hartmann-Tran) and allows for pressure, temperature, and sample composition constraints to be imposed on solutions.  In addition to fitting experimental spectra, MATS can generate simulated spectram, which allows for its use as an error analysis tool.</strong></p>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Getting Started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Getting Started.html#set-up">Set-Up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Getting Started.html#main-packages">Main Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Getting Started.html#dependent-packages">Dependent Packages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MATS Summary.html">MATS Summary</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MATS Summary.html#spectrum-class-and-objects">Spectrum Class and Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Summary.html#line-by-line-model-and-etalon-models">Line-by-line Model and Etalon Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Summary.html#dataset-class">Dataset Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Summary.html#generate-fitparam-file-class">Generate FitParam File Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Summary.html#edit-fit-param-files-class">Edit Fit Param Files Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Summary.html#fit-dataset-class">Fit Dataset Class</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Generating Parameter Line lists.html">Generating Parameter Line lists</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Generating Parameter Line lists.html#parameter-line-list-overview">Parameter Line list Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Generating Parameter Line lists.html#generating-parameter-line-list-from-hitran">Generating Parameter Line list from HITRAN</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MATS Example using Experimental and Synthetic Data.html">MATS Example using Experimental and Synthetic Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MATS Example using Experimental and Synthetic Data.html#import-modules-and-set-up">Import Modules and Set-Up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Example using Experimental and Synthetic Data.html#load-spectra-from-files">Load Spectra from files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Example using Experimental and Synthetic Data.html#simulate-spectra">Simulate Spectra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Example using Experimental and Synthetic Data.html#generate-a-dataset">Generate a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Example using Experimental and Synthetic Data.html#generate-fit-parameter-files">Generate Fit Parameter Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS Example using Experimental and Synthetic Data.html#fit-dataset">Fit Dataset</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MATS.html">MATS module</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="legal">
+<h2>Legal<a class="headerlink" href="#legal" title="Permalink to this headline">¶</a></h2>
+<p>This software is subject to the <a class="reference external" href="https://www.nist.gov/director/licensing">NIST Software License</a> (revised as of August 2018).</p>
+</div>
+<div class="section" id="contact">
+<h2>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">¶</a></h2>
+<p>Erin Adkins</p>
+<ul class="simple">
+<li><p><a class="reference external" href="mailto:erin&#46;adkins&#37;&#52;&#48;nist&#46;gov">Email</a></p></li>
+<li><p><a class="reference external" href="https://www.nist.gov/people/erin-adkins">NIST Staff Page</a></p></li>
+<li><p><a class="reference external" href="https://github.com/eadkins333">GitHub profile</a></p></li>
+</ul>
+</div>
+<div class="section" id="links">
+<h2>Links<a class="headerlink" href="#links" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://github.com/usnistgov">NIST GitHub Organization</a></p>
+<p><a class="reference external" href="https://www.nist.gov/mml/csd/optical-measurements-group">NIST Optical Measurements Group</a></p>
+<p><a class="reference external" href="http://nist.gov">NIST Home Page</a></p>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
 
 
-<script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
-<script>
-$(document).ready(function(){
-  // Mark external (non-nist.gov) A tags with class "external"
-  //If the adress start with https and ends with nist.gov
-  var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)');
-  //Regex to find address that start with https
-  var re_absolute_address = new RegExp('^((https?:)?\/\/)');
-  $("a").each(function(){
-    var url=$(this).attr('href');
-    if(re_nist.test(url) || !re_absolute_address.test(url)){
-      $(this).addClass('local');
-    }else{
-      //This a href appears to be external, so tag it
-      $(this).addClass('external');
-    }
-  });
-  // Add leaveNotice to external A elements
-  $('a.external').leaveNotice();
-});
-</script>
-<link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Getting Started.html"
+                        title="next chapter">Getting Started</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Getting Started.html" title="Getting Started"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">MATS 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
+    </div>
+  </body>
+</html>
