@@ -15,7 +15,10 @@ import sys
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0,"C:\\Users\\ema3\\Documents\\MATS\\MATS")
 
+
+
 # NIST required stuff
+'''
 def setup(app):
     #NIST header and footer
     app.add_stylesheet('https://pages.nist.gov/nist-header-footer/css/nist-combined.css')
@@ -31,6 +34,7 @@ def setup(app):
     app.add_stylesheet('https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css')
     app.add_javascript('leave_notice.js')
     return
+'''
 
 # -- Project information -----------------------------------------------------
 
