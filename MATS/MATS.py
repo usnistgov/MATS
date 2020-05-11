@@ -19,7 +19,7 @@ from hapi import EnvironmentDependency_Intensity, PYTIPS2017, molecularMass, pcq
 def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff',
                 p = 1, T = 296, molefraction = {}, 
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30):
-    """Simulates the absorbance based on input line list, wavenumbers, and sample parameters.
+    """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters.
     
     Outline
     
@@ -27,12 +27,12 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
     
     2.  Calculates the molecular density from pressure and temperature
     
-    3.  Set-up Diluent dictionary if not given as input
+    3.  Sets up Diluent dictionary if not given as input
     
-    4.  Calculate line intensity and doppler width at temperature for all lines
+    4.  Calculates line intensity and doppler width at temperature for all lines
     
-    5.  Loop through each line in the line list and loop through each diluent and generate a line parameter 
-        that is the appropriate ratio of each diluent species corrected for pressure and temperature.  For each line then simulate the line for the given simulation cutoffs and add to cross section
+    5.  Loops through each line in the line list and loops through each diluent, generating a line parameter at experimental conditions
+        that is the appropriate ratio of each diluent species corrected for pressure and temperature.  For each line, simulate the line for the given simulation cutoffs and add to cross section
     
     6.  Return wavenumber and cross section arrays 
     
@@ -190,7 +190,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
 
 
 class Spectrum:
-    """Spectrum class provides all information describing experimental or simulated spectrum necessary for fitting.
+    """Spectrum class provides all information describing experimental or simulated spectrum.
     
     Parameters
     ----------
@@ -199,13 +199,13 @@ class Spectrum:
     molefraction : dict
         mole fraction of each molecule in spectra in the format {molec_id: mole fraction (out of 1), molec_id: molefraction, . . . }
     natural_abundance : bool, optional
-        flag for if the spectrum contains data at natural abundance
+        flag for if the molecular species in the spectrum are at natural abundance
     abundance_ratio_MI : dict, optional
         if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }
     diluent : str, optional
         sets the diluent for the sample.  Default = 'air'
     Diluent : dict, optional
-        sets the diluent for the sample if there are a combination of several. Format {'he': 0.5, 'air': 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.
+        sets the diluent for the sample if there are a combination of several diluents. Format {'he': 0.5, 'air': 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.
     spectrum_number : int, optional
         sets a number for the spectrum that will correspond to fit parameters. This is set in the Dataset class, so should not need to be defined manually
     input_freq : bool, optional
@@ -293,7 +293,7 @@ class Spectrum:
         self.background = len(self.alpha)*[0]
     
     def diluent_sum_check(self):
-        """Checks that if multiple broadeners are used that the contributions sum to one
+        """Checks that if multiple broadeners are used that the contributions sum to one.
                
 
         Returns
@@ -309,7 +309,7 @@ class Spectrum:
             print ("YOUR DILUENTS DO NOT SUM TO ONE!")
 
     def segment_wave_alpha(self):
-        """Defines the wavenumber, alpha, and indices of spectrum that correspond to a given spectrum segment
+        """Defines the wavenumber, alpha, and indices of spectrum that correspond to a given spectrum segment.
         
 
         Returns
@@ -425,7 +425,7 @@ class Spectrum:
 
     ##Other Functions
     def plot_freq_tau(self):
-        """Generates a plot of Tau (us) as a function of Frequency (MHz)
+        """Generates a plot of tau (us) as a function of frequency (MHz).
         """
         plt.plot(self.frequency, self.tau)
         plt.xlabel('Frequency (MHz)')
@@ -433,7 +433,7 @@ class Spectrum:
         plt.show()
 
     def plot_wave_alpha(self):
-        """Generates a plot of alpha (ppm/cm) as a function of Wavenumber (cm-1)
+        """Generates a plot of alpha (ppm/cm) as a function of wavenumber (cm-1).
         """
         plt.plot(self.wavenumber, self.alpha)
         plt.xlabel('Wavenumber ($cm^{-1}$)')
@@ -441,9 +441,8 @@ class Spectrum:
         plt.show()
 
     def calculate_QF(self):
-        """Calculates the quality of fit factor (QF) for spectrum
-        
-        QF = (maximum alpha - minimum alpha) / std(residuals)
+        """Calculates the quality of fit factor (QF) for a spectrum - QF = (maximum alpha - minimum alpha) / std(residuals).
+            
         
 
         Returns
@@ -455,7 +454,7 @@ class Spectrum:
         return np.around((self.alpha.max() - self.alpha.min()) / self.residuals.std(),0)
 
     def plot_model_residuals(self):
-        """Generates a plot of the alpha and model (ppm/cm) as a function of Wavenumber (cm-1) and on lower plot shows the residuals (ppm/cm) as a function of wavenumber (cm-1)
+        """Generates a plot of the alpha and model (ppm/cm) as a function of wavenumber (cm-1) and on lower plot shows the residuals (ppm/cm) as a function of wavenumber (cm-1).
         """
         fig = plt.figure(figsize = (16,10))
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
@@ -475,7 +474,7 @@ class Spectrum:
         plt.show()
 
     def save_spectrum_info(self, save_file = False):
-        """Saves spectrum information to a pandas dataframe with option to also save as .csv
+        """Saves spectrum information to a pandas dataframe with option to also save as as a csv file.
         
 
         Parameters
@@ -509,9 +508,8 @@ class Spectrum:
         return (new_file)
 
     def fft_spectrum(self):
-        """Takes the FFT of the residuals of the spectrum
-        Prints a dataframe with the 20 highest amplitude frequencies with the FFT frequency (period), amplitude, FFT phase, and frequency (cm-1).
-        Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)
+        """Takes the FFT of the residuals of the spectrum, generates a plot of frequency (cm-1) versus amplitude (ppm/cm), and prints a dataframe with the 20 highest amplitude frequencies with the FFT frequency (period), amplitude, FFT phase, and frequency (cm-1).  
+     
         """
         wave = self.wavenumber
         y = self.residuals
@@ -536,7 +534,7 @@ class Spectrum:
         plt.show()
 
 class Dataset:
-    """Combines spectrum objects into a Dataset object to enable multi-spectrum fitting
+    """Combines spectrum objects into a Dataset object to enable multi-spectrum fitting.
     
     Parameters
     ----------
@@ -545,7 +543,7 @@ class Dataset:
     dataset_name : str
         Used to provide a name for the Dataset to use when saving files
     baseline_order : int
-        sets the baseline order for all spectra in the dataset.  This will automaticall be set to the maximum baseline order across all spectrum included in the Dataset.
+        sets the baseline order for all spectra in the dataset.  This will automatically be set to the maximum baseline order across all spectrum included in the Dataset.
         
     """
     def __init__(self, spectra, dataset_name, baseline_order = 1):
@@ -558,7 +556,7 @@ class Dataset:
         self.max_baseline_order()
         
     def renumber_spectra(self):
-        """renumbers the spectra to be sequential starting at 1. It is called in the initialization of the class
+        """renumbers the spectra to be sequential starting at 1 (called in the initialization of the class).
          """
         count = 1
         for spectrum in self.spectra:
@@ -566,7 +564,7 @@ class Dataset:
             count+=1
 
     def max_baseline_order(self):
-        """ sets the baseline order to be equal to the maximum set in any of the included spectra       
+        """ sets the baseline order to be equal to the maximum in any of the included spectra.
         """
         baseline_order_list = []
         for spectrum in self.spectra:
@@ -574,7 +572,7 @@ class Dataset:
         self.baseline_order = max(baseline_order_list)
 
     def correct_component_list(self):
-        """Corrects so that all spectrum share the same molecules, but the mole fraction is fixed to zero where molecule is not present.  Called at the initialization of the class
+        """Corrects so that all spectrum share the same molecules, but the mole fraction is fixed to zero where molecules are not present (called in the initialization of the class). 
         """
         dataset_molecule_list = []
         for spectrum in self.spectra:
@@ -588,7 +586,7 @@ class Dataset:
             spectrum.set_molefraction(spectrum_molefraction_dictionary)
 
     def correct_etalon_list(self):
-        """Corrects so that all spectrum share the same number of etalons, but the amplitude and period are fixed to zero where appropriate.  Called at the initialization of the class
+        """Corrects so that all spectrum share the same number of etalons, but the amplitude and period are fixed to zero where appropriate(called in the initialization of the class). 
           """
         dataset_etalon_list = []
         for spectrum in self.spectra:
@@ -602,7 +600,7 @@ class Dataset:
             spectrum.set_etalons(spectrum_etalon_dictionary)
 
     def get_etalons(self):
-        """ Get list of number of etalons for spectra
+        """ Get list of number of etalons for spectra.
         
 
         Returns
@@ -618,7 +616,7 @@ class Dataset:
         return dataset_etalon_list
 
     def get_molecules(self):
-        """ Get list of molecules in spectra
+        """ Get list of molecules in spectra.
         
 
         Returns
@@ -650,7 +648,7 @@ class Dataset:
         return len(self.spectra)
 
     def get_spectrum_filename(self, spectrum_num):
-        """ Gets spectrum filename for spectrum in Dataset
+        """ Gets spectrum filename for spectrum in Dataset.
         
 
         Parameters
@@ -670,7 +668,7 @@ class Dataset:
         return None
 
     def get_spectrum_pressure(self, spectrum_num):
-        """Gets spectrum pressure for spectrum in Dataset
+        """Gets spectrum pressure for spectrum in Dataset.
         
 
         Parameters
@@ -690,7 +688,7 @@ class Dataset:
         return None
 
     def get_spectrum_temperature(self, spectrum_num):
-        """Gets spectrum temperature for spectrum in Dataset
+        """Gets spectrum temperature for spectrum in Dataset.
         
 
         Parameters
@@ -710,7 +708,7 @@ class Dataset:
         return None
 
     def get_spectra_extremes(self):
-        """Gets the minimum and maximum wavenumber for the entire Dataset
+        """Gets the minimum and maximum wavenumber for the entire Dataset.
         
 
         Returns
@@ -733,7 +731,7 @@ class Dataset:
         return wave_min, wave_max
 
     def get_spectrum_extremes(self):
-        """Gets the minimum and maximum wavenumber for each spectrum in the Dataset
+        """Gets the minimum and maximum wavenumber for each spectrum in the Dataset.
         
 
         Returns
@@ -747,7 +745,7 @@ class Dataset:
         return extreme_dictionary
             
     def get_number_nominal_temperatures(self):
-        """ Get the number of nominal temperatures in the Dataset
+        """ Get the number of nominal temperatures in the .
         
 
         Returns
@@ -765,7 +763,7 @@ class Dataset:
         return len(nominal_temperatures), nominal_temperatures
          
     def average_QF(self):
-        """Calculates the Average QF from all spectrum
+        """Calculates the Average QF from all spectra.
         
 
         Returns
@@ -780,7 +778,7 @@ class Dataset:
         return sum_ / self.get_number_spectra()
 
     def get_list_spectrum_numbers(self):
-        """ Generates a list of all spectrum_numbers
+        """ Generates a list of all spectrum_numbers.
         
 
         Returns
@@ -795,8 +793,8 @@ class Dataset:
         return spec_num_list    
         
     def generate_baseline_paramlist(self):
-        """Generates a .csv file called dataset_name + _baseline_paramlist.csv. This file will be used to generate another .csv that is used for fitting these spectrum dependent parameters. With columns for 
-        spectrum number, segment number, x_shift, concentration for each molecule in the dataset, baseline terms (a = 0th order term, b = 1st order , . . .), and etalon terms (set an amplitude, period, and phase for the number of etalons listed for each spectrum in the Dataset)
+        """Generates a csv file called dataset_name + _baseline_paramlist, which will be used to generate another csv file that is used for fitting spectrum dependent parameters with columns for 
+        spectrum number, segment number, x_shift, concentration for each molecule in the dataset, baseline terms (a = 0th order term, b = 1st order, etc), and etalon terms (set an amplitude, period, and phase for the number of etalons listed for each spectrum in the Dataset).
 
         Returns
         -------
@@ -831,7 +829,7 @@ class Dataset:
         return baseline_paramlist
 
     def generate_summary_file(self, save_file = False):
-        """ Generates a summary file combining spectral information from all spectra in the Dataset
+        """ Generates a summary file combining spectral information from all spectra in the Dataset.
         
 
         Parameters
@@ -854,7 +852,7 @@ class Dataset:
         return summary_file
 
     def plot_model_residuals(self):
-        """ Generates a plot showing both the model and experimental data as a function of wavenumber in the main plot. A subplot shows the residuals as function of wavenumber.  Each spectra in the Dataset will have a different color.  
+        """ Generates a plot showing both the model and experimental data as a function of wavenumber in the main plot with a subplot showing the residuals as function of wavenumber.
         """
         fig = plt.figure(figsize = (16,10))
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
@@ -913,7 +911,7 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
                         natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {}, 
                         nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 10):
-    """allows for a synthetic spectrum to be generated, where the output is a spectrum object that can be used in MATS classes.
+    """Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.
     
 
     Parameters
@@ -1160,7 +1158,7 @@ class Generate_FitParam_File:
                                    vary_as = {}, vary_n_delta2 = {}, 
                                    vary_nuVC = {}, vary_n_nuVC = {},
                                    vary_eta = {}, vary_linemixing = {}):
-        """Generates the actual parameter line list used and updated in fitting.
+        """Generates the parameter line list used in fitting and updates the fitting booleans to desired settings.
                
         
 
@@ -1577,7 +1575,7 @@ class Generate_FitParam_File:
 
     def generate_fit_baseline_linelist(self, vary_baseline = True, vary_pressure = False, vary_temperature = False,vary_molefraction = {}, vary_xshift = False, 
                                       vary_etalon_amp= False, vary_etalon_freq= False, vary_etalon_phase= False):
-        """Generates the actual baseline line list used and updated in fitting.  
+        """Generates the baseline line list used in fitting and updates the fitting booleans to desired settings.
         
 
         Parameters
@@ -1711,7 +1709,7 @@ def hasNumbers(inputString):
     return False
 
 class Fit_DataSet:
-    """Provides the fitting functionality
+    """Provides the fitting functionality for a Dataset.
         
 
         Parameters
@@ -1872,13 +1870,13 @@ class Fit_DataSet:
         self.linemixing_limit_factor = linemixing_limit_factor
         
     def generate_params(self):
-        """Generates the lmfit params object that will be used in fitting
+        """Generates the lmfit parameter object that will be used in fitting.
         
 
         Returns
         -------
         params : lmfit parameter object
-            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit
+            the parameter object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit
 
         """
         params = Parameters()
@@ -2166,7 +2164,7 @@ class Fit_DataSet:
     def constrained_baseline(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
                                     etalon_amp_segment_constrained = True, etalon_freq_segment_constrained = True, etalon_phase_segment_constrained = True, 
                                     pressure_segment_constrained = True, temperature_segment_constrained = True):
-        """Allows you to impose baseline constraints when using multiple segments per spectrum, ie. all baseline parameters can be the same across the entire spectrum except for the etalon phase, which is allowed to vary per segment
+        """Imposes baseline constraints when using multiple segments per spectrum, ie all baseline parameters can be the same across the entire spectrum except for the etalon phase, which is allowed to vary per segment.
         
 
         Parameters
@@ -2244,7 +2242,7 @@ class Fit_DataSet:
         return params
 
     def simulation_model(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff'):
-        """This is the model that is used for fitting.  It combines the baseline terms (baseline, etalons) and resonant absorption models
+        """This is the model used for fitting that includes baseline and resonant absorption models.
         
 
         Parameters
@@ -2379,7 +2377,7 @@ class Fit_DataSet:
         total_simulated = np.asarray(total_simulated)
         return total_residuals
     def fit_data(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff', xtol = 1e-7, maxfev = 2000, ftol = 1e-7):
-        """Uses the LMFit minimizer to do the fitting through the simulation model function
+        """Uses the lmfit minimizer to do the fitting through the simulation model function.
         
 
         Parameters
@@ -2409,7 +2407,7 @@ class Fit_DataSet:
         result = minner.minimize(method = 'leastsq')#'
         return result
     def residual_analysis(self, result, indv_resid_plot = False):
-        """Updates the model and residual arrays in each spectrum object with the results of the fit and gives the option of plotting each spectra with residuals.
+        """Updates the model and residual arrays in each spectrum object with the results of the fit and gives the option of generating the combined absorption and residual plot for each spectrum.
         
 
         Parameters
@@ -2429,7 +2427,7 @@ class Fit_DataSet:
             if indv_resid_plot:
                 spectrum.plot_model_residuals()
     def update_params(self, result, base_linelist_update_file = None , param_linelist_update_file = None):
-        """Updates the baseline and line parameter files based on fit results with the option to write over the file (default) or save as a new file. It also calculates and add the baseline and etalon terms into a baseline array for the spectrum.
+        """Updates the baseline and line parameter files based on fit results with the option to write over the file (default) or save as a new file. 
         
 
         Parameters
