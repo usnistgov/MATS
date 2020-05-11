@@ -4,29 +4,29 @@ Generating Parameter Line lists
 Parameter Line list Overview
 ++++++++++++++++++++++++++++
 
-The MATS program uses a spectroscopic line list that varies from the traditional HITRAN and HAPI format to accomodate the full HTP parameterization including temperature dependences for all parmeters (other than the correlation parameter and nearest neighbor line-mixing).  The linelist format has rows that correspond to each line and columns that correspond to the various line parameters.  The necessary column headers are below, where there needs to be a column for each parameter and each diluent being fit (ie. air, self) and the line-mixing term needs to include the nominal temperature as a suffix.  
+The MATS program uses a spectroscopic line list that varies from the traditional HITRAN and HAPI formats to accomodate the full HTP parameterization including temperature dependencies for all parameters (other than the correlation parameter and nearest neighbor line-mixing).  The spectroscopic line list format has rows that correspond to each molecular transition and columns that correspond to the various HTP parameters.  The necessary column headers are below, where there needs to be a column for each parameter and each diluent (ie. air, self) in the dataset. Additionally, there needs to be a line-mixing term for each nominal temperature in the dataset, where the nominal temperature is the included as the suffix of the column header.  
 	* molec_id: HITRAN molecule id number
 	* local_iso_id: HITRAN local isotope id number
 	* nu: line center (cm-1)
 	* sw : spectral line intensity (cm−1/(molecule⋅cm−2)) at Tref=296K
 	* elower: The lower-state energy of the transition (cm-1)
 	* gamma0_diluent: collisional half-width (cm−1/atm) at Tref=296K and reference pressure pref=1atm for a given diluent
-	* n_gamma0_diluent: coefficient of the temperature dependence of the half width
+	* n_gamma0_diluent: coefficient of the temperature dependence of the collisional half-width
 	* delta0_diluent: pressure shift (cm−1/atm) at Tref=296K and pref=1atm of the line position with respect to line center
 	* n_delta0_diluent:  the coefficient of the temperature dependence of the pressure shift
 	* SD_gamma_diluent: the ratio of the speed dependent width to the collisional half-width at reference temperature and pressure
-	* n_gamma2_diluent: the coefficient of the temperature dependence of the speed dependent width NOTE: This is the temperature dependence of the speed dependent width not the ratio of the speed dependence to the half-width
-	* SD_delta_diluent:  the ratio of the speed dependent shift to the collisional shift at reference temperature and pressure
-	* n_delta2_diluent: he coefficient of the temperature dependence of the speed dependent shift NOTE: This is the temperature dependence of the speed dependent shift not the ratio of the speed dependence to the shift
-	* nuVC_diluent: dicke narrowing term at reference temperature and pressure
-	* n__nuVC_diluent:  coefficient of the temperature dependence of the dicke narrowing term
-	* eta_diluent:  the correlation parameter for the VC and SD effects
-	* y_diluent_nominaltemp: linemixing term (as currently written this doesn't have a temperature dependence, so different column for each nominal temperature)
+	* n_gamma2_diluent: the coefficient of the temperature dependence of the speed-dependent width NOTE: This is the temperature dependence of the speed-dependent width not the temperature dependence of the ratio of the speed-dependent width to the collisional half-width
+	* SD_delta_diluent:  the ratio of the speed-dependent shift to the collisional shift at reference temperature and pressure
+	* n_delta2_diluent: the coefficient of the temperature dependence of the speed-dependent shift NOTE: This is the temperature dependence of the speed-dependent shift not the temperature dependence of the ratio of the speed-dependent shift to the pressure shift
+	* nuVC_diluent: Dicke narrowing term at reference temperature and pressure
+	* n__nuVC_diluent:  coefficient of the temperature dependence of the Dicke narrowing term
+	* eta_diluent:  correlation parameter 
+	* y_diluent_nominaltemp: line mixing term (as currently written this doesn't have a temperature dependence, so there is a different column for each nominal temperature)
 
 Generating Parameter Line list from HITRAN
 ++++++++++++++++++++++++++++++++++++++++++
 
-The parameter line list .csv file can be generated manually, but `this code <https://github.com/usnistgov/MATS/blob/master/MATS/HITRAN_to_Dataframe.ipynb>`_ generates a parameter list using `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_.  The overview below walks through this notebook.  
+The parameter line list .csv file can be generated manually, but `this notebook <https://github.com/usnistgov/MATS/blob/master/MATS/HITRAN_to_Dataframe.ipynb>`_ generates a parameter list using the `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_.  The overview below walks through this notebook.  
 
 Imports
 -------
@@ -49,14 +49,14 @@ Optional imports include matplotlib and seaborn for plotting.
    sns.set_style("ticks")
    sns.set_context("poster")
    
-Add location of hapi.py to system path
+Add location of hapi.py file to system path
 
 .. code:: ipython3
 
    sys.path.append(r'C:\Users\Documents\Python Scripts\HAPI')#Add hapi.py folder location to system path
    from hapi import *
    
-Set Working File Location
+Set working file location
 
 .. code:: ipython3
 
@@ -66,7 +66,7 @@ Set Working File Location
 Molecule and Isotope Information
 ---------------------------------
 
-HAPI provids a dictionary called ISO_ID, where the global isotope id acts as the key, with a sub dictionary containing the molecule id, local isotope id, isotope name, relative abundance, mass, and molecule name.  The following command will generate the dictionary as the output.  This provides the necessary information for interfacing with HAPI to pull-down HITRAN infomation.
+HAPI provides a dictionary called ISO_ID, where the global isotope id acts as the key, with a sub-dictionary containing the molecule id, local isotope id, isotope name, relative abundance, mass, and molecule name.  The following command will generate the dictionary as the output.  This provides the necessary global isotope id information for interfacing with HAPI to access HITRAN infomation.
 
 .. code:: ipython3
 
@@ -206,7 +206,14 @@ HAPI provids a dictionary called ISO_ID, where the global isotope id acts as the
 
 Set-Up Variables for Line list
 ------------------------------
-To generate a line list you will need to provide a tablename (str), an array containing the global isotope numbers of the molecules/isotopes that you are interested in, the minimum and maximum wavenumbers, and the minimum line intensity of interested. The example below would generate a HITRAN table named 'CO' that contains the all CO isotopes and the most abundant CO2 isotope in the spectral region between 6200 and 6500 cm-1 that have line intensities greater than 1e-30. 
+To select the relevant information from HITRAN you will need to provide:
+
+* table name (str)
+* an array containing the global isotope numbers of the molecules/isotopes of interest
+* the minimum and maximum wavenumbers
+* the minimum line intensity of interest
+
+The example below would generate a HITRAN table named 'CO' that contains all CO isotopes and the most abundant CO2 isotope in the spectral region between 6200 and 6500 cm-1 that have line intensities greater than 1e-30. 
 
 .. code:: ipython3
 
@@ -219,14 +226,14 @@ To generate a line list you will need to provide a tablename (str), an array con
 
 Generate HITRAN and Initial Guess Line lists from HAPI Call
 -----------------------------------------------------------
-The next section of the example contains a function and function call teh output a MATS compatible line list.  NOTE: The line mixing term that the fitting script wants has a subscript with the nominal temperatures included in the dataset. I have been adding these columns by hand to the .csv by copying and pasting. Code can be updated to do this manually.
+The next section of the example contains a function and function call where the output is a MATS compatible line list.  NOTE: The line mixing term MATS needs has a subscript with the nominal temperatures included in the dataset. These columns can be added by hand to the .csv by copying, pasting, and renaming the generated line mixing column. Code can be updated to do this as well (DF['y_air_296'] = DF['y_air'].copy()).
 
 
 .. code-block:: python
 
    def HITRANlinelist_to_csv(isotopes, minimum_wavenumber, maximum_wavenumber, tablename = 'tmp', filename = tablename, temperature = 296): 
 		
-		"""Generates two .csv files generated information available from HTIRAN.  
+		"""Generates two .csv files containing information available from HTIRAN.  
 		The first line list matches the information available from HITRAN (_HITRAN.csv) 
 		and the second supplements the HITRAN information with theoretical values and translates into MATS input format (_initguess.csv)
 
@@ -241,7 +248,7 @@ The next section of the example contains a function and function call teh output
 			- set the gamma_2 temperature exponent equal to the gamma0 temperature exponent
 			- set the delta_2 temperature exponent equal to the delta0 temperature exponent
 			- set the dicke narrowing temperature exponent to 1
-		4. Save the supplemented and MATS formatted HITRAN information as filename_initguess.csv
+		4. Save the supplemented MATS formatted HITRAN information as filename_initguess.csv
 
 
 		Parameters
