@@ -19,7 +19,7 @@ Dependent Packages
 ++++++++++++++++++
 MATS is not written as a basic package, meaning that there are several dependent packages that need to be installed. 
 
-If a desired package is not installed then the following command will install it.  Many python package distributions have integrated package managers required packages can also be installed through that mechanism.
+If a desired package is not installed then the following command will install it.  Many python package distributions have integrated package managers and required packages can also be installed through that mechanism.
 
 .. code-block:: python
 

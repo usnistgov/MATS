@@ -1,7 +1,7 @@
 MATS Example using Experimental and Synthetic Data
 ===================================================
 
-Provided in the MATS v1.0 release are two examples using MATS in the Oxygen A-Band.  The first uses `experimental spectra <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/A-Band%20-%20Experimental%20Spectra>`_ and the second uses `synthetic spectra <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/A-Band%20-%20Synthetic%20Spectra>`_.  In this overview, we will walk through the common elements of both examples and highlight the differences between using experimental data and simulated spectra generated through the :py:func:`MATS.simulate_spectrum` function.  
+Provided in the MATS v1.0 release are two examples using MATS in the Oxygen A-Band.  The first uses `experimental spectra <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/A-Band%20-%20Experimental%20Spectra>`_ and the second uses `synthetic spectra <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/A-Band%20-%20Synthetic%20Spectra>`_.  This overview steps through the common elements of both examples and highlights the differences between using experimental data and simulated spectra generated through the :py:func:`MATS.simulate_spectrum` function.  
 
 
 
@@ -27,7 +27,7 @@ Append the system path to include the location of both the hapi and MATS modules
    from hapi import *
    from MATS import *
   
-Change the path to the working directory that contains experimental spectra or the file that you want to work in.
+Change the path to the working directory that contains experimental spectra or to the folder that you want to work in.
 
 .. code:: ipython3
 
@@ -40,7 +40,7 @@ Load Spectra from files
 +++++++++++++++++++++++
 There are two options for generating :py:class:`MATS.Spectrum` objects.  The first is from a file by instantiating an instance of the class.  The second option is by using the :py:func:`MATS.simulate_spectrum` function described in the following section.  
 
-Before generating :py:class:`MATS.Spectrum` objects from your experimental data, it is helpful to set some variables for terms that will be used in all of the spectrum objects or throughout the fitting.  In this example the minimum intensity threshold for simulation (IntensityThreshold), the minimum line intensity of lines  fit in the analysis (Fit_Intensity), the order of the polynomial used in the baseline fits, and the names of columns used for the absorption, frequency, pressure, and temperature data are defined at the top of the example.
+Before generating :py:class:`MATS.Spectrum` objects from your experimental data, it is helpful to set some variables for terms that will be used in all of the :py:class:`MATS.Spectrum` objects or throughout the fitting.  In this example the minimum intensity threshold for simulation (IntensityThreshold), the minimum line intensity of lines  fit in the analysis (Fit_Intensity), the order of the polynomial used in the baseline fits, and the names of columns used for the absorption, frequency, pressure, and temperature data are defined at the top of the example.
 
 .. code:: ipython3
 
@@ -53,7 +53,7 @@ Before generating :py:class:`MATS.Spectrum` objects from your experimental data,
    pressure_column = 'Cavity Pressure /Torr'
    temperature_column = 'Cavity Temperature Side 2 /C'
 
-After that 4 instances of the :py:class:`MATS.Spectrum` class are instantiated from 4 experimental spectra.  In the class instantiation, the mole fraction of the oxygen sample used is defined, the etalon amplitude and period are defined, the sample is confirmed to be at natural abundance, the diluent is set to air, and the columns defined for pressure, temperature, frequency, and absorbance data are set.  
+After that, 4 instances of the :py:class:`MATS.Spectrum` class are instantiated from 4 experimental spectra.  In the class instantiation, the mole fraction of the oxygen sample used is defined, the etalon amplitude and period are defined, the sample is confirmed to be at natural abundance, the diluent is set to air, and the columns defined for pressure, temperature, frequency, and absorbance data are set.  
 
 .. code:: ipython3
 
@@ -87,7 +87,7 @@ After that 4 instances of the :py:class:`MATS.Spectrum` class are instantiated f
                         nominal_temperature = 296, x_shift = 0.00)
 
 
-The :py:func:`MATS.Spectrum.plot_wave_alpha` function is called to plot a spectrum.
+The :py:func:`MATS.Spectrum.plot_wave_alpha` function can be called to plot any of the spectra.
 
 .. code:: ipython3
 
@@ -97,9 +97,9 @@ The :py:func:`MATS.Spectrum.plot_wave_alpha` function is called to plot a spectr
 
 Simulate Spectra
 ++++++++++++++++
-If you are simulating spectra, opposed to reading them in from a file, then you can use the :py:func:`MATS.simulate_spectrum` function.
+If you are simulating spectra, opposed to reading them in from a file as discussed above, then you can use the :py:func:`MATS.simulate_spectrum` function.
 
-When simulating spectra, the first step is to read in the reference line list.  The following code reads in the reference line list as a pandas dataframe, then resets the working directory,
+When simulating spectra, the first step is to read in the reference line list.  Generation of this line list is described in the Generating Parameter Line lists page.  The following code reads in the reference line list as a pandas dataframe, then resets the working directory.  
 
 .. code:: ipython3
 
@@ -110,7 +110,7 @@ When simulating spectra, the first step is to read in the reference line list.  
    path = r'C:\Users\Documents\MATS\MATS\Examples\A-Band - Synthetic Spectra'
    os.chdir(path)   
 
-Just as you would do if reading in the experimental spectrum, this example defines some common simulation and fit variables.  In addition to variables defined above, the minimum and maximum wavenumbers for the simulation and the simulation wavenumber spacing are defined.  The baseline (defined by a polynomial where the array index is the parameter coefficient order).  
+Just as you would do if reading in the experimental spectrum, this example defines some common simulation and fit variables.  In addition to variables defined above, the minimum and maximum wavenumbers for the simulation and the simulation wavenumber spacing are defined.  The baseline is defined by a polynomial where the array index is the parameter coefficient order, such that the [1, 0] would correspond to a linear baseline with a slope of 0 and an offset of 1.  
 
 .. code:: ipython3
 
@@ -125,12 +125,12 @@ Just as you would do if reading in the experimental spectrum, this example defin
    baseline_terms = [0] #polynomial baseline coefficients where the index is equal to the coefficient order  
    
 
-The :py:func:`MATS.simulate_spectrum` function also allows for error to be added:
+The :py:func:`MATS.simulate_spectrum` function also allows for error to be added in the following ways:
 
-* to the absorption axis through SNR.  The SNR is implemented by adding  gaussian noise to the spectra such that the (maximum alpha - minimum alpha) / noise is equal to the SNR.
-* to the wavenumber axis through the wave_err parameter.  The wavenumber err is a gaussian noise error of the specified magnitude added to the wavenumber axis.  
-* to the mole fraction through the molefraction_err parameter.  The molefraction_err is implemented as a percent error bias on each molecule molefraction, such that the simulated value is off by a constant positve offset from the simulated value(could enter negative percent error to get negative offset).  This mimics the maximum impact that a constant error in sample mole fraction would have.  
-* to the temperature/pressure through the temperature_err and pressure_err dictionaries.  In experiments there are generally two type of errors with pressure and temperature measurements.  The first is a constant bias in the reading.  The second type of error is an actual change in the pressure/temperature during the collection of the spectrum.  To account for both error types the pressure_err and temperature_err are dictionaries, where the keys correspond to 'bias/per_bias' (bias for temperature and per_bias for pressure), function (allows 'linear' or 'sine') and params.  If the function is 'linear' then param keys are 'm' and 'b' corresponding to the slope and interecept. If the function is 'sine' then the param keys are 'amp', 'freq', and 'phase' corresponding to the amplitude, period, and phase of the etalon.  For both temperature and pressure, the pressure/temperature recorded in the simulated spectra output include the average pressure or temperature over the segment (representing the frequency of the pressure/temperature measurement in an experiment) and does not include the bias in pressure/temperature as this is an unknown.  
+* to the absorption axis through signal-to-noise ratio (SNR).  The SNR is implemented by adding  gaussian noise to the spectra such that the (maximum alpha - minimum alpha) / noise is equal to the set SNR.
+* to the wavenumber axis through the wave_err parameter.  The wavenumber error is implemented by adding a gaussian noise error of the specified magnitude to the wavenumber axis.  
+* to the mole fraction through the molefraction_err parameter.  The molefraction error is implemented as a percent error bias on each (could enter a negative percent error to get negative offset).  This mimics the maximum impact that a constant error in sample mole fraction would have.  
+* to the temperature/pressure through the temperature_err and pressure_err dictionaries.  In experiments there are generally two type of errors with pressure and temperature measurements.  The first is a constant bias in the reading.  The second type of error is an actual change in the pressure/temperature during the collection of the spectrum.  To account for both error types the pressure_err and temperature_err are dictionaries, where the keys correspond to 'bias/per_bias' (bias for temperature and per_bias for pressure), function (allows 'linear' or 'sine'), and params.  If the function is 'linear' then the param keys are 'm' and 'b' corresponding to the slope and interecept. If the function is 'sine' then the param keys are 'amp', 'freq', and 'phase' corresponding to the amplitude, period, and phase of the sine function.  For both temperature and pressure, the pressure/temperature recorded in the simulated spectra output include the average pressure or temperature over the segment (analogous to the frequency of the pressure/temperature measurement in an experiment) and does not include the bias in pressure/temperature as this is would be an unknown in an experiment.  
 
 .. code:: ipython3
 
@@ -140,7 +140,7 @@ The :py:func:`MATS.simulate_spectrum` function also allows for error to be added
    pressure_err = {'per_bias': 0.01, 'function': None, 'params': {}}
    molefraction_err = {7:0.01}
 
-These parameters and the additional settings for filenames and number of segments can be used to call the :py:func:`MATS.simulate_spectrum` function setting the output equal to the variables as was done when the :py:class:`MATS.Spectrum` was used.  This makes it simple to transition code from analysis of experimental spectra to error analysis through simulations.  
+These parameters and the additional settings for filenames and number of segments can be used to call the :py:func:`MATS.simulate_spectrum` function setting the output equal to a variable as was done when the :py:class:`MATS.Spectrum` was used.  This makes it simple to transition code from analysis of experimental spectra to error analysis through simulations.  
 
 .. code:: ipython3   
    
@@ -169,13 +169,13 @@ These parameters and the additional settings for filenames and number of segment
 
 Generate a Dataset
 ++++++++++++++++++
-The procedure for analysis for both spectrum class generation methods illustrated above is the same from this point on.  The next step is to combine all spectrum objects for analysis into a :py:class:`MATS.Dataset` object, where we give the dataset a name.  The order of polynomial to use for the baseline fit is also defined.
+The procedure for analysis for both spectrum class generation methods illustrated above is the same from this point on.  The next step is to combine all desired :py:class:`MATS.Spectrum` objects  into a :py:class:`MATS.Dataset` object, where we give the dataset a name.  The order of polynomial to use for the baseline fit is also defined.
 
 .. code:: ipython3
 
    SPECTRA = Dataset([spec_1, spec_2, spec_3, spec_4], 'Line Intensity', baseline_order = order_baseline_fit)
    
-The :py:class:`MATS.Dataset` class contains a function to generate a baseline linelist analogous to the one for the parameter line list done outside of this example based on the order of the baseline fit, etalons, molecules, x-shift parameters, and segments as defined by both the spectrum and dataset objects.
+The :py:class:`MATS.Dataset` class contains a function to generate a baseline line list, analogous to the one for the parameter line list done outside of this example, based on the order of the baseline fit, etalons, molecules, x-shift parameters, and segments as defined by both the spectrum and dataset objects.
 
 .. code:: ipython3
 
@@ -204,7 +204,7 @@ The next section of code uses the :py:class:`MATS.Generate_FitParam_File` class 
                                    nuVC_constrain = True, eta_constrain =True, linemixing_constrain = True)
 
 
-The next step is to generate fit parameter and baseline line lists that include columns that specify whether that parameter should be varied during fitting, in addition to adding error columns for the fit error in that parameter.  For the following example the line centers, line intensities, collisional half-widths, and aw terms will be floated for all main oxygen isotopes for lines where the line intensity is greater than 1e-24.  Additionally, the baseline terms will float, as will the etalon amplitude and phase.  
+The next step is to generate fit parameter and baseline line lists that include columns that specify whether that parameter should be varied during fitting, in addition to adding error columns for the fit error for each parameter.  For the following example the line centers, line intensities, collisional half-widths, and speed-dependent broadening terms will be floated for all main oxygen isotopes for lines where the line intensity is greater than 1e-24.  Additionally, the baseline terms will float, as will the etalon amplitude and phase.  
 
 .. code:: ipython3
 
@@ -242,7 +242,7 @@ Instantiating the :py:class:`MATS.Fit_DataSet` class reads in the information fr
                 eta_limit = True, eta_limit_factor = 50, linemixing_limit = False, linemixing_limit_factor = 50)
    
 
-The next step is to generate the lmfit params dictionary object through the :py:func:`MATS.Fit_DataSet.generate_params` function.  This translates baseline and parameter linelist .csv files into the lmfit parameter dictionary that is used in the fits.  After the parameters object is generated you can use the keys to set values and impose constraints on individual parameters, if desired.  While this is not coded in the MATS toolkit, it is incredibly powerful as it lets you define min, max, vary, and expression values for any parameter.  In the example below, two additional constraints are imposed on specific fit parameters the first constrains all aw parameters to be between the values of 0.01 and 0.25 and the second forces the amplitude of the etalon to be constant across all spectra.  
+The next step is to generate the lmfit params dictionary object through the :py:func:`MATS.Fit_DataSet.generate_params` function.  This translates baseline and parameter line list .csv files into the lmfit parameter dictionary that is used in the fits.  After the parameters object is generated you can use the keys to set values and impose constraints on individual parameters, if desired.  While this is not coded in the MATS toolkit, it is incredibly powerful as it lets you define min, max, vary, and expression values for any parameter.  In the example below, two additional constraints are imposed on specific fit parameters.  The first constrains all speed-dependent width parameters to be between the values of 0.01 and 0.25 and the second forces the amplitude of the etalon to be constant across all spectra.  
 
 .. code:: ipython3
 
@@ -257,7 +257,7 @@ The next step is to generate the lmfit params dictionary object through the :py:
 			if param != 'etalon_1_amp_1_1':
 				params[param].set(expr='etalon_1_amp_1_1')
 
-The params file is then used to fit the spectra in the dataset using the :py:func:`MATS.Fit_DataSet.fit_data` function, where the result is a lmfit result object. The lmft prettyprint function prints the parameter fit results.  Included below is an abbreviated prettyprint output that not only shows the fit result values and stderr, but also highlights that constraints were imposed on the SD_gamma parameters and an expression was imposed on the etalon_amplitudes.  It also shows that the there is a line intensity reported for every line (suffix number) and spectrum (after sw_) as the line intensities were not constrained to global fits.  The sw reportes shows that the fitted line intensity value is scaled by the minimum fit value.  This aids in the fitting as line intensities are so much smaller than other values.  
+The params file is then used to fit the spectra in the dataset using the :py:func:`MATS.Fit_DataSet.fit_data` function, where the result is a lmfit result object. The lmft prettyprint function prints the parameter fit results.  Included below is an abbreviated prettyprint output that not only shows the fit result values and standard errors, but also highlights that constraints were imposed on the SD_gamma (speed dependent broadening) parameters and an expression was imposed on the etalon_amplitudes.  It also shows that the there is a line intensity reported for every line (suffix number) and spectrum (after sw_) as the line intensities were not constrained to global fits.  The reported sw shows that the fitted line intensity value is scaled by the minimum fit value.  This aids in the fitting as line intensities are so much smaller than other values.  
 
 .. code:: ipython3
 
@@ -322,7 +322,7 @@ The params file is then used to fit the spectra in the dataset using the :py:fun
    sw_4_line_26             3.399    1.699    6.798        0    False     None     None
 
 
-The last segment of code provides residual plots and updates residuals through the :py:func:`MATS.fit_data.residual_analysis` and :py:func:`MATS.Dataset.plot_model_residuals` functions, updates the parameter and baseline line lists :py:func:`MATS.fit_data.update_params`, and generates a summary file with the fit results :py:func:`MATS.Dataset.plot_model_residuals`.
+The last segment of code provides residual plots and updates residuals through the :py:func:`MATS.fit_data.residual_analysis` and :py:func:`MATS.Dataset.plot_model_residuals` functions, updates the parameter and baseline line lists through :py:func:`MATS.fit_data.update_params`, and generates a summary file with the fit results using :py:func:`MATS.Dataset.plot_model_residuals`.
 
 .. code:: ipython3
 
@@ -334,11 +334,11 @@ The last segment of code provides residual plots and updates residuals through t
 .. image:: example_files/spectra_residuals.png  
 
 
-At the bottom of the experimental spectra example there is call to the :py:func:`MATS.Spectrum.fft_spectrum` function.  If we hadn't included the etalon the fit residuals would look like this:
+At the bottom of the experimental spectra example there is call to the :py:func:`MATS.Spectrum.fft_spectrum` function.  If we hadn't included the etalon, the fit residuals would look like this:
 
 .. image:: example_files/spectra_residuals_noetalon.png  
 
-Calling the :py:func:`MATS.Spectrum.fft_spectrum` function on these residuals gives the following result with the most abundant period being 1.271443 cm-1 and an amplitude of 0.001364.  The more periods present in the spectral region being fit the more precise the etalon amplitude and frequency will be.
+Calling the :py:func:`MATS.Spectrum.fft_spectrum` function on these residuals gives the following result with the most abundant period being 1.271443 cm-1 and an amplitude of 0.001364.  The more etalon periods present in the spectral region being fit the more precise the etalon amplitude and frequency determined by the FFT will be.
 
 .. image:: example_files/Noetalon_FFT.png  
 

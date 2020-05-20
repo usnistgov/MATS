@@ -57,7 +57,7 @@ release = '1.0'
 extensions = ['sphinx.ext.todo', 
               'sphinx.ext.viewcode', 
               'sphinx.ext.autodoc',
-              'sphinx.ext.pngmath',
+              #'sphinx.ext.imgmath',
               'sphinx.ext.napoleon', 
               'sphinx.ext.autosummary', 
               'nbsphinx',

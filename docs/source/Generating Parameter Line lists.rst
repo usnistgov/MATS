@@ -4,24 +4,24 @@ Generating Parameter Line lists
 Parameter Line list Overview
 ++++++++++++++++++++++++++++
 
-The MATS program uses a spectroscopic line list that varies from the traditional HITRAN and HAPI formats to accomodate the full HTP parameterization including temperature dependencies for all parameters (other than the correlation parameter and nearest neighbor line-mixing).  The spectroscopic line list format has rows that correspond to each molecular transition and columns that correspond to the various HTP parameters.  The necessary column headers are below, where there needs to be a column for each parameter and each diluent (ie. air, self) in the dataset. Additionally, there needs to be a line-mixing term for each nominal temperature in the dataset, where the nominal temperature is the included as the suffix of the column header.  
+The MATS program uses a spectroscopic line list that varies from the traditional HITRAN and HAPI formats to accomodate the full HTP parameterization including temperature dependencies for all parameters (other than the correlation parameter and nearest neighbor line-mixing).  The spectroscopic line list format has rows that correspond to each molecular transition and columns that correspond to the various HTP parameters.  The necessary column headers are below, where there needs to be a column for each parameter for each diluent (ie. air, self) in the dataset. Additionally, there needs to be a line-mixing term for each nominal temperature in the dataset, where the nominal temperature is the included as the suffix of the column header.  
 	* molec_id: HITRAN molecule id number
 	* local_iso_id: HITRAN local isotope id number
-	* nu: line center (cm-1)
-	* sw : spectral line intensity (cm−1/(molecule⋅cm−2)) at Tref=296K
-	* elower: The lower-state energy of the transition (cm-1)
-	* gamma0_diluent: collisional half-width (cm−1/atm) at Tref=296K and reference pressure pref=1atm for a given diluent
+	* nu: line center (:math:`cm^{-1}`)
+	* sw : spectral line intensity (:math:`\frac{cm^{-1}}{molecule \cdot cm^{-2}}`) at Tref=296K
+	* elower: The lower-state energy of the transition (:math:`cm^{-1}`)
+	* gamma0_diluent: collisional half-width (:math:`\frac{cm^{-1}}{atm}`) at Tref=296K and reference pressure pref=1atm for a given diluent
 	* n_gamma0_diluent: coefficient of the temperature dependence of the collisional half-width
-	* delta0_diluent: pressure shift (cm−1/atm) at Tref=296K and pref=1atm of the line position with respect to line center
+	* delta0_diluent: pressure shift (:math:`\frac{cm^{-1}}{atm}`) at Tref=296K and pref=1atm of the line position with respect to line center
 	* n_delta0_diluent:  the coefficient of the temperature dependence of the pressure shift
 	* SD_gamma_diluent: the ratio of the speed dependent width to the collisional half-width at reference temperature and pressure
 	* n_gamma2_diluent: the coefficient of the temperature dependence of the speed-dependent width NOTE: This is the temperature dependence of the speed-dependent width not the temperature dependence of the ratio of the speed-dependent width to the collisional half-width
 	* SD_delta_diluent:  the ratio of the speed-dependent shift to the collisional shift at reference temperature and pressure
 	* n_delta2_diluent: the coefficient of the temperature dependence of the speed-dependent shift NOTE: This is the temperature dependence of the speed-dependent shift not the temperature dependence of the ratio of the speed-dependent shift to the pressure shift
-	* nuVC_diluent: Dicke narrowing term at reference temperature and pressure
+	* nuVC_diluent: Dicke narrowing term (:math:`\frac{cm^{-1}}{atm}`) at reference temperature and pressure
 	* n__nuVC_diluent:  coefficient of the temperature dependence of the Dicke narrowing term
 	* eta_diluent:  correlation parameter 
-	* y_diluent_nominaltemp: line mixing term (as currently written this doesn't have a temperature dependence, so there is a different column for each nominal temperature)
+	* y_diluent_nominaltemp: line mixing term (:math:`\frac{cm^{-1}}{atm}`) NOTE: As currently written , this doesn't have a temperature dependence, so there is a different column for each nominal temperature.
 
 Generating Parameter Line list from HITRAN
 ++++++++++++++++++++++++++++++++++++++++++
@@ -213,20 +213,20 @@ To select the relevant information from HITRAN you will need to provide:
 * the minimum and maximum wavenumbers
 * the minimum line intensity of interest
 
-The example below would generate a HITRAN table named 'CO' that contains all CO isotopes and the most abundant CO2 isotope in the spectral region between 6200 and 6500 cm-1 that have line intensities greater than 1e-30. 
+The example below would generate a HITRAN table named 'CO' that contains all :math:`CO` isotopes (global isotopes 26 - 31) and the most abundant :math:`CO_{2}` isotope (global isotope 7) in the spectral region between 6200 and 6500 :math:`cm^{-1}` that have line intensities greater than 1e-30 :math:`\frac{cm^{-1}}{molecule \cdot cm^{-2}}`. 
 
 .. code:: ipython3
 
    tablename = 'CO'
    global_isotopes = [26, 27, 28, 29, 30,31,7]
-   wave_min = 6200 #7903.5#cm-1
-   wave_max = 6500 #7904.5 #cm-1
+   wave_min = 6200 
+   wave_max = 6500 
    intensity_cutoff = 1e-30
 
 
 Generate HITRAN and Initial Guess Line lists from HAPI Call
 -----------------------------------------------------------
-The next section of the example contains a function and function call where the output is a MATS compatible line list.  NOTE: The line mixing term MATS needs has a subscript with the nominal temperatures included in the dataset. These columns can be added by hand to the .csv by copying, pasting, and renaming the generated line mixing column. Code can be updated to do this as well (DF['y_air_296'] = DF['y_air'].copy()).
+The next section of the example contains a function and function call where the output is a MATS compatible line list. 
 
 
 .. code-block:: python
@@ -278,3 +278,8 @@ The next section of the example contains a function and function call where the 
 
 		"""
 
+The line mixing term MATS needs has a subscript with the nominal temperatures included in the dataset. These columns can be added by hand to the .csv by copying, pasting, and renaming the generated line mixing column.  Alternatively, the following code can be added to do this in the script for each nominal temperature.
+
+.. code-block:: python
+
+   DF['y_air_296'] = DF['y_air'].copy()
