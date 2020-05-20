@@ -13,6 +13,8 @@
     <script src="_static/doctools.js"></script>
     <script src="_static/language_data.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MATS Summary" href="MATS Summary.html" />
@@ -75,26 +77,27 @@ $(document).ready(function(){
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="set-up">
 <h2>Set-Up<a class="headerlink" href="#set-up" title="Permalink to this headline">¶</a></h2>
-<p>Code was orginally developed using the <a class="reference external" href="https://www.enthought.com/product/canopy/">Enthought Canopy python package distribution</a>.  However, further development will use <a class="reference external" href="https://www.anaconda.com/">Anaconda</a>. Code is typically run using  <a class="reference external" href="https://jupyter.org/">jupyter notebooks</a> (run in jupyter lab.  Any python package distribution should work with the code as long as the dependent packages are installed.</p>
+<p>The MATS code was orginally developed using the <a class="reference external" href="https://www.enthought.com/product/canopy/">Enthought Canopy python package distribution</a>.  However, further development will use <a class="reference external" href="https://www.anaconda.com/">Anaconda</a>. Example scripts have typically been written and run using  <a class="reference external" href="https://jupyter.org/">jupyter notebooks</a> (run in jupyter lab), as this allows for code to be run in segments and for iteration on certain code segments.  Any python package distribution should work with the code as long as the dependent packages are installed.</p>
 </div>
 <div class="section" id="main-packages">
 <h2>Main Packages<a class="headerlink" href="#main-packages" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="https://github.com/usnistgov/MATS">MATS</a></p></li>
-<li><p><a class="reference external" href="https://hitran.org/hapi/">HITRAN Application Programming Interface (HAPI)</a>   The version used in development is also available in the MATS repository.</p></li>
+<li><p><a class="reference external" href="https://hitran.org/hapi/">HITRAN Application Programming Interface (HAPI)</a>   The version used in development (v1.1.0.9.6) is available in the MATS repository.</p></li>
 </ul>
 </div>
 <div class="section" id="dependent-packages">
 <h2>Dependent Packages<a class="headerlink" href="#dependent-packages" title="Permalink to this headline">¶</a></h2>
-<p>This fitting program is not written as a basic package, meaning that there are several dependent packages that need to be installed and called to make the script work.</p>
-<p>There is commonly a delay in the most recent package release available in the enthought/anaconda package library and that available through pip install.  The following code will update to the newest release if the package is already installed.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">package_name</span> <span class="o">--</span><span class="n">user</span>
-</pre></div>
-</div>
-<p>If the package is not installed then the following will install it.</p>
+<p>MATS is not written as a basic package, meaning that there are several dependent packages that need to be installed.</p>
+<p>If a desired package is not installed then the following command will install it.  Many python package distributions have integrated package managers and required packages can also be installed through that mechanism.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">package_name</span>
 </pre></div>
 </div>
+<p>There is commonly a delay in the most recent package releases available in python package distribution package managers compared to that available through pip install.  The following command line script will update to the newest release if a package is already installed.  This should only be necessary if there is an error when running MATS with the currently installed version.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">package_name</span> <span class="o">--</span><span class="n">user</span>
+</pre></div>
+</div>
+<p>Below are a list of the packages used in MATS.</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://www.numpy.org/">numpy</a> - python’s fundamental scientific computing package</p></li>
 <li><p><a class="reference external" href="https://pandas.pydata.org/">pandas</a> - python data structure package</p></li>

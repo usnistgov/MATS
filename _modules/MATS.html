@@ -13,6 +13,8 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/language_data.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
 <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
@@ -86,7 +88,7 @@ $(document).ready(function(){
 <div class="viewcode-block" id="HTP_from_DF_select"><a class="viewcode-back" href="../MATS.html#MATS.HTP_from_DF_select">[docs]</a><span class="k">def</span> <span class="nf">HTP_from_DF_select</span><span class="p">(</span><span class="n">linelist</span><span class="p">,</span> <span class="n">waves</span><span class="p">,</span> <span class="n">wing_cutoff</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">wing_wavenumbers</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">wing_method</span> <span class="o">=</span> <span class="s1">&#39;wing_cutoff&#39;</span><span class="p">,</span>
                 <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="mi">296</span><span class="p">,</span> <span class="n">molefraction</span> <span class="o">=</span> <span class="p">{},</span> 
                 <span class="n">natural_abundance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">abundance_ratio_MI</span> <span class="o">=</span> <span class="p">{},</span>  <span class="n">Diluent</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">diluent</span> <span class="o">=</span> <span class="s1">&#39;air&#39;</span><span class="p">,</span> <span class="n">IntensityThreshold</span> <span class="o">=</span> <span class="mf">1e-30</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Simulates the absorbance based on input line list, wavenumbers, and sample parameters.</span>
+    <span class="sd">&quot;&quot;&quot;Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters.</span>
 <span class="sd">    </span>
 <span class="sd">    Outline</span>
 <span class="sd">    </span>
@@ -94,12 +96,12 @@ $(document).ready(function(){
 <span class="sd">    </span>
 <span class="sd">    2.  Calculates the molecular density from pressure and temperature</span>
 <span class="sd">    </span>
-<span class="sd">    3.  Set-up Diluent dictionary if not given as input</span>
+<span class="sd">    3.  Sets up Diluent dictionary if not given as input</span>
 <span class="sd">    </span>
-<span class="sd">    4.  Calculate line intensity and doppler width at temperature for all lines</span>
+<span class="sd">    4.  Calculates line intensity and doppler width at temperature for all lines</span>
 <span class="sd">    </span>
-<span class="sd">    5.  Loop through each line in the line list and loop through each diluent and generate a line parameter </span>
-<span class="sd">        that is the appropriate ratio of each diluent species corrected for pressure and temperature.  For each line then simulate the line for the given simulation cutoffs and add to cross section</span>
+<span class="sd">    5.  Loops through each line in the line list and loops through each diluent, generating a line parameter at experimental conditions</span>
+<span class="sd">        that is the appropriate ratio of each diluent species corrected for pressure and temperature.  For each line, simulate the line for the given simulation cutoffs and add to cross section</span>
 <span class="sd">    </span>
 <span class="sd">    6.  Return wavenumber and cross section arrays </span>
 <span class="sd">    </span>
@@ -257,7 +259,7 @@ $(document).ready(function(){
 
 
 <div class="viewcode-block" id="Spectrum"><a class="viewcode-back" href="../MATS.html#MATS.Spectrum">[docs]</a><span class="k">class</span> <span class="nc">Spectrum</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Spectrum class provides all information describing experimental or simulated spectrum necessary for fitting.</span>
+    <span class="sd">&quot;&quot;&quot;Spectrum class provides all information describing experimental or simulated spectrum.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -266,13 +268,13 @@ $(document).ready(function(){
 <span class="sd">    molefraction : dict</span>
 <span class="sd">        mole fraction of each molecule in spectra in the format {molec_id: mole fraction (out of 1), molec_id: molefraction, . . . }</span>
 <span class="sd">    natural_abundance : bool, optional</span>
-<span class="sd">        flag for if the spectrum contains data at natural abundance</span>
+<span class="sd">        flag for if the molecular species in the spectrum are at natural abundance</span>
 <span class="sd">    abundance_ratio_MI : dict, optional</span>
 <span class="sd">        if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }</span>
 <span class="sd">    diluent : str, optional</span>
 <span class="sd">        sets the diluent for the sample.  Default = &#39;air&#39;</span>
 <span class="sd">    Diluent : dict, optional</span>
-<span class="sd">        sets the diluent for the sample if there are a combination of several. Format {&#39;he&#39;: 0.5, &#39;air&#39;: 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.</span>
+<span class="sd">        sets the diluent for the sample if there are a combination of several diluents. Format {&#39;he&#39;: 0.5, &#39;air&#39;: 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.</span>
 <span class="sd">    spectrum_number : int, optional</span>
 <span class="sd">        sets a number for the spectrum that will correspond to fit parameters. This is set in the Dataset class, so should not need to be defined manually</span>
 <span class="sd">    input_freq : bool, optional</span>
@@ -360,7 +362,7 @@ $(document).ready(function(){
         <span class="bp">self</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     
 <div class="viewcode-block" id="Spectrum.diluent_sum_check"><a class="viewcode-back" href="../MATS.html#MATS.Spectrum.diluent_sum_check">[docs]</a>    <span class="k">def</span> <span class="nf">diluent_sum_check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Checks that if multiple broadeners are used that the contributions sum to one</span>
+        <span class="sd">&quot;&quot;&quot;Checks that if multiple broadeners are used that the contributions sum to one.</span>
 <span class="sd">               </span>
 
 <span class="sd">        Returns</span>
@@ -376,7 +378,7 @@ $(document).ready(function(){
             <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;YOUR DILUENTS DO NOT SUM TO ONE!&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Spectrum.segment_wave_alpha"><a class="viewcode-back" href="../MATS.html#MATS.Spectrum.segment_wave_alpha">[docs]</a>    <span class="k">def</span> <span class="nf">segment_wave_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Defines the wavenumber, alpha, and indices of spectrum that correspond to a given spectrum segment</span>
+        <span class="sd">&quot;&quot;&quot;Defines the wavenumber, alpha, and indices of spectrum that correspond to a given spectrum segment.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Returns</span>
@@ -492,7 +494,7 @@ $(document).ready(function(){
 
     <span class="c1">##Other Functions</span>
 <div class="viewcode-block" id="Spectrum.plot_freq_tau"><a class="viewcode-back" href="../MATS.html#MATS.Spectrum.plot_freq_tau">[docs]</a>    <span class="k">def</span> <span class="nf">plot_freq_tau</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generates a plot of Tau (us) as a function of Frequency (MHz)</span>
+        <span class="sd">&quot;&quot;&quot;Generates a plot of tau (us) as a function of frequency (MHz).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Frequency (MHz)&#39;</span><span class="p">)</span>
@@ -500,7 +502,7 @@ $(document).ready(function(){
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Spectrum.plot_wave_alpha"><a class="viewcode-back" href="../MATS.html#MATS.Spectrum.plot_wave_alpha">[docs]</a>    <span class="k">def</span> <span class="nf">plot_wave_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generates a plot of alpha (ppm/cm) as a function of Wavenumber (cm-1)</span>
+        <span class="sd">&quot;&quot;&quot;Generates a plot of alpha (ppm/cm) as a function of wavenumber (cm-1).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Wavenumber ($cm^{-1}$)&#39;</span><span class="p">)</span>
@@ -508,9 +510,8 @@ $(document).ready(function(){
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Spectrum.calculate_QF"><a class="viewcode-back" href="../MATS.html#MATS.Spectrum.calculate_QF">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_QF</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculates the quality of fit factor (QF) for spectrum</span>
-<span class="sd">        </span>
-<span class="sd">        QF = (maximum alpha - minimum alpha) / std(residuals)</span>
+        <span class="sd">&quot;&quot;&quot;Calculates the quality of fit factor (QF) for a spectrum - QF = (maximum alpha - minimum alpha) / std(residuals).</span>
+<span class="sd">            </span>
 <span class="sd">        </span>
 
 <span class="sd">        Returns</span>
@@ -522,7 +523,7 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span><span class="mi">0</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Spectrum.plot_model_residuals"><a class="viewcode-back" href="../MATS.html#MATS.Spectrum.plot_model_residuals">[docs]</a>    <span class="k">def</span> <span class="nf">plot_model_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generates a plot of the alpha and model (ppm/cm) as a function of Wavenumber (cm-1) and on lower plot shows the residuals (ppm/cm) as a function of wavenumber (cm-1)</span>
+        <span class="sd">&quot;&quot;&quot;Generates a plot of the alpha and model (ppm/cm) as a function of wavenumber (cm-1) and on lower plot shows the residuals (ppm/cm) as a function of wavenumber (cm-1).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
         <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">height_ratios</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
@@ -542,7 +543,7 @@ $(document).ready(function(){
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Spectrum.save_spectrum_info"><a class="viewcode-back" href="../MATS.html#MATS.Spectrum.save_spectrum_info">[docs]</a>    <span class="k">def</span> <span class="nf">save_spectrum_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_file</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Saves spectrum information to a pandas dataframe with option to also save as .csv</span>
+        <span class="sd">&quot;&quot;&quot;Saves spectrum information to a pandas dataframe with option to also save as as a csv file.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Parameters</span>
@@ -576,9 +577,8 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="p">(</span><span class="n">new_file</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Spectrum.fft_spectrum"><a class="viewcode-back" href="../MATS.html#MATS.Spectrum.fft_spectrum">[docs]</a>    <span class="k">def</span> <span class="nf">fft_spectrum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Takes the FFT of the residuals of the spectrum</span>
-<span class="sd">        Prints a dataframe with the 20 highest amplitude frequencies with the FFT frequency (period), amplitude, FFT phase, and frequency (cm-1).</span>
-<span class="sd">        Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)</span>
+        <span class="sd">&quot;&quot;&quot;Takes the FFT of the residuals of the spectrum, generates a plot of frequency (cm-1) versus amplitude (ppm/cm), and prints a dataframe with the 20 highest amplitude frequencies with the FFT frequency (period), amplitude, FFT phase, and frequency (cm-1).  </span>
+<span class="sd">     </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">wave</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span>
         <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span>
@@ -603,7 +603,7 @@ $(document).ready(function(){
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div></div>
 
 <div class="viewcode-block" id="Dataset"><a class="viewcode-back" href="../MATS.html#MATS.Dataset">[docs]</a><span class="k">class</span> <span class="nc">Dataset</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Combines spectrum objects into a Dataset object to enable multi-spectrum fitting</span>
+    <span class="sd">&quot;&quot;&quot;Combines spectrum objects into a Dataset object to enable multi-spectrum fitting.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -612,7 +612,7 @@ $(document).ready(function(){
 <span class="sd">    dataset_name : str</span>
 <span class="sd">        Used to provide a name for the Dataset to use when saving files</span>
 <span class="sd">    baseline_order : int</span>
-<span class="sd">        sets the baseline order for all spectra in the dataset.  This will automaticall be set to the maximum baseline order across all spectrum included in the Dataset.</span>
+<span class="sd">        sets the baseline order for all spectra in the dataset.  This will automatically be set to the maximum baseline order across all spectrum included in the Dataset.</span>
 <span class="sd">        </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spectra</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">,</span> <span class="n">baseline_order</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
@@ -625,7 +625,7 @@ $(document).ready(function(){
         <span class="bp">self</span><span class="o">.</span><span class="n">max_baseline_order</span><span class="p">()</span>
         
 <div class="viewcode-block" id="Dataset.renumber_spectra"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.renumber_spectra">[docs]</a>    <span class="k">def</span> <span class="nf">renumber_spectra</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;renumbers the spectra to be sequential starting at 1. It is called in the initialization of the class</span>
+        <span class="sd">&quot;&quot;&quot;renumbers the spectra to be sequential starting at 1 (called in the initialization of the class).</span>
 <span class="sd">         &quot;&quot;&quot;</span>
         <span class="n">count</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
@@ -633,7 +633,7 @@ $(document).ready(function(){
             <span class="n">count</span><span class="o">+=</span><span class="mi">1</span></div>
 
 <div class="viewcode-block" id="Dataset.max_baseline_order"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.max_baseline_order">[docs]</a>    <span class="k">def</span> <span class="nf">max_baseline_order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; sets the baseline order to be equal to the maximum set in any of the included spectra       </span>
+        <span class="sd">&quot;&quot;&quot; sets the baseline order to be equal to the maximum in any of the included spectra.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">baseline_order_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
@@ -641,7 +641,7 @@ $(document).ready(function(){
         <span class="bp">self</span><span class="o">.</span><span class="n">baseline_order</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">baseline_order_list</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Dataset.correct_component_list"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.correct_component_list">[docs]</a>    <span class="k">def</span> <span class="nf">correct_component_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Corrects so that all spectrum share the same molecules, but the mole fraction is fixed to zero where molecule is not present.  Called at the initialization of the class</span>
+        <span class="sd">&quot;&quot;&quot;Corrects so that all spectrum share the same molecules, but the mole fraction is fixed to zero where molecules are not present (called in the initialization of the class). </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dataset_molecule_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
@@ -655,7 +655,7 @@ $(document).ready(function(){
             <span class="n">spectrum</span><span class="o">.</span><span class="n">set_molefraction</span><span class="p">(</span><span class="n">spectrum_molefraction_dictionary</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Dataset.correct_etalon_list"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.correct_etalon_list">[docs]</a>    <span class="k">def</span> <span class="nf">correct_etalon_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Corrects so that all spectrum share the same number of etalons, but the amplitude and period are fixed to zero where appropriate.  Called at the initialization of the class</span>
+        <span class="sd">&quot;&quot;&quot;Corrects so that all spectrum share the same number of etalons, but the amplitude and period are fixed to zero where appropriate(called in the initialization of the class). </span>
 <span class="sd">          &quot;&quot;&quot;</span>
         <span class="n">dataset_etalon_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
@@ -669,7 +669,7 @@ $(document).ready(function(){
             <span class="n">spectrum</span><span class="o">.</span><span class="n">set_etalons</span><span class="p">(</span><span class="n">spectrum_etalon_dictionary</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Dataset.get_etalons"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.get_etalons">[docs]</a>    <span class="k">def</span> <span class="nf">get_etalons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Get list of number of etalons for spectra</span>
+        <span class="sd">&quot;&quot;&quot; Get list of number of etalons for spectra.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Returns</span>
@@ -685,7 +685,7 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="n">dataset_etalon_list</span></div>
 
 <div class="viewcode-block" id="Dataset.get_molecules"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.get_molecules">[docs]</a>    <span class="k">def</span> <span class="nf">get_molecules</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Get list of molecules in spectra</span>
+        <span class="sd">&quot;&quot;&quot; Get list of molecules in spectra.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Returns</span>
@@ -717,7 +717,7 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Dataset.get_spectrum_filename"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.get_spectrum_filename">[docs]</a>    <span class="k">def</span> <span class="nf">get_spectrum_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spectrum_num</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Gets spectrum filename for spectrum in Dataset</span>
+        <span class="sd">&quot;&quot;&quot; Gets spectrum filename for spectrum in Dataset.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Parameters</span>
@@ -737,7 +737,7 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="Dataset.get_spectrum_pressure"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.get_spectrum_pressure">[docs]</a>    <span class="k">def</span> <span class="nf">get_spectrum_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spectrum_num</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Gets spectrum pressure for spectrum in Dataset</span>
+        <span class="sd">&quot;&quot;&quot;Gets spectrum pressure for spectrum in Dataset.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Parameters</span>
@@ -757,7 +757,7 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="Dataset.get_spectrum_temperature"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.get_spectrum_temperature">[docs]</a>    <span class="k">def</span> <span class="nf">get_spectrum_temperature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spectrum_num</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Gets spectrum temperature for spectrum in Dataset</span>
+        <span class="sd">&quot;&quot;&quot;Gets spectrum temperature for spectrum in Dataset.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Parameters</span>
@@ -777,7 +777,7 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="Dataset.get_spectra_extremes"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.get_spectra_extremes">[docs]</a>    <span class="k">def</span> <span class="nf">get_spectra_extremes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Gets the minimum and maximum wavenumber for the entire Dataset</span>
+        <span class="sd">&quot;&quot;&quot;Gets the minimum and maximum wavenumber for the entire Dataset.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Returns</span>
@@ -800,7 +800,7 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="n">wave_min</span><span class="p">,</span> <span class="n">wave_max</span></div>
 
 <div class="viewcode-block" id="Dataset.get_spectrum_extremes"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.get_spectrum_extremes">[docs]</a>    <span class="k">def</span> <span class="nf">get_spectrum_extremes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Gets the minimum and maximum wavenumber for each spectrum in the Dataset</span>
+        <span class="sd">&quot;&quot;&quot;Gets the minimum and maximum wavenumber for each spectrum in the Dataset.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Returns</span>
@@ -814,7 +814,7 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="n">extreme_dictionary</span></div>
             
 <div class="viewcode-block" id="Dataset.get_number_nominal_temperatures"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.get_number_nominal_temperatures">[docs]</a>    <span class="k">def</span> <span class="nf">get_number_nominal_temperatures</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Get the number of nominal temperatures in the Dataset</span>
+        <span class="sd">&quot;&quot;&quot; Get the number of nominal temperatures in the .</span>
 <span class="sd">        </span>
 
 <span class="sd">        Returns</span>
@@ -832,7 +832,7 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">nominal_temperatures</span><span class="p">),</span> <span class="n">nominal_temperatures</span></div>
          
 <div class="viewcode-block" id="Dataset.average_QF"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.average_QF">[docs]</a>    <span class="k">def</span> <span class="nf">average_QF</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculates the Average QF from all spectrum</span>
+        <span class="sd">&quot;&quot;&quot;Calculates the Average QF from all spectra.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Returns</span>
@@ -847,7 +847,7 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="n">sum_</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_number_spectra</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Dataset.get_list_spectrum_numbers"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.get_list_spectrum_numbers">[docs]</a>    <span class="k">def</span> <span class="nf">get_list_spectrum_numbers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Generates a list of all spectrum_numbers</span>
+        <span class="sd">&quot;&quot;&quot; Generates a list of all spectrum_numbers.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Returns</span>
@@ -862,8 +862,8 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="n">spec_num_list</span>    </div>
         
 <div class="viewcode-block" id="Dataset.generate_baseline_paramlist"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.generate_baseline_paramlist">[docs]</a>    <span class="k">def</span> <span class="nf">generate_baseline_paramlist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generates a .csv file called dataset_name + _baseline_paramlist.csv. This file will be used to generate another .csv that is used for fitting these spectrum dependent parameters. With columns for </span>
-<span class="sd">        spectrum number, segment number, x_shift, concentration for each molecule in the dataset, baseline terms (a = 0th order term, b = 1st order , . . .), and etalon terms (set an amplitude, period, and phase for the number of etalons listed for each spectrum in the Dataset)</span>
+        <span class="sd">&quot;&quot;&quot;Generates a csv file called dataset_name + _baseline_paramlist, which will be used to generate another csv file that is used for fitting spectrum dependent parameters with columns for </span>
+<span class="sd">        spectrum number, segment number, x_shift, concentration for each molecule in the dataset, baseline terms (a = 0th order term, b = 1st order, etc), and etalon terms (set an amplitude, period, and phase for the number of etalons listed for each spectrum in the Dataset).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -898,7 +898,7 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="n">baseline_paramlist</span></div>
 
 <div class="viewcode-block" id="Dataset.generate_summary_file"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.generate_summary_file">[docs]</a>    <span class="k">def</span> <span class="nf">generate_summary_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_file</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Generates a summary file combining spectral information from all spectra in the Dataset</span>
+        <span class="sd">&quot;&quot;&quot; Generates a summary file combining spectral information from all spectra in the Dataset.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Parameters</span>
@@ -921,7 +921,7 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="n">summary_file</span></div>
 
 <div class="viewcode-block" id="Dataset.plot_model_residuals"><a class="viewcode-back" href="../MATS.html#MATS.Dataset.plot_model_residuals">[docs]</a>    <span class="k">def</span> <span class="nf">plot_model_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Generates a plot showing both the model and experimental data as a function of wavenumber in the main plot. A subplot shows the residuals as function of wavenumber.  Each spectra in the Dataset will have a different color.  </span>
+        <span class="sd">&quot;&quot;&quot; Generates a plot showing both the model and experimental data as a function of wavenumber in the main plot with a subplot showing the residuals as function of wavenumber.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
         <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">height_ratios</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
@@ -980,7 +980,7 @@ $(document).ready(function(){
                         <span class="n">wing_cutoff</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">wing_wavenumbers</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">wing_method</span> <span class="o">=</span> <span class="s1">&#39;wing_cutoff&#39;</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="n">molefraction</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">molefraction_err</span> <span class="o">=</span> <span class="p">{},</span>
                         <span class="n">natural_abundance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">abundance_ratio_MI</span> <span class="o">=</span> <span class="p">{},</span><span class="n">diluent</span> <span class="o">=</span> <span class="s1">&#39;air&#39;</span><span class="p">,</span> <span class="n">Diluent</span> <span class="o">=</span> <span class="p">{},</span> 
                         <span class="n">nominal_temperature</span> <span class="o">=</span> <span class="mi">296</span><span class="p">,</span> <span class="n">etalons</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">x_shift</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">IntensityThreshold</span> <span class="o">=</span> <span class="mf">1e-30</span><span class="p">,</span> <span class="n">num_segments</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;allows for a synthetic spectrum to be generated, where the output is a spectrum object that can be used in MATS classes.</span>
+    <span class="sd">&quot;&quot;&quot;Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.</span>
 <span class="sd">    </span>
 
 <span class="sd">    Parameters</span>
@@ -1227,7 +1227,7 @@ $(document).ready(function(){
                                    <span class="n">vary_as</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">vary_n_delta2</span> <span class="o">=</span> <span class="p">{},</span> 
                                    <span class="n">vary_nuVC</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">vary_n_nuVC</span> <span class="o">=</span> <span class="p">{},</span>
                                    <span class="n">vary_eta</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">vary_linemixing</span> <span class="o">=</span> <span class="p">{}):</span>
-        <span class="sd">&quot;&quot;&quot;Generates the actual parameter line list used and updated in fitting.</span>
+        <span class="sd">&quot;&quot;&quot;Generates the parameter line list used in fitting and updates the fitting booleans to desired settings.</span>
 <span class="sd">               </span>
 <span class="sd">        </span>
 
@@ -1644,7 +1644,7 @@ $(document).ready(function(){
 
 <div class="viewcode-block" id="Generate_FitParam_File.generate_fit_baseline_linelist"><a class="viewcode-back" href="../MATS.html#MATS.Generate_FitParam_File.generate_fit_baseline_linelist">[docs]</a>    <span class="k">def</span> <span class="nf">generate_fit_baseline_linelist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vary_baseline</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">vary_pressure</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">vary_temperature</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span><span class="n">vary_molefraction</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">vary_xshift</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> 
                                       <span class="n">vary_etalon_amp</span><span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">vary_etalon_freq</span><span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">vary_etalon_phase</span><span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generates the actual baseline line list used and updated in fitting.  </span>
+        <span class="sd">&quot;&quot;&quot;Generates the baseline line list used in fitting and updates the fitting booleans to desired settings.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Parameters</span>
@@ -1778,7 +1778,7 @@ $(document).ready(function(){
     <span class="k">return</span> <span class="kc">False</span></div>
 
 <div class="viewcode-block" id="Fit_DataSet"><a class="viewcode-back" href="../MATS.html#MATS.Fit_DataSet">[docs]</a><span class="k">class</span> <span class="nc">Fit_DataSet</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Provides the fitting functionality</span>
+    <span class="sd">&quot;&quot;&quot;Provides the fitting functionality for a Dataset.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Parameters</span>
@@ -1939,13 +1939,13 @@ $(document).ready(function(){
         <span class="bp">self</span><span class="o">.</span><span class="n">linemixing_limit_factor</span> <span class="o">=</span> <span class="n">linemixing_limit_factor</span>
         
 <div class="viewcode-block" id="Fit_DataSet.generate_params"><a class="viewcode-back" href="../MATS.html#MATS.Fit_DataSet.generate_params">[docs]</a>    <span class="k">def</span> <span class="nf">generate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generates the lmfit params object that will be used in fitting</span>
+        <span class="sd">&quot;&quot;&quot;Generates the lmfit parameter object that will be used in fitting.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        params : lmfit parameter object</span>
-<span class="sd">            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit</span>
+<span class="sd">            the parameter object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">params</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">()</span>
@@ -2233,7 +2233,7 @@ $(document).ready(function(){
 <div class="viewcode-block" id="Fit_DataSet.constrained_baseline"><a class="viewcode-back" href="../MATS.html#MATS.Fit_DataSet.constrained_baseline">[docs]</a>    <span class="k">def</span> <span class="nf">constrained_baseline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">baseline_segment_constrained</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">xshift_segment_constrained</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">molefraction_segment_constrained</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                                     <span class="n">etalon_amp_segment_constrained</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">etalon_freq_segment_constrained</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">etalon_phase_segment_constrained</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> 
                                     <span class="n">pressure_segment_constrained</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">temperature_segment_constrained</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Allows you to impose baseline constraints when using multiple segments per spectrum, ie. all baseline parameters can be the same across the entire spectrum except for the etalon phase, which is allowed to vary per segment</span>
+        <span class="sd">&quot;&quot;&quot;Imposes baseline constraints when using multiple segments per spectrum, ie all baseline parameters can be the same across the entire spectrum except for the etalon phase, which is allowed to vary per segment.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Parameters</span>
@@ -2311,7 +2311,7 @@ $(document).ready(function(){
         <span class="k">return</span> <span class="n">params</span></div>
 
 <div class="viewcode-block" id="Fit_DataSet.simulation_model"><a class="viewcode-back" href="../MATS.html#MATS.Fit_DataSet.simulation_model">[docs]</a>    <span class="k">def</span> <span class="nf">simulation_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">wing_cutoff</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">wing_wavenumbers</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">wing_method</span> <span class="o">=</span> <span class="s1">&#39;wing_cutoff&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;This is the model that is used for fitting.  It combines the baseline terms (baseline, etalons) and resonant absorption models</span>
+        <span class="sd">&quot;&quot;&quot;This is the model used for fitting that includes baseline and resonant absorption models.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Parameters</span>
@@ -2446,7 +2446,7 @@ $(document).ready(function(){
         <span class="n">total_simulated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">total_simulated</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">total_residuals</span></div>
 <div class="viewcode-block" id="Fit_DataSet.fit_data"><a class="viewcode-back" href="../MATS.html#MATS.Fit_DataSet.fit_data">[docs]</a>    <span class="k">def</span> <span class="nf">fit_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">wing_cutoff</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">wing_wavenumbers</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">wing_method</span> <span class="o">=</span> <span class="s1">&#39;wing_cutoff&#39;</span><span class="p">,</span> <span class="n">xtol</span> <span class="o">=</span> <span class="mf">1e-7</span><span class="p">,</span> <span class="n">maxfev</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">,</span> <span class="n">ftol</span> <span class="o">=</span> <span class="mf">1e-7</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Uses the LMFit minimizer to do the fitting through the simulation model function</span>
+        <span class="sd">&quot;&quot;&quot;Uses the lmfit minimizer to do the fitting through the simulation model function.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Parameters</span>
@@ -2476,7 +2476,7 @@ $(document).ready(function(){
         <span class="n">result</span> <span class="o">=</span> <span class="n">minner</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;leastsq&#39;</span><span class="p">)</span><span class="c1">#&#39;</span>
         <span class="k">return</span> <span class="n">result</span></div>
 <div class="viewcode-block" id="Fit_DataSet.residual_analysis"><a class="viewcode-back" href="../MATS.html#MATS.Fit_DataSet.residual_analysis">[docs]</a>    <span class="k">def</span> <span class="nf">residual_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">indv_resid_plot</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Updates the model and residual arrays in each spectrum object with the results of the fit and gives the option of plotting each spectra with residuals.</span>
+        <span class="sd">&quot;&quot;&quot;Updates the model and residual arrays in each spectrum object with the results of the fit and gives the option of generating the combined absorption and residual plot for each spectrum.</span>
 <span class="sd">        </span>
 
 <span class="sd">        Parameters</span>
@@ -2496,7 +2496,7 @@ $(document).ready(function(){
             <span class="k">if</span> <span class="n">indv_resid_plot</span><span class="p">:</span>
                 <span class="n">spectrum</span><span class="o">.</span><span class="n">plot_model_residuals</span><span class="p">()</span></div>
 <div class="viewcode-block" id="Fit_DataSet.update_params"><a class="viewcode-back" href="../MATS.html#MATS.Fit_DataSet.update_params">[docs]</a>    <span class="k">def</span> <span class="nf">update_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">base_linelist_update_file</span> <span class="o">=</span> <span class="kc">None</span> <span class="p">,</span> <span class="n">param_linelist_update_file</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Updates the baseline and line parameter files based on fit results with the option to write over the file (default) or save as a new file. It also calculates and add the baseline and etalon terms into a baseline array for the spectrum.</span>
+        <span class="sd">&quot;&quot;&quot;Updates the baseline and line parameter files based on fit results with the option to write over the file (default) or save as a new file. </span>
 <span class="sd">        </span>
 
 <span class="sd">        Parameters</span>

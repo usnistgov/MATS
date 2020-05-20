@@ -13,6 +13,8 @@
     <script src="_static/doctools.js"></script>
     <script src="_static/language_data.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="MATS Example using Experimental and Synthetic Data" href="MATS Example using Experimental and Synthetic Data.html" />
@@ -73,20 +75,20 @@ $(document).ready(function(){
 <dt id="MATS.Dataset">
 <em class="property">class </em><code class="sig-prename descclassname">MATS.</code><code class="sig-name descname">Dataset</code><span class="sig-paren">(</span><em class="sig-param">spectra</em>, <em class="sig-param">dataset_name</em>, <em class="sig-param">baseline_order=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Combines spectrum objects into a Dataset object to enable multi-spectrum fitting</p>
+<p>Combines spectrum objects into a Dataset object to enable multi-spectrum fitting.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>spectra</strong> (<em>list</em>) – list of spectrum objects to be included in the Dataset. Example [spectrum_1, spectrum_2, …]</p></li>
 <li><p><strong>dataset_name</strong> (<em>str</em>) – Used to provide a name for the Dataset to use when saving files</p></li>
-<li><p><strong>baseline_order</strong> (<em>int</em>) – sets the baseline order for all spectra in the dataset.  This will automaticall be set to the maximum baseline order across all spectrum included in the Dataset.</p></li>
+<li><p><strong>baseline_order</strong> (<em>int</em>) – sets the baseline order for all spectra in the dataset.  This will automatically be set to the maximum baseline order across all spectrum included in the Dataset.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="method">
 <dt id="MATS.Dataset.average_QF">
 <code class="sig-name descname">average_QF</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.average_QF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.average_QF" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates the Average QF from all spectrum</p>
+<dd><p>Calculates the Average QF from all spectra.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><strong>average_QF</strong> – average QF of all spectra in dataset</p>
@@ -100,20 +102,20 @@ $(document).ready(function(){
 <dl class="method">
 <dt id="MATS.Dataset.correct_component_list">
 <code class="sig-name descname">correct_component_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.correct_component_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.correct_component_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Corrects so that all spectrum share the same molecules, but the mole fraction is fixed to zero where molecule is not present.  Called at the initialization of the class</p>
+<dd><p>Corrects so that all spectrum share the same molecules, but the mole fraction is fixed to zero where molecules are not present (called in the initialization of the class).</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="MATS.Dataset.correct_etalon_list">
 <code class="sig-name descname">correct_etalon_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.correct_etalon_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.correct_etalon_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Corrects so that all spectrum share the same number of etalons, but the amplitude and period are fixed to zero where appropriate.  Called at the initialization of the class</p>
+<dd><p>Corrects so that all spectrum share the same number of etalons, but the amplitude and period are fixed to zero where appropriate(called in the initialization of the class).</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="MATS.Dataset.generate_baseline_paramlist">
 <code class="sig-name descname">generate_baseline_paramlist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.generate_baseline_paramlist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.generate_baseline_paramlist" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates a .csv file called dataset_name + _baseline_paramlist.csv. This file will be used to generate another .csv that is used for fitting these spectrum dependent parameters. With columns for
-spectrum number, segment number, x_shift, concentration for each molecule in the dataset, baseline terms (a = 0th order term, b = 1st order , …), and etalon terms (set an amplitude, period, and phase for the number of etalons listed for each spectrum in the Dataset)</p>
+<dd><p>Generates a csv file called dataset_name + _baseline_paramlist, which will be used to generate another csv file that is used for fitting spectrum dependent parameters with columns for
+spectrum number, segment number, x_shift, concentration for each molecule in the dataset, baseline terms (a = 0th order term, b = 1st order, etc), and etalon terms (set an amplitude, period, and phase for the number of etalons listed for each spectrum in the Dataset).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><strong>baseline_paramlist</strong> – dataframe containing information describing baseline parameters.  Also saves to .csv.  Either file can be edited before making the baseline parameter list used for fitting.  If editting the .csv file will need to regenerate dataframe from .csv.</p>
@@ -127,7 +129,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Dataset.generate_summary_file">
 <code class="sig-name descname">generate_summary_file</code><span class="sig-paren">(</span><em class="sig-param">save_file=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.generate_summary_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.generate_summary_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates a summary file combining spectral information from all spectra in the Dataset</p>
+<dd><p>Generates a summary file combining spectral information from all spectra in the Dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>save_file</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then a .csv is generated in addition to the dataframe. The default is False.</p>
@@ -154,7 +156,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Dataset.get_etalons">
 <code class="sig-name descname">get_etalons</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.get_etalons"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.get_etalons" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get list of number of etalons for spectra</p>
+<dd><p>Get list of number of etalons for spectra.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><strong>dataset_etalon_list</strong> – etalon keys across spectra</p>
@@ -168,7 +170,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Dataset.get_list_spectrum_numbers">
 <code class="sig-name descname">get_list_spectrum_numbers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.get_list_spectrum_numbers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.get_list_spectrum_numbers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates a list of all spectrum_numbers</p>
+<dd><p>Generates a list of all spectrum_numbers.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><strong>spec_num_list</strong> – list of all spectrum numbers used in the dataset.</p>
@@ -182,7 +184,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Dataset.get_molecules">
 <code class="sig-name descname">get_molecules</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.get_molecules"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.get_molecules" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get list of molecules in spectra</p>
+<dd><p>Get list of molecules in spectra.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><strong>dataset_molecule_list</strong> – list of molecules in spectra</p>
@@ -196,7 +198,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Dataset.get_number_nominal_temperatures">
 <code class="sig-name descname">get_number_nominal_temperatures</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.get_number_nominal_temperatures"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.get_number_nominal_temperatures" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the number of nominal temperatures in the Dataset</p>
+<dd><p>Get the number of nominal temperatures in the .</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><ul class="simple">
@@ -221,7 +223,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Dataset.get_spectra_extremes">
 <code class="sig-name descname">get_spectra_extremes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.get_spectra_extremes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.get_spectra_extremes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the minimum and maximum wavenumber for the entire Dataset</p>
+<dd><p>Gets the minimum and maximum wavenumber for the entire Dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><ul class="simple">
@@ -236,7 +238,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Dataset.get_spectrum_extremes">
 <code class="sig-name descname">get_spectrum_extremes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.get_spectrum_extremes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.get_spectrum_extremes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the minimum and maximum wavenumber for each spectrum in the Dataset</p>
+<dd><p>Gets the minimum and maximum wavenumber for each spectrum in the Dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><strong>extreme_dictionary</strong> – Dictionary where the key corresponds to the spectrum_num with the value equal to a list where list[0] = minimum wavenumber in spectrum and list[1] = maximum wavenumber in spectrum</p>
@@ -250,7 +252,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Dataset.get_spectrum_filename">
 <code class="sig-name descname">get_spectrum_filename</code><span class="sig-paren">(</span><em class="sig-param">spectrum_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.get_spectrum_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.get_spectrum_filename" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets spectrum filename for spectrum in Dataset</p>
+<dd><p>Gets spectrum filename for spectrum in Dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>spectrum_num</strong> (<em>int</em>) – Integer assigned to a given spectrum.</p>
@@ -267,7 +269,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Dataset.get_spectrum_pressure">
 <code class="sig-name descname">get_spectrum_pressure</code><span class="sig-paren">(</span><em class="sig-param">spectrum_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.get_spectrum_pressure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.get_spectrum_pressure" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets spectrum pressure for spectrum in Dataset</p>
+<dd><p>Gets spectrum pressure for spectrum in Dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>spectrum_num</strong> (<em>int</em>) – Integer assigned to a given spectrum.</p>
@@ -284,7 +286,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Dataset.get_spectrum_temperature">
 <code class="sig-name descname">get_spectrum_temperature</code><span class="sig-paren">(</span><em class="sig-param">spectrum_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.get_spectrum_temperature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.get_spectrum_temperature" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets spectrum temperature for spectrum in Dataset</p>
+<dd><p>Gets spectrum temperature for spectrum in Dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>spectrum_num</strong> (<em>int</em>) – Integer assigned to a given spectrum.</p>
@@ -301,19 +303,19 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Dataset.max_baseline_order">
 <code class="sig-name descname">max_baseline_order</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.max_baseline_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.max_baseline_order" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets the baseline order to be equal to the maximum set in any of the included spectra</p>
+<dd><p>sets the baseline order to be equal to the maximum in any of the included spectra.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="MATS.Dataset.plot_model_residuals">
 <code class="sig-name descname">plot_model_residuals</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.plot_model_residuals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.plot_model_residuals" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates a plot showing both the model and experimental data as a function of wavenumber in the main plot. A subplot shows the residuals as function of wavenumber.  Each spectra in the Dataset will have a different color.</p>
+<dd><p>Generates a plot showing both the model and experimental data as a function of wavenumber in the main plot with a subplot showing the residuals as function of wavenumber.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="MATS.Dataset.renumber_spectra">
 <code class="sig-name descname">renumber_spectra</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Dataset.renumber_spectra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Dataset.renumber_spectra" title="Permalink to this definition">¶</a></dt>
-<dd><p>renumbers the spectra to be sequential starting at 1. It is called in the initialization of the class</p>
+<dd><p>renumbers the spectra to be sequential starting at 1 (called in the initialization of the class).</p>
 </dd></dl>
 
 <dl class="method">
@@ -378,7 +380,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dt id="MATS.Fit_DataSet">
 <em class="property">class </em><code class="sig-prename descclassname">MATS.</code><code class="sig-name descname">Fit_DataSet</code><span class="sig-paren">(</span><em class="sig-param">dataset</em>, <em class="sig-param">base_linelist_file</em>, <em class="sig-param">param_linelist_file</em>, <em class="sig-param">minimum_parameter_fit_intensity=1e-27</em>, <em class="sig-param">baseline_limit=False</em>, <em class="sig-param">baseline_limit_factor=10</em>, <em class="sig-param">pressure_limit=False</em>, <em class="sig-param">pressure_limit_factor=10</em>, <em class="sig-param">temperature_limit=False</em>, <em class="sig-param">temperature_limit_factor=10</em>, <em class="sig-param">molefraction_limit=False</em>, <em class="sig-param">molefraction_limit_factor=10</em>, <em class="sig-param">etalon_limit=False</em>, <em class="sig-param">etalon_limit_factor=50</em>, <em class="sig-param">x_shift_limit=False</em>, <em class="sig-param">x_shift_limit_magnitude=0.1</em>, <em class="sig-param">nu_limit=False</em>, <em class="sig-param">nu_limit_magnitude=0.1</em>, <em class="sig-param">sw_limit=False</em>, <em class="sig-param">sw_limit_factor=10</em>, <em class="sig-param">gamma0_limit=False</em>, <em class="sig-param">gamma0_limit_factor=10</em>, <em class="sig-param">n_gamma0_limit=True</em>, <em class="sig-param">n_gamma0_limit_factor=10</em>, <em class="sig-param">delta0_limit=False</em>, <em class="sig-param">delta0_limit_factor=10</em>, <em class="sig-param">n_delta0_limit=True</em>, <em class="sig-param">n_delta0_limit_factor=10</em>, <em class="sig-param">SD_gamma_limit=False</em>, <em class="sig-param">SD_gamma_limit_factor=10</em>, <em class="sig-param">n_gamma2_limit=True</em>, <em class="sig-param">n_gamma2_limit_factor=10</em>, <em class="sig-param">SD_delta_limit=True</em>, <em class="sig-param">SD_delta_limit_factor=10</em>, <em class="sig-param">n_delta2_limit=True</em>, <em class="sig-param">n_delta2_limit_factor=10</em>, <em class="sig-param">nuVC_limit=False</em>, <em class="sig-param">nuVC_limit_factor=10</em>, <em class="sig-param">n_nuVC_limit=True</em>, <em class="sig-param">n_nuVC_limit_factor=10</em>, <em class="sig-param">eta_limit=True</em>, <em class="sig-param">eta_limit_factor=10</em>, <em class="sig-param">linemixing_limit=False</em>, <em class="sig-param">linemixing_limit_factor=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Fit_DataSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Fit_DataSet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Provides the fitting functionality</p>
+<p>Provides the fitting functionality for a Dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -432,7 +434,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Fit_DataSet.constrained_baseline">
 <code class="sig-name descname">constrained_baseline</code><span class="sig-paren">(</span><em class="sig-param">params</em>, <em class="sig-param">baseline_segment_constrained=True</em>, <em class="sig-param">xshift_segment_constrained=True</em>, <em class="sig-param">molefraction_segment_constrained=True</em>, <em class="sig-param">etalon_amp_segment_constrained=True</em>, <em class="sig-param">etalon_freq_segment_constrained=True</em>, <em class="sig-param">etalon_phase_segment_constrained=True</em>, <em class="sig-param">pressure_segment_constrained=True</em>, <em class="sig-param">temperature_segment_constrained=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Fit_DataSet.constrained_baseline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Fit_DataSet.constrained_baseline" title="Permalink to this definition">¶</a></dt>
-<dd><p>Allows you to impose baseline constraints when using multiple segments per spectrum, ie. all baseline parameters can be the same across the entire spectrum except for the etalon phase, which is allowed to vary per segment</p>
+<dd><p>Imposes baseline constraints when using multiple segments per spectrum, ie all baseline parameters can be the same across the entire spectrum except for the etalon phase, which is allowed to vary per segment.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -459,7 +461,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Fit_DataSet.fit_data">
 <code class="sig-name descname">fit_data</code><span class="sig-paren">(</span><em class="sig-param">params</em>, <em class="sig-param">wing_cutoff=50</em>, <em class="sig-param">wing_wavenumbers=50</em>, <em class="sig-param">wing_method='wing_cutoff'</em>, <em class="sig-param">xtol=1e-07</em>, <em class="sig-param">maxfev=2000</em>, <em class="sig-param">ftol=1e-07</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Fit_DataSet.fit_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Fit_DataSet.fit_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Uses the LMFit minimizer to do the fitting through the simulation model function</p>
+<dd><p>Uses the lmfit minimizer to do the fitting through the simulation model function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -484,10 +486,10 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Fit_DataSet.generate_params">
 <code class="sig-name descname">generate_params</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Fit_DataSet.generate_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Fit_DataSet.generate_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates the lmfit params object that will be used in fitting</p>
+<dd><p>Generates the lmfit parameter object that will be used in fitting.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><strong>params</strong> – the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit</p>
+<dd class="field-odd"><p><strong>params</strong> – the parameter object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>lmfit parameter object</p>
@@ -498,7 +500,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Fit_DataSet.residual_analysis">
 <code class="sig-name descname">residual_analysis</code><span class="sig-paren">(</span><em class="sig-param">result</em>, <em class="sig-param">indv_resid_plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Fit_DataSet.residual_analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Fit_DataSet.residual_analysis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates the model and residual arrays in each spectrum object with the results of the fit and gives the option of plotting each spectra with residuals.</p>
+<dd><p>Updates the model and residual arrays in each spectrum object with the results of the fit and gives the option of generating the combined absorption and residual plot for each spectrum.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -512,7 +514,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Fit_DataSet.simulation_model">
 <code class="sig-name descname">simulation_model</code><span class="sig-paren">(</span><em class="sig-param">params</em>, <em class="sig-param">wing_cutoff=50</em>, <em class="sig-param">wing_wavenumbers=50</em>, <em class="sig-param">wing_method='wing_cutoff'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Fit_DataSet.simulation_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Fit_DataSet.simulation_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is the model that is used for fitting.  It combines the baseline terms (baseline, etalons) and resonant absorption models</p>
+<dd><p>This is the model used for fitting that includes baseline and resonant absorption models.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -534,7 +536,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Fit_DataSet.update_params">
 <code class="sig-name descname">update_params</code><span class="sig-paren">(</span><em class="sig-param">result</em>, <em class="sig-param">base_linelist_update_file=None</em>, <em class="sig-param">param_linelist_update_file=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Fit_DataSet.update_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Fit_DataSet.update_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates the baseline and line parameter files based on fit results with the option to write over the file (default) or save as a new file. It also calculates and add the baseline and etalon terms into a baseline array for the spectrum.</p>
+<dd><p>Updates the baseline and line parameter files based on fit results with the option to write over the file (default) or save as a new file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -582,7 +584,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Generate_FitParam_File.generate_fit_baseline_linelist">
 <code class="sig-name descname">generate_fit_baseline_linelist</code><span class="sig-paren">(</span><em class="sig-param">vary_baseline=True</em>, <em class="sig-param">vary_pressure=False</em>, <em class="sig-param">vary_temperature=False</em>, <em class="sig-param">vary_molefraction={}</em>, <em class="sig-param">vary_xshift=False</em>, <em class="sig-param">vary_etalon_amp=False</em>, <em class="sig-param">vary_etalon_freq=False</em>, <em class="sig-param">vary_etalon_phase=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Generate_FitParam_File.generate_fit_baseline_linelist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Generate_FitParam_File.generate_fit_baseline_linelist" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates the actual baseline line list used and updated in fitting.</p>
+<dd><p>Generates the baseline line list used in fitting and updates the fitting booleans to desired settings.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -608,7 +610,7 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="method">
 <dt id="MATS.Generate_FitParam_File.generate_fit_param_linelist_from_linelist">
 <code class="sig-name descname">generate_fit_param_linelist_from_linelist</code><span class="sig-paren">(</span><em class="sig-param">vary_nu={}</em>, <em class="sig-param">vary_sw={}</em>, <em class="sig-param">vary_gamma0={}</em>, <em class="sig-param">vary_n_gamma0={}</em>, <em class="sig-param">vary_delta0={}</em>, <em class="sig-param">vary_n_delta0={}</em>, <em class="sig-param">vary_aw={}</em>, <em class="sig-param">vary_n_gamma2={}</em>, <em class="sig-param">vary_as={}</em>, <em class="sig-param">vary_n_delta2={}</em>, <em class="sig-param">vary_nuVC={}</em>, <em class="sig-param">vary_n_nuVC={}</em>, <em class="sig-param">vary_eta={}</em>, <em class="sig-param">vary_linemixing={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Generate_FitParam_File.generate_fit_param_linelist_from_linelist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Generate_FitParam_File.generate_fit_param_linelist_from_linelist" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates the actual parameter line list used and updated in fitting.</p>
+<dd><p>Generates the parameter line list used in fitting and updates the fitting booleans to desired settings.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -657,15 +659,15 @@ spectrum number, segment number, x_shift, concentration for each molecule in the
 <dl class="function">
 <dt id="MATS.HTP_from_DF_select">
 <code class="sig-prename descclassname">MATS.</code><code class="sig-name descname">HTP_from_DF_select</code><span class="sig-paren">(</span><em class="sig-param">linelist</em>, <em class="sig-param">waves</em>, <em class="sig-param">wing_cutoff=50</em>, <em class="sig-param">wing_wavenumbers=50</em>, <em class="sig-param">wing_method='wing_cutoff'</em>, <em class="sig-param">p=1</em>, <em class="sig-param">T=296</em>, <em class="sig-param">molefraction={}</em>, <em class="sig-param">natural_abundance=True</em>, <em class="sig-param">abundance_ratio_MI={}</em>, <em class="sig-param">Diluent={}</em>, <em class="sig-param">diluent='air'</em>, <em class="sig-param">IntensityThreshold=1e-30</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#HTP_from_DF_select"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.HTP_from_DF_select" title="Permalink to this definition">¶</a></dt>
-<dd><p>Simulates the absorbance based on input line list, wavenumbers, and sample parameters.</p>
+<dd><p>Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters.</p>
 <p>Outline</p>
 <ol class="arabic simple">
 <li><p>Uses provided wavenumber axis</p></li>
 <li><p>Calculates the molecular density from pressure and temperature</p></li>
-<li><p>Set-up Diluent dictionary if not given as input</p></li>
-<li><p>Calculate line intensity and doppler width at temperature for all lines</p></li>
-<li><p>Loop through each line in the line list and loop through each diluent and generate a line parameter
-that is the appropriate ratio of each diluent species corrected for pressure and temperature.  For each line then simulate the line for the given simulation cutoffs and add to cross section</p></li>
+<li><p>Sets up Diluent dictionary if not given as input</p></li>
+<li><p>Calculates line intensity and doppler width at temperature for all lines</p></li>
+<li><p>Loops through each line in the line list and loops through each diluent, generating a line parameter at experimental conditions
+that is the appropriate ratio of each diluent species corrected for pressure and temperature.  For each line, simulate the line for the given simulation cutoffs and add to cross section</p></li>
 <li><p>Return wavenumber and cross section arrays</p></li>
 </ol>
 <dl class="field-list simple">
@@ -720,16 +722,16 @@ that is the appropriate ratio of each diluent species corrected for pressure and
 <dt id="MATS.Spectrum">
 <em class="property">class </em><code class="sig-prename descclassname">MATS.</code><code class="sig-name descname">Spectrum</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">molefraction={}</em>, <em class="sig-param">natural_abundance=True</em>, <em class="sig-param">diluent='air'</em>, <em class="sig-param">Diluent={}</em>, <em class="sig-param">abundance_ratio_MI={}</em>, <em class="sig-param">spectrum_number=1</em>, <em class="sig-param">input_freq=True</em>, <em class="sig-param">input_tau=True</em>, <em class="sig-param">pressure_column='Cavity Pressure /Torr'</em>, <em class="sig-param">temperature_column='Cavity Temperature Side 2 /C'</em>, <em class="sig-param">frequency_column='Total Frequency /MHz'</em>, <em class="sig-param">tau_column='Mean tau/us'</em>, <em class="sig-param">tau_stats_column=None</em>, <em class="sig-param">segment_column=None</em>, <em class="sig-param">etalons={}</em>, <em class="sig-param">nominal_temperature=296</em>, <em class="sig-param">x_shift=0</em>, <em class="sig-param">baseline_order=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Spectrum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Spectrum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Spectrum class provides all information describing experimental or simulated spectrum necessary for fitting.</p>
+<p>Spectrum class provides all information describing experimental or simulated spectrum.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> (<em>str</em>) – file containing spectrum with .csv extension. File extension is not included in the name</p></li>
 <li><p><strong>molefraction</strong> (<em>dict</em>) – mole fraction of each molecule in spectra in the format {molec_id: mole fraction (out of 1), molec_id: molefraction, … }</p></li>
-<li><p><strong>natural_abundance</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for if the spectrum contains data at natural abundance</p></li>
+<li><p><strong>natural_abundance</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for if the molecular species in the spectrum are at natural abundance</p></li>
 <li><p><strong>abundance_ratio_MI</strong> (<em>dict</em><em>, </em><em>optional</em>) – if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, … }</p></li>
 <li><p><strong>diluent</strong> (<em>str</em><em>, </em><em>optional</em>) – sets the diluent for the sample.  Default = ‘air’</p></li>
-<li><p><strong>Diluent</strong> (<em>dict</em><em>, </em><em>optional</em>) – sets the diluent for the sample if there are a combination of several. Format {‘he’: 0.5, ‘air’: 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.</p></li>
+<li><p><strong>Diluent</strong> (<em>dict</em><em>, </em><em>optional</em>) – sets the diluent for the sample if there are a combination of several diluents. Format {‘he’: 0.5, ‘air’: 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.</p></li>
 <li><p><strong>spectrum_number</strong> (<em>int</em><em>, </em><em>optional</em>) – sets a number for the spectrum that will correspond to fit parameters. This is set in the Dataset class, so should not need to be defined manually</p></li>
 <li><p><strong>input_freq</strong> (<em>bool</em><em>, </em><em>optional</em>) – True indicates that the frequency_column is in MHz. False indicates that the frequency column is in wavenumbers.</p></li>
 <li><p><strong>input_tau</strong> (<em>bool</em><em>, </em><em>optional</em>) – True indicates that the tau_column is in us. False indicates that the tau column is in 1/c*tau (ppm/cm).</p></li>
@@ -749,8 +751,7 @@ that is the appropriate ratio of each diluent species corrected for pressure and
 <dl class="method">
 <dt id="MATS.Spectrum.calculate_QF">
 <code class="sig-name descname">calculate_QF</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Spectrum.calculate_QF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Spectrum.calculate_QF" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates the quality of fit factor (QF) for spectrum</p>
-<p>QF = (maximum alpha - minimum alpha) / std(residuals)</p>
+<dd><p>Calculates the quality of fit factor (QF) for a spectrum - QF = (maximum alpha - minimum alpha) / std(residuals).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>QF.</p>
@@ -764,7 +765,7 @@ that is the appropriate ratio of each diluent species corrected for pressure and
 <dl class="method">
 <dt id="MATS.Spectrum.diluent_sum_check">
 <code class="sig-name descname">diluent_sum_check</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Spectrum.diluent_sum_check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Spectrum.diluent_sum_check" title="Permalink to this definition">¶</a></dt>
-<dd><p>Checks that if multiple broadeners are used that the contributions sum to one</p>
+<dd><p>Checks that if multiple broadeners are used that the contributions sum to one.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Warning if the diluents don’t sum to one</p>
@@ -778,9 +779,7 @@ that is the appropriate ratio of each diluent species corrected for pressure and
 <dl class="method">
 <dt id="MATS.Spectrum.fft_spectrum">
 <code class="sig-name descname">fft_spectrum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Spectrum.fft_spectrum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Spectrum.fft_spectrum" title="Permalink to this definition">¶</a></dt>
-<dd><p>Takes the FFT of the residuals of the spectrum
-Prints a dataframe with the 20 highest amplitude frequencies with the FFT frequency (period), amplitude, FFT phase, and frequency (cm-1).
-Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)</p>
+<dd><p>Takes the FFT of the residuals of the spectrum, generates a plot of frequency (cm-1) versus amplitude (ppm/cm), and prints a dataframe with the 20 highest amplitude frequencies with the FFT frequency (period), amplitude, FFT phase, and frequency (cm-1).</p>
 </dd></dl>
 
 <dl class="method">
@@ -891,25 +890,25 @@ Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)</p>
 <dl class="method">
 <dt id="MATS.Spectrum.plot_freq_tau">
 <code class="sig-name descname">plot_freq_tau</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Spectrum.plot_freq_tau"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Spectrum.plot_freq_tau" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates a plot of Tau (us) as a function of Frequency (MHz)</p>
+<dd><p>Generates a plot of tau (us) as a function of frequency (MHz).</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="MATS.Spectrum.plot_model_residuals">
 <code class="sig-name descname">plot_model_residuals</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Spectrum.plot_model_residuals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Spectrum.plot_model_residuals" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates a plot of the alpha and model (ppm/cm) as a function of Wavenumber (cm-1) and on lower plot shows the residuals (ppm/cm) as a function of wavenumber (cm-1)</p>
+<dd><p>Generates a plot of the alpha and model (ppm/cm) as a function of wavenumber (cm-1) and on lower plot shows the residuals (ppm/cm) as a function of wavenumber (cm-1).</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="MATS.Spectrum.plot_wave_alpha">
 <code class="sig-name descname">plot_wave_alpha</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Spectrum.plot_wave_alpha"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Spectrum.plot_wave_alpha" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates a plot of alpha (ppm/cm) as a function of Wavenumber (cm-1)</p>
+<dd><p>Generates a plot of alpha (ppm/cm) as a function of wavenumber (cm-1).</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="MATS.Spectrum.save_spectrum_info">
 <code class="sig-name descname">save_spectrum_info</code><span class="sig-paren">(</span><em class="sig-param">save_file=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Spectrum.save_spectrum_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Spectrum.save_spectrum_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Saves spectrum information to a pandas dataframe with option to also save as .csv</p>
+<dd><p>Saves spectrum information to a pandas dataframe with option to also save as as a csv file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>save_file</strong> (<em>bool</em><em>, </em><em>optional</em>) – If False, then only a dataframe is created. If True, then a csv file will be generated with the name filename + ‘_saved.csv’. The default is False.</p>
@@ -926,7 +925,7 @@ Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)</p>
 <dl class="method">
 <dt id="MATS.Spectrum.segment_wave_alpha">
 <code class="sig-name descname">segment_wave_alpha</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#Spectrum.segment_wave_alpha"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.Spectrum.segment_wave_alpha" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines the wavenumber, alpha, and indices of spectrum that correspond to a given spectrum segment</p>
+<dd><p>Defines the wavenumber, alpha, and indices of spectrum that correspond to a given spectrum segment.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><ul class="simple">
@@ -1069,7 +1068,7 @@ Also generates a plot of frequency (cm-1) versus amplitude (ppm/cm)</p>
 <dl class="function">
 <dt id="MATS.simulate_spectrum">
 <code class="sig-prename descclassname">MATS.</code><code class="sig-name descname">simulate_spectrum</code><span class="sig-paren">(</span><em class="sig-param">parameter_linelist, wave_min, wave_max, wave_space, wave_error=0, SNR=None, baseline_terms=[0], temperature=25, temperature_err={'bias': 0, 'function': None, 'params': {}}, pressure=760, pressure_err={'function': None, 'params': {}, 'per_bias': 0}, wing_cutoff=25, wing_wavenumbers=25, wing_method='wing_cutoff', filename='temp', molefraction={}, molefraction_err={}, natural_abundance=True, abundance_ratio_MI={}, diluent='air', Diluent={}, nominal_temperature=296, etalons={}, x_shift=0, IntensityThreshold=1e-30, num_segments=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MATS.html#simulate_spectrum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MATS.simulate_spectrum" title="Permalink to this definition">¶</a></dt>
-<dd><p>allows for a synthetic spectrum to be generated, where the output is a spectrum object that can be used in MATS classes.</p>
+<dd><p>Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">

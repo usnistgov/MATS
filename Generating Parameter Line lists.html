@@ -13,6 +13,8 @@
     <script src="_static/doctools.js"></script>
     <script src="_static/language_data.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MATS Example using Experimental and Synthetic Data" href="MATS Example using Experimental and Synthetic Data.html" />
@@ -76,31 +78,31 @@ $(document).ready(function(){
 <div class="section" id="parameter-line-list-overview">
 <h2>Parameter Line list Overview<a class="headerlink" href="#parameter-line-list-overview" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
-<dt>The MATS program uses a spectroscopic line list that varies from the traditional HITRAN and HAPI format to accomodate the full HTP parameterization including temperature dependences for all parmeters (other than the correlation parameter and nearest neighbor line-mixing).  The linelist format has rows that correspond to each line and columns that correspond to the various line parameters.  The necessary column headers are below, where there needs to be a column for each parameter and each diluent being fit (ie. air, self) and the line-mixing term needs to include the nominal temperature as a suffix.</dt><dd><ul class="simple">
+<dt>The MATS program uses a spectroscopic line list that varies from the traditional HITRAN and HAPI formats to accomodate the full HTP parameterization including temperature dependencies for all parameters (other than the correlation parameter and nearest neighbor line-mixing).  The spectroscopic line list format has rows that correspond to each molecular transition and columns that correspond to the various HTP parameters.  The necessary column headers are below, where there needs to be a column for each parameter for each diluent (ie. air, self) in the dataset. Additionally, there needs to be a line-mixing term for each nominal temperature in the dataset, where the nominal temperature is the included as the suffix of the column header.</dt><dd><ul class="simple">
 <li><p>molec_id: HITRAN molecule id number</p></li>
 <li><p>local_iso_id: HITRAN local isotope id number</p></li>
-<li><p>nu: line center (cm-1)</p></li>
-<li><p>sw : spectral line intensity (cm−1/(molecule⋅cm−2)) at Tref=296K</p></li>
-<li><p>elower: The lower-state energy of the transition (cm-1)</p></li>
-<li><p>gamma0_diluent: collisional half-width (cm−1/atm) at Tref=296K and reference pressure pref=1atm for a given diluent</p></li>
-<li><p>n_gamma0_diluent: coefficient of the temperature dependence of the half width</p></li>
-<li><p>delta0_diluent: pressure shift (cm−1/atm) at Tref=296K and pref=1atm of the line position with respect to line center</p></li>
+<li><p>nu: line center (<span class="math notranslate nohighlight">\(cm^{-1}\)</span>)</p></li>
+<li><p>sw : spectral line intensity (<span class="math notranslate nohighlight">\(\frac{cm^{-1}}{molecule \cdot cm^{-2}}\)</span>) at Tref=296K</p></li>
+<li><p>elower: The lower-state energy of the transition (<span class="math notranslate nohighlight">\(cm^{-1}\)</span>)</p></li>
+<li><p>gamma0_diluent: collisional half-width (<span class="math notranslate nohighlight">\(\frac{cm^{-1}}{atm}\)</span>) at Tref=296K and reference pressure pref=1atm for a given diluent</p></li>
+<li><p>n_gamma0_diluent: coefficient of the temperature dependence of the collisional half-width</p></li>
+<li><p>delta0_diluent: pressure shift (<span class="math notranslate nohighlight">\(\frac{cm^{-1}}{atm}\)</span>) at Tref=296K and pref=1atm of the line position with respect to line center</p></li>
 <li><p>n_delta0_diluent:  the coefficient of the temperature dependence of the pressure shift</p></li>
 <li><p>SD_gamma_diluent: the ratio of the speed dependent width to the collisional half-width at reference temperature and pressure</p></li>
-<li><p>n_gamma2_diluent: the coefficient of the temperature dependence of the speed dependent width NOTE: This is the temperature dependence of the speed dependent width not the ratio of the speed dependence to the half-width</p></li>
-<li><p>SD_delta_diluent:  the ratio of the speed dependent shift to the collisional shift at reference temperature and pressure</p></li>
-<li><p>n_delta2_diluent: he coefficient of the temperature dependence of the speed dependent shift NOTE: This is the temperature dependence of the speed dependent shift not the ratio of the speed dependence to the shift</p></li>
-<li><p>nuVC_diluent: dicke narrowing term at reference temperature and pressure</p></li>
-<li><p>n__nuVC_diluent:  coefficient of the temperature dependence of the dicke narrowing term</p></li>
-<li><p>eta_diluent:  the correlation parameter for the VC and SD effects</p></li>
-<li><p>y_diluent_nominaltemp: linemixing term (as currently written this doesn’t have a temperature dependence, so different column for each nominal temperature)</p></li>
+<li><p>n_gamma2_diluent: the coefficient of the temperature dependence of the speed-dependent width NOTE: This is the temperature dependence of the speed-dependent width not the temperature dependence of the ratio of the speed-dependent width to the collisional half-width</p></li>
+<li><p>SD_delta_diluent:  the ratio of the speed-dependent shift to the collisional shift at reference temperature and pressure</p></li>
+<li><p>n_delta2_diluent: the coefficient of the temperature dependence of the speed-dependent shift NOTE: This is the temperature dependence of the speed-dependent shift not the temperature dependence of the ratio of the speed-dependent shift to the pressure shift</p></li>
+<li><p>nuVC_diluent: Dicke narrowing term (<span class="math notranslate nohighlight">\(\frac{cm^{-1}}{atm}\)</span>) at reference temperature and pressure</p></li>
+<li><p>n__nuVC_diluent:  coefficient of the temperature dependence of the Dicke narrowing term</p></li>
+<li><p>eta_diluent:  correlation parameter</p></li>
+<li><p>y_diluent_nominaltemp: line mixing term (<span class="math notranslate nohighlight">\(\frac{cm^{-1}}{atm}\)</span>) NOTE: As currently written , this doesn’t have a temperature dependence, so there is a different column for each nominal temperature.</p></li>
 </ul>
 </dd>
 </dl>
 </div>
 <div class="section" id="generating-parameter-line-list-from-hitran">
 <h2>Generating Parameter Line list from HITRAN<a class="headerlink" href="#generating-parameter-line-list-from-hitran" title="Permalink to this headline">¶</a></h2>
-<p>The parameter line list .csv file can be generated manually, but <a class="reference external" href="https://github.com/usnistgov/MATS/blob/master/MATS/HITRAN_to_Dataframe.ipynb">this code</a> generates a parameter list using <a class="reference external" href="https://hitran.org/hapi/">HITRAN Application Programming Interface (HAPI)</a>.  The overview below walks through this notebook.</p>
+<p>The parameter line list .csv file can be generated manually, but <a class="reference external" href="https://github.com/usnistgov/MATS/blob/master/MATS/HITRAN_to_Dataframe.ipynb">this notebook</a> generates a parameter list using the <a class="reference external" href="https://hitran.org/hapi/">HITRAN Application Programming Interface (HAPI)</a>.  The overview below walks through this notebook.</p>
 <div class="section" id="imports">
 <h3>Imports<a class="headerlink" href="#imports" title="Permalink to this headline">¶</a></h3>
 <p>Import the numpy, pandas, os, and sys packages.  Set pandas dataframe to show all of the rows.</p>
@@ -118,12 +120,12 @@ $(document).ready(function(){
 <span class="n">sns</span><span class="o">.</span><span class="n">set_context</span><span class="p">(</span><span class="s2">&quot;poster&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Add location of hapi.py to system path</p>
+<p>Add location of hapi.py file to system path</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;C:\Users\Documents\Python Scripts\HAPI&#39;</span><span class="p">)</span><span class="c1">#Add hapi.py folder location to system path</span>
 <span class="kn">from</span> <span class="nn">hapi</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
-<p>Set Working File Location</p>
+<p>Set working file location</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">spec_path</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;C:\Users\Documents\Python Scripts\HAPI&#39;</span> <span class="c1"># Location of the Summary Data File</span>
 <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">spec_path</span><span class="p">)</span>
 </pre></div>
@@ -131,7 +133,7 @@ $(document).ready(function(){
 </div>
 <div class="section" id="molecule-and-isotope-information">
 <h3>Molecule and Isotope Information<a class="headerlink" href="#molecule-and-isotope-information" title="Permalink to this headline">¶</a></h3>
-<p>HAPI provids a dictionary called ISO_ID, where the global isotope id acts as the key, with a sub dictionary containing the molecule id, local isotope id, isotope name, relative abundance, mass, and molecule name.  The following command will generate the dictionary as the output.  This provides the necessary information for interfacing with HAPI to pull-down HITRAN infomation.</p>
+<p>HAPI provides a dictionary called ISO_ID, where the global isotope id acts as the key, with a sub-dictionary containing the molecule id, local isotope id, isotope name, relative abundance, mass, and molecule name.  The following command will generate the dictionary as the output.  This provides the necessary global isotope id information for interfacing with HAPI to access HITRAN infomation.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">print_iso_id</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -267,21 +269,28 @@ $(document).ready(function(){
 </div>
 <div class="section" id="set-up-variables-for-line-list">
 <h3>Set-Up Variables for Line list<a class="headerlink" href="#set-up-variables-for-line-list" title="Permalink to this headline">¶</a></h3>
-<p>To generate a line list you will need to provide a tablename (str), an array containing the global isotope numbers of the molecules/isotopes that you are interested in, the minimum and maximum wavenumbers, and the minimum line intensity of interested. The example below would generate a HITRAN table named ‘CO’ that contains the all CO isotopes and the most abundant CO2 isotope in the spectral region between 6200 and 6500 cm-1 that have line intensities greater than 1e-30.</p>
+<p>To select the relevant information from HITRAN you will need to provide:</p>
+<ul class="simple">
+<li><p>table name (str)</p></li>
+<li><p>an array containing the global isotope numbers of the molecules/isotopes of interest</p></li>
+<li><p>the minimum and maximum wavenumbers</p></li>
+<li><p>the minimum line intensity of interest</p></li>
+</ul>
+<p>The example below would generate a HITRAN table named ‘CO’ that contains all <span class="math notranslate nohighlight">\(CO\)</span> isotopes (global isotopes 26 - 31) and the most abundant <span class="math notranslate nohighlight">\(CO_{2}\)</span> isotope (global isotope 7) in the spectral region between 6200 and 6500 <span class="math notranslate nohighlight">\(cm^{-1}\)</span> that have line intensities greater than 1e-30 <span class="math notranslate nohighlight">\(\frac{cm^{-1}}{molecule \cdot cm^{-2}}\)</span>.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tablename</span> <span class="o">=</span> <span class="s1">&#39;CO&#39;</span>
 <span class="n">global_isotopes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">26</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span><span class="mi">31</span><span class="p">,</span><span class="mi">7</span><span class="p">]</span>
-<span class="n">wave_min</span> <span class="o">=</span> <span class="mi">6200</span> <span class="c1">#7903.5#cm-1</span>
-<span class="n">wave_max</span> <span class="o">=</span> <span class="mi">6500</span> <span class="c1">#7904.5 #cm-1</span>
+<span class="n">wave_min</span> <span class="o">=</span> <span class="mi">6200</span>
+<span class="n">wave_max</span> <span class="o">=</span> <span class="mi">6500</span>
 <span class="n">intensity_cutoff</span> <span class="o">=</span> <span class="mf">1e-30</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="generate-hitran-and-initial-guess-line-lists-from-hapi-call">
 <h3>Generate HITRAN and Initial Guess Line lists from HAPI Call<a class="headerlink" href="#generate-hitran-and-initial-guess-line-lists-from-hapi-call" title="Permalink to this headline">¶</a></h3>
-<p>The next section of the example contains a function and function call teh output a MATS compatible line list.  NOTE: The line mixing term that the fitting script wants has a subscript with the nominal temperatures included in the dataset. I have been adding these columns by hand to the .csv by copying and pasting. Code can be updated to do this manually.</p>
+<p>The next section of the example contains a function and function call where the output is a MATS compatible line list.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">HITRANlinelist_to_csv</span><span class="p">(</span><span class="n">isotopes</span><span class="p">,</span> <span class="n">minimum_wavenumber</span><span class="p">,</span> <span class="n">maximum_wavenumber</span><span class="p">,</span> <span class="n">tablename</span> <span class="o">=</span> <span class="s1">&#39;tmp&#39;</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="n">tablename</span><span class="p">,</span> <span class="n">temperature</span> <span class="o">=</span> <span class="mi">296</span><span class="p">):</span>
 
-             <span class="sd">&quot;&quot;&quot;Generates two .csv files generated information available from HTIRAN.</span>
+             <span class="sd">&quot;&quot;&quot;Generates two .csv files containing information available from HTIRAN.</span>
 <span class="sd">             The first line list matches the information available from HITRAN (_HITRAN.csv)</span>
 <span class="sd">             and the second supplements the HITRAN information with theoretical values and translates into MATS input format (_initguess.csv)</span>
 
@@ -296,7 +305,7 @@ $(document).ready(function(){
 <span class="sd">                     - set the gamma_2 temperature exponent equal to the gamma0 temperature exponent</span>
 <span class="sd">                     - set the delta_2 temperature exponent equal to the delta0 temperature exponent</span>
 <span class="sd">                     - set the dicke narrowing temperature exponent to 1</span>
-<span class="sd">             4. Save the supplemented and MATS formatted HITRAN information as filename_initguess.csv</span>
+<span class="sd">             4. Save the supplemented MATS formatted HITRAN information as filename_initguess.csv</span>
 
 
 <span class="sd">             Parameters</span>
@@ -325,6 +334,10 @@ $(document).ready(function(){
 <span class="sd">                     file corresponding to available HITRAN information supplemented by theory and assumptions in MATS format</span>
 
 <span class="sd">             &quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>The line mixing term MATS needs has a subscript with the nominal temperatures included in the dataset. These columns can be added by hand to the .csv by copying, pasting, and renaming the generated line mixing column.  Alternatively, the following code can be added to do this in the script for each nominal temperature.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DF</span><span class="p">[</span><span class="s1">&#39;y_air_296&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DF</span><span class="p">[</span><span class="s1">&#39;y_air&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>

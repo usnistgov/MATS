@@ -4,7 +4,7 @@ Getting Started
 Set-Up
 ++++++
 
-Code was orginally developed using the `Enthought Canopy python package distribution <https://www.enthought.com/product/canopy/>`_.  However, further development will use `Anaconda <https://www.anaconda.com/>`_. Code is typically run using  `jupyter notebooks <https://jupyter.org/>`_ (run in jupyter lab.  Any python package distribution should work with the code as long as the dependent packages are installed.
+The MATS code was orginally developed using the `Enthought Canopy python package distribution <https://www.enthought.com/product/canopy/>`_.  However, further development will use `Anaconda <https://www.anaconda.com/>`_. Example scripts have typically been written and run using  `jupyter notebooks <https://jupyter.org/>`_ (run in jupyter lab), as this allows for code to be run in segments and for iteration on certain code segments.  Any python package distribution should work with the code as long as the dependent packages are installed.
 
 
 Main Packages
@@ -12,24 +12,26 @@ Main Packages
 
 * `MATS <https://github.com/usnistgov/MATS>`_
 
-* `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_   The version used in development is also available in the MATS repository.
+* `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_   The version used in development (v1.1.0.9.6) is available in the MATS repository.
 
 
 Dependent Packages
 ++++++++++++++++++
-This fitting program is not written as a basic package, meaning that there are several dependent packages that need to be installed and called to make the script work. 
+MATS is not written as a basic package, meaning that there are several dependent packages that need to be installed. 
 
-There is commonly a delay in the most recent package release available in the enthought/anaconda package library and that available through pip install.  The following code will update to the newest release if the package is already installed.
+If a desired package is not installed then the following command will install it.  Many python package distributions have integrated package managers and required packages can also be installed through that mechanism.
+
+.. code-block:: python
+
+	pip install package_name
+
+There is commonly a delay in the most recent package releases available in python package distribution package managers compared to that available through pip install.  The following command line script will update to the newest release if a package is already installed.  This should only be necessary if there is an error when running MATS with the currently installed version. 
 
 .. code-block:: python
 
 	python -m pip install --upgrade package_name --user
 
-If the package is not installed then the following will install it.
-
-.. code-block:: python
-
-	pip install package_name
+Below are a list of the packages used in MATS. 
 
 * `numpy <https://www.numpy.org/>`_ - python's fundamental scientific computing package
 * `pandas <https://pandas.pydata.org/>`_ - python data structure package 
