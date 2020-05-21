@@ -56,7 +56,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
         for iso in linelist ['local_iso_id'].unique():
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = PYTIPS2017(molec,iso,T)
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
-            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) * 1.66053873e-27 * 1000 #cmassmol and kg conversion
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) * 1.66053873e-27 * 1000 #cmassmol and kg conversion 
             if ( natural_abundance == False) and abundance_ratio_MI != {}:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'abun_ratio'] = abundance_ratio_MI[molec][iso]
     linelist['LineIntensity'] = EnvironmentDependency_Intensity(linelist['sw'],T,Tref,linelist['SigmaT'],linelist['SigmaTref'],linelist['elower'],linelist['nu'])
@@ -86,7 +86,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
         #eta
         linelist['Eta'] += linelist['eta_%s'%species] *abun
         #Line mixing
-        linelist['Y'] += abun*(linelist['y_%s'%species]  *(p/pref))
+        linelist['Y'] += abun*(linelist['y_%s'%species] *(p/pref))
     
     #Line profile simulation cut-off determination    
     if wing_method == 'wing_cutoff':
@@ -1150,7 +1150,7 @@ class Generate_FitParam_File:
                         if not self.linemixing:
                             param_linelist_df.loc[:,'y_' + diluent + '_'+str(nominal_temp) +'_' + str(spec)] = 0
                         else:
-                            param_linelist_df['y_' +diluent + '_'+ str(nominal_temp)+'_' +str(spec)] = (param_linelist_df['y_' + diluent].values)
+                            param_linelist_df['y_' +diluent + '_'+ str(nominal_temp)+'_' +str(spec)] = (param_linelist_df['y_' + diluent+ '_' +str(nominal_temp)].values)
                             if vary_linemixing != {}:
                                 for molecule in vary_linemixing:
                                     for isotope in vary_linemixing[molecule]:
