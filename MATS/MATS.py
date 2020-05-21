@@ -1674,16 +1674,16 @@ class Fit_DataSet:
                     elif ('gamma0_' in line_param) and ('n_' not in line_param) and (gamma0_constrain) and (index_length==1):
                         if self.gamma0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.gamma0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param] ,#(1 - (self.gamma0_limit_percent / 100))*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.gamma0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])#(1 + (self.gamma0_limit_percent / 100))*lineparam_list.loc[int(spec_line)][line_param])
+                                  min = (1 / self.gamma0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param] ,
+                                  max = self.gamma0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                                 
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('gamma0_' in line_param) and ('n_' not in line_param) and (not gamma0_constrain) and (index_length>1):
                         if self.gamma0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.gamma0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],#(1 - (self.gamma0_limit_percent / 100))*lineparam_list.loc[int(spec_line)][line_param], 
-                                  max = self.gamma0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])#(1 + (self.gamma0_limit_percent / 100))*lineparam_list.loc[int(spec_line)][line_param])
+                                  min = (1 / self.gamma0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param]
+                                  max = self.gamma0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('n_gamma0' in line_param):
@@ -1722,7 +1722,7 @@ class Fit_DataSet:
                                   min = (1 / self.SD_gamma_limit_factor) *self.lineparam_list.loc[int(spec_line)][line_param], 
                                   max = self.SD_gamma_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],)
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('SD_gamma' in line_param) and (not SD_gamma_constrain) and (index_length>2):
                         if self.SD_gamma_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
