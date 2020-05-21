@@ -14,7 +14,7 @@ sns.set_style("whitegrid")
 sns.set_style("ticks")
 sns.set_context("poster")
 #Files that should be in the same folder
-from hapi import EnvironmentDependency_Intensity, PYTIPS2017, molecularMass, pcqsdhc, ISO
+from hapi import PYTIPS2017, molecularMass, pcqsdhc, ISO
 from Karman_CIA import Karman_CIA_Model
 
 
@@ -56,13 +56,21 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
         for iso in linelist ['local_iso_id'].unique():
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = PYTIPS2017(molec,iso,T)
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
-            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) * 1.66053873e-27 * 1000 #cmassmol and kg conversion 
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion 
             if ( natural_abundance == False) and abundance_ratio_MI != {}:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'abun_ratio'] = abundance_ratio_MI[molec][iso]
-    linelist['LineIntensity'] = EnvironmentDependency_Intensity(linelist['sw'],T,Tref,linelist['SigmaT'],linelist['SigmaTref'],linelist['elower'],linelist['nu'])
+    
+    #linelist['LineIntensity'] = EnvironmentDependency_Intensity(linelist['sw'],T,Tref,linelist['SigmaT'],linelist['SigmaTref'],linelist['elower'],linelist['nu'])
+    h = 6.62607015e-27 #erg s https://physics.nist.gov/cgi-bin/cuu/Value?h|search_for=h as of 5/21/2020
+    c = 29979245800 #cm/s # https://physics.nist.gov/cgi-bin/cuu/Value?c|search_for=c as of 5/21/2020
+    k = 1.380649e-16 # erg / K https://physics.nist.gov/cgi-bin/cuu/Value?k as of 5/21/2020     
+    Na = 6.02214076e23 # mol-1 https://physics.nist.gov/cgi-bin/cuu/Value?na as of 5/21/2020
+    c2 =  (h*c)/k
+    linelist['LineIntensity'] = linelist['sw']*linelist['SigmaTref']/linelist['SigmaT']*(np.exp(-c2*linelist['elower']/T)*(1-np.exp(-c2*linelist['nu']/T)))/(np.exp(-c2*linelist['elower']/Tref)*(1-np.exp(-c2*linelist['nu']/Tref)))
+
     
     #Calculate Doppler Broadening
-    linelist['GammaD'] = np.sqrt(2*1.380648813E-16*T*np.log(2)/linelist['m']/2.99792458e10**2)*linelist['nu']
+    linelist['GammaD'] = np.sqrt(2*k*Na*T*np.log(2)/(linelist['m'].values))*linelist['nu'] / c
     # Calculated Line Parameters across Broadeners
     linelist['Gamma0'] = 0
     linelist['Shift0'] = 0
@@ -150,7 +158,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = PYTIPS2017(molec,iso,T)
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'ma'] = molecularMass(molec,iso)
-            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) * 1.66053873e-27 * 1000 #cmassmol and kg conversion
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion
             if (len(Diluent) == 1) & ('self' in Diluent):
                 Diluent['self']['mp'] = molecularMass(molec,iso)
             if ( natural_abundance == False) and abundance_ratio_MI != {}:
@@ -164,9 +172,18 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
         
             
     # Get Line Intensity
-    linelist['LineIntensity'] = EnvironmentDependency_Intensity(linelist['sw'],T,Tref,linelist['SigmaT'],linelist['SigmaTref'],linelist['elower'],linelist['nu'])
+    #linelist['LineIntensity'] = EnvironmentDependency_Intensity(linelist['sw'],T,Tref,linelist['SigmaT'],linelist['SigmaTref'],linelist['elower'],linelist['nu'])
+    h = 6.62607015e-27 #erg s https://physics.nist.gov/cgi-bin/cuu/Value?h|search_for=h as of 5/21/2020
+    c = 29979245800 #cm/s # https://physics.nist.gov/cgi-bin/cuu/Value?c|search_for=c as of 5/21/2020
+    k = 1.380649e-16 # erg / K https://physics.nist.gov/cgi-bin/cuu/Value?k as of 5/21/2020     
+    Na = 6.02214076e23 # mol-1 https://physics.nist.gov/cgi-bin/cuu/Value?na as of 5/21/2020
+    c2 =  (h*c)/k
+    linelist['LineIntensity'] = linelist['sw']*linelist['SigmaTref']/linelist['SigmaT']*(np.exp(-c2*linelist['elower']/T)*(1-np.exp(-c2*linelist['nu']/T)))/(np.exp(-c2*linelist['elower']/Tref)*(1-np.exp(-c2*linelist['nu']/Tref)))
+
     #Calculate Doppler Broadening
-    linelist['GammaD'] = np.sqrt(2*1.380648813E-16*T*np.log(2)/linelist['m']/2.99792458e10**2)*linelist['nu']
+    #linelist['GammaD'] = np.sqrt(2*1.380648813E-16*T*np.log(2)/linelist['m']/2.99792458e10**2)*linelist['nu']
+    linelist['GammaD'] = np.sqrt(2*k*Na*T*np.log(2)/(linelist['m'].values))*linelist['nu'] / c
+    
     # Calculated Line Parameters across Broadeners
     linelist['Gamma0'] = 0
     linelist['Shift0'] = 0
