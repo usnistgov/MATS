@@ -51,7 +51,7 @@ Hartmann-Tran (HTP): :math:`\Gamma_{D}, \Gamma_{0}, \Delta_{0}, \nu_{VC}, \Gamma
 
 Line Intensity
 --------------
-The line intensity for each line at the experimental temperature is calculated using the EnvironmentDependency_Intensity function in HAPI.  This function takes as arguments the line intensity at 296 K (:math:`S(t_{ref})`), the experimental temperature (:math:`T`), the reference temperature 296 K (:math:`T_{ref}`), the partition function at the experimental temperature (:math:`Q(T)`), the partition function at the reference temperature (:math:`Q(T_{ref})`), the lower state energy (:math:`E"`), and the line center ((:math:`\nu`)), and constant (:math:`c2 = hc/k` = 1.4388028496642257).  The partition functions are calculated using `TIPS-2017 <http://dx.doi.org/10.1016/j.jqsrt.2017.03.045>`_. 
+The line intensity for each line at the experimental temperature is calculated using the EnvironmentDependency_Intensity function in HAPI.  This function takes as arguments the line intensity at 296 K (:math:`S(T_{ref})`), the experimental temperature (:math:`T`), the reference temperature 296 K (:math:`T_{ref}`), the partition function at the experimental temperature (:math:`Q(T)`), the partition function at the reference temperature (:math:`Q(T_{ref})`), the lower state energy (:math:`E"`), and the line center ((:math:`\nu`)), and constant (:math:`c2 = hc/k` = 1.4388028496642257).  The partition functions are calculated using `TIPS-2017 <http://dx.doi.org/10.1016/j.jqsrt.2017.03.045>`_. 
 
 .. math::
 
@@ -59,33 +59,34 @@ The line intensity for each line at the experimental temperature is calculated u
 	
 .. todo::
 
-    The MATS line intensity calculation currently uses the HAPI EnvironmentDependency_Intensity function, which has specific values for physical constants. Additionally, c2 is defined as hc/k and hardwired into the code.  This value includes the Boltzmann constant, which was recently redefined by the CIPM, for the sake of maintining consistency with the SI the next version of MATS will update to use the CODATA values and move from the use of the HAPI EnvironmentDependency_Intensity function.  
+    The MATS line intensity calculation currently uses the HAPI EnvironmentDependency_Intensity function, which has specific values for physical constants. The second ratiation constant, c2, is defined as hc/k and hardwired into the code.  This value includes the Boltzmann constant, which was recently redefined by the CIPM, for the sake of maintining consistency with the SI the next version of MATS will update to use the CODATA values and move from the use of the HAPI EnvironmentDependency_Intensity function.  
 	
-	`Boltzmann Constant <https://physics.nist.gov/cgi-bin/cuu/Value?k>`_
+	`CODATA: Boltzmann Constant <https://physics.nist.gov/cgi-bin/cuu/Value?k>`_
 
 	
 	
 Doppler Broadening
 ------------------
-In MATS, the doppler broadening (:math:`\Gamma_{D}`)is not a floatable parameter and is calculated based on the experimental temperature (:math:`t`), line center (:math:`\nu`), and molecular mass (:math:`m`).  The doppler width is calculated as:
+In MATS, the doppler broadening (:math:`\Gamma_{D}`)is not a floatable parameter and is calculated based on the experimental temperature (:math:`T`), line center (:math:`\nu`), and molecular mass (:math:`m`).  The doppler width is calculated as:
 
 .. math::
 	
 	\Gamma_{D} = \sqrt{\frac{2kT \cdot ln(2)}{cMassMol\cdot mc^{2}}} \cdot \nu
 	
 	k = 1.380648813 x 10^{-16} erg K^{-1}
-	cMassMol = 1.66053873e-24 mol 
+	
+	cMassMol = 1.66053873x 10^{-24} mol 
 .. todo::
 
     MATS uses the above values for the Boltzmann constant and the term cMassMol, which is equal to the inverse of Avogadro's constant.  This is consistent with the HAPI calculation of the doppler width.  However, the Boltzmann and Avogadro's constants were recently redefined by the CIPM, for the sake of maintining consistency with the SI the next version of MATS will update to use the CODATA values.  This will involve re-defining the doppler width to include Avogadro's number and not the cMassMol value.
 	
-	`Boltzmann Constant <https://physics.nist.gov/cgi-bin/cuu/Value?k>`_
-	`Avogadro constant <https://physics.nist.gov/cgi-bin/cuu/Value?na>`_
+	`CODATA: Boltzmann Constant <https://physics.nist.gov/cgi-bin/cuu/Value?k>`_
+	`CODATA: Avogadro constant <https://physics.nist.gov/cgi-bin/cuu/Value?na>`_
 
 
 Collisional Half-Width
 ----------------------
-The collisional half-width (:math:`\Gamma_{0}`) is a function of both the experimental pressure (:math:`p`) and temperature (:math:`p`) referenced to :math:`p_{ref}` (1 atm) and :math:`t_{ref}` (296 K). The contributions from each diluent (k) can be scaled by the diluent composition fraction (:math:`abun`) and summed to model the ensemble collisional broadening.  The temperature dependence is modeled as a power law, where :math:`n` is the temperature exponent for the collisional width.  The collisional half-width for each line at experimental temperature and pressure can be represented as:
+The collisional half-width (:math:`\Gamma_{0}`) is a function of both the experimental pressure (:math:`P`) and temperature (:math:`T`) referenced to :math:`P_{ref}` (1 atm) and :math:`T_{ref}` (296 K). The contributions from each diluent (k) can be scaled by the diluent composition fraction (:math:`abun`) and summed to model the ensemble collisional broadening.  The temperature dependence is modeled as a power law, where :math:`n` is the temperature exponent for the collisional width.  The collisional half-width for each line at experimental temperature and pressure can be represented as:
 
 .. math::
 
@@ -97,7 +98,7 @@ In the MATS nomenclature, the collisional half-width is called gamma0_diluent an
 
 Pressure Shift
 --------------
-Just like the collisional half-width, the pressure shift (:math:`\Delta_{0}`) is a function of both the experimental pressure (:math:`p`) and temperature (:math:`t`) referenced to :math:`p_{ref}` (1 atm) and :math:`t_{ref}` (296 K). The contributions from each diluent (:math:`k`) can be scaled by the diluent composition fraction (:math:`abun`) and summed to model the ensemble pressure shift.  Unlike the collisional half-width, the pressure shift has a linear temperature dependence, where :math:`n` represents the temperature dependence of the pressure shift.  The pressure shift for each line at experimental pressure and temperature can be represented as:
+Just like the collisional half-width, the pressure shift (:math:`\Delta_{0}`) is a function of both the experimental pressure (:math:`P`) and temperature (:math:`T`) referenced to :math:`P_{ref}` (1 atm) and :math:`T_{ref}` (296 K). The contributions from each diluent (:math:`k`) can be scaled by the diluent composition fraction (:math:`abun`) and summed to model the ensemble pressure shift.  Unlike the collisional half-width, the pressure shift has a linear temperature dependence, where :math:`n` represents the temperature dependence of the pressure shift.  The pressure shift for each line at experimental pressure and temperature can be represented as:
 
 .. math::
 
