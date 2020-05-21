@@ -251,7 +251,7 @@ class Spectrum:
             elif self.diluent == 'self': 
                 self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
                 #mass will be set during HTP_wBeta_from_DF_select if necessary 
-                print ("If using the self broadening term, then consider explicitly labeling the broadener (ie in an oxygen spectra use 'O2' instead of self).  This may avoid confusion in multiple broadener multiple species fits. ")
+                print ("If using the self broadening term, then consider explicitly labeling the broadener (ie in an oxygen spectra use 'O2' instead of self).  This may avoid confusion in multiple species fits. ")
             else:
                 print ('If using the HTP_wBeta_from_DF_select then you need to go back and use the Diluent{diluent:{"composition": 1, "m": mass}} format')
                 self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
@@ -1214,7 +1214,7 @@ class Generate_FitParam_File:
                             for isotope in vary_n_nuVC[molecule]:
                                 param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'n_nuVC_' +diluent + '_vary'] = (vary_n_nuVC[molecule][isotope])
         ordered_list = ['molec_id', 'local_iso_id','elower']
-        
+
         for item in order_nu:
             ordered_list.append(item)
             ordered_list.append(item + '_err')
@@ -1279,6 +1279,19 @@ class Generate_FitParam_File:
             ordered_list.append(item + '_vary')
         param_linelist_df = param_linelist_df[ordered_list]
         param_linelist_df.to_csv(self.param_linelist_savename + '.csv') #
+        
+        #Warnings of SD_gamma, SD_delta, nuVC, eta are zero and floated
+        for param in ordered_list:
+            if ('SD_gamma' in param) & ('vary' not in param) & ('err' not in param):
+                if len(param_linelist_df[(param_linelist_df[param]==0) & (param_linelist_df[param + '_vary']==True)])!=0:
+                    print (param, ': floating SD_gamma terms when the initial guess is zero can make it difficult for the solution to converge. Consider setting initial guess to a non-zero value.')
+            if ('SD_delta' in param) & ('vary' not in param) & ('err' not in param):
+                if len(param_linelist_df[(param_linelist_df[param]==0) & (param_linelist_df[param + '_vary']==True)])!=0:
+                    print (param, ': floating SD_delta terms when the initial guess is zero can make it difficult for the solution to converge. Consider setting initial guess to a non-zero value.')
+            if ('nuVC' in param) & ('vary' not in param) & ('err' not in param) & ('n_nuVC' not in param):
+                if len(param_linelist_df[(param_linelist_df[param]==0) & (param_linelist_df[param + '_vary']==True)])!=0:
+                    print (param, ': floating nuVC terms when the initial guess is zero can make it difficult for the solution to converge. Consider setting initial guess to a non-zero value.  This is generally less of an issue than the case where SD_gamma is floated when the initial guess is zero.')
+                    
         return param_linelist_df 
 
     def generate_fit_baseline_linelist(self, vary_baseline = True, vary_pressure = False, vary_temperature = False,vary_molefraction = {7:True, 1:False}, vary_xshift = False, 
@@ -1709,8 +1722,7 @@ class Fit_DataSet:
                                   min = (1 / self.SD_gamma_limit_factor) *self.lineparam_list.loc[int(spec_line)][line_param], 
                                   max = self.SD_gamma_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
-                            min = 0)
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],)
                     elif ('SD_gamma' in line_param) and (not SD_gamma_constrain) and (index_length>2):
                         if self.SD_gamma_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
