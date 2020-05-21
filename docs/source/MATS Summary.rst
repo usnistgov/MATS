@@ -51,23 +51,36 @@ Hartmann-Tran (HTP): :math:`\Gamma_{D}, \Gamma_{0}, \Delta_{0}, \nu_{VC}, \Gamma
 
 Line Intensity
 --------------
-The line intensity for each line at the experimental temperature is calculated using the EnvironmentDependency_Intensity function in HAPI.  This function takes as arguments the line intensity at 296 K (:math:`S(t_{ref})`), the experimental temperature (:math:`t`), the reference temperature 296 K (:math:`t_{ref}`), the partition function at the experimental temperature (:math:`Q(t)`), the partition function at the reference temperature (:math:`Q(t_{ref})`), the lower state energy (:math:`E"`), and the line center ((:math:`\nu`)), and constant (:math:`c2` = 1.4388028496642257).  The partition functions are calculated using `TIPS-2017 <http://dx.doi.org/10.1016/j.jqsrt.2017.03.045>`_. 
+The line intensity for each line at the experimental temperature is calculated using the EnvironmentDependency_Intensity function in HAPI.  This function takes as arguments the line intensity at 296 K (:math:`S(t_{ref})`), the experimental temperature (:math:`T`), the reference temperature 296 K (:math:`T_{ref}`), the partition function at the experimental temperature (:math:`Q(T)`), the partition function at the reference temperature (:math:`Q(T_{ref})`), the lower state energy (:math:`E"`), and the line center ((:math:`\nu`)), and constant (:math:`c2 = hc/k` = 1.4388028496642257).  The partition functions are calculated using `TIPS-2017 <http://dx.doi.org/10.1016/j.jqsrt.2017.03.045>`_. 
 
 .. math::
 
-    S(t) = S(t_{ref}) \frac{Q(t_{ref})}{Q(t)}\frac{e^{-c2E"/t}}{e^{-c2E"/t_{ref}}} \frac{1 - e^{-c2\nu / t}}{1 - e^{-c2\nu / t_{ref}}}
+    S(T) = S(T_{ref}) \frac{Q(T_{ref})}{Q(T)}\frac{e^{-c2E"/T}}{e^{-c2E"/T_{ref}}} \frac{1 - e^{-c2\nu / T}}{1 - e^{-c2\nu / T_{ref}}}
 	
+.. todo::
 
+    The MATS line intensity calculation currently uses the HAPI EnvironmentDependency_Intensity function, which has specific values for physical constants. Additionally, c2 is defined as hc/k and hardwired into the code.  This value includes the Boltzmann constant, which was recently redefined by the CIPM, for the sake of maintining consistency with the SI the next version of MATS will update to use the CODATA values and move from the use of the HAPI EnvironmentDependency_Intensity function.  
+	
+	`Boltzmann Constant <https://physics.nist.gov/cgi-bin/cuu/Value?k>`_
+
+	
+	
 Doppler Broadening
 ------------------
 In MATS, the doppler broadening (:math:`\Gamma_{D}`)is not a floatable parameter and is calculated based on the experimental temperature (:math:`t`), line center (:math:`\nu`), and molecular mass (:math:`m`).  The doppler width is calculated as:
 
 .. math::
 	
-	\Gamma_{D} = \sqrt{\frac{2kt \cdot ln(2) \cdot N_{A}}{mc^{2}}} \cdot \nu
+	\Gamma_{D} = \sqrt{\frac{2kT \cdot ln(2)}{cMassMol\cdot mc^{2}}} \cdot \nu
 	
-	k = 1.3806488 x 10^{-16} erg K^{-1}
-	N_{A} = 6.02214129 x 10^{23} mol^{-1}
+	k = 1.380648813 x 10^{-16} erg K^{-1}
+	cMassMol = 1.66053873e-24 mol 
+.. todo::
+
+    MATS uses the above values for the Boltzmann constant and the term cMassMol, which is equal to the inverse of Avogadro's constant.  This is consistent with the HAPI calculation of the doppler width.  However, the Boltzmann and Avogadro's constants were recently redefined by the CIPM, for the sake of maintining consistency with the SI the next version of MATS will update to use the CODATA values.  This will involve re-defining the doppler width to include Avogadro's number and not the cMassMol value.
+	
+	`Boltzmann Constant <https://physics.nist.gov/cgi-bin/cuu/Value?k>`_
+	`Avogadro constant <https://physics.nist.gov/cgi-bin/cuu/Value?na>`_
 
 
 Collisional Half-Width
@@ -76,7 +89,7 @@ The collisional half-width (:math:`\Gamma_{0}`) is a function of both the experi
 
 .. math::
 
-	\Gamma_{0} (p,t, k) = \sum_{k=i} abun_{k} (\Gamma_{0}^{k} * \frac{p}{p_{ref}} * (\frac{T_{ref}}{T})^{n_{\Gamma_{0}^{k}}})
+	\Gamma_{0} (P,T) = \sum abun_{k} (\Gamma_{0}^{k} * \frac{P}{P_{ref}} * (\frac{T_{ref}}{T})^{n_{\Gamma_{0}^{k}}})
 
 	
 In the MATS nomenclature, the collisional half-width is called gamma0_diluent and the temperature dependence of the collisional half-width is called n_gamma0_diluent.  
@@ -88,7 +101,7 @@ Just like the collisional half-width, the pressure shift (:math:`\Delta_{0}`) is
 
 .. math::
 
-	\Delta_{0} (p,t, k) = \sum_{k=i} abun_{k} (\Delta_{0}^{k} +  n_{\Delta_{0}^{k}}\cdot (t - t_{ref}) )\frac{p}{p_{ref}}
+	\Delta_{0} (P,T) = \sum abun_{k} (\Delta_{0}^{k} +  n_{\Delta_{0}^{k}}\cdot (T - T_{ref}) )\frac{P}{P_{ref}}
 	
 
 In the MATS nomenclature, the pressure shift is called delta0_diluent and the temperature dependence of the pressure shift is called n_delta0_diluent.
@@ -101,7 +114,7 @@ The speed-dependent mechanism accounts for the speed-dependence of relaxation ra
 
 .. math::
 
-	\Gamma_{2} (p,t, k) = \sum_{k=i} abun_{k} (a_{w}^{k} *\Gamma_{0}^{k} * \frac{p}{p_{ref}} * (\frac{T_{ref}}{T})^{n_{\Gamma_{2}^{k}}})
+	\Gamma_{2} (P,T) = \sum abun_{k} (a_{w}^{k} *\Gamma_{0}^{k} * \frac{P}{P_{ref}} * (\frac{T_{ref}}{T})^{n_{\Gamma_{2}^{k}}})
 	
 
 In the MATS nomenclature, the ratio of the speed-dependent broadening to the collisional broadening (:math:`a_{w}`) is called SD_gamma_diluent and the temperature dependence of the speed-dependent broadening is called n_gamma2_diluent.  The difference in the naming structure (SD_gamma vs gamma2) is chosen to emphasize the difference between the speed-dependent width being parameterized as a ratio versus as an absolute value.  
@@ -113,7 +126,7 @@ The speed-dependent mechanism accounts for the speed-dependence of relaxation ra
 
 .. math::
 
-	\Delta_{2} (p,t, k) = \sum_{k=i} abun_{k} (a_{s} \cdot \Delta_{0}^{k} +  n_{\Delta_{2}^{k}}\cdot (t - t_{ref}) )\frac{p}{p_{ref}}
+	\Delta_{2} (P,T) = \sum abun_{k} (a_{s} \cdot \Delta_{0}^{k} +  n_{\Delta_{2}^{k}}\cdot (T - T_{ref}) )\frac{P}{P_{ref}}
 	
 In MATS nomenclature, the ratio of the speed-dependent shift to the pressure shift (:math:`a_{s}`) is called SD_shift_diluent and the temperature dependence of the speed-dependent shift is called n_delta2_diluent.  The difference in the naming structure (SD_delta vs delta2) is chosen to emphasize the difference between the speed-dependent shift being parameterized as a ratio versus as an absolute value.   
 
@@ -124,7 +137,7 @@ The Dicke narrowing mechanism models collisional induced velocity changes and is
 
 .. math::
 
-	\nu_{VC} (p,t, k) = \sum_{k=i} abun_{k} (\nu_{VC}^{k} * \frac{p}{p_{ref}} * (\frac{T_{ref}}{T})^{n_{\nu{VC}^{k}}})
+	\nu_{VC} (P,T) = \sum_{k=i} abun_{k} (\nu_{VC}^{k} * \frac{P}{P_{ref}} * (\frac{T_{ref}}{T})^{n_{\nu{VC}^{k}}})
 	
 
 In MATS nomenclature, the Dicke narrowing is referred to as nuVC_diluent and the temperature exponent is n_nuVC_diluent.  This differs from the naming convention in HAPI, which changes based on the origin of the Dicke narrowing term (Galatry profile versus HTP).  For simplicity, MATS has adopted a self-consistent naming convention.  
@@ -136,7 +149,7 @@ The correlation parameter (:math:`\eta`) models the correlation between velocity
 
 .. math::
 
-	\eta (k) = \sum_{k=i} abun_{k} \cdot \eta
+	\eta (k) = \sum abun_{k} \cdot \eta
 
 In MATS nomenclature, the correlation parameter is referred to as eta_diluent.
 
@@ -146,7 +159,7 @@ The nearest-neighbor line mixing (:math:`Y`) can be calculated from the imaginar
 
 .. math::
 
-	Y (p, k) = \sum_{k=i} abun_{k} Y \frac{p}{p_{ref}}
+	Y (P) = \sum abun_{k} Y \frac{P}{P_{ref}}
 	
 The line mixing is implemented as:
 
