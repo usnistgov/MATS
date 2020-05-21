@@ -251,6 +251,7 @@ class Spectrum:
             elif self.diluent == 'self': 
                 self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
                 #mass will be set during HTP_wBeta_from_DF_select if necessary 
+                print ("If using the self broadening term, then consider explicitly labeling the broadener (ie in an oxygen spectra use 'O2' instead of self).  This may avoid confusion in multiple broadener multiple species fits. ")
             else:
                 print ('If using the HTP_wBeta_from_DF_select then you need to go back and use the Diluent{diluent:{"composition": 1, "m": mass}} format')
                 self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
@@ -258,6 +259,9 @@ class Spectrum:
                 
         else:
             self.Diluent = Diluent
+            if 'self' in self.Diluent:
+                print ("You are using the 'self' term, consider explicitly labeling the broadener (ie in an oxygen spectra use 'O2' instead of 'self').  This may avoid confusion in multiple species fits. For single species fits it should not matter.")  
+                print ("Double check that you did not include the equivalent of the self term explicitly (ie in an oxygen spectra having both 'O2' and 'self').")
         self.spectrum_number = spectrum_number
         self.pressure_column = pressure_column
         self.temperature_column = temperature_column
