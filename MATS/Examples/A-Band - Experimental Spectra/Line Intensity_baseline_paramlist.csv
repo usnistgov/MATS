@@ -1,4 +1,4 @@
-Spectrum Number,Baseline Order,Pressure,Segment Number,Temperature,baseline_a,baseline_b,etalon_1_amp,etalon_1_freq,etalon_1_phase,molefraction_O2,x_shift
+Spectrum Number,Baseline Order,Pressure,Segment Number,Temperature,baseline_a,baseline_b,etalon_1_amp,etalon_1_period,etalon_1_phase,molefraction_O2,x_shift
 1.0,1.0,0.07911117863197344,1.0,297.9037456816823,2.957090557503572,0.0,0.001364,1.271443,0.0,0.01949,0.0
 2.0,1.0,0.06555786634500006,1.0,297.90824458315126,2.959480174488974,0.0,0.001364,1.271443,0.0,0.01949,0.0
 3.0,1.0,0.046017320729342094,1.0,297.87630335002524,2.956828923944623,0.0,0.001364,1.271443,0.0,0.01949,0.0
