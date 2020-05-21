@@ -159,7 +159,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
         for iso in linelist ['local_iso_id'].unique():
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = PYTIPS2017(molec,iso,T)
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
-            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'ma'] = molecularMass(molec,iso)
+            #linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'ma'] = molecularMass(molec,iso)
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion
             if (len(Diluent) == 1) & ('self' in Diluent):
                 Diluent['self']['mp'] = molecularMass(molec,iso)
@@ -169,10 +169,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
     mp = 0
     for diluent in Diluent:
         mp += Diluent[diluent]['composition']*Diluent[diluent]['m']
-    linelist['alpha'] =  mp / linelist['ma']
-
-        
-            
+     
     # Get Line Intensity
     linelist['LineIntensity'] = linelist['sw']*linelist['SigmaTref']/linelist['SigmaT']*(np.exp(-c2*linelist['elower']/T)*(1-np.exp(-c2*linelist['nu']/T)))/(np.exp(-c2*linelist['elower']/Tref)*(1-np.exp(-c2*linelist['nu']/Tref)))
 
@@ -204,6 +201,8 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
         linelist['Eta'] += linelist['eta_%s'%species] *abun
         #Line mixing
         linelist['Y'] += abun*(linelist['y_%s'%species]*(p/pref))
+        
+    linelist['alpha'] =  mp / linelist['m']
     linelist['Chi'] = linelist['NuVC'] / linelist['GammaD']
     linelist['A'] = 0.0534 + 0.1585*np.exp(-0.451*linelist['alpha'].values)
     linelist['B'] = 1.9595 - 0.1258*linelist['alpha'].values + 0.0056*linelist['alpha'].values**2 + 0.0050*linelist['alpha'].values**3
@@ -2145,3 +2144,78 @@ class Fit_DataSet:
                 for i in range(1, len(spectrum.etalons)+1):
                     baseline[bound_min: bound_max +1] += etalon(wave_rel, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase'])
             spectrum.set_background(baseline)
+    def generate_beta_output_file(self, beta_summary_filename = None ):
+        if beta_summary_filename == None:
+            beta_summary_filename = 'Beta Summary File'
+        if self.beta_formalism == True:
+            beta_summary_list = lineparam_list.copy()
+            #List of all Diluents in Dataset
+            diluent_list = []
+            for spectrum in self.dataset.spectra:
+                for diluent in spectrum.Diluent:
+                    if diluent not in diluent_list:
+                        diluent_list.append(diluent)
+            #Determine if line center and nuVC terms are constrained across Dataset or vary for each spectrum
+            nu_constrain = True
+            nuVC_constrain = True
+
+            
+            if ((sum(('nu' in param) & ('nuVC' not in param) for param in linelist_params))) > 1:
+                nu_constrain = False
+            if (self.dataset.get_number_nominal_temperatures()[0]) == 1:
+                if (sum('nuVC' in param for param in linelist_params)) >  len(diluent_list):
+                    nuVC_constrain = False
+            else:
+                if (sum('nuVC' in param for param in linelist_params)) >  2*len(diluent_list) :
+                    nuVC_constrain = False
+                        
+            #Add Column for mass
+            for molec in beta_summary_list['molec_id'].unique():
+                for iso in beta_summary_list ['local_iso_id'].unique():
+                    beta_summary_list.loc[(beta_summary_list['molec_id']==molec) & (beta_summary_list['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) 
+
+            #Single or MS for nu and nuVC
+            for spectrum in self.dataset.spectra:
+                wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
+                mp = 0
+                for diluent in spectrum.Diluent:
+                    mp += spectrum.Diluent[diluent]['composition']*spectrum.Diluent[diluent]['m']
+                
+                for segment in list(set(spectrum.segments)):
+                    p = self.baseline_list[(baseline_list['Spectrum Number'] == spectrum.spectrum_number) & (baseline_list['Segment Number'] == segment))]['Pressure'].values[0]
+                    T = self.baseline_list[(baseline_list['Spectrum Number'] == spectrum.spectrum_number) & (baseline_list['Segment Number'] == segment))]['Temperature'].values[0]
+                    wave_min = np.min(wavenumber_segments[segment])
+                    wave_max = np.max(wavenumber_segments[segment])
+
+                    alpha = mp / beta_summary_list['m']
+                    if nu_constrain:
+                        GammaD = np.sqrt(2*k*Na*T*np.log(2)/(beta_summary_list['m'].values))*beta_summary_list['nu'] / c #change with nu
+                    else:
+                        GammaD = np.sqrt(2*k*Na*T*np.log(2)/(beta_summary_list['m'].values))*beta_summary_list['nu' + '_' + str(spectrum.spectrum_number)] / c #change with nu
+                    nuVC = len(GammaD)*[0]
+                    for diluent in spectrum.Diluent:
+                        abun = spectrum.Diluent[species]['composition']
+                        if nuVC_constrain:
+                            nuVC += abun*(beta_summary_list['nuVC_%s'%diluent]*(p/1)*((296/T)**(linelist['n_nuVC_%s'%diluent]))) 
+                        else:
+                            nuVC += abun*(beta_summary_list['nuVC_%s'%diluent]*(p/1)*((296/T)**(linelist['n_nuVC_%s_%s'%(diluent,str(spectrum.spectrum_number))]))) 
+                    Chi = nuVC/ GammaD
+                    A = 0.0534 + 0.1585*np.exp(-0.451*linelist['alpha'].values)
+                    B = 1.9595 - 0.1258*linelist['alpha'].values + 0.0056*linelist['alpha'].values**2 + 0.0050*linelist['alpha'].values**3
+                    C = -0.0546 + 0.0672*linelist['alpha'].values - 0.0125*linelist['alpha'].values**2+0.0003*linelist['alpha'].values**3
+                    D = 0.9466 - 0.1585*np.exp(-0.4510*linelist['alpha'].values)
+                    beta_summary_list['beta'] =  A*np.tanh(B * np.log10(Chi) + C) + D
+                    beta_summary_list.loc[(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max),'Beta_' + str(spectrum.spectrum_number) ] =beta_summary_list['(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max)']['beta'].values
+                    
+
+            select_columns = ['molec_id', 'local_iso_id', 'nu']
+            for param in beta_summary_list.columns:
+                if ('nuVC' in param) & ('n_nuVC' not in param):
+                    select_columns.append(param)
+                if ('Beta' in param):
+                    select_columns.append(param)
+            beta_summary_list = beta_summary_list[select_columns]
+            beta_summary_list.to_csv(beta_summary_filename + '.csv')
+
+
+       
