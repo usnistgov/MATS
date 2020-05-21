@@ -18,7 +18,13 @@ from hapi import PYTIPS2017, molecularMass, pcqsdhc, ISO
 from Karman_CIA import Karman_CIA_Model
 
 
-
+#Constants
+h = 6.62607015e-27 #erg s https://physics.nist.gov/cgi-bin/cuu/Value?h|search_for=h as of 5/21/2020
+c = 29979245800 #cm/s # https://physics.nist.gov/cgi-bin/cuu/Value?c|search_for=c as of 5/21/2020
+k = 1.380649e-16 # erg / K https://physics.nist.gov/cgi-bin/cuu/Value?k as of 5/21/2020     
+Na = 6.02214076e23 # mol-1 https://physics.nist.gov/cgi-bin/cuu/Value?na as of 5/21/2020
+cpa_atm = (10*101325)**-1 #convert from cpa to atm  https://physics.nist.gov/cgi-bin/cuu/Value?stdatm|search_for=atmosphere as of 5/21/2020
+c2 =  (h*c)/k
 
 
 def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff',
@@ -34,7 +40,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
     #define reference temperature/pressure and calculate molecular density
     Tref = 296. # K
     pref = 1. # atm
-    mol_dens = (p/9.869233e-7)/(1.380648813E-16*T) 
+    mol_dens = (p/cpa_atm)/(k*T) 
     
     #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
     #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
@@ -61,11 +67,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'abun_ratio'] = abundance_ratio_MI[molec][iso]
     
     #linelist['LineIntensity'] = EnvironmentDependency_Intensity(linelist['sw'],T,Tref,linelist['SigmaT'],linelist['SigmaTref'],linelist['elower'],linelist['nu'])
-    h = 6.62607015e-27 #erg s https://physics.nist.gov/cgi-bin/cuu/Value?h|search_for=h as of 5/21/2020
-    c = 29979245800 #cm/s # https://physics.nist.gov/cgi-bin/cuu/Value?c|search_for=c as of 5/21/2020
-    k = 1.380649e-16 # erg / K https://physics.nist.gov/cgi-bin/cuu/Value?k as of 5/21/2020     
-    Na = 6.02214076e23 # mol-1 https://physics.nist.gov/cgi-bin/cuu/Value?na as of 5/21/2020
-    c2 =  (h*c)/k
+
     linelist['LineIntensity'] = linelist['sw']*linelist['SigmaTref']/linelist['SigmaT']*(np.exp(-c2*linelist['elower']/T)*(1-np.exp(-c2*linelist['nu']/T)))/(np.exp(-c2*linelist['elower']/Tref)*(1-np.exp(-c2*linelist['nu']/Tref)))
 
     
@@ -131,7 +133,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
     #define reference temperature/pressure and calculate molecular density
     Tref = 296. # K
     pref = 1. # atm
-    mol_dens = (p/9.869233e-7)/(1.380648813E-16*T) 
+    mol_dens = (p/cpa_atm)/(k*T) 
     
     #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
     if not Diluent:
@@ -172,12 +174,6 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
         
             
     # Get Line Intensity
-    #linelist['LineIntensity'] = EnvironmentDependency_Intensity(linelist['sw'],T,Tref,linelist['SigmaT'],linelist['SigmaTref'],linelist['elower'],linelist['nu'])
-    h = 6.62607015e-27 #erg s https://physics.nist.gov/cgi-bin/cuu/Value?h|search_for=h as of 5/21/2020
-    c = 29979245800 #cm/s # https://physics.nist.gov/cgi-bin/cuu/Value?c|search_for=c as of 5/21/2020
-    k = 1.380649e-16 # erg / K https://physics.nist.gov/cgi-bin/cuu/Value?k as of 5/21/2020     
-    Na = 6.02214076e23 # mol-1 https://physics.nist.gov/cgi-bin/cuu/Value?na as of 5/21/2020
-    c2 =  (h*c)/k
     linelist['LineIntensity'] = linelist['sw']*linelist['SigmaTref']/linelist['SigmaT']*(np.exp(-c2*linelist['elower']/T)*(1-np.exp(-c2*linelist['nu']/T)))/(np.exp(-c2*linelist['elower']/Tref)*(1-np.exp(-c2*linelist['nu']/Tref)))
 
     #Calculate Doppler Broadening
@@ -404,12 +400,12 @@ class Spectrum:
         self.frequency_column = new_frequency_column
         file_contents = pd.read_csv(self.filename + '.csv')
         self.frequency = file_contents[self.frequency_column].values
-        self.wavenumber = self.frequency*10**6 / 29979245800
+        self.wavenumber = self.frequency*10**6 / c
     def set_tau_column(self, new_tau_column):
         self.tau_column = new_tau_column
         file_contents = pd.read_csv(self.filename + '.csv')
         self.tau = file_contents[self.tau_column].values
-        self.alpha = (self.tau*0.0299792458)**-1
+        self.alpha = (self.tau*c*1e-10)**-1
     def set_tau_stats_column(self, new_tau_stats_column):
         self.tau_stats_column = new_tau_stats_column
         file_contents = pd.read_csv(self.filename + '.csv')
@@ -491,7 +487,7 @@ class Spectrum:
         fft_amplitude = np.sqrt(A.real**2 + A.imag**2) / (len(A))
         fft_phase = np.arctan2(A.imag, A.real)
         FFT = pd.DataFrame()
-        FFT['Frequency'] = fft_freq
+        FFT['Period (cm)'] = fft_freq
         FFT['Amplitude'] = fft_amplitude
         FFT['Phase'] = fft_phase
         FFT['Freq (cm-1)'] = 1 / fft_freq
@@ -501,7 +497,7 @@ class Spectrum:
         plt.subplot(111)
         plt.plot(1 / fft_freq, fft_amplitude, '-')
         plt.ylabel('Amplitude')
-        plt.xlabel('Experimental Wavenumber ($cm^{-1}$)')
+        plt.xlabel('Experimental Frequency ($cm^{-1}$)')
         plt.ylabel('Amplitude (ppm/cm')
         plt.show()
 
@@ -669,7 +665,7 @@ class Dataset:
                         line['baseline_' + chr(i+97)] = 0
                 for etalon_name in spectrum.etalons:
                     line['etalon_' + str(etalon_name) + '_amp'] = spectrum.etalons[etalon_name][0]
-                    line['etalon_' + str(etalon_name) + '_freq'] = spectrum.etalons[etalon_name][1]
+                    line['etalon_' + str(etalon_name) + '_period'] = spectrum.etalons[etalon_name][1]
                     line['etalon_' + str(etalon_name) + '_phase'] = 0
                 baseline_paramlist  = baseline_paramlist.append(line, ignore_index=True)
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
@@ -740,8 +736,8 @@ def max_iter(pars, iter, resid, *args, **kws):
         else:
             return False
                    
-def etalon(x, amp, freq, phase):
-    return amp*np.sin((2*np.pi * freq)*x+ phase)   
+def etalon(x, amp, period, phase):
+    return amp*np.sin((2*np.pi * period)*x+ phase)   
 
    
         
@@ -785,7 +781,7 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
             pressure_w_error += pressure_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + pressure_err['params']['b']
     elif pressure_err['function'] == 'sine':
         if 'params' in pressure_err:
-            pressure_w_error += etalon((wavenumbers-np.min(wavenumbers)), pressure_err['params']['amp'], pressure_err['params']['freq'], pressure_err['params']['phase'])
+            pressure_w_error += etalon((wavenumbers-np.min(wavenumbers)), pressure_err['params']['amp'], pressure_err['params']['period'], pressure_err['params']['phase'])
     #temperature error  
     temperature_w_error = temperature_K + temperature_err['bias']
     temperature_w_error = len(wavenumbers)*[temperature_w_error] 
@@ -794,7 +790,7 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
             temperature_w_error += temperature_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + temperature_err['params']['b']
     elif pressure_err['function'] == 'sine':
         if 'params' in pressure_err:
-            temperature_w_error += etalon((wavenumbers-np.min(wavenumbers)), temperature_err['params']['amp'], temperature_err['params']['freq'], temperature_err['params']['phase'])
+            temperature_w_error += etalon((wavenumbers-np.min(wavenumbers)), temperature_err['params']['amp'], temperature_err['params']['period'], temperature_err['params']['phase'])
 
     #Define Segments
     seg_number = np.arange(len(wavenumbers))
@@ -833,10 +829,10 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
     etalon_model = len(wavenumbers)*[0]
     for r in range(1, len(etalons)+1):
         amp = etalons[r][0]
-        freq = etalons[r][1]
+        period = etalons[r][1]
         phase = np.random.rand()
         x = wavenumbers - np.min(wavenumbers)
-        etalon_model += amp*np.sin((2*np.pi * freq)*x+ phase) 
+        etalon_model += amp*np.sin((2*np.pi * period)*x+ phase) 
     #Calculate Noisy Spectrum
     if SNR == None:
         alpha_noise = alpha_array
@@ -1282,7 +1278,7 @@ class Generate_FitParam_File:
         return param_linelist_df 
 
     def generate_fit_baseline_linelist(self, vary_baseline = True, vary_pressure = False, vary_temperature = False,vary_molefraction = {7:True, 1:False}, vary_xshift = False, 
-                                      vary_etalon_amp= False, vary_etalon_freq= False, vary_etalon_phase= False):
+                                      vary_etalon_amp= False, vary_etalon_period= False, vary_etalon_phase= False):
         base_linelist_df = self.get_base_linelist().copy()
         parameters =  (list(base_linelist_df))
 
@@ -1310,10 +1306,10 @@ class Generate_FitParam_File:
                         base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_molefraction[molecule])                                
             if 'amp' in param:
                 base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_etalon_amp) 
-            if 'freq' in param:
-                base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_etalon_freq) 
+            if 'period' in param:
+                base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_etalon_period) 
             if 'phase' in param:
-                base_linelist_df.loc[base_linelist_df[param.replace("phase", "freq")]!=0, param + '_vary'] = (vary_etalon_phase)
+                base_linelist_df.loc[base_linelist_df[param.replace("phase", "period")]!=0, param + '_vary'] = (vary_etalon_phase)
         base_linelist_df.drop(['Baseline Order'], axis=1, inplace = True)
         #base_linelist_df = base_linelist_df.reindex(sorted(base_linelist_df.columns), axis=1)
         base_linelist_df.to_csv(self.base_linelist_savename + '.csv', index = True)
@@ -1810,7 +1806,7 @@ class Fit_DataSet:
         return (params)
 
     def constrained_baseline(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
-                                    etalon_amp_segment_constrained = True, etalon_freq_segment_constrained = True, etalon_phase_segment_constrained = True, 
+                                    etalon_amp_segment_constrained = True, etalon_period_segment_constrained = True, etalon_phase_segment_constrained = True, 
                                     pressure_segment_constrained = True, temperature_segment_constrained = True):
         spectrum_segment_min = {}
         for spectrum in self.dataset.spectra:
@@ -1851,7 +1847,7 @@ class Fit_DataSet:
                 if 'amp' in param and etalon_amp_segment_constrained:
                     if segment_num != spectrum_segment_min[spectrum_num]:
                         params[param].set(expr = param[:indices[2]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
-                elif 'freq' in param and etalon_freq_segment_constrained:
+                elif 'period' in param and etalon_period_segment_constrained:
                     if segment_num != spectrum_segment_min[spectrum_num]:
                         params[param].set(expr = param[:indices[2]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
                 elif 'phase' in param and etalon_phase_segment_constrained:
@@ -1988,19 +1984,19 @@ class Fit_DataSet:
                 #Etalon Calculation
                 fit_etalon_parameters = {}
                 for i in range(1, len(spectrum.etalons)+1):
-                    fit_etalon_parameters[i] = {'amp': 0, 'freq':1, 'phase':0}
+                    fit_etalon_parameters[i] = {'amp': 0, 'period':1, 'phase':0}
                 for param in baseline_params:
                     if ('etalon' in param) and (str(spectrum_number) in param[param.find('_', 7):]):
                         etalon_num = int(param[param.find('_')+1: param.find('_', param.find('_')+1)])
                         if param == 'etalon_' + str(etalon_num) + '_amp_' + str(spectrum_number) + '_' +str(segment):#('amp' in param) and (str(etalon_num) in param):
                             fit_etalon_parameters[etalon_num]['amp'] = np.float(params[param])
-                        if param == 'etalon_' + str(etalon_num) + '_freq_' + str(spectrum_number) + '_' +str(segment):#('freq' in param) and (str(etalon_num) in param):
-                            fit_etalon_parameters[etalon_num]['freq'] = np.float(params[param])
+                        if param == 'etalon_' + str(etalon_num) + '_period_' + str(spectrum_number) + '_' +str(segment):#('period' in param) and (str(etalon_num) in param):
+                            fit_etalon_parameters[etalon_num]['period'] = np.float(params[param])
                         if param == 'etalon_' + str(etalon_num) + '_phase_' + str(spectrum_number) +'_' + str(segment):#('phase' in param) and (str(etalon_num) in param):
                             fit_etalon_parameters[etalon_num]['phase'] = np.float(params[param])
                 etalons = len(wavenumbers)*[0]
                 for i in range(1, len(spectrum.etalons)+1):
-                    etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['freq'], fit_etalon_parameters[i]['phase']) 
+                    etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase']) 
                 simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = (baseline + etalons + fit_coef + CIA)
                 residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = (baseline + etalons + fit_coef + CIA) - alpha_segments[segment]
             total_simulated = np.append(total_simulated, simulated_spectra)
@@ -2116,7 +2112,7 @@ class Fit_DataSet:
                 baseline_param_array = [0]*(self.dataset.baseline_order+1)
                 fit_etalon_parameters = {}
                 for i in range(1, len(spectrum.etalons)+1):
-                    fit_etalon_parameters[i] = {'amp': 0, 'freq':1, 'phase':0}
+                    fit_etalon_parameters[i] = {'amp': 0, 'period':0, 'phase':0}
                 for key, par in result.params.items():
                     if ('baseline' in par.name) and (str(spectrum.spectrum_number) in par.name):
                         baseline_param_array[ord(par.name[9:par.name.find('_',9)])-97] = np.float(par.value)
@@ -2124,12 +2120,12 @@ class Fit_DataSet:
                         etalon_num = int(par.name[par.name.find('_')+1: par.name.find('_', par.name.find('_')+1)])
                         if ('amp' in par.name) and (str(etalon_num) in par.name):
                             fit_etalon_parameters[etalon_num]['amp'] = par.value
-                        if ('freq' in par.name) and (str(etalon_num) in par.name):
-                            fit_etalon_parameters[etalon_num]['freq'] = par.value
+                        if ('period' in par.name) and (str(etalon_num) in par.name):
+                            fit_etalon_parameters[etalon_num]['period'] = par.value
                         if ('phase' in par.name) and (str(etalon_num) in par.name):
                             fit_etalon_parameters[etalon_num]['phase'] = par.value
                 baseline_param_array = baseline_param_array[::-1] # reverses array to be used for polyval
                 baseline[bound_min: bound_max + 1] += np.polyval(baseline_param_array, wave_rel)
                 for i in range(1, len(spectrum.etalons)+1):
-                    baseline[bound_min: bound_max +1] += etalon(wave_rel, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['freq'], fit_etalon_parameters[i]['phase'])
+                    baseline[bound_min: bound_max +1] += etalon(wave_rel, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase'])
             spectrum.set_background(baseline)
