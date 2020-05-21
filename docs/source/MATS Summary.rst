@@ -81,6 +81,7 @@ In MATS, the doppler broadening (:math:`\Gamma_{D}`)is not a floatable parameter
     MATS uses the above values for the Boltzmann constant and the term cMassMol, which is equal to the inverse of Avogadro's constant.  This is consistent with the HAPI calculation of the doppler width.  However, the Boltzmann and Avogadro's constants were recently redefined by the CIPM, for the sake of maintining consistency with the SI the next version of MATS will update to use the CODATA values.  This will involve re-defining the doppler width to include Avogadro's number and not the cMassMol value.
 	
 	`CODATA: Boltzmann Constant <https://physics.nist.gov/cgi-bin/cuu/Value?k>`_
+	
 	`CODATA: Avogadro constant <https://physics.nist.gov/cgi-bin/cuu/Value?na>`_
 
 
