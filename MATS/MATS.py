@@ -536,7 +536,6 @@ class Dataset:
         dataset_molecule_list  += param_linelist['molec_id'].unique()
         dataset_molecule_list = list(set(dataset_molecule_list))
         
-        
         for spectrum in self.spectra:
             spectrum_molefraction_dictionary = spectrum.get_molefraction()
             for molecule in dataset_molecule_list:
@@ -775,6 +774,15 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
 
     wavenumbers_err = wavenumbers + wave_error*np.random.normal(loc = 0, scale =1, size = len(wavenumbers))
     #molefraction error
+    #check that all moleules included in the parameter list are included in spectrum molefraction
+    dataset_molecule_list = molefraction.keys()
+    dataset_molecule_list  += parameter_linelist['molec_id'].unique()
+    dataset_molecule_list = list(set(dataset_molecule_list))
+    for molecule in dataset_molecule_list:
+        if molecule not in molefraction:
+            molefraction[molecule] = 0
+
+    
     molefraction_w_error = {}        
     for species in molefraction:
         if molefraction_err == {}:
