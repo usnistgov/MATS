@@ -505,9 +505,10 @@ class Spectrum:
         plt.show()
 
 class Dataset:
-    def __init__(self, spectra, dataset_name, baseline_order = 1, CIA_model = None):
+    def __init__(self, spectra, dataset_name, param_linelist, baseline_order = 1, CIA_model = None):
         self.spectra = spectra
         self.dataset_name = dataset_name
+        self.param_linelist = param_linelist
         self.baseline_order = baseline_order
         self.CIA_model = CIA_model
         self.renumber_spectra()
@@ -532,7 +533,10 @@ class Dataset:
         dataset_molecule_list = []
         for spectrum in self.spectra:
             dataset_molecule_list += (spectrum.molefraction.keys())
+        dataset_molecule_list  += param_linelist['molec_id'].unique()
         dataset_molecule_list = list(set(dataset_molecule_list))
+        
+        
         for spectrum in self.spectra:
             spectrum_molefraction_dictionary = spectrum.get_molefraction()
             for molecule in dataset_molecule_list:
