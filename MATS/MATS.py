@@ -282,16 +282,16 @@ class Spectrum:
         self.temperature = file_contents[self.temperature_column].mean() + 273.15
         if self.input_freq:
             self.frequency = file_contents[self.frequency_column].values
-            self.wavenumber = self.frequency*10**6 / 29979245800
+            self.wavenumber = self.frequency*10**6 / c
         else:
             self.wavenumber = file_contents[self.frequency_column].values
-            self.frequency = self.wavenumber*29979245800 / 10**6
+            self.frequency = self.wavenumber*c / 10**6
         if self.input_tau:
             self.tau = file_contents[self.tau_column].values
-            self.alpha = (self.tau*0.0299792458)**-1
+            self.alpha = (self.tau*c / 1e12)**-1
         else:
             self.alpha = file_contents[self.tau_column].values
-            self.tau = (self.alpha*0.0299792458)**-1
+            self.tau = (self.alpha*c / 1e12)**-1
             
         if self.tau_stats_column != None:
             self.tau_stats = file_contents[self.tau_stats_column].values
@@ -408,7 +408,7 @@ class Spectrum:
         self.tau_column = new_tau_column
         file_contents = pd.read_csv(self.filename + '.csv')
         self.tau = file_contents[self.tau_column].values
-        self.alpha = (self.tau*c*1e-10)**-1
+        self.alpha = (self.tau*c*1e-12)**-1
     def set_tau_stats_column(self, new_tau_stats_column):
         self.tau_stats_column = new_tau_stats_column
         file_contents = pd.read_csv(self.filename + '.csv')
@@ -533,7 +533,9 @@ class Dataset:
         dataset_molecule_list = []
         for spectrum in self.spectra:
             dataset_molecule_list += (spectrum.molefraction.keys())
-        dataset_molecule_list  += param_linelist['molec_id'].unique()
+        molecules_in_paramlist = self.param_linelist['molec_id'].unique()
+        for i in range(0, len(molecules_in_paramlist)):
+            dataset_molecule_list.append(molecules_in_paramlist[i]) 
         dataset_molecule_list = list(set(dataset_molecule_list))
         
         for spectrum in self.spectra:
@@ -775,8 +777,10 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
     wavenumbers_err = wavenumbers + wave_error*np.random.normal(loc = 0, scale =1, size = len(wavenumbers))
     #molefraction error
     #check that all moleules included in the parameter list are included in spectrum molefraction
-    dataset_molecule_list = molefraction.keys()
-    dataset_molecule_list  += parameter_linelist['molec_id'].unique()
+    dataset_molecule_list = list(molefraction.keys())
+    molecules_in_paramlist = parameter_linelist['molec_id'].unique()
+    for i in range(0, len(molecules_in_paramlist)):
+        dataset_molecule_list.append(molecules_in_paramlist[i]) 
     dataset_molecule_list = list(set(dataset_molecule_list))
     for molecule in dataset_molecule_list:
         if molecule not in molefraction:
@@ -786,6 +790,8 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
     molefraction_w_error = {}        
     for species in molefraction:
         if molefraction_err == {}:
+            molefraction_err[species] = 0
+        elif species not in molefraction_err:
             molefraction_err[species] = 0
         molefraction_w_error[species] = molefraction[species] + molefraction[species]*(molefraction_err[species]/100)
     #pressure error
@@ -1693,7 +1699,7 @@ class Fit_DataSet:
                     elif ('gamma0_' in line_param) and ('n_' not in line_param) and (not gamma0_constrain) and (index_length>1):
                         if self.gamma0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.gamma0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param]
+                                  min = (1 / self.gamma0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.gamma0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
@@ -2194,8 +2200,8 @@ class Fit_DataSet:
                     mp += spectrum.Diluent[diluent]['composition']*spectrum.Diluent[diluent]['m']
                 
                 for segment in list(set(spectrum.segments)):
-                    p = self.baseline_list[(baseline_list['Spectrum Number'] == spectrum.spectrum_number) & (baseline_list['Segment Number'] == segment))]['Pressure'].values[0]
-                    T = self.baseline_list[(baseline_list['Spectrum Number'] == spectrum.spectrum_number) & (baseline_list['Segment Number'] == segment))]['Temperature'].values[0]
+                    p = self.baseline_list[(baseline_list['Spectrum Number'] == spectrum.spectrum_number) & (baseline_list['Segment Number'] == segment)]['Pressure'].values[0]
+                    T = self.baseline_list[(baseline_list['Spectrum Number'] == spectrum.spectrum_number) & (baseline_list['Segment Number'] == segment)]['Temperature'].values[0]
                     wave_min = np.min(wavenumber_segments[segment])
                     wave_max = np.max(wavenumber_segments[segment])
 
@@ -2217,7 +2223,7 @@ class Fit_DataSet:
                     C = -0.0546 + 0.0672*linelist['alpha'].values - 0.0125*linelist['alpha'].values**2+0.0003*linelist['alpha'].values**3
                     D = 0.9466 - 0.1585*np.exp(-0.4510*linelist['alpha'].values)
                     beta_summary_list['beta'] =  A*np.tanh(B * np.log10(Chi) + C) + D
-                    beta_summary_list.loc[(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max),'Beta_' + str(spectrum.spectrum_number) ] =beta_summary_list['(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max)']['beta'].values
+                    beta_summary_list.loc[(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max),'Beta_' + str(spectrum.spectrum_number) ] = beta_summary_list[(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max)]['beta'].values
                     
 
             select_columns = ['molec_id', 'local_iso_id', 'nu']
