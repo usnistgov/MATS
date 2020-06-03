@@ -882,7 +882,8 @@ class Generate_FitParam_File:
                   lineprofile = 'VP', linemixing = False, threshold_intensity = 1e-30, fit_intensity = 1e-26, fit_window = 1.5, sim_window = 5, 
                   param_linelist_savename = 'Parameter_LineList', base_linelist_savename = 'Baseline_LineList', CIA_linelist_savename = 'CIA_LineList', 
                  nu_constrain = True, sw_constrain = True, gamma0_constrain = True, delta0_constrain = True, aw_constrain = True, as_constrain = True, 
-                 nuVC_constrain = True, eta_constrain =True, linemixing_constrain = True):
+                 nuVC_constrain = True, eta_constrain =True, linemixing_constrain = True, 
+                 additional_columns = []):
         self.dataset = dataset
         self.param_linelist = param_linelist
         self.base_linelist = base_linelist
@@ -910,6 +911,7 @@ class Generate_FitParam_File:
         self.nuVC_constrain = nuVC_constrain
         self.eta_constrain = eta_constrain
         self.linemixing_constrain = linemixing_constrain
+        self.additional_columns = additional_columns
     def get_dataset(self):
         return self.dataset
     def get_param_linelist(self):
@@ -940,7 +942,8 @@ class Generate_FitParam_File:
                 if diluent not in diluent_list:
                     diluent_list.append(diluent)
         num_nominal_temps, list_nominal_temps = self.dataset.get_number_nominal_temperatures()
-        column_list = ['molec_id', 'local_iso_id','elower', 'nu', 'sw']
+        column_list =  self.additional_columns.copy()
+        column_list += ['molec_id', 'local_iso_id','elower', 'nu', 'sw']
         for diluent in diluent_list:
             column_list.append('gamma0_' + diluent)
             column_list.append('n_gamma0_' + diluent)
@@ -1230,7 +1233,8 @@ class Generate_FitParam_File:
                         for molecule in vary_n_nuVC:
                             for isotope in vary_n_nuVC[molecule]:
                                 param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'n_nuVC_' +diluent + '_vary'] = (vary_n_nuVC[molecule][isotope])
-        ordered_list = ['molec_id', 'local_iso_id','elower']
+        ordered_list = self.additional_columns.copy()
+        ordered_list += ['molec_id', 'local_iso_id','elower']
 
         for item in order_nu:
             ordered_list.append(item)
