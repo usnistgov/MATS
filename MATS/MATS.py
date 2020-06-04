@@ -2098,7 +2098,8 @@ class Fit_DataSet:
                 if self.CIA_calculate and self.CIA_model == 'Karman':
                     indices = [m.start() for m in re.finditer('_', par.name)]
                     parameter = (par.name[:indices[0]])
-                    CIA_pair = (par.name[indices[0] + 1:indices[1]])
+                    CIA_pair = (par.name[indices[0] + 1:])
+                    
                     self.CIAparam_list.loc[(self.CIAparam_list['CIA Pair'] == CIA_pair), parameter] = par.value
                     if par.vary:
                         self.CIAparam_list.loc[(self.CIAparam_list['CIA Pair'] == CIA_pair), parameter + '_err'] = par.stderr
