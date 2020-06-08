@@ -1265,11 +1265,11 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
     temperature : float, optional
          temperature for simulation in celsius. The default is 25.
     temperature_err : dict, optional
-        possible keys include 'bias', 'function', and 'params'. The bias indicates the absolute bias in Celsius of the temperature reading, which will be added to the input temperature. Function can be 'linear' with params 'm' and 'b' or 'sine' with parameters 'amp', 'freq', and 'phase'. These define a function that is added to both the bias and set temperature as a function of the wavenumber. Note: if 'function' key is not equal to None, then there also needs to be a params key to define the function.. The default is {'bias': 0, 'function': None, 'params': {}}.
+        possible keys include 'bias', 'function', and 'params'. The bias indicates the absolute bias in Celsius of the temperature reading, which will be added to the input temperature. Function can be 'linear' with params 'm' and 'b' or 'sine' with parameters 'amp', 'phase', and 'phase'. These define a function that is added to both the bias and set temperature as a function of the wavenumber. Note: if 'function' key is not equal to None, then there also needs to be a params key to define the function.. The default is {'bias': 0, 'function': None, 'params': {}}.
     pressure : float, optional
         pressure for simulation in torr. The default is 760.
     pressure_err : dict, optional
-        possible keys include bias, function, and params. The bias indicates the percent bias in of the pressure reading, which will be added to the input pressure. Function can be 'linear' with params 'm' and 'b' or 'sine' with parameters 'amp', 'freq', and 'phase'. These define a function that is added to both the bias and set pressure as a function of the wavenumber. Note: if 'function' key is not equal to None, then there also needs to be a params key to define the function.. The default is {'per_bias': 0, 'function': None, 'params': {}}.
+        possible keys include bias, function, and params. The bias indicates the percent bias in of the pressure reading, which will be added to the input pressure. Function can be 'linear' with params 'm' and 'b' or 'sine' with parameters 'amp', 'phase', and 'phase'. These define a function that is added to both the bias and set pressure as a function of the wavenumber. Note: if 'function' key is not equal to None, then there also needs to be a params key to define the function.. The default is {'per_bias': 0, 'function': None, 'params': {}}.
     wing_cutoff : float, optional
         number of voigt half-widths to simulate on either side of each line. The default is 25.
     wing_wavenumbers : float, optional
@@ -2719,21 +2719,21 @@ class Fit_DataSet:
         params : lmfit parameter object
             the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
         baseline_segment_constrained : bool, optional
-            True means the baseline terms are constrained across each spectrum.. The default is True.
+            True means the baseline terms are constrained across each spectrum. The default is True.
         xshift_segment_constrained : bool, optional
-            True means the x_shift terms are constrained across each spectrum.. The default is True.
+            True means the x_shift terms are constrained across each spectrum. The default is True.
         molefraction_segment_constrained : bool, optional
-            True means the mole fraction for that molecule is constrained across each spectrum.. The default is True.
+            True means the mole fraction for that molecule is constrained across each spectrum. The default is True.
         etalon_amp_segment_constrained : bool, optional
-            True means the etalon amplitude is constrained across each spectrum.. The default is True.
-        etalon_freq_segment_constrained : bool, optional
-            True means the etalon frequency is constrained across each spectrum.. The default is True.
+            True means the etalon amplitude is constrained across each spectrum. The default is True.
+        etalon_period_segment_constrained : bool, optional
+            True means the etalon period is constrained across each spectrum. The default is True.
         etalon_phase_segment_constrained : bool, optional
-            True means the etalon phase is constrained across each spectrum.. The default is True.
+            True means the etalon phase is constrained across each spectrum. The default is True.
         pressure_segment_constrained : bool, optional
-            True means the pressure is constrained across each spectrum.. The default is True.
+            True means the pressure is constrained across each spectrum. The default is True.
         temperature_segment_constrained : bool, optional
-            True means the temperature is constrained across each spectrum.. The default is True.
+            True means the temperature is constrained across each spectrum. The default is True.
 
         Returns
         -------
