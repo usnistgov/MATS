@@ -22,7 +22,7 @@ from Dataset import *
 from Generate_FitParam_File import *
 from Edit_Fit_Param_Files import *
 from Fit_Dataset import *
-from Karman_CIA import Karman_CIA_Model
+
 
 
 
