@@ -1,6 +1,6 @@
 #Import Packages
 from Utilities import *
-
+from Fit_Dataset import HTP_from_DF_select, HTP_wBeta_from_DF_select
 
 
 
