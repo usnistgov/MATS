@@ -8,6 +8,8 @@ from bisect import bisect
 import re
 from lmfit import Parameters, Minimizer
 
+from Karman_CIA import Karman_CIA_Model
+
 
 #Constants
 h = 6.62607015e-27 #erg s https://physics.nist.gov/cgi-bin/cuu/Value?h|search_for=h as of 5/21/2020
