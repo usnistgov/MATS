@@ -1128,11 +1128,11 @@ class Fit_DataSet:
                     etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase']) 
                 simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = (baseline + etalons + fit_coef + CIA)
                 if self.weight_spectra:
-                    if spectrum.tau_stats != None:
-                        pt_by_pt_weights= 1 / (spectrum.tau_stats[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1])
-                        weights = spectrum.weight * pt_by_pt_weights
-                    else:
+                    if spectrum.tau_stats.all() == 0:
                         weights = len(alpha_segments[segment])*[spectrum.weight]
+                    else:
+                        pt_by_pt_weights= 1 / (spectrum.tau_stats[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1])
+                        weights = spectrum.weight * pt_by_pt_weights                        
                     residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = ((baseline + etalons + fit_coef + CIA) - alpha_segments[segment])*weights
                 else:
                     residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = (baseline + etalons + fit_coef + CIA) - alpha_segments[segment]
@@ -1170,7 +1170,7 @@ class Fit_DataSet:
 
         """
 
-        minner = Minimizer(self.simulation_model, params, xtol =xtol, maxfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method)
+        minner = Minimizer(self.simulation_model, params, xtol =xtol, maxfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
         result = minner.minimize(method = 'leastsq')#'
         return result
     def residual_analysis(self, result, indv_resid_plot = False):
@@ -1194,12 +1194,15 @@ class Fit_DataSet:
             spectrum_residual, residual_array = np.split(residual_array, [len(spectrum.wavenumber)])
             
             if self.weight_spectra:
-                if spectrum.tau_stats != None:
+                if spectrum.tau_stats.all() == 0:
+                    weights = len(spectrum_residual)*[spectrum.weight]
+                else:
                     pt_by_pt_weights= 1 / (spectrum.tau_stats)
                     weights = spectrum.weight * pt_by_pt_weights
+                if spectrum.weight == 0:
+                    spectrum_residual = np.asarray(len(spectrum_residual)*[0])
                 else:
-                    weights = len(spectrum_residual)*[spectrum.weight]
-                spectrum_residual  = spectrum_residual / weights    
+                    spectrum_residual  = spectrum_residual / weights    
             
             spectrum.set_residuals(spectrum_residual)
             spectrum.set_model(spectrum_residual + spectrum.alpha)
