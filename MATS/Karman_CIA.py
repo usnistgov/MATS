@@ -139,9 +139,8 @@ def Karman_CIA_Model(wavenumbers, pressure, temperature, wave_step = 5,
     sim_wave = np.arange(wave_min, wave_max + wave_step, wave_step)
     omegas = sim_wave - bandcenter
     #Density Correction
-    amagat = (760 / (62.36357736*273.15)) #mol / L
-    at_P_T = (pressure/ (62.36357736*(temperature+273.15)))
-    density_correction = ((at_P_T / amagat)**2)
+    density_correction = ((pressure/760)*(273.15/(temperature + 273.15)))
+    print (density_correction)
     #Calculate Exchange and Spin Orbit Components
     if EXCH_scalar == 0:
         VGEXCH = len(omegas)*[0]
@@ -152,7 +151,7 @@ def Karman_CIA_Model(wavenumbers, pressure, temperature, wave_step = 5,
     else:
         VGSO = SO_scalar*SO(omegas, ahard=SO_ahard , lso=int(SO_l), Nmax=Nmax, Temp=temperature + 273.15)
     #Add the Exchange and SO components and correct for density
-    CIA_model_sim = (np.asarray(VGEXCH) + np.asarray(VGSO))*density_correction
+    CIA_model_sim = (np.asarray(VGEXCH) + np.asarray(VGSO))*density_correction**2
     f = interpolate.interp1d(sim_wave, CIA_model_sim, bounds_error = False, fill_value = 'extrapolate')
     return f(wavenumbers)
     
