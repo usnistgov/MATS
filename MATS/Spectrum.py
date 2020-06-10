@@ -57,7 +57,7 @@ class Spectrum:
                     input_freq = True, input_tau = True, 
                     pressure_column = 'Cavity Pressure /Torr', temperature_column = 'Cavity Temperature Side 2 /C', frequency_column = 'Total Frequency /MHz', 
                     tau_column = 'Mean tau/us', tau_stats_column = None, segment_column = None, 
-                    etalons = {}, nominal_temperature = 296, x_shift = 0, baseline_order = 1):
+                    etalons = {}, nominal_temperature = 296, x_shift = 0, baseline_order = 1, weight = 1):
         self.filename = filename
         self.molefraction = molefraction
         self.natural_abundance = natural_abundance
@@ -93,6 +93,9 @@ class Spectrum:
         self.nominal_temperature = nominal_temperature
         self.x_shift = x_shift
         self.baseline_order = baseline_order
+        self.weight = weight
+        if self.weight ==0:
+            print ('Change the weight to a non-zero value or remove the spectrum from the dataset.  If the weight is 0, then the residuals returned for that spectrum will be 0. ')
         self.diluent_sum_check() # Makes sure that the diluent contributions sum to 1
         
         #Defined from contents of file
@@ -113,9 +116,13 @@ class Spectrum:
             self.tau = (self.alpha*c / 1e12)**-1
             
         if self.tau_stats_column != None:
-            self.tau_stats = file_contents[self.tau_stats_column].values
+            stats = file_contents[self.tau_stats_column].values
+            stats= np.nan_to_num(stats)
+            median_tau_stats = np.median(stats [stats  > 0])
+            stats[stats <= 0] = median_tau_stats
+            self.tau_stats = stats
         else:
-            self.tau_stats = None
+            self.tau_stats  = len(file_contents)*[0]
         if self.segment_column != None:
             self.segments = file_contents[self.segment_column].values
         else:
@@ -214,6 +221,8 @@ class Spectrum:
         return self.nominal_temperature
 
     ##SETTERS 
+    def set_weight(self, new_weight):
+        self.weight = new_weight
     def set_molefraction(self, new_molefraction):
         self.molefraction = new_molefraction
     def set_natural_abundance(self, new_natural_abundance):
@@ -255,7 +264,12 @@ class Spectrum:
     def set_tau_stats_column(self, new_tau_stats_column):
         self.tau_stats_column = new_tau_stats_column
         file_contents = pd.read_csv(self.filename + '.csv')
-        self.tau_stats = file_contents[self.tau_stats_column].values
+        stats = file_contents[self.tau_stats_column].values
+        stats= np.nan_to_num(stats)
+        median_tau_stats = np.median(stats [stats  > 0])
+        stats[stats <= 0] = median_tau_stats
+        self.tau_stats = stats
+        
     def set_etalons(self, new_etalons):
         self.etalons = new_etalons
     def set_model(self, new_model):
