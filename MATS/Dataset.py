@@ -322,7 +322,7 @@ class Dataset:
                     line['molefraction_' + (ISO[(molecule, 1)][4])] = (spectrum.molefraction[molecule])
                 for i in range(0, self.baseline_order + 1):
                     if chr(i+97) == 'a':
-                        line['baseline_' + chr(i+97)] = spectrum.alpha[0]
+                        line['baseline_' + chr(i+97)] = 0
                     else:
                         line['baseline_' + chr(i+97)] = 0
                 for etalon_name in spectrum.etalons:
