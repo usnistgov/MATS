@@ -38,7 +38,7 @@ class Spectrum:
     tau_column : str, optional
         Name of the tau column in input file. Column should be in us or in 1/ctau (ppm/cm) (with appropriate flag for input_tau). Default is Mean tau/us.
     tau_stats_column  : str, optional
-        Name of the tau stats column in input file. Default is 'tau rel. std. dev./%
+        Name of column containing the pt by pt error as a percent of the y-axis. Default is 'tau rel. std. dev./%
     segment_column  : str, optional
         Name of column with segment numbers in input file. This column allows spectrum background parameters to be treated in segments across the spectrum. If None then the entire spectrum will share the same segment.
     etalons : dict, optional
@@ -49,6 +49,9 @@ class Spectrum:
         value in wavenumbers of the x shift for the spectrum axis. This is a fittable parameter. Be careful in using this parameter as floating multiple parameters with similar effects cause fits to not converge (ie. unconstrained line centers + x_shift or fits with line center, shifts, and x_shifts terms without enough lines per spectrum to isolate the different effects). Floating this term works best if you have a good initial guess. Default = 0
     baseline_order : int, optional
         sets the baseline order for this spectrum. Allows you to change the baseline order across the broader dataset.()
+    weight : float, optional,
+        set the weighting to used for the spectrum if using weighted fits.  This can be used to weight a whole spectrum in addition to the pt by pt weighting using the stats column.  
+    
     """
 
 
@@ -223,6 +226,8 @@ class Spectrum:
     ##SETTERS 
     def set_weight(self, new_weight):
         self.weight = new_weight
+        if new_weight == 0:
+            print ('Change the weight to a non-zero value or remove the spectrum from the dataset.  If the weight is 0, then the residuals returned for that spectrum will be 0. ')
     def set_molefraction(self, new_molefraction):
         self.molefraction = new_molefraction
     def set_natural_abundance(self, new_natural_abundance):
@@ -469,7 +474,7 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
     Returns
     -------
     spectrum_file : .csv
-        File that contains the simulated wavenumber axis, noisy wavenumber axis, absorbance data, noisy absorbance data, pressure (torr), and temperature (C). The filename will correspond to the filename parameter, which has a default value of temp. The pressure and temperature columns will include whatever functional change there is to the pressure or temperature, but not the bias offset. This is coded to match how this error would manifest in experiments.
+        File that contains the simulated wavenumber axis, noisy wavenumber axis, absorbance data, noisy absorbance data, percent noise, pressure (torr), and temperature (C). The filename will correspond to the filename parameter, which has a default value of temp. The pressure and temperature columns will include whatever functional change there is to the pressure or temperature, but not the bias offset. This is coded to match how this error would manifest in experiments.
     spectrum_object : object
         Outputs a Spectrum class object. This makes it so the you can easily switch between reading in an experimental spectrum and simulated a synthetic spectrum by simply switching out whether the spectrum object is defined through the class definition or through the simulate_spectrum function.
 
@@ -587,6 +592,7 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
     spectrum['Wavenumber + Noise (cm-1)'] = wavenumbers_err
     spectrum['Alpha (ppm/cm)'] = alpha_array + baseline + etalon_model
     spectrum['Alpha + Noise (ppm/cm)'] = alpha_noise
+    spectrum['Noise (%)'] = 100 *(alpha_noise - (alpha_array + baseline + etalon_model)) / np.max(alpha_noise)
     spectrum['Pressure (Torr)'] = pressure_array*760
     spectrum['Temperature (C)'] = temperature_array - 273.15
     spectrum.to_csv(filename + '.csv', index = False)
@@ -594,5 +600,5 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
     return Spectrum(filename, molefraction = molefraction, natural_abundance = natural_abundance, diluent = diluent, Diluent = Diluent, abundance_ratio_MI = abundance_ratio_MI, spectrum_number = 1, 
                 input_freq = False, input_tau = False, 
                 pressure_column = 'Pressure (Torr)', temperature_column = 'Temperature (C)', frequency_column = 'Wavenumber + Noise (cm-1)', 
-                tau_column = 'Alpha + Noise (ppm/cm)', tau_stats_column = None, segment_column = 'Segment Number',
-                etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1)
+                tau_column = 'Alpha + Noise (ppm/cm)', tau_stats_column = 'Noise (%)', segment_column = 'Segment Number',
+                etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1, weight = 1)

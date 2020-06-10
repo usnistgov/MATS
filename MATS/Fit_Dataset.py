@@ -421,6 +421,8 @@ class Fit_DataSet:
             filename for file constraining CIA parameters
         minimum_parameter_fit_intensity : float, optional
             minimum intensity for parameters to be generated for fitting. NOTE: Even if a value is floated in the param_linelist if it is below this threshold then it won't be a floated.. The default is 1e-27.
+        weight_spectra : boolean
+            If True, then the pt by pt percent uncertainty for each spectrum and the spectrum weighting will be used in the calculation of the residuals.  Default is False.
         baseline_limit : bool, optional
             If True, then impose min/max limits on baseline parameter solutions. The default is False.
         baseline_limit_factor : float, optional
