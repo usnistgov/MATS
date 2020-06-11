@@ -1,1 +1,17 @@
-v1_1 pushed on 12/27/19
+v1_1 pushed TBD
+NEW FEATURES
+* Beta correction to the Dicke Narrowing accounting for the hardness of coliisions based on broadener and perturber.  
+* Added CIA functionality.  Currently, can manually enter CIA for each file or use the Karman O2 CIA Model
+* Added capability pass non-fitting columns through the fit definition.  This will help for future addition of bandwide functions or for ease of transforming fit outputs to reported results.
+* Add ability to weight the spectra
+
+
+BUG FIXES
+* Changed the structure of MATS, so that each class is in its own python file
+* Changed all constant values to be consistent with CODATA values and hardwired the values to definition in the utility script
+* Added warning for floating parameters with an initial guess equal to 0.
+* Changed the etalon_freq variables to etalon_period, since that is how it is coded.
+* Added checks for molecule consistency between dataset and parameter line list.
+
+
+v1_0 pushed on 12/27/19
