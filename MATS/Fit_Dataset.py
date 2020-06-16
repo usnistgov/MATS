@@ -1177,11 +1177,8 @@ class Fit_DataSet:
         minner = Minimizer(self.simulation_model, params, xtol =xtol, maxfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
         result = minner.minimize(method = 'leastsq')#'
         return result
-    def emcee_analysis(self, params, burn = 300, steps = 1000, thin = 20, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff'):
-        minner = Minimizer(self.simulation_model, params,  fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
-        result = minner.minimize(method='emcee',  burn=burn, steps=steps, thin=thin,
-                     params=params, is_weighted=False, progress=False)
-        return result
+
+        
     def residual_analysis(self, result, indv_resid_plot = False):
         """Updates the model and residual arrays in each spectrum object with the results of the fit and gives the option of generating the combined absorption and residual plot for each spectrum.
         

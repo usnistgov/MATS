@@ -7,7 +7,6 @@ import qgrid
 from bisect import bisect
 import re
 from lmfit import Parameters, Minimizer
-
 from Karman_CIA import Karman_CIA_Model
 
 
