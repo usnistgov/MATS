@@ -31,6 +31,7 @@ class Dataset:
         self.CIA_model = CIA_model
         self.renumber_spectra()
         self.molecule_list = self.correct_component_list()
+        self.isotope_list = self.check_iso_list()
         self.correct_etalon_list()
         self.max_baseline_order()
         self.broadener_list = self.get_broadener_list()
@@ -72,6 +73,64 @@ class Dataset:
                     spectrum_molefraction_dictionary[molecule] = 0
             spectrum.set_molefraction(spectrum_molefraction_dictionary)
         return dataset_molecule_list
+    
+    def check_iso_list(self):
+        ''' Checks to make sure that all molecules are in the isotope_list and also checks to make sure all spectra use the same isotope list
+        '''
+        # Dictionary of Molecules and Isoptes in linelist:
+        molecules_isotopes_in_paramlist= self.param_linelist.groupby(['molec_id','local_iso_id']).size().reset_index().rename(columns={0:'count'})
+        molecules_isotopes_in_paramlist_dict = {}
+        for i in molecules_isotopes_in_paramlist:
+            molecule = molecules_isotopes_in_paramlist[molecules_isotopes_in_paramlist.index == i]['molec_id'].values
+            isotope = molecules_isotopes_in_paramlist[molecules_isotopes_in_paramlist.index == i]['local_iso_id'].values
+            if molecule not in molecules_isotopes_in_paramelist_dict.keys():
+                molecules_isotopes_in_paramlist_dict[molecule] = isotope
+            else:
+                isotope_list = molecules_isotopes_in_paramlist_dict[molecule] 
+                isotope_list.append(isotope)
+                molecules_isotopes_in_paramlist_dict[molecule] = isotope_list  
+                
+        
+        # check if isotope list is different from ISO
+        missing_molecules = {}
+        other_isotope_list = []
+        for spectrum in self.spectra:
+            if spectrum.isotope_list != ISO:
+                other_isotope_list.append(spectrum.isotope_list)
+                isolist_molecules_isotopes = isotope_list_molecules_isotopes(isotope_list = spectrum.isotope_list)
+                for molecule in self.molecule_list:
+                    if molecule not in isolist_molecules_isotopes:
+                        if molecule in molecules_isotopes_in_paramlist_dict:
+                            missing_molecules[molecule] = molecules_isotopes_in_paramlist_dict[molecule]
+                        else:
+                            missing_molecules[molecule] = ['all isotopes missing']
+                    else:
+                        for isotope in molecules_isotopes_in_paramlist_dict[molecule]:
+                            if isotope not in isolist_molecules_isotopes[molecule]:
+                                if molecule not in missing_molecules:
+                                    missing_molecules[molecule] = isotope
+                                else:
+                                    isotope_list = missing_molecules[molecule] 
+                                    isotope_list.append(isotope)
+                                    missing_molecules[molecule] = isotope_list 
+                                    
+                            
+        if len(missing_molecules) == 0 & len(other_isotope_list)== 1:
+            for spectrum in self.spectra:
+                if spectrum.isotope_list != other_isotope_list[0]:
+                    spectrum.isotope_list = other_isotope_list[0]
+                    print ('Best practice is to use the same isotope list for all spectra.  All molecules were found in the non-HITRAN isotope list, so this has been set as the isotope list for all molecules.')
+            return other_isotope_list[0]
+        elif len(other_isotope_list)> 1 and (len(missing_molecules) ==0):
+            print ('WARNING:  Use the same isotope list for all spectra to ensure continuity in the dataset')
+            return ISO
+        elif len(missing_molecules) !=0:
+            print (missing_molecules)
+            print ('WARNING:  Use the same isotope list for all spectra to ensure continuity in the dataset and make sure all Molecules and isotopes are in that isotope list.')
+            return ISO
+                
+                    
+                
     
     def get_broadener_list(self):
         """Provides a list of all broadeners in the dataset.

@@ -3,7 +3,7 @@ from Utilities import *
 
 
 def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff',
-                p = 1, T = 296, molefraction = {}, 
+                p = 1, T = 296, molefraction = {}, isotope_list = ISO,
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30):
     """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters.
     
@@ -74,6 +74,8 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
         temperature for simulation in kelvin. The default is 296.
     molefraction : dict, optional
         takes the form {molecule_id : mole fraction, molecule_id: mole fraction, . . .}. The default is {}.
+    isotope_list : dict, optional
+        provides opportunity to specify the isotope look-up table.  Default is ISO, which is from HAPI.  If not using ISO, then must use this format and suggested you use function to add to ISO
     natural_abundance : bool, optional
         True indicates the sample is at natural abundance. The default is True.
     abundance_ratio_MI : dictionary, optional
@@ -124,16 +126,23 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
     
     for molec in linelist['molec_id'].unique():
         for iso in linelist ['local_iso_id'].unique():
-            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = PYTIPS2017(molec,iso,T)
-            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
-            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion 
+            try:
+                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = PYTIPS2017(molec,iso,T)
+            except:
+                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = 1
+            try:
+                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
+            except:
+                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = 1
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso, isotope_list = isotope_list) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion 
             if ( natural_abundance == False) and abundance_ratio_MI != {}:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'abun_ratio'] = abundance_ratio_MI[molec][iso]
     
     #linelist['LineIntensity'] = EnvironmentDependency_Intensity(linelist['sw'],T,Tref,linelist['SigmaT'],linelist['SigmaTref'],linelist['elower'],linelist['nu'])
 
     linelist['LineIntensity'] = linelist['sw']*linelist['SigmaTref']/linelist['SigmaT']*(np.exp(-c2*linelist['elower']/T)*(1-np.exp(-c2*linelist['nu']/T)))/(np.exp(-c2*linelist['elower']/Tref)*(1-np.exp(-c2*linelist['nu']/Tref)))
-
+    if isotope_list != ISO:
+        linelist.loc[(linelist['SigmaT' == 1]) & (linelist['SigmaTref' == 1])] = linelist[(linelist['SigmaT' == 1]) & (linelist['SigmaTref' == 1])]['sw'].values
     
     #Calculate Doppler Broadening
     linelist['GammaD'] = np.sqrt(2*k*Na*T*np.log(2)/(linelist['m'].values))*linelist['nu'] / c
@@ -185,7 +194,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
     return (wavenumbers, np.asarray(Xsect))  
 
 def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff',
-                p = 1, T = 296, molefraction = {}, 
+                p = 1, T = 296, molefraction = {}, isotope_list = ISO, 
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30):
     """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters with capability of incorporating the beta correction to the Dicke Narrowing proposed in Analytical-function correction to the Hartmann–Tran profile for more reliable representation of the Dicke-narrowed molecular spectra.
     
@@ -256,6 +265,8 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
         temperature for simulation in kelvin. The default is 296.
     molefraction : dict, optional
         takes the form {molecule_id : mole fraction, molecule_id: mole fraction, . . .}. The default is {}.
+    isotope_list : dict, optional
+        provides opportunity to specify the isotope look-up table.  Default is ISO, which is from HAPI.  If not using ISO, then must use this format and suggested you use function to add to ISO
     natural_abundance : bool, optional
         True indicates the sample is at natural abundance. The default is True.
     abundance_ratio_MI : dictionary, optional
@@ -310,12 +321,19 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
     
     for molec in linelist['molec_id'].unique():
         for iso in linelist ['local_iso_id'].unique():
-            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = PYTIPS2017(molec,iso,T)
-            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
-            #linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'ma'] = molecularMass(molec,iso)
-            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion
+            try:
+                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = PYTIPS2017(molec,iso,T)
+            except:
+                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = 1
+            try:
+                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
+            except:
+                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = 1
+                
+
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso, isotope_list = isotope_list) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion
             if (len(Diluent) == 1) & ('self' in Diluent):
-                Diluent['self']['mp'] = molecularMass(molec,iso)
+                Diluent['self']['mp'] = molecularMass(molec,iso, isotope_list = isotope_list)
             if ( natural_abundance == False) and abundance_ratio_MI != {}:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'abun_ratio'] = abundance_ratio_MI[molec][iso]
     # Calculate mp
@@ -325,7 +343,9 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers
      
     # Get Line Intensity
     linelist['LineIntensity'] = linelist['sw']*linelist['SigmaTref']/linelist['SigmaT']*(np.exp(-c2*linelist['elower']/T)*(1-np.exp(-c2*linelist['nu']/T)))/(np.exp(-c2*linelist['elower']/Tref)*(1-np.exp(-c2*linelist['nu']/Tref)))
-
+    if isotope_list != ISO:
+        linelist.loc[(linelist['SigmaT' == 1]) & (linelist['SigmaTref' == 1])] = linelist[(linelist['SigmaT' == 1]) & (linelist['SigmaTref' == 1])]['sw'].values
+    
     #Calculate Doppler Broadening
     #linelist['GammaD'] = np.sqrt(2*1.380648813E-16*T*np.log(2)/linelist['m']/2.99792458e10**2)*linelist['nu']
     linelist['GammaD'] = np.sqrt(2*k*Na*T*np.log(2)/(linelist['m'].values))*linelist['nu'] / c
@@ -1071,11 +1091,11 @@ class Fit_DataSet:
                 
                 if self.beta_formalism == True:
                     fit_nu, fit_coef = HTP_wBeta_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
-                            p = p, T = T, molefraction = fit_molefraction, 
+                            p = p, T = T, molefraction = fit_molefraction, isotope_list = self.dataset.isotope_list, 
                             natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
                 else:
                     fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
-                            p = p, T = T, molefraction = fit_molefraction, 
+                            p = p, T = T, molefraction = fit_molefraction, isotope_list = self.dataset.isotope_list, 
                             natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
                 fit_coef = fit_coef * 1e6
                 ## CIA Calculation
@@ -1387,7 +1407,7 @@ class Fit_DataSet:
             #Add Column for mass
             for molec in beta_summary_list['molec_id'].unique():
                 for iso in beta_summary_list ['local_iso_id'].unique():
-                    beta_summary_list.loc[(beta_summary_list['molec_id']==molec) & (beta_summary_list['local_iso_id']==iso), 'm'] = molecularMass(molec,iso) 
+                    beta_summary_list.loc[(beta_summary_list['molec_id']==molec) & (beta_summary_list['local_iso_id']==iso), 'm'] = molecularMass(molec,iso, isotope_list = self.dataset.isotope_list, ) 
 
             #Single or MS for nu and nuVC
             for spectrum in self.dataset.spectra:

@@ -19,6 +19,8 @@ class Spectrum:
         flag for if the molecular species in the spectrum are at natural abundance
     abundance_ratio_MI : dict, optional
         if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }
+    isotope_list : dict, optional
+        provides opportunity to specify the isotope look-up table.  Default is ISO, which is from HAPI.  If not using ISO, then must use this format and suggested you use function to add to ISO
     diluent : str, optional
         sets the diluent for the sample.  Default = 'air'
     Diluent : dict, optional
@@ -56,7 +58,7 @@ class Spectrum:
 
 
     
-    def __init__(self, filename, molefraction = {}, natural_abundance = True, diluent = 'air', Diluent = {}, abundance_ratio_MI = {}, spectrum_number = 1, 
+    def __init__(self, filename, molefraction = {}, natural_abundance = True, isotope_list = ISO, diluent = 'air', Diluent = {}, abundance_ratio_MI = {}, spectrum_number = 1, 
                     input_freq = True, input_tau = True, 
                     pressure_column = 'Cavity Pressure /Torr', temperature_column = 'Cavity Temperature Side 2 /C', frequency_column = 'Total Frequency /MHz', 
                     tau_column = 'Mean tau/us', tau_stats_column = None, segment_column = None, 
@@ -65,6 +67,7 @@ class Spectrum:
         self.molefraction = molefraction
         self.natural_abundance = natural_abundance
         self.abundance_ratio_MI = abundance_ratio_MI
+        self.isotope_list = isotope_list
         self.diluent = diluent
         if Diluent == {}: #if Diluent was not set as the dictionary of various broadeners, then define dictionary with all of the broadening contribution coming from the diluent broadener
             if self.diluent == 'air':
@@ -409,7 +412,7 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
                         SNR = None, baseline_terms = [0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760, 
                         pressure_err = {'per_bias': 0, 'function': None, 'params': {}}, 
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
-                        natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {}, 
+                        isotope_list = ISO, natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {}, 
                         nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False):
     """Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.
     
@@ -454,6 +457,8 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
         flag for if the spectrum contains data at natural abundance. The default is True.
     abundance_ratio_MI : dict, optional
         if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }. The default is {}.
+    isotope_list : dict, optional
+        provides opportunity to specify the isotope look-up table.  Default is ISO, which is from HAPI.  If not using ISO, then must use this format and suggested you use function to add to ISO
     diluent : str, optional
         sets the diluent for the sample if only using one broadener. The default is 'air'.
     Diluent : dict, optional
@@ -554,12 +559,12 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
 
         if beta_formalism:
             waves, alpha = HTP_wBeta_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
-                                p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, 
+                                p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, isotope_list = isotope_list,
                                 natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,  
                                 Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold)
         else:
             waves, alpha = HTP_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
-                    p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, 
+                    p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, isotope_list = isotope_list,
                     natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,  
                     Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold)
         alpha_array[np.min(segment_array): np.max(segment_array)+1] = alpha * 1e6
@@ -597,8 +602,8 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
     spectrum['Temperature (C)'] = temperature_array - 273.15
     spectrum.to_csv(filename + '.csv', index = False)
     # Returns a spectrum class object for facile integration into the fitting workflow
-    return Spectrum(filename, molefraction = molefraction, natural_abundance = natural_abundance, diluent = diluent, Diluent = Diluent, abundance_ratio_MI = abundance_ratio_MI, spectrum_number = 1, 
-                input_freq = False, input_tau = False, 
+    return Spectrum(filename, molefraction = molefraction, natural_abundance = natural_abundance, diluent = diluent, Diluent = Diluent, abundance_ratio_MI = abundance_ratio_MI, isotope_list = isotope_list,
+                    spectrum_number = 1, input_freq = False, input_tau = False, 
                 pressure_column = 'Pressure (Torr)', temperature_column = 'Temperature (C)', frequency_column = 'Wavenumber + Noise (cm-1)', 
                 tau_column = 'Alpha + Noise (ppm/cm)', tau_stats_column = 'Noise (%)', segment_column = 'Segment Number',
                 etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1, weight = 1)
