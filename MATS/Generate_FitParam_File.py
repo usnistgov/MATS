@@ -589,7 +589,7 @@ class Generate_FitParam_File:
                 base_linelist_df.loc[base_linelist_df['Baseline Order']>= order, param + '_vary'] = vary_baseline         
             if 'molefraction' in param:
                 for molecule in vary_molefraction:
-                    if (ISO[(molecule, 1)][4]) in param:  
+                    if (self.dataset.isotope_list[(molecule, 1)][4]) in param:  
                         base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_molefraction[molecule])                                
             if 'amp' in param:
                 base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_etalon_amp) 

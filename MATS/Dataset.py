@@ -63,15 +63,15 @@ class Dataset:
             dataset_molecule_list += (spectrum.molefraction.keys())
         molecules_in_paramlist = self.param_linelist['molec_id'].unique()
         for i in range(0, len(molecules_in_paramlist)):
-            dataset_molecule_list.append(molecules_in_paramlist[i]) 
-        dataset_molecule_list = list(set(dataset_molecule_list))
-        
+            if molecules_in_paramlist[i] not in dataset_molecule_list:
+                dataset_molecule_list.append(molecules_in_paramlist[i]) 
         for spectrum in self.spectra:
             spectrum_molefraction_dictionary = spectrum.get_molefraction()
             for molecule in dataset_molecule_list:
                 if molecule not in spectrum_molefraction_dictionary:
                     spectrum_molefraction_dictionary[molecule] = 0
             spectrum.set_molefraction(spectrum_molefraction_dictionary)
+        
         return dataset_molecule_list
     
     def check_iso_list(self):
@@ -79,12 +79,13 @@ class Dataset:
         '''
         # Dictionary of Molecules and Isoptes in linelist:
         molecules_isotopes_in_paramlist= self.param_linelist.groupby(['molec_id','local_iso_id']).size().reset_index().rename(columns={0:'count'})
+        molecules_isotopes_in_paramlist = molecules_isotopes_in_paramlist.astype(int)
         molecules_isotopes_in_paramlist_dict = {}
-        for i in molecules_isotopes_in_paramlist:
-            molecule = molecules_isotopes_in_paramlist[molecules_isotopes_in_paramlist.index == i]['molec_id'].values
-            isotope = molecules_isotopes_in_paramlist[molecules_isotopes_in_paramlist.index == i]['local_iso_id'].values
-            if molecule not in molecules_isotopes_in_paramelist_dict.keys():
-                molecules_isotopes_in_paramlist_dict[molecule] = isotope
+        for i in molecules_isotopes_in_paramlist.index:            
+            molecule = molecules_isotopes_in_paramlist[molecules_isotopes_in_paramlist.index == i]['molec_id'].values[0]
+            isotope = molecules_isotopes_in_paramlist[molecules_isotopes_in_paramlist.index == i]['local_iso_id'].values[0]
+            if molecule not in molecules_isotopes_in_paramlist_dict.keys():
+                molecules_isotopes_in_paramlist_dict[molecule] = [isotope]
             else:
                 isotope_list = molecules_isotopes_in_paramlist_dict[molecule] 
                 isotope_list.append(isotope)
@@ -96,26 +97,26 @@ class Dataset:
         other_isotope_list = []
         for spectrum in self.spectra:
             if spectrum.isotope_list != ISO:
-                other_isotope_list.append(spectrum.isotope_list)
-                isolist_molecules_isotopes = isotope_list_molecules_isotopes(isotope_list = spectrum.isotope_list)
-                for molecule in self.molecule_list:
-                    if molecule not in isolist_molecules_isotopes:
-                        if molecule in molecules_isotopes_in_paramlist_dict:
-                            missing_molecules[molecule] = molecules_isotopes_in_paramlist_dict[molecule]
+                if spectrum.isotope_list not in other_isotope_list:
+                    other_isotope_list.append(spectrum.isotope_list)
+                    isolist_molecules_isotopes = isotope_list_molecules_isotopes(isotope_list = spectrum.isotope_list)
+                    for molecule in self.molecule_list:
+                        if molecule not in isolist_molecules_isotopes:
+                            if molecule in molecules_isotopes_in_paramlist_dict:
+                                missing_molecules[molecule] = molecules_isotopes_in_paramlist_dict[molecule]
+                            else:
+                                missing_molecules[molecule] = ['all isotopes missing']
                         else:
-                            missing_molecules[molecule] = ['all isotopes missing']
-                    else:
-                        for isotope in molecules_isotopes_in_paramlist_dict[molecule]:
-                            if isotope not in isolist_molecules_isotopes[molecule]:
-                                if molecule not in missing_molecules:
-                                    missing_molecules[molecule] = isotope
-                                else:
-                                    isotope_list = missing_molecules[molecule] 
-                                    isotope_list.append(isotope)
-                                    missing_molecules[molecule] = isotope_list 
-                                    
-                            
-        if len(missing_molecules) == 0 & len(other_isotope_list)== 1:
+                            for isotope in molecules_isotopes_in_paramlist_dict[molecule]:
+                                if isotope not in isolist_molecules_isotopes[molecule]:
+                                    if molecule not in missing_molecules:
+                                        missing_molecules[molecule] = isotope
+                                    else:
+                                        isotope_list = missing_molecules[molecule] 
+                                        isotope_list.append(isotope)
+                                        missing_molecules[molecule] = isotope_list 
+
+        if len(missing_molecules) == 0 and len(other_isotope_list)== 1:
             for spectrum in self.spectra:
                 if spectrum.isotope_list != other_isotope_list[0]:
                     spectrum.isotope_list = other_isotope_list[0]
@@ -128,6 +129,7 @@ class Dataset:
             print (missing_molecules)
             print ('WARNING:  Use the same isotope list for all spectra to ensure continuity in the dataset and make sure all Molecules and isotopes are in that isotope list.')
             return ISO
+        
                 
                     
                 
@@ -378,7 +380,7 @@ class Dataset:
                 line['Temperature'] = spectrum.get_temperature()
                 line['x_shift'] = spectrum.x_shift
                 for molecule in spectrum.molefraction:
-                    line['molefraction_' + (ISO[(molecule, 1)][4])] = (spectrum.molefraction[molecule])
+                    line['molefraction_' + (self.isotope_list[(molecule, 1)][4])] = (spectrum.molefraction[molecule])
                 for i in range(0, self.baseline_order + 1):
                     if chr(i+97) == 'a':
                         line['baseline_' + chr(i+97)] = 0
@@ -408,7 +410,7 @@ class Dataset:
             CIA_paramlist = pd.DataFrame()
             CIA_list = []
             for molecule in self.molecule_list:
-                molecule_name = ISO[(molecule, 1)][4]
+                molecule_name = self.isotope_list[(molecule, 1)][4]
                 for broadener in self.broadener_list:
                     if broadener == 'self':
                         if molecule_name + '_' + molecule_name not in CIA_list:

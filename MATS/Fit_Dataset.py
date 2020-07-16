@@ -142,7 +142,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
 
     linelist['LineIntensity'] = linelist['sw']*linelist['SigmaTref']/linelist['SigmaT']*(np.exp(-c2*linelist['elower']/T)*(1-np.exp(-c2*linelist['nu']/T)))/(np.exp(-c2*linelist['elower']/Tref)*(1-np.exp(-c2*linelist['nu']/Tref)))
     if isotope_list != ISO:
-        linelist.loc[(linelist['SigmaT' == 1]) & (linelist['SigmaTref' == 1])] = linelist[(linelist['SigmaT' == 1]) & (linelist['SigmaTref' == 1])]['sw'].values
+        linelist.loc[(linelist['SigmaT'] == 1) & (linelist['SigmaTref'] == 1), 'LineIntensity'] = linelist[(linelist['SigmaT'] == 1) & (linelist['SigmaTref'] == 1)]['sw'].values
     
     #Calculate Doppler Broadening
     linelist['GammaD'] = np.sqrt(2*k*Na*T*np.log(2)/(linelist['m'].values))*linelist['nu'] / c
@@ -1082,8 +1082,8 @@ class Fit_DataSet:
                 #Set-up MoleFraction for Fitting
                 fit_molefraction = spectrum.molefraction
                 for molecule in spectrum.molefraction:
-                    if ('molefraction_'+ ISO[(molecule, 1)][4]) + '_' + str(spectrum_number) + '_' + str(segment) in baseline_params:
-                        fit_molefraction[molecule] = np.float(params[('molefraction_'+ ISO[(molecule, 1)][4]) + '_' + str(spectrum_number) + '_' + str(segment)])
+                    if ('molefraction_'+ self.dataset.isotope_list[(molecule, 1)][4]) + '_' + str(spectrum_number) + '_' + str(segment) in baseline_params:
+                        fit_molefraction[molecule] = np.float(params[('molefraction_'+ self.dataset.isotope_list[(molecule, 1)][4]) + '_' + str(spectrum_number) + '_' + str(segment)])
                 #Get Environmental Parameters
                 p = np.float(params['Pressure_' + str(spectrum_number) + '_' + str(segment)])
                 T = np.float(params['Temperature_' + str(spectrum_number) + '_' + str(segment)])               
