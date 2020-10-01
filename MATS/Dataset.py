@@ -129,7 +129,9 @@ class Dataset:
             print (missing_molecules)
             print ('WARNING:  Use the same isotope list for all spectra to ensure continuity in the dataset and make sure all Molecules and isotopes are in that isotope list.')
             return ISO
-        
+        else:
+            return ISO
+   
                 
                     
                 
