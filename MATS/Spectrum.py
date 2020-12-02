@@ -631,4 +631,5 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
                     spectrum_number = 1, input_freq = False, input_tau = False, 
                 pressure_column = 'Pressure (Torr)', temperature_column = 'Temperature (C)', frequency_column = 'Wavenumber + Noise (cm-1)', 
                 tau_column = 'Alpha + Noise (ppm/cm)', tau_stats_column = 'Noise (%)', segment_column = 'Segment Number',
-                etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1, weight = 1)
+                etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1, weight = 1, 
+                ILS_function = ILS_function, ILS_resolution = ILS_resolution ,ILS_wing=ILS_wing)
