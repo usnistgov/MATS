@@ -35,6 +35,7 @@ class Dataset:
         self.correct_etalon_list()
         self.max_baseline_order()
         self.broadener_list = self.get_broadener_list()
+        self.ILS_function_dict = self.get_ILS_function_dict()
         
     def renumber_spectra(self):
         """renumbers the spectra to be sequential starting at 1 (called in the initialization of the class).
@@ -151,7 +152,27 @@ class Dataset:
             dataset_broadener_list += spectrum.Diluent.keys()
         dataset_broadener_list = list(set(dataset_broadener_list))
         return dataset_broadener_list
-            
+    def get_ILS_function_dict(self):
+        """Provides a dictionary of all ILS functions used in the dataset and the number of resolution parameters
+        
+
+        Returns
+        -------
+        dataset_ILS_list : list
+            list of strings matching the name of the ILS functions used in the dataset
+
+        """
+        dataset_ILS_function_dict = {}
+        for spectrum in self.spectra:
+            if spectrum.ILS_function != None:
+                if spectrum.ILS_function.__name__ not in dataset_ILS_function_dict:
+                    if (type(spectrum.ILS_resolution) == float) or (type(spectrum.ILS_resolution) == int):
+                        dataset_ILS_function_dict[spectrum.ILS_function.__name__] = 1
+                    else:
+                        dataset_ILS_function_dict[spectrum.ILS_function.__name__] = len(spectrum.ILS_resolution)
+                        
+      
+        return dataset_ILS_function_dict            
 
 
     def correct_etalon_list(self):
@@ -392,6 +413,13 @@ class Dataset:
                     line['etalon_' + str(etalon_name) + '_amp'] = spectrum.etalons[etalon_name][0]
                     line['etalon_' + str(etalon_name) + '_period'] = spectrum.etalons[etalon_name][1]
                     line['etalon_' + str(etalon_name) + '_phase'] = 0
+                if self.ILS_function_dict != {}:
+                    for ILS_function in self.ILS_function_dict:
+                        for res_param in range(0, self.ILS_function_dict[ILS_function]):
+                            if (type(spectrum.ILS_resolution) == float) or (type(spectrum.ILS_resolution) == int):
+                                line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution
+                            else:
+                                line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution[res_param]           
                 baseline_paramlist  = baseline_paramlist.append(line, ignore_index=True)
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
         baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv', index = True)
