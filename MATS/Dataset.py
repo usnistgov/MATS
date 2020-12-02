@@ -416,7 +416,9 @@ class Dataset:
                 if self.ILS_function_dict != {}:
                     for ILS_function in self.ILS_function_dict:
                         for res_param in range(0, self.ILS_function_dict[ILS_function]):
-                            if (type(spectrum.ILS_resolution) == float) or (type(spectrum.ILS_resolution) == int):
+                            if (spectrum.ILS_function == None) or (spectrum.ILS_function.__name__ != ILS_function):
+                                line[ILS_function + '_res_' + str(res_param)] = 0
+                            elif (type(spectrum.ILS_resolution) == float) or (type(spectrum.ILS_resolution) == int):
                                 line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution
                             else:
                                 line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution[res_param]           
