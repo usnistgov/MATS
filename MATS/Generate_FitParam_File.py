@@ -534,7 +534,8 @@ class Generate_FitParam_File:
         return param_linelist_df 
 
     def generate_fit_baseline_linelist(self, vary_baseline = True, vary_pressure = False, vary_temperature = False,vary_molefraction = {7:True, 1:False}, vary_xshift = False, 
-                                      vary_etalon_amp= False, vary_etalon_period= False, vary_etalon_phase= False):
+                                      vary_etalon_amp= False, vary_etalon_period= False, vary_etalon_phase= False, 
+                                      vary_ILS_res = False):
         """Generates the baseline line list used in fitting and updates the fitting booleans to desired settings.
         
 
@@ -556,6 +557,8 @@ class Generate_FitParam_File:
             If True, then sets etalon period parameters for all spectra to float. . The default is False.
         vary_etalon_phase : bool, optional
             If True, then sets etalon phase parameters for all spectra to float.. The default is False.
+        vary_ILS_res : bool, optional
+            If True, then sets ILS resolution parameters for all spectra to float.. The default is False.
 
         Returns
         -------
@@ -568,12 +571,15 @@ class Generate_FitParam_File:
 
         base_linelist_df = self.get_base_linelist().copy()
         parameters =  (list(base_linelist_df))
-
+        baseline_param_order = ['Segment Number']
+        
         #Generate Fit Baseline file
         for param in parameters:
             if ('Baseline Order' != param) and ('Segment Number' != param):
                 base_linelist_df[param + '_err'] = 0
                 base_linelist_df[param + '_vary']= False
+                baseline_param_order += [param, param + '_err', param + '_vary']
+                
             if 'Pressure' in param:
                 base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_pressure)]
                 if (vary_pressure):
@@ -597,7 +603,12 @@ class Generate_FitParam_File:
                 base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_etalon_period) 
             if 'phase' in param:
                 base_linelist_df.loc[base_linelist_df[param.replace("phase", "period")]!=0, param + '_vary'] = (vary_etalon_phase)
-        base_linelist_df.drop(['Baseline Order'], axis=1, inplace = True)
+            if '_res_' in param:
+                base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_ILS_res) 
+        
+                
+        #base_linelist_df.drop(['Baseline Order'], axis=1, inplace = True)
+        base_linelist_df = base_linelist_df[baseline_param_order]
         #base_linelist_df = base_linelist_df.reindex(sorted(base_linelist_df.columns), axis=1)
         base_linelist_df.to_csv(self.base_linelist_savename + '.csv', index = True)
         return base_linelist_df
