@@ -530,7 +530,8 @@ class Fit_DataSet:
         CIA_model : str, optional
             The name of the CIA model to used in the simulation model.  Current option is 'Karman'.
         CIA_wavestep : float, optional
-            defines the simulation wavenumber steps for the CIA calculation.  The CIA will then be interpolated onto the spectrum frequency axis.  
+            defines the simulation wavenumber steps for the CIA calculation.  The CIA will then be interpolated onto the spectrum frequency axis. 
+
 
         """
 
