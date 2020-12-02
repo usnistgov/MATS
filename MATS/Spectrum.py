@@ -605,22 +605,22 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
         phase = np.random.rand()
         x = wavenumbers - np.min(wavenumbers)
         etalon_model += amp*np.sin((2*np.pi * period)*x+ phase) 
+    alpha_array += (baseline + etalon_model)
+    if ILS_function != None:
+        wavenumbers, alpha_array, i1, i2m, slit = convolveSpectrumSame(wavenumbers, alpha_array, SlitFunction = ILS_function, Resolution = ILS_resolution ,AF_wing=ILS_wing)  
     #Calculate Noisy Spectrum
     if SNR == None:
         alpha_noise = alpha_array
     else:   
         alpha_noise = alpha_array + np.max(alpha_array)*np.random.normal(loc = 0, scale =1, size = len(alpha_array))*1/SNR
-    alpha_noise += (baseline + etalon_model)
-    if ILS_function != None:
-        wavenumbers_err, alpha_noise, i1, i2m, slit = convolveSpectrumSame(wavenumbers_err, alpha_noise, SlitFunction = ILS_function, Resolution = ILS_resolution ,AF_wing=ILS_wing)
-    
+ 
     
     #Generate and save Simulated Spectrum File
     spectrum = pd.DataFrame()
     spectrum['Segment Number'] = seg_number
     spectrum['Wavenumber (cm-1)'] = wavenumbers
     spectrum['Wavenumber + Noise (cm-1)'] = wavenumbers_err
-    spectrum['Alpha (ppm/cm)'] = alpha_array + baseline + etalon_model
+    spectrum['Alpha (ppm/cm)'] = alpha_array 
     spectrum['Alpha + Noise (ppm/cm)'] = alpha_noise
     spectrum['Noise (%)'] = 100 *(alpha_noise - (alpha_array + baseline + etalon_model)) / np.max(alpha_noise)
     spectrum['Pressure (Torr)'] = pressure_array*760
