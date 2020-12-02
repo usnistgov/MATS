@@ -53,6 +53,13 @@ class Spectrum:
         sets the baseline order for this spectrum. Allows you to change the baseline order across the broader dataset.()
     weight : float, optional,
         set the weighting to used for the spectrum if using weighted fits.  This can be used to weight a whole spectrum in addition to the pt by pt weighting using the stats column.  
+    ILS_function: string, optional
+        Default is None and means that no instrument line shape is used in the fitting.  
+        Function can be: SLIT_MICHELSON, SLIT_DIFFRACTION, SLIT_COSINUS, SLIT_DISPERSION, SLIT_GAUSSIAN, SLIT_TRIANGULAR, SLIT_RECTANGULAR corresponding to the ILS functions defined in HAPI or a user defined function.
+    ILS_resolution: float/array, optional   
+        Resolution is a float or array of ILS resolutions in wavenumbers.  The SlitFunctions defined in HAPI have 1 resolution, but this opens the option for the user defined function to be comprised of several functions with varying resolutions.  Default is 0.1 cm-1.
+    ILS_wing: float/array, optional
+        AF_wing is the a float or array consisting of the range the ILS is calculted over in cm-1.  This is a single value fort he HAPI slit functions, but could be an array of multiple values for user-defined functions.  Default is 10 cm-1 
     
     """
 
@@ -62,7 +69,8 @@ class Spectrum:
                     input_freq = True, input_tau = True, 
                     pressure_column = 'Cavity Pressure /Torr', temperature_column = 'Cavity Temperature Side 2 /C', frequency_column = 'Total Frequency /MHz', 
                     tau_column = 'Mean tau/us', tau_stats_column = None, segment_column = None, 
-                    etalons = {}, nominal_temperature = 296, x_shift = 0, baseline_order = 1, weight = 1):
+                    etalons = {}, nominal_temperature = 296, x_shift = 0, baseline_order = 1, weight = 1, 
+                    ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10):
         self.filename = filename
         self.molefraction = molefraction
         self.natural_abundance = natural_abundance
@@ -102,6 +110,11 @@ class Spectrum:
         self.weight = weight
         if self.weight ==0:
             print ('Change the weight to a non-zero value or remove the spectrum from the dataset.  If the weight is 0, then the residuals returned for that spectrum will be 0. ')
+        self.ILS_function = ILS_function
+        self.ILS_resolution = ILS_resolution
+        self.ILS_wing = ILS_wing
+        
+
         self.diluent_sum_check() # Makes sure that the diluent contributions sum to 1
         
         #Defined from contents of file
@@ -413,7 +426,8 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
                         pressure_err = {'per_bias': 0, 'function': None, 'params': {}}, 
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
                         isotope_list = ISO, natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {}, 
-                        nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False):
+                        nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False, 
+                        ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10):
     """Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.
     
 
@@ -475,7 +489,14 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
         Number of segments in the file, which is implemented labeling the segment column into equal sequential se . The default is 10.
     beta_formalism : boolean, optional
         Indicates whether the beta correction for Dicke Narrowing should be used.  The default is False.
-
+    ILS_function: string, optional
+        Default is None and means that no instrument line shape is used in the fitting.  
+        Function can be: SLIT_MICHELSON, SLIT_DIFFRACTION, SLIT_COSINUS, SLIT_DISPERSION, SLIT_GAUSSIAN, SLIT_TRIANGULAR, SLIT_RECTANGULAR corresponding to the ILS functions defined in HAPI or a user defined function.
+    ILS_resolution: float/array, optional   
+        Resolution is a float or array of ILS resolutions in wavenumbers.  The SlitFunctions defined in HAPI have 1 resolution, but this opens the option for the user defined function to be comprised of several functions with varying resolutions.  Default is 0.1 cm-1.
+    ILS_wing: float, optional
+        AF_wing is the a float consisting of the range the ILS is calculted over in cm-1. Default is 10 cm-1 
+    
     Returns
     -------
     spectrum_file : .csv
@@ -589,7 +610,11 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
         alpha_noise = alpha_array
     else:   
         alpha_noise = alpha_array + np.max(alpha_array)*np.random.normal(loc = 0, scale =1, size = len(alpha_array))*1/SNR
-    alpha_noise += (baseline + etalon_model) 
+    alpha_noise += (baseline + etalon_model)
+    if ILS_function != None:
+        wavenumbers_err, alpha_noise, i1, i2m, slit = convolveSpectrumSame(wavenumbers_err, alpha_noise, SlitFunction = ILS_function, Resolution = ILS_resolution ,AF_wing=ILS_wing)
+    
+    
     #Generate and save Simulated Spectrum File
     spectrum = pd.DataFrame()
     spectrum['Segment Number'] = seg_number
