@@ -1016,7 +1016,7 @@ class Fit_DataSet:
         
         # Set-up Baseline Parameters
         for param in (list(params.valuesdict().keys())):
-            if ('molefraction' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param) or ('Pressure' in param) or ('Temperature' in param):
+            if ('molefraction' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param) or ('Pressure' in param) or ('Temperature' in param) or ('_res_' in param):
                 baseline_params.append(param)
             elif ('EXCH_scalar' in param) or ('EXCH_gamma' in param) or ('EXCH_l' in param) or ('SO_scalar' in param) or ('SO_ahard' in param) or ('SO_ahard' in param) or ('SO_l' in param) or ('bandcenter' in param) or ('Nmax' in param):
                 CIA_params.append(param)
@@ -1152,9 +1152,16 @@ class Fit_DataSet:
                 for i in range(1, len(spectrum.etalons)+1):
                     etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase'])
                 segment_alpha = baseline + etalons + fit_coef + CIA
-                simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = (segment_alpha)
+                #ILS_Function
                 if spectrum.ILS_function != None:
-                    pass
+                    if self.dataset.ILS_function_dict[spectrum.ILS_function.__name__] ==1:
+                        spec_seg_ILS_resolution  = np.float(params[spectrum.ILS_function.__name__ + '_res_0_' + str(spectrum_number) + '_' +str(segment)])
+                    else:
+                        spec_seg_ILS_resolution  = []
+                        for res_param in range(0, self.dataset.ILS_function_dict[spectrum.ILS_function.__name__]):
+                            spec_seg_ILS_resolution  += np.float(params[spectrum.ILS_function.__name__ + '_res_' + str(res_param) +'_' + str(spectrum_number) + '_' +str(segment)])
+                    wavenumbers, segment_alpha, i1, i2m, slit = convolveSpectrumSame(wavenumbers, segment_alpha, SlitFunction = spectrum.ILS_function, Resolution = spec_seg_ILS_resolution ,AF_wing=spectrum.ILS_wing)
+                simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = (segment_alpha)
                 if self.weight_spectra:
                     if spectrum.tau_stats.all() == 0:
                         weights = len(alpha_segments[segment])*[spectrum.weight]
@@ -1286,6 +1293,14 @@ class Fit_DataSet:
                 parameter = par.name[:indices[2]]
                 spectrum = int(par.name[indices[2]+1:indices[3]])
                 segment = int(par.name[indices[3]+1:])
+                self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
+                if par.vary:
+                    self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
+            elif ('_res_' in par.name):
+                indices = [m.start() for m in re.finditer('_', par.name[par.name.find('_res_') + 5:])]
+                spec_num = par.name[par.name.find('_res_') + 5:][indices[0]+1:indices[1]]
+                seg_num = par.name[par.name.find('_res_') + 5:][indices[1]+1:]
+                parameter = par.name[:par.name.find('_res_')] + '_res_' + par.name[par.name.find('_res_') + 5:][:indices[0]]
                 self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
                 if par.vary:
                     self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
