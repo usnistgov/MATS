@@ -1150,17 +1150,20 @@ class Fit_DataSet:
                             fit_etalon_parameters[etalon_num]['phase'] = np.float(params[param])
                 etalons = len(wavenumbers)*[0]
                 for i in range(1, len(spectrum.etalons)+1):
-                    etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase']) 
-                simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = (baseline + etalons + fit_coef + CIA)
+                    etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase'])
+                segment_alpha = baseline + etalons + fit_coef + CIA
+                simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = (segment_alpha)
+                if spectrum.ILS_function != None:
+                    pass
                 if self.weight_spectra:
                     if spectrum.tau_stats.all() == 0:
                         weights = len(alpha_segments[segment])*[spectrum.weight]
                     else:
                         pt_by_pt_weights= 1 / (spectrum.tau_stats[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1])
                         weights = spectrum.weight * pt_by_pt_weights                        
-                    residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = ((baseline + etalons + fit_coef + CIA) - alpha_segments[segment])*weights
+                    residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = ((segment_alpha) - alpha_segments[segment])*weights
                 else:
-                    residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = (baseline + etalons + fit_coef + CIA) - alpha_segments[segment]
+                    residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = (segment_alpha) - alpha_segments[segment]
                     
             total_simulated = np.append(total_simulated, simulated_spectra)
             total_residuals = np.append(total_residuals, residuals)
