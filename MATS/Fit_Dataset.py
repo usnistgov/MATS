@@ -1016,7 +1016,7 @@ class Fit_DataSet:
         
         # Set-up Baseline Parameters
         for param in (list(params.valuesdict().keys())):
-            if ('molefraction' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param) or ('Pressure' in param) or ('Temperature' in param):
+            if ('molefraction' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param) or ('Pressure' in param) or ('Temperature' in param) or ('_res_'):
                 baseline_params.append(param)
             elif ('EXCH_scalar' in param) or ('EXCH_gamma' in param) or ('EXCH_l' in param) or ('SO_scalar' in param) or ('SO_ahard' in param) or ('SO_ahard' in param) or ('SO_l' in param) or ('bandcenter' in param) or ('Nmax' in param):
                 CIA_params.append(param)
@@ -1151,16 +1151,30 @@ class Fit_DataSet:
                 etalons = len(wavenumbers)*[0]
                 for i in range(1, len(spectrum.etalons)+1):
                     etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase']) 
-                simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = (baseline + etalons + fit_coef + CIA)
+                
+                simulated_segment = (baseline + etalons + fit_coef + CIA)
+                #Add in ILS
+                if spectrum.ILS_function != None:                   
+                    if self.dataset.ILS_function_dict[spectrum.ILS_function.__name__] ==1:
+                        spec_seg_ILS_resolution  = np.float(params[spectrum.ILS_function.__name__ + '_res_0_' + str(spectrum_number) + '_' +str(segment)])
+                    else:
+                        spec_seg_ILS_resolution  = []
+                        for res_param in range(0, self.dataset.ILS_function_dict[spectrum.ILS_function.__name__]):
+                            spec_seg_ILS_resolution  += np.float(params[spectrum.ILS_function.__name__ + '_res_' + str(res_param) +'_' + str(spectrum_number) + '_' +str(segment)])
+                    wavenumbers, simulated_segment, i1, i2m, slit = convolveSpectrumSame(wavenumbers, simulated_segment, SlitFunction = spectrum.ILS_function, Resolution = spec_seg_ILS_resolution ,AF_wing=spectrum.ILS_wing)
+                    
+                simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = simulated_segment
+                
+                #Weight Spectra Segment
                 if self.weight_spectra:
                     if spectrum.tau_stats.all() == 0:
                         weights = len(alpha_segments[segment])*[spectrum.weight]
                     else:
                         pt_by_pt_weights= 1 / (spectrum.tau_stats[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1])
                         weights = spectrum.weight * pt_by_pt_weights                        
-                    residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = ((baseline + etalons + fit_coef + CIA) - alpha_segments[segment])*weights
+                    residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = ((simulated_segment) - alpha_segments[segment])*weights
                 else:
-                    residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = (baseline + etalons + fit_coef + CIA) - alpha_segments[segment]
+                    residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = (simulated_segment) - alpha_segments[segment]
                     
             total_simulated = np.append(total_simulated, simulated_spectra)
             total_residuals = np.append(total_residuals, residuals)
@@ -1285,7 +1299,17 @@ class Fit_DataSet:
                 segment = int(par.name[indices[3]+1:])
                 self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
                 if par.vary:
-                    self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
+                    self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr    
+            elif ('_res_' in par.name):
+                indices = [m.start() for m in re.finditer('_', par.name[par.name.find('_res_') + 5:])]
+                spec_num = par.name[par.name.find('_res_') + 5:][indices[0]+1:indices[1]]
+                seg_num = par.name[par.name.find('_res_') + 5:][indices[1]+1:]
+                parameter = par.name[:par.name.find('_res_')] + '_res_' + par.name[par.name.find('_res_') + 5:][:indices[0]]
+                self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
+                if par.vary:
+                    self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr  
+
+                
             elif ('EXCH_scalar' in par.name) or ('EXCH_gamma' in par.name) or ('EXCH_l' in par.name) or ('SO_scalar' in par.name) or ('SO_ahard' in par.name) or ('SO_l' in par.name):
                 if self.CIA_calculate and self.CIA_model == 'Karman':
                     indices = [m.start() for m in re.finditer('_', par.name)]
