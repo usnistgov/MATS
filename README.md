@@ -1,4 +1,6 @@
-**The purpose of this project is to develop a NIST based multi-spectrum fitting tool that allows the flexibility to test and adapt to experimental/data-driven needs.  The tool uses HAPI and LMFit as the engine for spectral fitting.**  
+Full Documentation for the MATS project can be found on the [MATS project page](https://pages.nist.gov/MATS/)
+
+**The purpose of the MATS project is to develop a NIST based multi-spectrum fitting tool for spectroscopic data that allows the flexibility to test and adapt to experimental/data-driven needs.  This software allows for the use of several commonly-used spectroscopic line profiles (Voigt, Nelkin-Ghatak, speed-dependent Voigt, speed-dependent Nelkin-Ghatak, and Hartmann-Tran) and allows for pressure, temperature, and composition constraints to be imposed on solutions.  In addition to fitting experimental spectra, MATS can generate simulated spectra, which allows for its use as an error analysis tool.  The tool uses existing python applications such as the HITRAN Application Programming Interface (HAPI) and LMFit as the engine for spectral fitting.**  
 
 The package is based on spectrum objects, which read in x, y column of the wavenumber and absorption from a file.  Additionally, the spectrum object contains information on the pressure, temperature (and nominal temperature), etalons, and sample composition, and baseline behavior.  Spectrum object also allows for segmentation of the spectrum through a segment column.  The spectrum objects are bundled together to form a dataset object, which is the collection of spectra that are being analyzed.  
 
@@ -8,11 +10,7 @@ The fitting class fits the data and allows you to impose constraints on the para
 
 In addition to fitting real spectra, there is a simulate_spectrum function, which returns a spectrum object that match input simulation parameters.  This is useful for performing error analysis in the same framework as primary data analysis.  See wiki for more detailed discussion of functionality.
 
-[**Wiki**](https://gitlab.nist.gov/gitlab/ema3/HAPI-spectral-fitting/wikis/home)
+The wiki contains additional documentation and instructions.  There are also examples jupyterlab notebooks and formatted linelists available in the /HAP-spectral-fitting/From DataFrame appropriately named folders.  
 
-[**Examples**](https://gitlab.nist.gov/gitlab/ema3/HAPI-spectral-fitting/tree/master/From%20DataFrame/Examples)
-
-
-[**Linelists**](https://gitlab.nist.gov/gitlab/ema3/HAPI-spectral-fitting/tree/master/From%20DataFrame/Linelists)
 
 
