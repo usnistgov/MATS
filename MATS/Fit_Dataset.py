@@ -1472,5 +1472,4 @@ class Fit_DataSet:
                     select_columns.append(param)
             beta_summary_list = beta_summary_list[select_columns]
             #beta_summary_list  = beta_summary_list[(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max)]
-            beta_summary_list.to_csv(beta_summary_filename + '.csv')
-            
+            beta_summary_list.to_csv(beta_summary_filename + '.csv')          
