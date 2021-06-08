@@ -421,7 +421,8 @@ class Spectrum:
         plt.ylabel('Amplitude (ppm/cm')
         plt.show()
 
-def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_error = 0, 
+def simulate_spectrum(parameter_linelist, 
+                        wave_min=None, wave_max= None, wave_space=None, wavenumbers = [],  wave_error = 0, 
                         SNR = None, baseline_terms = [0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760, 
                         pressure_err = {'per_bias': 0, 'function': None, 'params': {}}, 
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
@@ -435,11 +436,13 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
     ----------
     parameter_linelist : dataframe
         linelist following the convention of the linelists used for the HTP_from_DF_select.  Note that there will need to be a linemixing column for each nominal temperature, which you will have to do manually (ie y_air_296, y_self_296).
-    wave_min : float
+    wavenumbers : array of floats, optional
+        array of wavenumbers for the simulation (cm-1).  If provided, then this axis will be used.  If wavenumbers = None, then the wave_min, wave_max, and wave_space will be used to calculate wavenumber grid.
+    wave_min : float, optional
          minimum wavenumber for the simulation (cm-1)
-    wave_max : float
+    wave_max : float, optional
         maximum wavenumber for the simulation (cm-1).
-    wave_space : float
+    wave_space : float, optional
         wavenumber spacing for the simulation (cm-1).
     wave_error : float, optional
         absolute error on the wavenumber axis (cm-1) to include in simulations. The default is 0.
@@ -523,7 +526,8 @@ def simulate_spectrum(parameter_linelist, wave_min, wave_max, wave_space, wave_e
     baseline_terms = np.flip(baseline_terms)
     temperature_K = temperature + 273.15
     pressure_atm = pressure / 760
-    wavenumbers = np.arange(wave_min, wave_max + wave_space, wave_space)
+    if wavenumbers == []:
+        wavenumbers = np.arange(wave_min, wave_max + wave_space, wave_space)
 
     wavenumbers_err = wavenumbers + wave_error*np.random.normal(loc = 0, scale =1, size = len(wavenumbers))
     #molefraction error
