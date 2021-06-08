@@ -23,11 +23,10 @@ class Dataset:
 
     
     
-    def __init__(self, spectra, dataset_name, param_linelist, baseline_order = 1, CIA_model = None):
+    def __init__(self, spectra, dataset_name, param_linelist, CIA_model = None):
         self.spectra = spectra
         self.dataset_name = dataset_name
         self.param_linelist = param_linelist
-        self.baseline_order = baseline_order
         self.CIA_model = CIA_model
         self.renumber_spectra()
         self.molecule_list = self.correct_component_list()

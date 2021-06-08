@@ -1206,7 +1206,7 @@ class Fit_DataSet:
 
         """
 
-        minner = Minimizer(self.simulation_model, params, xtol =xtol, maxfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
+        minner = Minimizer(self.simulation_model, params, xtol =xtol, max_nfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
         result = minner.minimize(method = 'leastsq')#'
         return result
 
@@ -1473,3 +1473,4 @@ class Fit_DataSet:
             beta_summary_list = beta_summary_list[select_columns]
             #beta_summary_list  = beta_summary_list[(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max)]
             beta_summary_list.to_csv(beta_summary_filename + '.csv')
+            

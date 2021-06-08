@@ -118,7 +118,7 @@ class Spectrum:
         self.diluent_sum_check() # Makes sure that the diluent contributions sum to 1
         
         #Defined from contents of file
-        file_contents = pd.read_csv(self.filename + '.csv',float_precision = 'High')
+        file_contents = pd.read_csv(self.filename + '.csv',float_precision = 'high')
         self.pressure = file_contents[self.pressure_column].mean() / 760
         self.temperature = file_contents[self.temperature_column].mean() + 273.15
         if self.input_freq:
@@ -141,7 +141,7 @@ class Spectrum:
             stats[stats <= 0] = median_tau_stats
             self.tau_stats = stats
         else:
-            self.tau_stats  = len(file_contents)*[0]
+            self.tau_stats  = np.asarray(len(file_contents)*[0])
         if self.segment_column != None:
             self.segments = file_contents[self.segment_column].values
         else:
