@@ -322,7 +322,7 @@ class Generate_FitParam_File:
                     if (self.lineprofile == 'VP') or (self.lineprofile == 'NGP'):
                         param_linelist_df.loc[:, 'SD_delta_' +diluent + '_' +str(spec)] = 0
                     else:
-                        param_linelist_df['SD_delta_' +diluent + '_' +str(spec)] = (param_linelist_df['SD_deltaamma_' + diluent].values)
+                        param_linelist_df['SD_delta_' +diluent + '_' +str(spec)] = (param_linelist_df['SD_delta_' + diluent].values)
 
                         if vary_as != {}:
                             for molecule in vary_as:
