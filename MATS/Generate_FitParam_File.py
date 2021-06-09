@@ -15,7 +15,7 @@ class Generate_FitParam_File:
     base_linelist : dataframe
         baseline parameter dataframe name generated from the dataset.generate_baseline_paramlist() function.
     CIA_linelist : dataframe, optional
-        CIA linelist dataframe name generated from the dataset.generate_CIA_paramlist() function.
+        Future Function: CIA linelist dataframe name generated from the dataset.generate_CIA_paramlist() function.
     lineprofile : str
         lineprofile to use for the simulation. This sets values in the parameter linelist to 0 and forces them to not vary unless manually changed. Default values is VP, voigt profile. Options are VP, SDVP, NGP, SDNGP, HTP.
     linemixing : bool
@@ -33,7 +33,7 @@ class Generate_FitParam_File:
     param_linelist_savename : str
         filename that the parameter linelist will be saved as. Default is Parameter_LineList.
     CIA_linelist_save_name : str
-        filename that the CIA linelist will be saved as. Default is CIA_LineList.
+        Future Feature: filename that the CIA linelist will be saved as. Default is CIA_LineList.
     nu_constrain : bool
         True indicates that the line centers will be a global variable across all spectra. False generates a new value for each spectrum in the dataset.
     sw_constrain : bool
@@ -67,8 +67,8 @@ class Generate_FitParam_File:
             self.CIA_linelist = None
             self.CIA_linelist_savename = None
         else:
-            self.CIA_linelist = CIA_linelist
-            self.CIA_linelist_savename = CIA_linelist_savename
+            self.CIA_linelist = None
+            self.CIA_linelist_savename = None
 
         self.lineprofile = lineprofile
         self.linemixing = linemixing
@@ -613,105 +613,3 @@ class Generate_FitParam_File:
         base_linelist_df.to_csv(self.base_linelist_savename + '.csv', index = True)
         return base_linelist_df
         
-    def generate_fit_KarmanCIA_linelist(self, vary_EXCH_scalar = False, vary_EXCH_gamma = False, vary_EXCH_l = False, 
-                                  vary_SO_scalar = False, vary_SO_ahard = False, vary_SO_l = False, vary_bandcenter = False, vary_Nmax = False, wave_step = 5):
-        """Generates the CIA line list used in fitting (with rows corresponding to molecule pairs and columns corresponding to Karman CIA parameters), calculates the CIA based on the initial guess, and updates the fitting booleans to desired settings.
-        
-
-        Parameters
-        ----------
-        vary_EXCH_scalar : boolean, optional
-            If True, then sets the exchange mechanism scaling factor to float. The default is False.
-        vary_EXCH_gamma : boolean, optional
-            If True, then sets the exchange mechanism gamma parmeter to float. The default is False.
-        vary_EXCH_l : boolean, optional
-            If True, then sets the exchange mechanism l parmeter to float. The default is False.
-        vary_SO_scalar : boolean, optional
-            If True, then sets the spin-orbit mechanism scaling factor to float.. The default is False.
-        vary_SO_ahard : boolean, optional
-            If True, then sets the spin-orbit mechanism ahard parmeter to float. The default is False.
-        vary_SO_l : boolean, optional
-            If True, then sets the spin-orbit mechanism l parmeter to float. The default is False.
-        vary_bandcenter : boolean, optional
-            If True, then sets the bandcenter of the CIA to float. The default is False.
-        vary_Nmax : boolean, optional
-            If True, then sets the NMax term to float. The default is False.
-        wave_step :float, optional
-            The CIA calculation is time intensive.  Because the CIA is a broadband function, we can speed this up by simulated on a coarse grid and interpolating onto the spectra frequency axis.  The wave_step parameters defines the coarse simulation grid. The default is 5.
-
-        Returns
-        -------
-        CIA_linelist_df : TYPE
-            DESCRIPTION.
-
-        """
-        CIA_linelist_df = self.get_CIA_linelist().copy()
-        parameters =  (list(CIA_linelist_df))
-        #Initial Calculation of the Karman CIA based on initial guesses and application to spectra
-        if self.dataset.CIA_model == 'Karman':
-            CIA_pairs = CIA_linelist_df['CIA Pair'].unique()
-            for spectrum in self.dataset.spectra:
-                CIA = len(spectrum.wavenumber)*[0]
-                for CIA_pair in CIA_pairs:
-                    for molecule in self.dataset.molecule_list:
-                        molecule_name = ISO[(molecule, 1)][4]
-                        for broadener in self.dataset.broadener_list:
-                            try:
-                                broadener_composition = spectrum.Diluent[broadener]['composition']
-                            except:
-                                broadener_composition = 0
-                            if broadener == 'self':
-                                broadener = molecule_name
-                            if (molecule_name in CIA_pair) and (broadener in CIA_pair):
-                                CIA_select = CIA_linelist_df[CIA_linelist_df['CIA Pair'] == CIA_pair]
-                                CIA += broadener_composition*Karman_CIA_Model(spectrum.wavenumber, spectrum.get_pressure_torr(), spectrum.get_temperature_C(), wave_step = wave_step,
-                                     EXCH_scalar = CIA_select['EXCH_scalar'].values[0], EXCH_gamma = CIA_select['EXCH_gamma'].values[0], EXCH_l = CIA_select['EXCH_l'].values[0],
-                                     SO_scalar = CIA_select['SO_scalar'].values[0], SO_ahard = CIA_select['SO_ahard'].values[0], SO_l = CIA_select['SO_l'].values[0],
-                                     bandcenter = CIA_select['bandcenter'].values[0], Nmax = CIA_select['Nmax'].values[0])                  
-                spectrum.set_cia(CIA)
-
-            # Set parameter floats
-            for param in parameters:
-                if ('CIA Pair' != param):
-                    CIA_linelist_df[param + '_err'] = 0
-                    CIA_linelist_df[param + '_vary']= False
-                if 'EXCH_scalar' in param:
-                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_EXCH_scalar)]
-                if 'EXCH_gamma' in param:
-                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_EXCH_gamma)]
-                    if vary_EXCH_gamma:
-                        print ('USE CAUTION WHEN FLOATING EXCH_GAMMA')
-                if 'EXCH_l' in param:
-                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_EXCH_l)]
-                    if vary_EXCH_l:
-                        print ('USE CAUTION WHEN FLOATING EXCH_L')
-                if 'SO_scalar' in param:
-                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_SO_scalar)]
-                if 'SO_ahard' in param:
-                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_SO_ahard)]
-                    if vary_SO_ahard:
-                        print ('USE CAUTION WHEN FLOATING SO_AHARD')
-                if 'SO_l' in param:
-                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_SO_l)] 
-                    if vary_SO_l:
-                        print ('USE CAUTION WHEN FLOATING SO_L')
-                if 'bandcenter' in param:
-                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_bandcenter)]   
-                if 'Nmax' in param:
-                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_Nmax)] 
-                    if vary_Nmax:
-                        print ('USE CAUTION WHEN FLOATING NMAX')
-            CIA_linelist_df = CIA_linelist_df[['CIA Pair', 
-                      'EXCH_scalar', 'EXCH_scalar_err', 'EXCH_scalar_vary', 
-                      'EXCH_gamma', 'EXCH_gamma_err', 'EXCH_gamma_vary',
-                      'EXCH_l', 'EXCH_l_err', 'EXCH_l_vary', 
-                      'SO_scalar', 'SO_scalar_err', 'SO_scalar_vary', 
-                      'SO_ahard', 'SO_ahard_err', 'SO_ahard_vary',
-                      'SO_l', 'SO_l_err','SO_l_vary',
-                      'bandcenter','bandcenter_err', 'bandcenter_vary', 
-                      'Nmax', 'Nmax_err', 'Nmax_vary']]
-            CIA_linelist_df.to_csv(self.CIA_linelist_savename + '.csv', index = False)
-            return CIA_linelist_df
-        else:
-            print ('Generate_fit_KarmanCIA_linelist only applies to the CIA files generated for the Karman CIA model')
-            return None

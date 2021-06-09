@@ -18,7 +18,8 @@ class Dataset:
         Reads in the  parameter linelist used in fitting.  This enables for consistency checks between the input spectra and the parameter line list. 
     baseline_order : int
         sets the baseline order for all spectra in the dataset.  This will automatically be set to the maximum baseline order across all spectrum included in the Dataset.
-        
+    CIA_model : str
+        Future development will allow CIA model specification.  Default is None and 
     """
 
     
@@ -426,43 +427,19 @@ class Dataset:
         baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv', index = True)
         return baseline_paramlist
     def generate_CIA_paramlist(self):
-        """Generates a csv file called dataset_name + _CIA_paramlist, which will be used to generate another csv file that is used for fitting the broadband CIA that is common across all spectra, where the columns will be dependent on the CIA model used.  
+        """Future development will generates a csv file called dataset_name + _CIA_paramlist, which will be used to generate another csv file that is used for fitting the broadband CIA that is common across all spectra, where the columns will be dependent on the CIA model used.  
         
 
         Returns
         -------
         CIA_paramlist : pandas dataframe
-            dataframe containing information decribing the CIA parameters based on the CIA model chosen.  This dataframe is also saved to a dataframe.  Either file can be edited before making the CIA parameter list used for fitting.  If editting the .csv file will need to regenerate dataframe from .csv.
+            currently a place holder for future feature.
 
         """
         if self.CIA_model == None:
             return None
-        elif self.CIA_model == 'Karman':
-            CIA_paramlist = pd.DataFrame()
-            CIA_list = []
-            for molecule in self.molecule_list:
-                molecule_name = self.isotope_list[(molecule, 1)][4]
-                for broadener in self.broadener_list:
-                    if broadener == 'self':
-                        if molecule_name + '_' + molecule_name not in CIA_list:
-                            CIA_list.append(molecule_name + '_' + molecule_name)
-                    else:
-                        if (molecule_name + '_' + broadener not in CIA_list) & (broadener + '_' + molecule_name not in CIA_list):
-                            CIA_list.append(molecule_name + '_' + broadener)
-                        
-            CIA_paramlist['CIA Pair'] = CIA_list
-            CIA_paramlist['EXCH_scalar'] = [0]*len(CIA_list)
-            CIA_paramlist['EXCH_gamma'] = [3]*len(CIA_list)
-            CIA_paramlist['EXCH_l'] = [2]*len(CIA_list)
-            CIA_paramlist['SO_scalar'] = [0]*len(CIA_list)
-            CIA_paramlist['SO_ahard'] = [7]*len(CIA_list)
-            CIA_paramlist['SO_l'] = [2]*len(CIA_list)
-            CIA_paramlist['bandcenter'] = [13122]*len(CIA_list)
-            CIA_paramlist['Nmax'] = [31]*len(CIA_list)
-            #index definition?            
-            CIA_paramlist.to_csv(self.dataset_name + '_CIA_paramlist.csv', index = False) 
-            return CIA_paramlist
         else:
+            self.CIA_model = None
             return None
 
     def generate_summary_file(self, save_file = False):
