@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from hapi import PYTIPS2017, pcqsdhc, ISO, ISO_INDEX
-from hapi import convolveSpectrumSame, SLIT_MICHELSON, SLIT_DIFFRACTION, SLIT_COSINUS, SLIT_DISPERSION, SLIT_GAUSSIAN, SLIT_TRIANGULAR, SLIT_RECTANGULAR
+from hapi import SLIT_MICHELSON, SLIT_DIFFRACTION, SLIT_COSINUS, SLIT_DISPERSION, SLIT_GAUSSIAN, SLIT_TRIANGULAR, SLIT_RECTANGULAR
 import qgrid
 from bisect import bisect
 import re
@@ -162,4 +162,34 @@ def add_to_HITRANstyle_isotope_list(input_isotope_list = ISO, molec_id = 100, lo
     
     
     return output_isotope_list
+def arange_(lower,upper,step):
+    '''
+    originally from HAPI 1.1.0.9.6, but corrects npnt to be int
+
+    '''
+    npnt = np.floor((upper-lower)/step)+1
+    upper_new = lower + step*(npnt-1)
+    if abs((upper-upper_new)-step) < 1e-10:
+        upper_new += step
+        npnt += 1   
+    return np.linspace(lower,upper_new,int(npnt))
+
+def convolveSpectrumSame(Omega,CrossSection,Resolution=0.1,AF_wing=10.,
+                         SlitFunction=SLIT_RECTANGULAR,Wavenumber=None):
+    """ 
+    Convolves cross section with a slit function with given parameters.
+    Originally from HAPI 1.1.0.9.6 with correction to arange_ to prevent float/int error
+    """
+    # compatibility with older versions
+    if Wavenumber: Omega=Wavenumber
+    step = Omega[1]-Omega[0]
+    if step>=Resolution: raise Exception('step must be less than resolution')
+    #x = arange(-AF_wing,AF_wing+step,step)
+    x = arange_(-AF_wing,AF_wing+step,step) # fix
+    slit = SlitFunction(x,Resolution)
+    slit /= sum(slit)*step # simple normalization
+    left_bnd = 0
+    right_bnd = len(Omega)
+    CrossSectionLowRes = np.convolve(CrossSection,slit,mode='same')*step
+    return Omega[left_bnd:right_bnd],CrossSectionLowRes[left_bnd:right_bnd],left_bnd,right_bnd,slit
         
