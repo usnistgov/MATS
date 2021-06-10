@@ -2,7 +2,7 @@
 from Utilities import *
 
 
-def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff',
+def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff',
                 p = 1, T = 296, molefraction = {}, isotope_list = ISO,
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30):
     """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters.
@@ -193,7 +193,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50,
     # Return two arrays corresponding to the wavenumber axis and the calculated cross-section                                                                                                      
     return (wavenumbers, np.asarray(Xsect))  
 
-def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff',
+def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff',
                 p = 1, T = 296, molefraction = {}, isotope_list = ISO, 
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30):
     """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters with capability of incorporating the beta correction to the Dicke Narrowing proposed in Analytical-function correction to the Hartmann–Tran profile for more reliable representation of the Dicke-narrowed molecular spectra.
@@ -961,7 +961,7 @@ class Fit_DataSet:
                         params[param].set(expr = param[:indices[2]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
         return params
 
-    def simulation_model(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff'):
+    def simulation_model(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff'):
         """This is the model used for fitting that includes baseline, resonant absorption, and CIA models.
         
 
@@ -970,9 +970,9 @@ class Fit_DataSet:
         params : lmfit parameter object
             the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
         wing_cutoff : float, optional
-            number of voigt half-widths to simulate on either side of each line. The default is 50.
+            number of voigt half-widths to simulate on either side of each line. The default is 25.
         wing_wavenumbers : float, optional
-            number of wavenumbers to simulate on either side of each line. The default is 50.
+            number of wavenumbers to simulate on either side of each line. The default is 25
         wing_method : TYPE, optional
             Provides choice between the wing_cutoff and wing_wavenumbers line cut-off options. The default is 'wing_cutoff'.
 
@@ -1127,7 +1127,7 @@ class Fit_DataSet:
         total_residuals = np.asarray(total_residuals)
         total_simulated = np.asarray(total_simulated)
         return total_residuals
-    def fit_data(self, params, wing_cutoff = 50, wing_wavenumbers = 50, wing_method = 'wing_cutoff', xtol = 1e-7, maxfev = 2000, ftol = 1e-7):
+    def fit_data(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', xtol = 1e-7, maxfev = 2000, ftol = 1e-7):
         """Uses the lmfit minimizer to do the fitting through the simulation model function.
         
 
