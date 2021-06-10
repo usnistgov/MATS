@@ -1,0 +1,11 @@
+,trans_id,molec_id,local_iso_id,elower,nu,nu_err,nu_vary,sw,sw_err,sw_vary,sw_scale_factor,gamma0_air,gamma0_air_err,gamma0_air_vary,n_gamma0_air,delta0_air,delta0_air_err,delta0_air_vary,n_delta0_air,nuVC_air,nuVC_air_err,nuVC_air_vary,n_nuVC_air,SD_gamma_air,SD_gamma_air_err,SD_gamma_air_vary,n_gamma2_air,SD_delta_air,SD_delta_air_err,SD_delta_air_vary,n_delta2_air,eta_air,eta_air_err,eta_air_vary,y_air_296,y_air_296_err,y_air_296_vary
+0,196,100,1,0.0,39412.5957,0,False,3.23,0,False,1e-17,0.0963841891983574,0.004899196963348453,True,0,-0.06489823,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,False
+1,198,100,2,0.0,39412.4587,0,False,216.0,0,False,1e-17,0.10897797043287392,0.00015778888974526248,True,0,-0.06489823,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,False
+2,199A,100,3,0.0,39411.94471,0,False,122.0,0,False,1e-17,0.12658611840605852,0.0008264981647539901,True,0,-0.06489823,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,False
+3,199B,100,4,0.0,39412.6831,0,False,243.0,0,False,1e-17,0.10832638166793986,0.000483831844154778,True,0,-0.06489823,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,False
+4,200,100,5,0.0,39412.29841,0,False,499.0,0,False,1e-17,0.11030413711128684,4.018821153082906e-05,True,0,-0.06489823,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,False
+5,201a,100,6,0.0,39411.96974,0,False,142.0,0,False,1e-17,0.11295791918741835,0.0002468208556073452,True,0,-0.06489823,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,False
+6,201b,100,7,0.0,39412.43614,0,False,94.6,0,False,1e-17,0.11283417341821829,0.00037502463344239257,True,0,-0.06489823,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,False
+7,201c,100,8,0.0,39412.68793,0,False,47.3,0,False,1e-17,0.12144692571868819,0.002911441326526542,True,0,-0.06489823,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,False
+8,202,100,9,0.0,39412.12174,0,False,640.9999999999999,0,False,1e-17,0.11051206986533772,3.074296608971418e-05,True,0,-0.06489823,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,False
+9,204,100,10,0.0,39411.94793,0,False,147.0,0,False,1e-17,0.09739776724006363,0.0004963924733865192,True,0,-0.06489823,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,0,False,0,0,False
