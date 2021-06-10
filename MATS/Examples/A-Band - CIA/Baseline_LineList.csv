@@ -1,8 +1,8 @@
-Spectrum Number,Pressure,Segment Number,Temperature,baseline_a,baseline_b,baseline_c,molefraction_O2,x_shift,Pressure_err,Pressure_vary,Temperature_err,Temperature_vary,baseline_a_err,baseline_a_vary,baseline_b_err,baseline_b_vary,baseline_c_err,baseline_c_vary,molefraction_O2_err,molefraction_O2_vary,x_shift_err,x_shift_vary
-1.0,0.13157894736842105,1.0,298.15,0.0020842128425021264,0.0,0.0,0.209,0.0,0,False,0,False,0,False,0,False,0,False,0,False,0,False
-2.0,0.2631578947368421,1.0,298.15,0.016234398986716192,0.0,0.0,0.209,0.0,0,False,0,False,0,False,0,False,0,False,0,False,0,False
-3.0,0.5263157894736842,1.0,298.15,-0.0010083867840961457,0.0,0.0,0.209,0.0,0,False,0,False,0,False,0,False,0,False,0,False,0,False
-4.0,0.9210526315789472,1.0,298.15,0.04429946733415882,0.0,0.0,0.209,0.0,0,False,0,False,0,False,0,False,0,False,0,False,0,False
-5.0,1.3157894736842106,1.0,298.15,0.07043434913623943,0.0,0.0,0.209,0.0,0,False,0,False,0,False,0,False,0,False,0,False,0,False
-6.0,2.631578947368421,1.0,298.15,0.09747983071159698,0.0,0.0,0.209,0.0,0,False,0,False,0,False,0,False,0,False,0,False,0,False
-7.0,3.947368421052631,1.0,298.15,0.13315547972847155,0.0,0.0,0.209,0.0,0,False,0,False,0,False,0,False,0,False,0,False,0,False
+Spectrum Number,Segment Number,Pressure,Pressure_err,Pressure_vary,Temperature,Temperature_err,Temperature_vary,baseline_a,baseline_a_err,baseline_a_vary,baseline_b,baseline_b_err,baseline_b_vary,baseline_c,baseline_c_err,baseline_c_vary,molefraction_O2,molefraction_O2_err,molefraction_O2_vary,x_shift,x_shift_err,x_shift_vary
+1.0,1.0,0.131578947368421,0,False,298.15,0,False,0.0,0,False,0.0,0,False,0.0,0,False,0.209,0,False,0.0,0,False
+2.0,1.0,0.2631578947368421,0,False,298.15,0,False,0.0,0,False,0.0,0,False,0.0,0,False,0.209,0,False,0.0,0,False
+3.0,1.0,0.5263157894736842,0,False,298.15,0,False,0.0,0,False,0.0,0,False,0.0,0,False,0.209,0,False,0.0,0,False
+4.0,1.0,0.9210526315789472,0,False,298.15,0,False,0.0,0,False,0.0,0,False,0.0,0,False,0.209,0,False,0.0,0,False
+5.0,1.0,1.3157894736842106,0,False,298.15,0,False,0.0,0,False,0.0,0,False,0.0,0,False,0.209,0,False,0.0,0,False
+6.0,1.0,2.631578947368421,0,False,298.15,0,False,0.0,0,False,0.0,0,False,0.0,0,False,0.209,0,False,0.0,0,False
+7.0,1.0,3.947368421052631,0,False,298.15,0,False,0.0,0,False,0.0,0,False,0.0,0,False,0.209,0,False,0.0,0,False
