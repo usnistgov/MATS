@@ -18,7 +18,7 @@ class Spectrum:
     natural_abundance : bool, optional
         flag for if the molecular species in the spectrum are at natural abundance
     abundance_ratio_MI : dict, optional
-        if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }
+        if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }.  The enhancement is the ratio of the new abundance to the natural abundance.
     isotope_list : dict, optional
         provides opportunity to specify the isotope look-up table.  Default is ISO, which is from HAPI.  If not using ISO, then must use this format and suggested you use function to add to ISO
     diluent : str, optional
@@ -473,7 +473,7 @@ def simulate_spectrum(parameter_linelist,
     natural_abundance : bool, optional
         flag for if the spectrum contains data at natural abundance. The default is True.
     abundance_ratio_MI : dict, optional
-        if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }. The default is {}.
+        if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }. The default is {}.  The enhancement is the ratio of the new abundance to the natural abundance.
     isotope_list : dict, optional
         provides opportunity to specify the isotope look-up table.  Default is ISO, which is from HAPI.  If not using ISO, then must use this format and suggested you use function to add to ISO
     diluent : str, optional
