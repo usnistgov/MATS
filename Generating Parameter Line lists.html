@@ -1,24 +1,25 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>Generating Parameter Line lists &#8212; MATS 1.0 documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Generating Parameter Line lists &#8212; MATS 2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="MATS Example using Experimental and Synthetic Data" href="MATS Example using Experimental and Synthetic Data.html" />
-    <link rel="prev" title="MATS Summary" href="MATS Summary.html" />
+    <link rel="next" title="Examples" href="Examples.html" />
+    <link rel="prev" title="MATS Summary" href="MATS%20Summary.html" />
 <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
   <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
   <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
@@ -59,12 +60,13 @@ $(document).ready(function(){
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="MATS Example using Experimental and Synthetic Data.html" title="MATS Example using Experimental and Synthetic Data"
+          <a href="Examples.html" title="Examples"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="MATS Summary.html" title="MATS Summary"
+          <a href="MATS%20Summary.html" title="MATS Summary"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 1.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Generating Parameter Line lists</a></li> 
       </ul>
     </div>  
 
@@ -73,9 +75,9 @@ $(document).ready(function(){
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="generating-parameter-line-lists">
+  <section id="generating-parameter-line-lists">
 <h1>Generating Parameter Line lists<a class="headerlink" href="#generating-parameter-line-lists" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="parameter-line-list-overview">
+<section id="parameter-line-list-overview">
 <h2>Parameter Line list Overview<a class="headerlink" href="#parameter-line-list-overview" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
 <dt>The MATS program uses a spectroscopic line list that varies from the traditional HITRAN and HAPI formats to accomodate the full HTP parameterization including temperature dependencies for all parameters (other than the correlation parameter and nearest neighbor line-mixing).  The spectroscopic line list format has rows that correspond to each molecular transition and columns that correspond to the various HTP parameters.  The necessary column headers are below, where there needs to be a column for each parameter for each diluent (ie. air, self) in the dataset. Additionally, there needs to be a line-mixing term for each nominal temperature in the dataset, where the nominal temperature is the included as the suffix of the column header.</dt><dd><ul class="simple">
@@ -99,11 +101,11 @@ $(document).ready(function(){
 </ul>
 </dd>
 </dl>
-</div>
-<div class="section" id="generating-parameter-line-list-from-hitran">
+</section>
+<section id="generating-parameter-line-list-from-hitran">
 <h2>Generating Parameter Line list from HITRAN<a class="headerlink" href="#generating-parameter-line-list-from-hitran" title="Permalink to this headline">¶</a></h2>
 <p>The parameter line list .csv file can be generated manually, but <a class="reference external" href="https://github.com/usnistgov/MATS/blob/master/MATS/HITRAN_to_Dataframe.ipynb">this notebook</a> generates a parameter list using the <a class="reference external" href="https://hitran.org/hapi/">HITRAN Application Programming Interface (HAPI)</a>.  The overview below walks through this notebook.</p>
-<div class="section" id="imports">
+<section id="imports">
 <h3>Imports<a class="headerlink" href="#imports" title="Permalink to this headline">¶</a></h3>
 <p>Import the numpy, pandas, os, and sys packages.  Set pandas dataframe to show all of the rows.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -130,8 +132,8 @@ $(document).ready(function(){
 <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">spec_path</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="molecule-and-isotope-information">
+</section>
+<section id="molecule-and-isotope-information">
 <h3>Molecule and Isotope Information<a class="headerlink" href="#molecule-and-isotope-information" title="Permalink to this headline">¶</a></h3>
 <p>HAPI provides a dictionary called ISO_ID, where the global isotope id acts as the key, with a sub-dictionary containing the molecule id, local isotope id, isotope name, relative abundance, mass, and molecule name.  The following command will generate the dictionary as the output.  This provides the necessary global isotope id information for interfacing with HAPI to access HITRAN infomation.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">print_iso_id</span><span class="p">()</span>
@@ -266,8 +268,8 @@ $(document).ready(function(){
   <span class="mi">125</span>     <span class="p">:</span>     <span class="mi">49</span>    <span class="mi">2</span>      <span class="p">(</span><span class="mi">12</span><span class="n">C</span><span class="p">)(</span><span class="mi">16</span><span class="n">O</span><span class="p">)(</span><span class="mi">35</span><span class="n">Cl</span><span class="p">)(</span><span class="mi">37</span><span class="n">Cl</span><span class="p">)</span>    <span class="mf">0.3622352780</span>  <span class="mf">99.929670</span>           <span class="n">COCl2</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="set-up-variables-for-line-list">
+</section>
+<section id="set-up-variables-for-line-list">
 <h3>Set-Up Variables for Line list<a class="headerlink" href="#set-up-variables-for-line-list" title="Permalink to this headline">¶</a></h3>
 <p>To select the relevant information from HITRAN you will need to provide:</p>
 <ul class="simple">
@@ -284,8 +286,8 @@ $(document).ready(function(){
 <span class="n">intensity_cutoff</span> <span class="o">=</span> <span class="mf">1e-30</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="generate-hitran-and-initial-guess-line-lists-from-hapi-call">
+</section>
+<section id="generate-hitran-and-initial-guess-line-lists-from-hapi-call">
 <h3>Generate HITRAN and Initial Guess Line lists from HAPI Call<a class="headerlink" href="#generate-hitran-and-initial-guess-line-lists-from-hapi-call" title="Permalink to this headline">¶</a></h3>
 <p>The next section of the example contains a function and function call where the output is a MATS compatible line list.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">HITRANlinelist_to_csv</span><span class="p">(</span><span class="n">isotopes</span><span class="p">,</span> <span class="n">minimum_wavenumber</span><span class="p">,</span> <span class="n">maximum_wavenumber</span><span class="p">,</span> <span class="n">tablename</span> <span class="o">=</span> <span class="s1">&#39;tmp&#39;</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="n">tablename</span><span class="p">,</span> <span class="n">temperature</span> <span class="o">=</span> <span class="mi">296</span><span class="p">):</span>
@@ -340,22 +342,23 @@ $(document).ready(function(){
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DF</span><span class="p">[</span><span class="s1">&#39;y_air_296&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DF</span><span class="p">[</span><span class="s1">&#39;y_air&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="MATS Summary.html"
+  <p class="topless"><a href="MATS%20Summary.html"
                         title="previous chapter">MATS Summary</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="MATS Example using Experimental and Synthetic Data.html"
-                        title="next chapter">MATS Example using Experimental and Synthetic Data</a></p>
+  <p class="topless"><a href="Examples.html"
+                        title="next chapter">Examples</a></p>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
@@ -380,16 +383,17 @@ $(document).ready(function(){
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="MATS Example using Experimental and Synthetic Data.html" title="MATS Example using Experimental and Synthetic Data"
+          <a href="Examples.html" title="Examples"
              >next</a> |</li>
         <li class="right" >
-          <a href="MATS Summary.html" title="MATS Summary"
+          <a href="MATS%20Summary.html" title="MATS Summary"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 1.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Generating Parameter Line lists</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.1.
     </div>
   </body>
 </html>

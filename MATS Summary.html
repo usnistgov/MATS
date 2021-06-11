@@ -1,24 +1,25 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>MATS Summary &#8212; MATS 1.0 documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>MATS Summary &#8212; MATS 2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Generating Parameter Line lists" href="Generating Parameter Line lists.html" />
-    <link rel="prev" title="Getting Started" href="Getting Started.html" />
+    <link rel="next" title="Generating Parameter Line lists" href="Generating%20Parameter%20Line%20lists.html" />
+    <link rel="prev" title="MATS Version Summary" href="MATS%20Version%20Summary.html" />
 <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
   <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
   <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
@@ -59,12 +60,13 @@ $(document).ready(function(){
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Generating Parameter Line lists.html" title="Generating Parameter Line lists"
+          <a href="Generating%20Parameter%20Line%20lists.html" title="Generating Parameter Line lists"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="Getting Started.html" title="Getting Started"
+          <a href="MATS%20Version%20Summary.html" title="MATS Version Summary"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 1.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MATS Summary</a></li> 
       </ul>
     </div>  
 
@@ -73,14 +75,14 @@ $(document).ready(function(){
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="mats-summary">
+  <section id="mats-summary">
 <h1>MATS Summary<a class="headerlink" href="#mats-summary" title="Permalink to this headline">¶</a></h1>
 <p>In multi-spectrum fitting, there are a collection of spectra modeled by the same line-by-line spectroscopic parameters, but each spectrum might vary in pressure, temperature, and sample composition.</p>
-<p>The MATS program is based on <a class="reference internal" href="MATS.html#MATS.Spectrum" title="MATS.Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Spectrum</span></code></a> objects, which are defined not only by their wavenumber and absorption data, but also information on the spectrum pressure, temperature, baseline characteristics, and sample composition.  In addition to utilizing real spectra, MATS has a <a class="reference internal" href="MATS.html#MATS.simulate_spectrum" title="MATS.simulate_spectrum"><code class="xref py py-func docutils literal notranslate"><span class="pre">MATS.simulate_spectrum()</span></code></a> function, which returns a spectrum object calculated from input simulation parameters.  This is useful for performing error analysis in the same framework as primary data analysis by simply switching from experimental to simulated <a class="reference internal" href="MATS.html#MATS.Spectrum" title="MATS.Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Spectrum</span></code></a> objects.  These <a class="reference internal" href="MATS.html#MATS.Spectrum" title="MATS.Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Spectrum</span></code></a> objects are combined to form a <a class="reference internal" href="MATS.html#MATS.Dataset" title="MATS.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Dataset</span></code></a> object, which is the collection of spectra that are being analyzed together in the multi-spectrum analysis.</p>
-<p>There are two files that contain parameters that are fit in this model, one for spectrum dependent parameters (polynomial baseline parameters, etalons, sample composition, and x-shift term) and the other for line-by-line spectroscopic parameters that are common across all spectra.  These files are saved as .csv files with a column for each parameter and with rows corresponding to either the spectrum number or spectral line number.  In addition to the columns containing the values for the fit parameters, there are two additional columns for each fittable parameter called param_vary and param_err.  The param_vary column is a boolean  (True/False) flag that is toggled to indicate whether a given parameter will be varied in the fit.  The param_err column will be set to zero initially and replaced with the standard error for the parameter determined by the fit results.  Calls of the <a class="reference internal" href="MATS.html#MATS.Generate_FitParam_File" title="MATS.Generate_FitParam_File"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Generate_FitParam_File</span></code></a> class not only make these input files, but also set the line shape and define whether a parameter should be varied in the fit and if a parameter should be constrained across all spectra or allowed to vary by spectrum.  The <a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files" title="MATS.Edit_Fit_Param_Files"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files</span></code></a> class allows for edits to the parameter files in the Jupyter Notebook interface rather than editing in the .csv file.</p>
-<p>Finally, the <a class="reference internal" href="MATS.html#MATS.Fit_DataSet" title="MATS.Fit_DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Fit_DataSet</span></code></a> class fits the spectra.  Additionally, it allows the user to impose constraints on the parameters (min and max values), impose convergence criteria, update background and parameter line lists, and plot fit results.</p>
+<p>The MATS program is based on <a class="reference internal" href="MATS.html#module-Spectrum" title="Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spectrum</span></code></a> objects, which are defined not only by their wavenumber and absorption data, but also information on the spectrum pressure, temperature, baseline characteristics, and sample composition.  In addition to utilizing real spectra, MATS has a <a class="reference internal" href="MATS.html#Spectrum.simulate_spectrum" title="Spectrum.simulate_spectrum"><code class="xref py py-func docutils literal notranslate"><span class="pre">Spectrum.simulate_spectrum()</span></code></a> function, which returns a spectrum object calculated from input simulation parameters.  This is useful for performing error analysis in the same framework as primary data analysis by simply switching from experimental to simulated <a class="reference internal" href="MATS.html#module-Spectrum" title="Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spectrum</span></code></a> objects.  These <a class="reference internal" href="MATS.html#module-Spectrum" title="Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spectrum</span></code></a> objects are combined to form a <a class="reference internal" href="MATS.html#module-Dataset" title="Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a> object, which is the collection of spectra that are being analyzed together in the multi-spectrum analysis.</p>
+<p>There are two files that contain parameters that are fit in this model, one for spectrum dependent parameters (polynomial baseline parameters, etalons, sample composition, and x-shift term) and the other for line-by-line spectroscopic parameters that are common across all spectra.  These files are saved as .csv files with a column for each parameter and with rows corresponding to either the spectrum number or spectral line number.  In addition to the columns containing the values for the fit parameters, there are two additional columns for each fittable parameter called param_vary and param_err.  The param_vary column is a boolean  (True/False) flag that is toggled to indicate whether a given parameter will be varied in the fit.  The param_err column will be set to zero initially and replaced with the standard error for the parameter determined by the fit results.  Calls of the <a class="reference internal" href="MATS.html#module-Generate_FitParam_File" title="Generate_FitParam_File"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generate_FitParam_File</span></code></a> class not only make these input files, but also set the line shape and define whether a parameter should be varied in the fit and if a parameter should be constrained across all spectra or allowed to vary by spectrum.</p>
+<p>Finally, the <a class="reference internal" href="MATS.html#module-Fit_DataSet" title="Fit_DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">Fit_DataSet</span></code></a> class fits the spectra.  Additionally, it allows the user to impose constraints on the parameters (min and max values), impose convergence criteria, update background and parameter line lists, and plot fit results.</p>
 <p>Below is the sparse documentation for each of the classes and main functions in the MATS project with links to the full documentation provided.</p>
-<div class="section" id="spectrum-class-and-objects">
+<section id="spectrum-class-and-objects">
 <h2>Spectrum Class and Objects<a class="headerlink" href="#spectrum-class-and-objects" title="Permalink to this headline">¶</a></h2>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -88,38 +90,38 @@ $(document).ready(function(){
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum" title="MATS.Spectrum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum</span></code></a>(filename[, molefraction, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Spectrum.Spectrum" title="Spectrum.Spectrum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Spectrum</span></code></a>(filename[, molefraction, …])</p></td>
 <td><p>Spectrum class provides all information describing experimental or simulated spectrum.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.simulate_spectrum" title="MATS.simulate_spectrum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.simulate_spectrum</span></code></a>(parameter_linelist, …)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#Spectrum.simulate_spectrum" title="Spectrum.simulate_spectrum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">simulate_spectrum</span></code></a>(parameter_linelist[, …])</p></td>
 <td><p>Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum.calculate_QF" title="MATS.Spectrum.calculate_QF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum.calculate_QF</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Spectrum.Spectrum.calculate_QF" title="Spectrum.Spectrum.calculate_QF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Spectrum.calculate_QF</span></code></a>()</p></td>
 <td><p>Calculates the quality of fit factor (QF) for a spectrum - QF = (maximum alpha - minimum alpha) / std(residuals).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum.fft_spectrum" title="MATS.Spectrum.fft_spectrum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum.fft_spectrum</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#Spectrum.Spectrum.fft_spectrum" title="Spectrum.Spectrum.fft_spectrum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Spectrum.fft_spectrum</span></code></a>()</p></td>
 <td><p>Takes the FFT of the residuals of the spectrum, generates a plot of frequency (cm-1) versus amplitude (ppm/cm), and prints a dataframe with the 20 highest amplitude frequencies with the FFT frequency (period), amplitude, FFT phase, and frequency (cm-1).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum.plot_freq_tau" title="MATS.Spectrum.plot_freq_tau"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum.plot_freq_tau</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Spectrum.Spectrum.plot_freq_tau" title="Spectrum.Spectrum.plot_freq_tau"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Spectrum.plot_freq_tau</span></code></a>()</p></td>
 <td><p>Generates a plot of tau (us) as a function of frequency (MHz).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum.plot_model_residuals" title="MATS.Spectrum.plot_model_residuals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum.plot_model_residuals</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#Spectrum.Spectrum.plot_model_residuals" title="Spectrum.Spectrum.plot_model_residuals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Spectrum.plot_model_residuals</span></code></a>()</p></td>
 <td><p>Generates a plot of the alpha and model (ppm/cm) as a function of wavenumber (cm-1) and on lower plot shows the residuals (ppm/cm) as a function of wavenumber (cm-1).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum.plot_wave_alpha" title="MATS.Spectrum.plot_wave_alpha"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum.plot_wave_alpha</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Spectrum.Spectrum.plot_wave_alpha" title="Spectrum.Spectrum.plot_wave_alpha"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Spectrum.plot_wave_alpha</span></code></a>()</p></td>
 <td><p>Generates a plot of alpha (ppm/cm) as a function of wavenumber (cm-1).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum.save_spectrum_info" title="MATS.Spectrum.save_spectrum_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum.save_spectrum_info</span></code></a>([save_file])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#Spectrum.Spectrum.save_spectrum_info" title="Spectrum.Spectrum.save_spectrum_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Spectrum.save_spectrum_info</span></code></a>([save_file])</p></td>
 <td><p>Saves spectrum information to a pandas dataframe with option to also save as as a csv file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Spectrum.segment_wave_alpha" title="MATS.Spectrum.segment_wave_alpha"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Spectrum.segment_wave_alpha</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Spectrum.Spectrum.segment_wave_alpha" title="Spectrum.Spectrum.segment_wave_alpha"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Spectrum.segment_wave_alpha</span></code></a>()</p></td>
 <td><p>Defines the wavenumber, alpha, and indices of spectrum that correspond to a given spectrum segment.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="line-by-line-model-and-etalon-models">
-<h2>Line-by-line Model and Etalon Models<a class="headerlink" href="#line-by-line-model-and-etalon-models" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="line-by-line-model">
+<h2>Line-by-line Model<a class="headerlink" href="#line-by-line-model" title="Permalink to this headline">¶</a></h2>
 <p>The line-by-line model is based on the HTP code provided in the <a class="reference external" href="https://hitran.org/hapi/">HITRAN Application Programming Interface (HAPI)</a>.  For the most part the conventions and definitions used by HITRAN are used in the MATS program.  However, for some of the advanced line profile parameters the naming convention and temperature dependence is different.  In the sections below, the temperature and pressure dependence of the various parameters is outlined for clarity.</p>
 <p>The Hartmann-Tran profile limiting cases that correspond to several commonly used line profiles.  These limiting cases are achieved by setting line shape parameters equal to 0. The list below indicates the parameters that are not fixed equal to zero in each of the HTP limiting case line shapes.  For more information about the HTP see the following references: <a class="reference external" href="https://www.degruyter.com/view/journals/pac/86/12/article-p1931.xml">Recommended isolated-line profile for representing high-resolution spectroscopic transitions (IUPAC Technical Report)</a> and <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0022407313002422">An isolated line-shape model to go beyond the Voigt profile in spectroscopic databases and radiative transfer codes</a></p>
 <p>Voigt Profile (VP):  <span class="math notranslate nohighlight">\(\Gamma_{D}, \Gamma_{0}, \Delta_{0}\)</span></p>
@@ -127,104 +129,89 @@ $(document).ready(function(){
 <p>speed-dependent Voigt Profile (SDVP):  <span class="math notranslate nohighlight">\(\Gamma_{D}, \Gamma_{0}, \Delta_{0}, \Gamma_{2}, \Delta_{2}\)</span></p>
 <p>speed-dependent Nelkin-Ghatak Profile (SDNGP):  <span class="math notranslate nohighlight">\(\Gamma_{D}, \Gamma_{0}, \Delta_{0}, \nu_{VC}, \Gamma_{2}, \Delta_{2}\)</span></p>
 <p>Hartmann-Tran (HTP): <span class="math notranslate nohighlight">\(\Gamma_{D}, \Gamma_{0}, \Delta_{0}, \nu_{VC}, \Gamma_{2}, \Delta_{2}, \eta\)</span></p>
-<div class="section" id="line-intensity">
+<section id="line-intensity">
 <h3>Line Intensity<a class="headerlink" href="#line-intensity" title="Permalink to this headline">¶</a></h3>
-<p>The line intensity for each line at the experimental temperature is calculated using the EnvironmentDependency_Intensity function in HAPI.  This function takes as arguments the line intensity at 296 K (<span class="math notranslate nohighlight">\(S(T_{ref})\)</span>), the experimental temperature (<span class="math notranslate nohighlight">\(T\)</span>), the reference temperature 296 K (<span class="math notranslate nohighlight">\(T_{ref}\)</span>), the partition function at the experimental temperature (<span class="math notranslate nohighlight">\(Q(T)\)</span>), the partition function at the reference temperature (<span class="math notranslate nohighlight">\(Q(T_{ref})\)</span>), the lower state energy (<span class="math notranslate nohighlight">\(E&quot;\)</span>), and the line center ((<span class="math notranslate nohighlight">\(\nu\)</span>)), and constant (<span class="math notranslate nohighlight">\(c2 = hc/k\)</span> = 1.4388028496642257).  The partition functions are calculated using <a class="reference external" href="http://dx.doi.org/10.1016/j.jqsrt.2017.03.045">TIPS-2017</a>.</p>
+<p>The line intensity for each line at the experimental temperature is calculated using the EnvironmentDependency_Intensity function in HAPI.  This function takes as arguments the line intensity at 296 K (<span class="math notranslate nohighlight">\(S(T_{ref})\)</span>), the experimental temperature (<span class="math notranslate nohighlight">\(T\)</span>), the reference temperature 296 K (<span class="math notranslate nohighlight">\(T_{ref}\)</span>), the partition function at the experimental temperature (<span class="math notranslate nohighlight">\(Q(T)\)</span>), the partition function at the reference temperature (<span class="math notranslate nohighlight">\(Q(T_{ref})\)</span>), the lower state energy (<span class="math notranslate nohighlight">\(E&quot;\)</span>), and the line center ((<span class="math notranslate nohighlight">\(\nu\)</span>)), and constant (<span class="math notranslate nohighlight">\(c2 = hc/k\)</span> = 1.4388028496642257).  The partition functions are calculated using <a class="reference external" href="http://dx.doi.org/10.1016/j.jqsrt.2017.03.045">TIPS-2017</a>. Constants are defined by CODATA values</p>
 <div class="math notranslate nohighlight">
 \[S(T) = S(T_{ref}) \frac{Q(T_{ref})}{Q(T)}\frac{e^{-c2E&quot;/T}}{e^{-c2E&quot;/T_{ref}}} \frac{1 - e^{-c2\nu / T}}{1 - e^{-c2\nu / T_{ref}}}\]</div>
-<div class="admonition-todo admonition" id="id1">
-<p class="admonition-title">Todo</p>
-<p>The MATS line intensity calculation currently uses the HAPI EnvironmentDependency_Intensity function, which has specific values for physical constants. The second ratiation constant, c2, is defined as hc/k and hardwired into the code.  This value includes the Boltzmann constant, which was recently redefined by the CIPM, for the sake of maintining consistency with the SI the next version of MATS will update to use the CODATA values and move from the use of the HAPI EnvironmentDependency_Intensity function.</p>
-<blockquote>
-<div><p><a class="reference external" href="https://physics.nist.gov/cgi-bin/cuu/Value?k">CODATA: Boltzmann Constant</a></p>
-</div></blockquote>
-</div>
-</div>
-<div class="section" id="doppler-broadening">
+</section>
+<section id="doppler-broadening">
 <h3>Doppler Broadening<a class="headerlink" href="#doppler-broadening" title="Permalink to this headline">¶</a></h3>
-<p>In MATS, the doppler broadening (<span class="math notranslate nohighlight">\(\Gamma_{D}\)</span>)is not a floatable parameter and is calculated based on the experimental temperature (<span class="math notranslate nohighlight">\(T\)</span>), line center (<span class="math notranslate nohighlight">\(\nu\)</span>), and molecular mass (<span class="math notranslate nohighlight">\(m\)</span>).  The doppler width is calculated as:</p>
+<p>In MATS, the doppler broadening (<span class="math notranslate nohighlight">\(\Gamma_{D}\)</span>)is not a floatable parameter and is calculated based on the experimental temperature (<span class="math notranslate nohighlight">\(T\)</span>), line center (<span class="math notranslate nohighlight">\(\nu\)</span>), and molecular mass (<span class="math notranslate nohighlight">\(m\)</span>).  Constants are defined by CODATA values.  The doppler width is calculated as:</p>
 <div class="math notranslate nohighlight">
 \[ \begin{align}\begin{aligned}\Gamma_{D} = \sqrt{\frac{2kT \cdot ln(2)}{cMassMol\cdot mc^{2}}} \cdot \nu\\k = 1.380648813 x 10^{-16} erg K^{-1}\\cMassMol = 1.66053873x 10^{-24} mol\end{aligned}\end{align} \]</div>
-<div class="admonition-todo admonition" id="id3">
-<p class="admonition-title">Todo</p>
-<p>MATS uses the above values for the Boltzmann constant and the term cMassMol, which is equal to the inverse of Avogadro’s constant.  This is consistent with the HAPI calculation of the doppler width.  However, the Boltzmann and Avogadro’s constants were recently redefined by the CIPM, for the sake of maintining consistency with the SI the next version of MATS will update to use the CODATA values.  This will involve re-defining the doppler width to include Avogadro’s number and not the cMassMol value.</p>
-<blockquote>
-<div><p><a class="reference external" href="https://physics.nist.gov/cgi-bin/cuu/Value?k">CODATA: Boltzmann Constant</a></p>
-<p><a class="reference external" href="https://physics.nist.gov/cgi-bin/cuu/Value?na">CODATA: Avogadro constant</a></p>
-</div></blockquote>
-</div>
-</div>
-<div class="section" id="collisional-half-width">
+</section>
+<section id="collisional-half-width">
 <h3>Collisional Half-Width<a class="headerlink" href="#collisional-half-width" title="Permalink to this headline">¶</a></h3>
 <p>The collisional half-width (<span class="math notranslate nohighlight">\(\Gamma_{0}\)</span>) is a function of both the experimental pressure (<span class="math notranslate nohighlight">\(P\)</span>) and temperature (<span class="math notranslate nohighlight">\(T\)</span>) referenced to <span class="math notranslate nohighlight">\(P_{ref}\)</span> (1 atm) and <span class="math notranslate nohighlight">\(T_{ref}\)</span> (296 K). The contributions from each diluent (k) can be scaled by the diluent composition fraction (<span class="math notranslate nohighlight">\(abun\)</span>) and summed to model the ensemble collisional broadening.  The temperature dependence is modeled as a power law, where <span class="math notranslate nohighlight">\(n\)</span> is the temperature exponent for the collisional width.  The collisional half-width for each line at experimental temperature and pressure can be represented as:</p>
 <div class="math notranslate nohighlight">
 \[\Gamma_{0} (P,T) = \sum abun_{k} (\Gamma_{0}^{k} * \frac{P}{P_{ref}} * (\frac{T_{ref}}{T})^{n_{\Gamma_{0}^{k}}})\]</div>
 <p>In the MATS nomenclature, the collisional half-width is called gamma0_diluent and the temperature dependence of the collisional half-width is called n_gamma0_diluent.</p>
-</div>
-<div class="section" id="pressure-shift">
+</section>
+<section id="pressure-shift">
 <h3>Pressure Shift<a class="headerlink" href="#pressure-shift" title="Permalink to this headline">¶</a></h3>
 <p>Just like the collisional half-width, the pressure shift (<span class="math notranslate nohighlight">\(\Delta_{0}\)</span>) is a function of both the experimental pressure (<span class="math notranslate nohighlight">\(P\)</span>) and temperature (<span class="math notranslate nohighlight">\(T\)</span>) referenced to <span class="math notranslate nohighlight">\(P_{ref}\)</span> (1 atm) and <span class="math notranslate nohighlight">\(T_{ref}\)</span> (296 K). The contributions from each diluent (<span class="math notranslate nohighlight">\(k\)</span>) can be scaled by the diluent composition fraction (<span class="math notranslate nohighlight">\(abun\)</span>) and summed to model the ensemble pressure shift.  Unlike the collisional half-width, the pressure shift has a linear temperature dependence, where <span class="math notranslate nohighlight">\(n\)</span> represents the temperature dependence of the pressure shift.  The pressure shift for each line at experimental pressure and temperature can be represented as:</p>
 <div class="math notranslate nohighlight">
 \[\Delta_{0} (P,T) = \sum abun_{k} (\Delta_{0}^{k} +  n_{\Delta_{0}^{k}}\cdot (T - T_{ref}) )\frac{P}{P_{ref}}\]</div>
 <p>In the MATS nomenclature, the pressure shift is called delta0_diluent and the temperature dependence of the pressure shift is called n_delta0_diluent.</p>
-</div>
-<div class="section" id="speed-dependent-broadening">
+</section>
+<section id="speed-dependent-broadening">
 <h3>Speed-Dependent Broadening<a class="headerlink" href="#speed-dependent-broadening" title="Permalink to this headline">¶</a></h3>
 <p>The speed-dependent mechanism accounts for the speed-dependence of relaxation rates and is parameterized in the speed-dependent Voigt (SDVP), speed-dependent Nelkin-Ghatak (SDNGP), and Hartmann-Tran (HTP) profiles.  The speed-dependent broadening in MATS is tabulated as the ratio <span class="math notranslate nohighlight">\(a{w} = \frac{\Gamma_{2}}{\Gamma_{0}}\)</span>, but the actual fitted parameter is <span class="math notranslate nohighlight">\(\Gamma_{2}\)</span>.  The temperature dependence of the speed-dependent broadening is a power law dependence on <span class="math notranslate nohighlight">\(\Gamma_{2}\)</span>.  Currently in HITRAN, it is assumed that the <span class="math notranslate nohighlight">\(n_{\Gamma_{0}} = n_{\Gamma_{2}}\)</span>, such that <span class="math notranslate nohighlight">\(a_{w}\)</span> is assumed to be temperature independent.  The introduction of <span class="math notranslate nohighlight">\(n_{\Gamma_{2}}\)</span> as a parameter in MATS allows for the option of this assumption to imposed, but the flexibility to explore non-equivalent temperature dependences between the speed-dependent and collisional broadening terms.  The contributions from each diluent (<span class="math notranslate nohighlight">\(k\)</span>) can be scaled by the diluent composition fraction (<span class="math notranslate nohighlight">\(abun\)</span>) and summed to model the ensemble speed-dependent broadening.</p>
 <div class="math notranslate nohighlight">
 \[\Gamma_{2} (P,T) = \sum abun_{k} (a_{w}^{k} *\Gamma_{0}^{k} * \frac{P}{P_{ref}} * (\frac{T_{ref}}{T})^{n_{\Gamma_{2}^{k}}})\]</div>
 <p>In the MATS nomenclature, the ratio of the speed-dependent broadening to the collisional broadening (<span class="math notranslate nohighlight">\(a_{w}\)</span>) is called SD_gamma_diluent and the temperature dependence of the speed-dependent broadening is called n_gamma2_diluent.  The difference in the naming structure (SD_gamma vs gamma2) is chosen to emphasize the difference between the speed-dependent width being parameterized as a ratio versus as an absolute value.</p>
-</div>
-<div class="section" id="speed-dependent-shifting">
+</section>
+<section id="speed-dependent-shifting">
 <h3>Speed-Dependent Shifting<a class="headerlink" href="#speed-dependent-shifting" title="Permalink to this headline">¶</a></h3>
 <p>The speed-dependent mechanism accounts for the speed-dependence of relaxation rates and is parameterized in the speed-dependent Voigt (SDVP), speed-dependent Nelkin-Ghatak (SDNGP), and Hartmann-Tran (HTP) profiles.  The speed-dependent shift in MATS is tabulated as the ratio <span class="math notranslate nohighlight">\(a{s} = \frac{\Delta_{2}}{\Delta_{0}}\)</span>, but the actual fitted parameter is <span class="math notranslate nohighlight">\(\Delta_{2}\)</span>.  The temperature dependence of the speed-dependent shift is modeled with a linear dependence.  Currently, the temperature dependence of the speed-dependent shift is not parameterized in HITRAN.  The contributions from each diluent (<span class="math notranslate nohighlight">\(k\)</span>) can be scaled by the diluent composition fraction (<span class="math notranslate nohighlight">\(abun\)</span>) and summed to model the ensemble speed-dependent shift.</p>
 <div class="math notranslate nohighlight">
 \[\Delta_{2} (P,T) = \sum abun_{k} (a_{s} \cdot \Delta_{0}^{k} +  n_{\Delta_{2}^{k}}\cdot (T - T_{ref}) )\frac{P}{P_{ref}}\]</div>
 <p>In MATS nomenclature, the ratio of the speed-dependent shift to the pressure shift (<span class="math notranslate nohighlight">\(a_{s}\)</span>) is called SD_shift_diluent and the temperature dependence of the speed-dependent shift is called n_delta2_diluent.  The difference in the naming structure (SD_delta vs delta2) is chosen to emphasize the difference between the speed-dependent shift being parameterized as a ratio versus as an absolute value.</p>
-</div>
-<div class="section" id="dicke-narrowing">
+</section>
+<section id="dicke-narrowing">
 <h3>Dicke Narrowing<a class="headerlink" href="#dicke-narrowing" title="Permalink to this headline">¶</a></h3>
 <p>The Dicke narrowing mechanism models collisional induced velocity changes and is parameterized in the Nelkin-Ghatak (NGP), speed-dependent Nelkin-Ghatak (SDNGP), and Hartmann-Tran (HTP) profiles by the term <span class="math notranslate nohighlight">\(\nu_{VC}\)</span>. The temperature dependence is modeled as a power law, where <span class="math notranslate nohighlight">\(n\)</span> represents the temperature dependence of the Dicke narrowing term.  If the Dicke narrowing is assumed to behave like the diffusion coefficient, then the temperature dependence theoretically should be 1.  The contributions from each diluent (<span class="math notranslate nohighlight">\(k\)</span>) can be scaled by the diluent composition fraction (<span class="math notranslate nohighlight">\(abun\)</span>) and summed to model the ensemble Dicke narrowing.</p>
 <div class="math notranslate nohighlight">
 \[\nu_{VC} (P,T) = \sum_{k=i} abun_{k} (\nu_{VC}^{k} * \frac{P}{P_{ref}} * (\frac{T_{ref}}{T})^{n_{\nu{VC}^{k}}})\]</div>
 <p>In MATS nomenclature, the Dicke narrowing is referred to as nuVC_diluent and the temperature exponent is n_nuVC_diluent.  This differs from the naming convention in HAPI, which changes based on the origin of the Dicke narrowing term (Galatry profile versus HTP).  For simplicity, MATS has adopted a self-consistent naming convention.</p>
-</div>
-<div class="section" id="correlation-parameter">
+</section>
+<section id="correlation-parameter">
 <h3>Correlation Parameter<a class="headerlink" href="#correlation-parameter" title="Permalink to this headline">¶</a></h3>
 <p>The correlation parameter (<span class="math notranslate nohighlight">\(\eta\)</span>) models the correlation between velocity and rotation state changes due to collisions and is only parameterized in the Hartmann-Tran profile (HTP).  Currently, MATS has no temperature or pressure dependence associated with the correlation parameter.  However, contributions from each diluent (<span class="math notranslate nohighlight">\(k\)</span>) can be scaled by the diluent composition fraction (<span class="math notranslate nohighlight">\(abun\)</span>) and summed to model the ensemble correlation parameter.</p>
 <div class="math notranslate nohighlight">
 \[\eta (k) = \sum abun_{k} \cdot \eta\]</div>
 <p>In MATS nomenclature, the correlation parameter is referred to as eta_diluent.</p>
-</div>
-<div class="section" id="line-mixing">
+</section>
+<section id="line-mixing">
 <h3>Line Mixing<a class="headerlink" href="#line-mixing" title="Permalink to this headline">¶</a></h3>
-<p>The nearest-neighbor line mixing (<span class="math notranslate nohighlight">\(Y\)</span>) can be calculated from the imaginary portion of any of the HTP derivative line profiles.  Currently, there is no temperature dependence imposed on the line mixing, so there a different value is used for each nominal temperature, where the nominal temperature is specified in the <a class="reference internal" href="MATS.html#MATS.Spectrum" title="MATS.Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Spectrum</span></code></a> definition.  However, contributions from each diluent (<span class="math notranslate nohighlight">\(k\)</span>) can be scaled by the diluent composition fraction (<span class="math notranslate nohighlight">\(abun\)</span>) and  summed to model the ensemble line mixing.</p>
+<p>The nearest-neighbor line mixing (<span class="math notranslate nohighlight">\(Y\)</span>) can be calculated from the imaginary portion of any of the HTP derivative line profiles.  Currently, there is no temperature dependence imposed on the line mixing, so there a different value is used for each nominal temperature, where the nominal temperature is specified in the <code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Spectrum</span></code> definition.  However, contributions from each diluent (<span class="math notranslate nohighlight">\(k\)</span>) can be scaled by the diluent composition fraction (<span class="math notranslate nohighlight">\(abun\)</span>) and  summed to model the ensemble line mixing.</p>
 <div class="math notranslate nohighlight">
 \[Y (P) = \sum abun_{k} Y \frac{P}{P_{ref}}\]</div>
 <p>The line mixing is implemented as:</p>
 <div class="math notranslate nohighlight">
 \[\alpha = I * (Re{HTP(\Gamma_{D}, \Gamma_{0}, \Delta_{0}, \Gamma_{2}, \Delta_{2}, \nu_{VC}, \eta, \nu)} + Y*Im{HTP(\Gamma_{D}, \Gamma_{0}, \Delta_{0}, \Gamma_{2}, \Delta_{2}, \nu_{VC}, \eta, \nu)})\]</div>
 <p>In MATS nomenclature, the line mixing parameter is referred to as y_diluent_nominaltemperature.</p>
-</div>
-<div class="section" id="mats-functions">
-<h3>MATS Functions<a class="headerlink" href="#mats-functions" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="line-by-line-models">
+<h3>Line-by-line Models<a class="headerlink" href="#line-by-line-models" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.HTP_from_DF_select" title="MATS.HTP_from_DF_select"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.HTP_from_DF_select</span></code></a>(linelist, waves[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Fit_DataSet.HTP_from_DF_select" title="Fit_DataSet.HTP_from_DF_select"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HTP_from_DF_select</span></code></a>(linelist, waves[, …])</p></td>
 <td><p>Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.etalon" title="MATS.etalon"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.etalon</span></code></a>(x, amp, freq, phase)</p></td>
-<td><p>Etalon definition</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#Fit_DataSet.HTP_wBeta_from_DF_select" title="Fit_DataSet.HTP_wBeta_from_DF_select"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HTP_wBeta_from_DF_select</span></code></a>(linelist, waves[, …])</p></td>
+<td><p>Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters with capability of incorporating the beta correction to the Dicke Narrowing proposed in Analytical-function correction to the Hartmann–Tran profile for more reliable representation of the Dicke-narrowed molecular spectra.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<div class="section" id="dataset-class">
+</section>
+</section>
+<section id="dataset-class">
 <h2>Dataset Class<a class="headerlink" href="#dataset-class" title="Permalink to this headline">¶</a></h2>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -232,31 +219,31 @@ $(document).ready(function(){
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Dataset" title="MATS.Dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Dataset</span></code></a>(spectra, dataset_name[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Dataset.Dataset" title="Dataset.Dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dataset</span></code></a>(spectra, dataset_name, param_linelist)</p></td>
 <td><p>Combines spectrum objects into a Dataset object to enable multi-spectrum fitting.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Dataset.generate_baseline_paramlist" title="MATS.Dataset.generate_baseline_paramlist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Dataset.generate_baseline_paramlist</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#Dataset.Dataset.generate_baseline_paramlist" title="Dataset.Dataset.generate_baseline_paramlist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dataset.generate_baseline_paramlist</span></code></a>()</p></td>
 <td><p>Generates a csv file called dataset_name + _baseline_paramlist, which will be used to generate another csv file that is used for fitting spectrum dependent parameters with columns for spectrum number, segment number, x_shift, concentration for each molecule in the dataset, baseline terms (a = 0th order term, b = 1st order, etc), and etalon terms (set an amplitude, period, and phase for the number of etalons listed for each spectrum in the Dataset).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Dataset.generate_summary_file" title="MATS.Dataset.generate_summary_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Dataset.generate_summary_file</span></code></a>([save_file])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Dataset.Dataset.generate_summary_file" title="Dataset.Dataset.generate_summary_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dataset.generate_summary_file</span></code></a>([save_file])</p></td>
 <td><p>Generates a summary file combining spectral information from all spectra in the Dataset.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Dataset.get_spectra_extremes" title="MATS.Dataset.get_spectra_extremes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Dataset.get_spectra_extremes</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#Dataset.Dataset.get_spectra_extremes" title="Dataset.Dataset.get_spectra_extremes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dataset.get_spectra_extremes</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Dataset.Dataset.get_spectrum_extremes" title="Dataset.Dataset.get_spectrum_extremes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dataset.get_spectrum_extremes</span></code></a>()</p></td>
 <td><p>Gets the minimum and maximum wavenumber for the entire Dataset.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Dataset.get_spectrum_extremes" title="MATS.Dataset.get_spectrum_extremes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Dataset.get_spectrum_extremes</span></code></a>()</p></td>
-<td><p>Gets the minimum and maximum wavenumber for each spectrum in the Dataset.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Dataset.average_QF" title="MATS.Dataset.average_QF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Dataset.average_QF</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#Dataset.Dataset.average_QF" title="Dataset.Dataset.average_QF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dataset.average_QF</span></code></a>()</p></td>
 <td><p>Calculates the Average QF from all spectra.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Dataset.plot_model_residuals" title="MATS.Dataset.plot_model_residuals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Dataset.plot_model_residuals</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Dataset.Dataset.plot_model_residuals" title="Dataset.Dataset.plot_model_residuals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dataset.plot_model_residuals</span></code></a>()</p></td>
 <td><p>Generates a plot showing both the model and experimental data as a function of wavenumber in the main plot with a subplot showing the residuals as function of wavenumber.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="generate-fitparam-file-class">
+</section>
+<section id="generate-fitparam-file-class">
 <h2>Generate FitParam File Class<a class="headerlink" href="#generate-fitparam-file-class" title="Permalink to this headline">¶</a></h2>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -264,89 +251,87 @@ $(document).ready(function(){
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Generate_FitParam_File" title="MATS.Generate_FitParam_File"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Generate_FitParam_File</span></code></a>(dataset, …[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Generate_FitParam_File.Generate_FitParam_File" title="Generate_FitParam_File.Generate_FitParam_File"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Generate_FitParam_File</span></code></a>(dataset, …[, …])</p></td>
 <td><p>Class generates the parameter files used in fitting and sets up fit settings.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Generate_FitParam_File.generate_fit_baseline_linelist" title="MATS.Generate_FitParam_File.generate_fit_baseline_linelist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Generate_FitParam_File.generate_fit_baseline_linelist</span></code></a>([…])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#Generate_FitParam_File.Generate_FitParam_File.generate_fit_baseline_linelist" title="Generate_FitParam_File.Generate_FitParam_File.generate_fit_baseline_linelist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Generate_FitParam_File.generate_fit_baseline_linelist</span></code></a>([…])</p></td>
 <td><p>Generates the baseline line list used in fitting and updates the fitting booleans to desired settings.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Generate_FitParam_File.generate_fit_param_linelist_from_linelist" title="MATS.Generate_FitParam_File.generate_fit_param_linelist_from_linelist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Generate_FitParam_File.generate_fit_param_linelist_from_linelist</span></code></a>([…])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Generate_FitParam_File.Generate_FitParam_File.generate_fit_param_linelist_from_linelist" title="Generate_FitParam_File.Generate_FitParam_File.generate_fit_param_linelist_from_linelist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Generate_FitParam_File.generate_fit_param_linelist_from_linelist</span></code></a>([…])</p></td>
 <td><p>Generates the parameter line list used in fitting and updates the fitting booleans to desired settings.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="edit-fit-param-files-class">
-<h2>Edit Fit Param Files Class<a class="headerlink" href="#edit-fit-param-files-class" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="fit-dataset-class">
+<h2>Fit DataSet Class<a class="headerlink" href="#fit-dataset-class" title="Permalink to this headline">¶</a></h2>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files" title="MATS.Edit_Fit_Param_Files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files</span></code></a>(…[, …])</p></td>
-<td><p>Allows for the baseline and parameter files to be editted in jupyter notebook.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files.edit_generated_baselist" title="MATS.Edit_Fit_Param_Files.edit_generated_baselist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files.edit_generated_baselist</span></code></a>()</p></td>
-<td><p>Allows editting of baseline linelist in notebook</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files.edit_generated_paramlist" title="MATS.Edit_Fit_Param_Files.edit_generated_paramlist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files.edit_generated_paramlist</span></code></a>()</p></td>
-<td><p>Allows editting of parameter linelist in notebook</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files.save_editted_baselist" title="MATS.Edit_Fit_Param_Files.save_editted_baselist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files.save_editted_baselist</span></code></a>(…)</p></td>
-<td><p>Saves edits of baseline linelist in notebook</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files.save_editted_paramlist" title="MATS.Edit_Fit_Param_Files.save_editted_paramlist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files.save_editted_paramlist</span></code></a>(…)</p></td>
-<td><p>Saves edits of parameter linelist in notebook</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="fit-dataset-class">
-<h2>Fit Dataset Class<a class="headerlink" href="#fit-dataset-class" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Fit_DataSet" title="MATS.Fit_DataSet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Fit_DataSet</span></code></a>(dataset, …[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Fit_DataSet.Fit_DataSet" title="Fit_DataSet.Fit_DataSet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fit_DataSet</span></code></a>(dataset, base_linelist_file, …)</p></td>
 <td><p>Provides the fitting functionality for a Dataset.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Fit_DataSet.constrained_baseline" title="MATS.Fit_DataSet.constrained_baseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Fit_DataSet.constrained_baseline</span></code></a>(params)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#Fit_DataSet.Fit_DataSet.constrained_baseline" title="Fit_DataSet.Fit_DataSet.constrained_baseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fit_DataSet.constrained_baseline</span></code></a>(params[, …])</p></td>
 <td><p>Imposes baseline constraints when using multiple segments per spectrum, ie all baseline parameters can be the same across the entire spectrum except for the etalon phase, which is allowed to vary per segment.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Fit_DataSet.fit_data" title="MATS.Fit_DataSet.fit_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Fit_DataSet.fit_data</span></code></a>(params[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Fit_DataSet.Fit_DataSet.fit_data" title="Fit_DataSet.Fit_DataSet.fit_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fit_DataSet.fit_data</span></code></a>(params[, wing_cutoff, …])</p></td>
 <td><p>Uses the lmfit minimizer to do the fitting through the simulation model function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Fit_DataSet.generate_params" title="MATS.Fit_DataSet.generate_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Fit_DataSet.generate_params</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#Fit_DataSet.Fit_DataSet.generate_params" title="Fit_DataSet.Fit_DataSet.generate_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fit_DataSet.generate_params</span></code></a>()</p></td>
 <td><p>Generates the lmfit parameter object that will be used in fitting.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Fit_DataSet.residual_analysis" title="MATS.Fit_DataSet.residual_analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Fit_DataSet.residual_analysis</span></code></a>(result[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Fit_DataSet.Fit_DataSet.residual_analysis" title="Fit_DataSet.Fit_DataSet.residual_analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fit_DataSet.residual_analysis</span></code></a>(result[, …])</p></td>
 <td><p>Updates the model and residual arrays in each spectrum object with the results of the fit and gives the option of generating the combined absorption and residual plot for each spectrum.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#MATS.Fit_DataSet.simulation_model" title="MATS.Fit_DataSet.simulation_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Fit_DataSet.simulation_model</span></code></a>(params[, …])</p></td>
-<td><p>This is the model used for fitting that includes baseline and resonant absorption models.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#Fit_DataSet.Fit_DataSet.simulation_model" title="Fit_DataSet.Fit_DataSet.simulation_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fit_DataSet.simulation_model</span></code></a>(params[, …])</p></td>
+<td><p>This is the model used for fitting that includes baseline, resonant absorption, and CIA models.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#MATS.Fit_DataSet.update_params" title="MATS.Fit_DataSet.update_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MATS.Fit_DataSet.update_params</span></code></a>(result[, …])</p></td>
-<td><p>Updates the baseline and line parameter files based on fit results with the option to write over the file (default) or save as a new file.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Fit_DataSet.Fit_DataSet.update_params" title="Fit_DataSet.Fit_DataSet.update_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fit_DataSet.update_params</span></code></a>(result[, …])</p></td>
+<td><p>Updates the baseline and line parameter files based on fit results with the option to write over the file (default) or save as a new file and updates baseline values in the spectrum objects.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
+</section>
+<section id="utility-functions">
+<h2>Utility Functions<a class="headerlink" href="#utility-functions" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Utilities.etalon" title="Utilities.etalon"><code class="xref py py-obj docutils literal notranslate"><span class="pre">etalon</span></code></a>(x, amp, period, phase)</p></td>
+<td><p>Etalon definition</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#Utilities.molecularMass" title="Utilities.molecularMass"><code class="xref py py-obj docutils literal notranslate"><span class="pre">molecularMass</span></code></a>(M, I[, isotope_list])</p></td>
+<td><p>molecular mass look-up based on the HAPI definition adapted to allow used to specify ISO list INPUT PARAMETERS:     M: HITRAN molecule number     I: HITRAN isotopologue number OUTPUT PARAMETERS:     MolMass: molecular mass — DESCRIPTION:     Return molecular mass of HITRAN isotolopogue.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="MATS.html#Utilities.isotope_list_molecules_isotopes" title="Utilities.isotope_list_molecules_isotopes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isotope_list_molecules_isotopes</span></code></a>([isotope_list])</p></td>
+<td><p>The HITRAN style isotope list in the format (M,I), this function creates a dictionary from this with M as the keys and lists of I as values.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="MATS.html#Utilities.add_to_HITRANstyle_isotope_list" title="Utilities.add_to_HITRANstyle_isotope_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_to_HITRANstyle_isotope_list</span></code></a>([…])</p></td>
+<td><p>Allows for used to add to an existing isotope line list in the HITRAN format</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="Getting Started.html"
-                        title="previous chapter">Getting Started</a></p>
+  <p class="topless"><a href="MATS%20Version%20Summary.html"
+                        title="previous chapter">MATS Version Summary</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="Generating Parameter Line lists.html"
+  <p class="topless"><a href="Generating%20Parameter%20Line%20lists.html"
                         title="next chapter">Generating Parameter Line lists</a></p>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
@@ -372,16 +357,17 @@ $(document).ready(function(){
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Generating Parameter Line lists.html" title="Generating Parameter Line lists"
+          <a href="Generating%20Parameter%20Line%20lists.html" title="Generating Parameter Line lists"
              >next</a> |</li>
         <li class="right" >
-          <a href="Getting Started.html" title="Getting Started"
+          <a href="MATS%20Version%20Summary.html" title="MATS Version Summary"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 1.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MATS Summary</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.1.
     </div>
   </body>
 </html>

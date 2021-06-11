@@ -1,0 +1,297 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Incorporating CIA into fits &#8212; MATS 2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Including instrument line shapes in simulation and fits" href="Including%20instrument%20line%20shapes%20in%20simulation%20and%20fits.html" />
+    <link rel="prev" title="Applying Analytical Correction to hardness of collisions for HTP" href="Applying%20Analytical%20Correction%20to%20hardness%20of%20collisions%20for%20HTP.html" />
+<link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
+  <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+
+
+<script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
+<script>
+$(document).ready(function(){
+  // Mark external (non-nist.gov) A tags with class "external"
+  //If the adress start with https and ends with nist.gov
+  var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)');
+  //Regex to find address that start with https
+  var re_absolute_address = new RegExp('^((https?:)?\/\/)');
+  $("a").each(function(){
+    var url=$(this).attr('href');
+    if(re_nist.test(url) || !re_absolute_address.test(url)){
+      $(this).addClass('local');
+    }else{
+      //This a href appears to be external, so tag it
+      $(this).addClass('external');
+    }
+  });
+  // Add leaveNotice to external A elements
+  $('a.external').leaveNotice();
+});
+</script>
+<link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Including%20instrument%20line%20shapes%20in%20simulation%20and%20fits.html" title="Including instrument line shapes in simulation and fits"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Applying%20Analytical%20Correction%20to%20hardness%20of%20collisions%20for%20HTP.html" title="Applying Analytical Correction to hardness of collisions for HTP"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="Examples.html" accesskey="U">Examples</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Incorporating CIA into fits</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="incorporating-cia-into-fits">
+<h1>Incorporating CIA into fits<a class="headerlink" href="#incorporating-cia-into-fits" title="Permalink to this headline">¶</a></h1>
+<p>Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/MATS/Examples">examples folder</a>.</p>
+<p>Collision induced absorption (CIA) is a broadband effect stemming from intermolecular interactions leading to a collisionally-induced dipole. Traditionally, CIA is treated as the remaining absorption after modeling baseline and resonant absorption. To accomodate this approach, MATS allows for the input of a static CIA for each spectrum to account for in the fitting solution. <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/MATS/Examples/Generic_CIA">The example</a> below takes synthetic spectra that include CIA, evalutates using the initial line list, generates a CIA for each spectrum, and then fits the line shape parameters.</p>
+<section id="generate-spectrum-objects">
+<h2>Generate Spectrum Objects<a class="headerlink" href="#generate-spectrum-objects" title="Permalink to this headline">¶</a></h2>
+<p>Module import follows from the <a class="reference internal" href="Fitting%20Experimental%20Spectra.html#fitting-experimental-spectra"><span class="std std-ref">Fitting Experimental Spectra</span></a> and <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> examples with additional details on how to simulate spectra found in <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> and the source documentation.</p>
+<p>The provided spectra were simulated in MATS offline using the <a class="reference external" href="https://doi.org/10.1016/j.jqsrt.2016.03.037">Drouin 2017 Multispectrum analysis of the Oxygen A-Band</a> line list and also includes the CIA reported in that work. The code below generates <a class="reference internal" href="MATS.html#module-Spectrum" title="Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spectrum</span></code></a> objects from these spectra.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">path</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;C:\Users\ema3\Documents\MATS\MATS\Examples\Generic_CIA&#39;</span> <span class="c1"># Location of the Summary Data File</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+
+<span class="n">IntensityThreshold</span> <span class="o">=</span> <span class="mf">1e-30</span> <span class="c1">#intensities must be above this value to be simulated</span>
+<span class="n">Fit_Intensity</span> <span class="o">=</span> <span class="mf">1e-26</span><span class="c1">#intensities must be above this value for the line to be fit</span>
+<span class="n">wave_range</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="c1">#range outside of experimental x-range to simulate</span>
+<span class="n">segment_column</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">etalon</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">sample_concentration</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:</span>  <span class="mf">0.209</span><span class="p">}</span>
+
+
+
+<span class="n">freq_column</span> <span class="o">=</span> <span class="s1">&#39;Wavenumber + Noise (cm-1)&#39;</span>
+<span class="n">tau_column</span> <span class="o">=</span> <span class="s1">&#39;Alpha + LM + CIA&#39;</span>
+<span class="n">pressure_column</span> <span class="o">=</span> <span class="s1">&#39;Pressure (Torr)&#39;</span>
+<span class="n">temp_column</span> <span class="o">=</span> <span class="s1">&#39;Temperature (C)&#39;</span>
+<span class="n">order_baseline_fit</span> <span class="o">=</span> <span class="mi">2</span>
+
+
+
+<span class="n">spec_1</span> <span class="o">=</span> <span class="n">Spectrum</span><span class="p">(</span>  <span class="s1">&#39;100 Torr&#39;</span><span class="p">,</span>
+                         <span class="n">molefraction</span> <span class="o">=</span> <span class="n">sample_concentration</span><span class="p">,</span> <span class="n">natural_abundance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">diluent</span> <span class="o">=</span> <span class="s1">&#39;air&#39;</span><span class="p">,</span>
+                         <span class="n">etalons</span> <span class="o">=</span> <span class="n">etalon</span><span class="p">,</span>
+                         <span class="n">input_freq</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">frequency_column</span> <span class="o">=</span> <span class="n">freq_column</span><span class="p">,</span>
+                         <span class="n">input_tau</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tau_column</span> <span class="o">=</span> <span class="n">tau_column</span><span class="p">,</span> <span class="n">tau_stats_column</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                         <span class="n">pressure_column</span> <span class="o">=</span> <span class="n">pressure_column</span><span class="p">,</span> <span class="n">temperature_column</span> <span class="o">=</span> <span class="n">temp_column</span><span class="p">,</span><span class="c1">#segment_column = segment_column,</span>
+                         <span class="n">nominal_temperature</span> <span class="o">=</span> <span class="mi">296</span><span class="p">,</span> <span class="n">x_shift</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">baseline_order</span> <span class="o">=</span> <span class="n">order_baseline_fit</span><span class="p">)</span>
+<span class="n">spec_2</span> <span class="o">=</span> <span class="n">Spectrum</span><span class="p">(</span>  <span class="s1">&#39;200 Torr&#39;</span><span class="p">,</span>
+                         <span class="n">molefraction</span> <span class="o">=</span> <span class="n">sample_concentration</span><span class="p">,</span> <span class="n">natural_abundance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">diluent</span> <span class="o">=</span> <span class="s1">&#39;air&#39;</span><span class="p">,</span>
+                         <span class="n">etalons</span> <span class="o">=</span> <span class="n">etalon</span><span class="p">,</span>
+                         <span class="n">input_freq</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">frequency_column</span> <span class="o">=</span> <span class="n">freq_column</span><span class="p">,</span>
+                         <span class="n">input_tau</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tau_column</span> <span class="o">=</span> <span class="n">tau_column</span><span class="p">,</span> <span class="n">tau_stats_column</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                         <span class="n">pressure_column</span> <span class="o">=</span> <span class="n">pressure_column</span><span class="p">,</span> <span class="n">temperature_column</span> <span class="o">=</span> <span class="n">temp_column</span><span class="p">,</span><span class="c1">#segment_column = segment_column,</span>
+                         <span class="n">nominal_temperature</span> <span class="o">=</span> <span class="mi">296</span><span class="p">,</span> <span class="n">x_shift</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">baseline_order</span> <span class="o">=</span> <span class="n">order_baseline_fit</span><span class="p">)</span>
+<span class="n">spec_3</span> <span class="o">=</span> <span class="n">Spectrum</span><span class="p">(</span>  <span class="s1">&#39;400 Torr&#39;</span><span class="p">,</span>
+                         <span class="n">molefraction</span> <span class="o">=</span> <span class="n">sample_concentration</span><span class="p">,</span> <span class="n">natural_abundance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">diluent</span> <span class="o">=</span> <span class="s1">&#39;air&#39;</span><span class="p">,</span>
+                         <span class="n">etalons</span> <span class="o">=</span> <span class="n">etalon</span><span class="p">,</span>
+                         <span class="n">input_freq</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">frequency_column</span> <span class="o">=</span> <span class="n">freq_column</span><span class="p">,</span>
+                         <span class="n">input_tau</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tau_column</span> <span class="o">=</span> <span class="n">tau_column</span><span class="p">,</span> <span class="n">tau_stats_column</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                         <span class="n">pressure_column</span> <span class="o">=</span> <span class="n">pressure_column</span><span class="p">,</span> <span class="n">temperature_column</span> <span class="o">=</span> <span class="n">temp_column</span><span class="p">,</span><span class="c1">#segment_column = segment_column,</span>
+                         <span class="n">nominal_temperature</span> <span class="o">=</span> <span class="mi">296</span><span class="p">,</span> <span class="n">x_shift</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">baseline_order</span> <span class="o">=</span> <span class="n">order_baseline_fit</span><span class="p">)</span>
+<span class="n">spec_4</span> <span class="o">=</span> <span class="n">Spectrum</span><span class="p">(</span>  <span class="s1">&#39;700 Torr&#39;</span><span class="p">,</span>
+                         <span class="n">molefraction</span> <span class="o">=</span> <span class="n">sample_concentration</span><span class="p">,</span> <span class="n">natural_abundance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">diluent</span> <span class="o">=</span> <span class="s1">&#39;air&#39;</span><span class="p">,</span>
+                         <span class="n">etalons</span> <span class="o">=</span> <span class="n">etalon</span><span class="p">,</span>
+                         <span class="n">input_freq</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">frequency_column</span> <span class="o">=</span> <span class="n">freq_column</span><span class="p">,</span>
+                         <span class="n">input_tau</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tau_column</span> <span class="o">=</span> <span class="n">tau_column</span><span class="p">,</span> <span class="n">tau_stats_column</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                         <span class="n">pressure_column</span> <span class="o">=</span> <span class="n">pressure_column</span><span class="p">,</span> <span class="n">temperature_column</span> <span class="o">=</span> <span class="n">temp_column</span><span class="p">,</span><span class="c1">#segment_column = segment_column,</span>
+                         <span class="n">nominal_temperature</span> <span class="o">=</span> <span class="mi">296</span><span class="p">,</span> <span class="n">x_shift</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">baseline_order</span> <span class="o">=</span> <span class="n">order_baseline_fit</span><span class="p">)</span>
+<span class="n">spec_5</span> <span class="o">=</span> <span class="n">Spectrum</span><span class="p">(</span>  <span class="s1">&#39;1000 Torr&#39;</span><span class="p">,</span>
+                         <span class="n">molefraction</span> <span class="o">=</span> <span class="n">sample_concentration</span><span class="p">,</span> <span class="n">natural_abundance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">diluent</span> <span class="o">=</span> <span class="s1">&#39;air&#39;</span><span class="p">,</span>
+                         <span class="n">etalons</span> <span class="o">=</span> <span class="n">etalon</span><span class="p">,</span>
+                         <span class="n">input_freq</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">frequency_column</span> <span class="o">=</span> <span class="n">freq_column</span><span class="p">,</span>
+                         <span class="n">input_tau</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tau_column</span> <span class="o">=</span> <span class="n">tau_column</span><span class="p">,</span> <span class="n">tau_stats_column</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                         <span class="n">pressure_column</span> <span class="o">=</span> <span class="n">pressure_column</span><span class="p">,</span> <span class="n">temperature_column</span> <span class="o">=</span> <span class="n">temp_column</span><span class="p">,</span><span class="c1">#segment_column = segment_column,</span>
+                         <span class="n">nominal_temperature</span> <span class="o">=</span> <span class="mi">296</span><span class="p">,</span> <span class="n">x_shift</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">baseline_order</span> <span class="o">=</span> <span class="n">order_baseline_fit</span><span class="p">)</span>
+<span class="n">spec_6</span> <span class="o">=</span> <span class="n">Spectrum</span><span class="p">(</span>  <span class="s1">&#39;2000 Torr&#39;</span><span class="p">,</span>
+                         <span class="n">molefraction</span> <span class="o">=</span> <span class="n">sample_concentration</span><span class="p">,</span> <span class="n">natural_abundance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">diluent</span> <span class="o">=</span> <span class="s1">&#39;air&#39;</span><span class="p">,</span>
+                         <span class="n">etalons</span> <span class="o">=</span> <span class="n">etalon</span><span class="p">,</span>
+                         <span class="n">input_freq</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">frequency_column</span> <span class="o">=</span> <span class="n">freq_column</span><span class="p">,</span>
+                         <span class="n">input_tau</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tau_column</span> <span class="o">=</span> <span class="n">tau_column</span><span class="p">,</span> <span class="n">tau_stats_column</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                         <span class="n">pressure_column</span> <span class="o">=</span> <span class="n">pressure_column</span><span class="p">,</span> <span class="n">temperature_column</span> <span class="o">=</span> <span class="n">temp_column</span><span class="p">,</span><span class="c1">#segment_column = segment_column,</span>
+                         <span class="n">nominal_temperature</span> <span class="o">=</span> <span class="mi">296</span><span class="p">,</span> <span class="n">x_shift</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">baseline_order</span> <span class="o">=</span> <span class="n">order_baseline_fit</span><span class="p">)</span>
+<span class="n">spec_7</span> <span class="o">=</span> <span class="n">Spectrum</span><span class="p">(</span>  <span class="s1">&#39;3000 Torr&#39;</span><span class="p">,</span>
+                         <span class="n">molefraction</span> <span class="o">=</span> <span class="n">sample_concentration</span><span class="p">,</span> <span class="n">natural_abundance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">diluent</span> <span class="o">=</span> <span class="s1">&#39;air&#39;</span><span class="p">,</span>
+                         <span class="n">etalons</span> <span class="o">=</span> <span class="n">etalon</span><span class="p">,</span>
+                         <span class="n">input_freq</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">frequency_column</span> <span class="o">=</span> <span class="n">freq_column</span><span class="p">,</span>
+                         <span class="n">input_tau</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tau_column</span> <span class="o">=</span> <span class="n">tau_column</span><span class="p">,</span> <span class="n">tau_stats_column</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                         <span class="n">pressure_column</span> <span class="o">=</span> <span class="n">pressure_column</span><span class="p">,</span> <span class="n">temperature_column</span> <span class="o">=</span> <span class="n">temp_column</span><span class="p">,</span><span class="c1">#segment_column = segment_column,</span>
+                         <span class="n">nominal_temperature</span> <span class="o">=</span> <span class="mi">296</span><span class="p">,</span> <span class="n">x_shift</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">baseline_order</span> <span class="o">=</span> <span class="n">order_baseline_fit</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="generate-dataset">
+<h2>Generate Dataset<a class="headerlink" href="#generate-dataset" title="Permalink to this headline">¶</a></h2>
+<p>A line list generated from the Drouin 2017 Oxygen A-Band data combined with HITRAN 2016 values is used as the initial guess.  A similar line list was used in the generation of the spectra, with truncation errors being the most like cause of discrepencies.  Spectra are combined to form a <a class="reference internal" href="MATS.html#module-Dataset" title="Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a> object.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#Put Together Dataset</span>
+<span class="n">linelist</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;C:\Users\ema3\Documents\MATS\MATS\Linelists&#39;</span> <span class="c1"># Location of the Summary Data File</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">linelist</span><span class="p">)</span>
+<span class="n">PARAM_LINELIST</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;O2_ABand_Drouin_2017_linelist.csv&#39;</span><span class="p">)</span>
+
+
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+<span class="n">SPECTRA</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">([</span><span class="n">spec_1</span><span class="p">,</span> <span class="n">spec_2</span><span class="p">,</span> <span class="n">spec_3</span><span class="p">,</span> <span class="n">spec_4</span><span class="p">,</span> <span class="n">spec_5</span><span class="p">,</span> <span class="n">spec_6</span><span class="p">,</span> <span class="n">spec_7</span><span class="p">],</span> <span class="s1">&#39;CIA Spectra Study&#39;</span><span class="p">,</span> <span class="n">PARAM_LINELIST</span><span class="p">)</span>
+
+<span class="c1">#Generate Baseline Parameter list based on number of etalons in spectra definitions and baseline order</span>
+<span class="n">BASE_LINELIST</span> <span class="o">=</span> <span class="n">SPECTRA</span><span class="o">.</span><span class="n">generate_baseline_paramlist</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="evaluation">
+<h2>Evaluation<a class="headerlink" href="#evaluation" title="Permalink to this headline">¶</a></h2>
+<p>Inital fit doesn’t float any parameters.  The residual plots shown are only for the lowest and highest pressures.  In the high pressure residuals, you can see that the unaccounted for CIA is dominating the residuals and wouldn’t allow for optimization of line shape parameters without treatment.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">FITPARAMS</span> <span class="o">=</span> <span class="n">Generate_FitParam_File</span><span class="p">(</span><span class="n">SPECTRA</span><span class="p">,</span> <span class="n">PARAM_LINELIST</span><span class="p">,</span> <span class="n">BASE_LINELIST</span><span class="p">,</span>
+                                <span class="n">lineprofile</span> <span class="o">=</span> <span class="s1">&#39;SDVP&#39;</span><span class="p">,</span> <span class="n">linemixing</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                                   <span class="n">fit_intensity</span> <span class="o">=</span> <span class="n">Fit_Intensity</span><span class="p">,</span> <span class="n">threshold_intensity</span> <span class="o">=</span> <span class="n">Fit_Intensity</span><span class="p">,</span>
+                                   <span class="n">nu_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">sw_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">gamma0_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">delta0_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                                    <span class="n">aw_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">as_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                                    <span class="n">nuVC_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">eta_constrain</span> <span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">linemixing_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+
+<span class="n">FITPARAMS</span><span class="o">.</span><span class="n">generate_fit_param_linelist_from_linelist</span><span class="p">(</span><span class="n">vary_nu</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span><span class="kc">False</span><span class="p">}},</span> <span class="n">vary_sw</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span><span class="kc">False</span><span class="p">}},</span>
+                                                 <span class="n">vary_gamma0</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="kc">False</span><span class="p">}},</span> <span class="n">vary_n_gamma0</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">}},</span>
+                                                 <span class="n">vary_delta0</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="kc">False</span><span class="p">}},</span> <span class="n">vary_n_delta0</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">}},</span>
+                                                 <span class="n">vary_aw</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="kc">False</span><span class="p">}},</span> <span class="n">vary_n_gamma2</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">}},</span>
+                                                 <span class="n">vary_as</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">}},</span> <span class="n">vary_n_delta2</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">}},</span>
+                                                 <span class="n">vary_nuVC</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">}},</span> <span class="n">vary_n_nuVC</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">}},</span>
+                                                 <span class="n">vary_eta</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">vary_linemixing</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">}})</span>
+
+<span class="n">FITPARAMS</span><span class="o">.</span><span class="n">generate_fit_baseline_linelist</span><span class="p">(</span><span class="n">vary_baseline</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">vary_molefraction</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">},</span> <span class="n">vary_xshift</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                                   <span class="n">vary_etalon_amp</span><span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">vary_etalon_period</span><span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">vary_etalon_phase</span><span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+
+
+<span class="n">fit_data</span> <span class="o">=</span> <span class="n">Fit_DataSet</span><span class="p">(</span><span class="n">SPECTRA</span><span class="p">,</span><span class="s1">&#39;Baseline_LineList&#39;</span><span class="p">,</span> <span class="s1">&#39;Parameter_LineList&#39;</span><span class="p">,</span>
+                    <span class="n">minimum_parameter_fit_intensity</span> <span class="o">=</span> <span class="n">Fit_Intensity</span><span class="p">)</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">fit_data</span><span class="o">.</span><span class="n">generate_params</span><span class="p">()</span>
+
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">fit_data</span><span class="o">.</span><span class="n">fit_data</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">wing_wavenumbers</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">wing_method</span> <span class="o">=</span> <span class="s1">&#39;wing_wavenumbers&#39;</span><span class="p">,</span> <span class="n">xtol</span> <span class="o">=</span> <span class="mf">1e-7</span><span class="p">,</span> <span class="n">maxfev</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">,</span> <span class="n">ftol</span> <span class="o">=</span> <span class="mf">1e-7</span><span class="p">)</span>
+
+<span class="n">fit_data</span><span class="o">.</span><span class="n">residual_analysis</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indv_resid_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">fit_data</span><span class="o">.</span><span class="n">update_params</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="n">SPECTRA</span><span class="o">.</span><span class="n">generate_summary_file</span><span class="p">(</span><span class="n">save_file</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="_images/CIA_low.png" src="_images/CIA_low.png" />
+<img alt="_images/CIA_high.png" src="_images/CIA_high.png" />
+<p>A simple function is defined to  treat the CIA as the smooth residuals.  To do this we will use a filter to smooth over any resonant absorbance and then define the CIA as the negative of what is leftover.  This is done for all spectra making up the dataset.  Note that this defininition includes the <a class="reference internal" href="MATS.html#Spectrum.Spectrum.set_cia" title="Spectrum.Spectrum.set_cia"><code class="xref py py-func docutils literal notranslate"><span class="pre">Spectrum.set_cia()</span></code></a> function to assign this array to a given <a class="reference internal" href="MATS.html#module-Spectrum" title="Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spectrum</span></code></a> instance.  Again the plots below show this process for the lowest and highest pressure spectra, where the blue lines are the residuals and the orange lines are the smoothed residuals that will define the magnitude of the CIA.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">savgol_filter</span>
+
+<span class="k">def</span> <span class="nf">ad_hoc_CIA</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+
+ <span class="n">waves</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">wavenumber</span>
+ <span class="n">resds</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">residuals</span>
+
+ <span class="n">CIA</span> <span class="o">=</span> <span class="n">savgol_filter</span><span class="p">(</span><span class="n">resds</span><span class="p">,</span> <span class="mi">501</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># Savitsky Golay Filte that uses a 501 pt sliding window with a first order polynomial to smooth the data.  These settings were arbitrary to smooth out the data.</span>
+ <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">waves</span><span class="p">,</span> <span class="n">resds</span><span class="p">)</span>
+ <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">waves</span><span class="p">,</span> <span class="n">CIA</span><span class="p">)</span>
+ <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Wavenumbers ($cm^{-1}$)&#39;</span><span class="p">)</span>
+ <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Residuals (ppm/cm)&#39;</span><span class="p">)</span>
+ <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span> <span class="s1">&#39;Spectrum &#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">spectrum_number</span><span class="p">))</span>
+ <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+ <span class="n">spec</span><span class="o">.</span><span class="n">set_cia</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">CIA</span><span class="p">)</span>
+<span class="n">ad_hoc_CIA</span><span class="p">(</span><span class="n">spec_1</span><span class="p">)</span>
+<span class="n">ad_hoc_CIA</span><span class="p">(</span><span class="n">spec_2</span><span class="p">)</span>
+<span class="n">ad_hoc_CIA</span><span class="p">(</span><span class="n">spec_3</span><span class="p">)</span>
+<span class="n">ad_hoc_CIA</span><span class="p">(</span><span class="n">spec_4</span><span class="p">)</span>
+<span class="n">ad_hoc_CIA</span><span class="p">(</span><span class="n">spec_5</span><span class="p">)</span>
+<span class="n">ad_hoc_CIA</span><span class="p">(</span><span class="n">spec_6</span><span class="p">)</span>
+<span class="n">ad_hoc_CIA</span><span class="p">(</span><span class="n">spec_7</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="_images/Resds_smooth_low.png" src="_images/Resds_smooth_low.png" />
+<img alt="_images/Resds_smooth_high.png" src="_images/Resds_smooth_high.png" />
+<p>The spectra are evaluated again and we see that the residuals have improved.  To further improve fits, I would optimize line parameters in small wavenumber sections using the baseline parameter to account for remaining CIA.  These line shape parameters  could then be used in evaluation of the full band (like above) and then the CIA column could be ammended based on those results.  Iterating on these steps should allow for optimization of both the line shape parameters and the CIA.</p>
+<img alt="_images/CIA_low_2.png" src="_images/CIA_low_2.png" />
+<img alt="_images/CIA_high_2.png" src="_images/CIA_high_2.png" />
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Applying%20Analytical%20Correction%20to%20hardness%20of%20collisions%20for%20HTP.html"
+                        title="previous chapter">Applying Analytical Correction to hardness of collisions for HTP</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Including%20instrument%20line%20shapes%20in%20simulation%20and%20fits.html"
+                        title="next chapter">Including instrument line shapes in simulation and fits</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Including%20instrument%20line%20shapes%20in%20simulation%20and%20fits.html" title="Including instrument line shapes in simulation and fits"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Applying%20Analytical%20Correction%20to%20hardness%20of%20collisions%20for%20HTP.html" title="Applying Analytical Correction to hardness of collisions for HTP"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="Examples.html" >Examples</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Incorporating CIA into fits</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.1.
+    </div>
+  </body>
+</html>

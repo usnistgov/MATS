@@ -1,23 +1,22 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>Getting Started &#8212; MATS 1.0 documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Getting Started &#8212; MATS 2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="MATS Summary" href="MATS Summary.html" />
+    <link rel="next" title="MATS Version Summary" href="MATS%20Version%20Summary.html" />
     <link rel="prev" title="MATS: Multi-spectrum Analysis Tool for Spectroscopy" href="index.html" />
 <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
   <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
@@ -59,12 +58,13 @@ $(document).ready(function(){
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="MATS Summary.html" title="MATS Summary"
+          <a href="MATS%20Version%20Summary.html" title="MATS Version Summary"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="MATS: Multi-spectrum Analysis Tool for Spectroscopy"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 1.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Getting Started</a></li> 
       </ul>
     </div>  
 
@@ -73,20 +73,20 @@ $(document).ready(function(){
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="getting-started">
+  <section id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="set-up">
+<section id="set-up">
 <h2>Set-Up<a class="headerlink" href="#set-up" title="Permalink to this headline">¶</a></h2>
 <p>The MATS code was orginally developed using the <a class="reference external" href="https://www.enthought.com/product/canopy/">Enthought Canopy python package distribution</a>.  However, further development will use <a class="reference external" href="https://www.anaconda.com/">Anaconda</a>. Example scripts have typically been written and run using  <a class="reference external" href="https://jupyter.org/">jupyter notebooks</a> (run in jupyter lab), as this allows for code to be run in segments and for iteration on certain code segments.  Any python package distribution should work with the code as long as the dependent packages are installed.</p>
-</div>
-<div class="section" id="main-packages">
+</section>
+<section id="main-packages">
 <h2>Main Packages<a class="headerlink" href="#main-packages" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="https://github.com/usnistgov/MATS">MATS</a></p></li>
-<li><p><a class="reference external" href="https://hitran.org/hapi/">HITRAN Application Programming Interface (HAPI)</a>   The version used in development (v1.1.0.9.6) is available in the MATS repository.</p></li>
+<li><p><a class="reference external" href="https://hitran.org/hapi/">HITRAN Application Programming Interface (HAPI)</a>   The v1.1.1.0 was tested and is available in the MATS repository.</p></li>
 </ul>
-</div>
-<div class="section" id="dependent-packages">
+</section>
+<section id="dependent-packages">
 <h2>Dependent Packages<a class="headerlink" href="#dependent-packages" title="Permalink to this headline">¶</a></h2>
 <p>MATS is not written as a basic package, meaning that there are several dependent packages that need to be installed.</p>
 <p>If a desired package is not installed then the following command will install it.  Many python package distributions have integrated package managers and required packages can also be installed through that mechanism.</p>
@@ -101,7 +101,6 @@ $(document).ready(function(){
 <ul class="simple">
 <li><p><a class="reference external" href="https://www.numpy.org/">numpy</a> - python’s fundamental scientific computing package</p></li>
 <li><p><a class="reference external" href="https://pandas.pydata.org/">pandas</a> - python data structure package</p></li>
-<li><p><a class="reference external" href="https://github.com/quantopian/qgrid">qgrid</a> - provides interactive sorting, filtering, and editing of pandas dataframes in jupyter notebooks.  Make sure to follow the install instructions for both installation and jupyter installation or this won’t work.  This is an optional package that allows for the <a class="reference internal" href="MATS.html#MATS.Edit_Fit_Param_Files" title="MATS.Edit_Fit_Param_Files"><code class="xref py py-class docutils literal notranslate"><span class="pre">MATS.Edit_Fit_Param_Files</span></code></a> to function.</p></li>
 <li><p>os, sys - system variables</p></li>
 <li><p><a class="reference external" href="https://lmfit.github.io/lmfit-py/fitting.html">lmfit</a> - non-linear least-squares minimization and curve-fitting for python</p></li>
 <li><p><a class="reference external" href="https://matplotlib.org/">matplotlib</a> - python plotting</p></li>
@@ -109,10 +108,11 @@ $(document).ready(function(){
 <li><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/fftpack.html">scipy.fftpack</a> - provides fft functionality</p></li>
 <li><p><a class="reference external" href="https://jupyterlab.readthedocs.io/en/stable/">jupyter lab</a> - web-based user interface for Project Jupyter</p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -122,8 +122,8 @@ $(document).ready(function(){
   <p class="topless"><a href="index.html"
                         title="previous chapter">MATS: Multi-spectrum Analysis Tool for Spectroscopy</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="MATS Summary.html"
-                        title="next chapter">MATS Summary</a></p>
+  <p class="topless"><a href="MATS%20Version%20Summary.html"
+                        title="next chapter">MATS Version Summary</a></p>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
@@ -148,16 +148,17 @@ $(document).ready(function(){
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="MATS Summary.html" title="MATS Summary"
+          <a href="MATS%20Version%20Summary.html" title="MATS Version Summary"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="MATS: Multi-spectrum Analysis Tool for Spectroscopy"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 1.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Getting Started</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.1.
     </div>
   </body>
 </html>

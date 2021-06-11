@@ -1,0 +1,281 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Fitting and Simulating isotopes and molecules not in HITRAN &#8212; MATS 2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MATS module" href="MATS.html" />
+    <link rel="prev" title="Including instrument line shapes in simulation and fits" href="Including%20instrument%20line%20shapes%20in%20simulation%20and%20fits.html" />
+<link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
+  <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+
+
+<script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
+<script>
+$(document).ready(function(){
+  // Mark external (non-nist.gov) A tags with class "external"
+  //If the adress start with https and ends with nist.gov
+  var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)');
+  //Regex to find address that start with https
+  var re_absolute_address = new RegExp('^((https?:)?\/\/)');
+  $("a").each(function(){
+    var url=$(this).attr('href');
+    if(re_nist.test(url) || !re_absolute_address.test(url)){
+      $(this).addClass('local');
+    }else{
+      //This a href appears to be external, so tag it
+      $(this).addClass('external');
+    }
+  });
+  // Add leaveNotice to external A elements
+  $('a.external').leaveNotice();
+});
+</script>
+<link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="MATS.html" title="MATS module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Including%20instrument%20line%20shapes%20in%20simulation%20and%20fits.html" title="Including instrument line shapes in simulation and fits"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="Examples.html" accesskey="U">Examples</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Fitting and Simulating isotopes and molecules not in HITRAN</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="fitting-and-simulating-isotopes-and-molecules-not-in-hitran">
+<h1>Fitting and Simulating isotopes and molecules not in HITRAN<a class="headerlink" href="#fitting-and-simulating-isotopes-and-molecules-not-in-hitran" title="Permalink to this headline">¶</a></h1>
+<p>Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/MATS/Examples">examples folder</a>.</p>
+<p>HITRAN’s focus is on atmospherically relevent molecules.  This was the original focus of MATS, however recent feature development has allowed for adaption of to include non-HITRAN molecules.</p>
+<p>The example shows how to supplement the HITRAN isotope list and then use that in simulations and fits. This example uses Mercury as an examaple case <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/MATS/Examples/nonHITRAN_Molecules">This example uses Mercury as an examaple case</a>.</p>
+<section id="append-to-the-hitran-isotope-list-to-include-desired-isotopes">
+<h2>Append to the HITRAN isotope list to include desired isotopes<a class="headerlink" href="#append-to-the-hitran-isotope-list-to-include-desired-isotopes" title="Permalink to this headline">¶</a></h2>
+<p>Module import follows from the <a class="reference internal" href="Fitting%20Experimental%20Spectra.html#fitting-experimental-spectra"><span class="std std-ref">Fitting Experimental Spectra</span></a> and <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> examples.</p>
+<p>The <a class="reference internal" href="MATS.html#Utilities.add_to_HITRANstyle_isotope_list" title="Utilities.add_to_HITRANstyle_isotope_list"><code class="xref py py-func docutils literal notranslate"><span class="pre">add_to_HITRANstyle_isotope_list()</span></code></a><a class="reference internal" href="MATS.html#Utilities.add_to_HITRANstyle_isotope_list" title="Utilities.add_to_HITRANstyle_isotope_list"><code class="xref py py-func docutils literal notranslate"><span class="pre">add_to_HITRANstyle_isotope_list()</span></code></a> function allows you to ammend a given isotope list to include additional molecules and/or isotopes using the HITRAN-style molcule_id, local_isotope id, and global isotope id parameterization.  This function has some checks to verify expected behavior
+- if the molecule id and isotope id are in the initial isotope line list, it will return ‘Already entry with that molec_id and local_iso_id.  This result will write over that entry.
+- if the molecule id is in the initial isotope list it will return ‘This is being added as a new isotope of molecule name.  Proceed if that was the intention.
+- if the global isotope id is already in the isotope list it will return, ‘There is another entry with this global isotope id.  Consider changing the value for consistency’</p>
+<p>Mercury line shape parameters are not included in the HITRAN database.  The code below uses <a class="reference internal" href="MATS.html#Utilities.add_to_HITRANstyle_isotope_list" title="Utilities.add_to_HITRANstyle_isotope_list"><code class="xref py py-func docutils literal notranslate"><span class="pre">add_to_HITRANstyle_isotope_list()</span></code></a> function to add 10 Mercury isotopes to the HITRAN isotope list.  This is saved in a new isotope list called HITRAN_Hg_isolist that can be used in simulating and fitting spectra. The <a class="reference external" href="https://hitran.org/docs/iso-meta/">HITRAN isotope list</a> provides the HITRAN molecule and global ids that are already in use.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">HITRAN_Hg_isolist</span> <span class="o">=</span> <span class="n">add_to_HITRANstyle_isotope_list</span><span class="p">(</span><span class="n">input_isotope_list</span> <span class="o">=</span> <span class="n">ISO</span><span class="p">,</span> <span class="n">molec_id</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">local_iso_id</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                                                 <span class="n">global_isotope_id</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">iso_name</span> <span class="o">=</span> <span class="s1">&#39;196&#39;</span><span class="p">,</span>
+                                                 <span class="n">abundance</span> <span class="o">=</span> <span class="mf">0.0015</span><span class="p">,</span> <span class="n">mass</span> <span class="o">=</span> <span class="mf">195.96581</span><span class="p">,</span> <span class="n">mol_name</span> <span class="o">=</span> <span class="s1">&#39;Hg&#39;</span><span class="p">)</span>
+<span class="n">HITRAN_Hg_isolist</span> <span class="o">=</span> <span class="n">add_to_HITRANstyle_isotope_list</span><span class="p">(</span><span class="n">input_isotope_list</span> <span class="o">=</span> <span class="n">HITRAN_Hg_isolist</span><span class="p">,</span> <span class="n">molec_id</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">local_iso_id</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                                                 <span class="n">global_isotope_id</span> <span class="o">=</span> <span class="mi">201</span><span class="p">,</span> <span class="n">iso_name</span> <span class="o">=</span> <span class="s1">&#39;198&#39;</span><span class="p">,</span>
+                                                 <span class="n">abundance</span> <span class="o">=</span> <span class="mf">0.1004</span><span class="p">,</span> <span class="n">mass</span> <span class="o">=</span><span class="mf">197.96674</span><span class="p">,</span> <span class="n">mol_name</span> <span class="o">=</span> <span class="s1">&#39;Hg&#39;</span><span class="p">)</span>
+<span class="n">HITRAN_Hg_isolist</span> <span class="o">=</span> <span class="n">add_to_HITRANstyle_isotope_list</span><span class="p">(</span><span class="n">input_isotope_list</span> <span class="o">=</span> <span class="n">HITRAN_Hg_isolist</span><span class="p">,</span> <span class="n">molec_id</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">local_iso_id</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+                                                 <span class="n">global_isotope_id</span> <span class="o">=</span> <span class="mi">202</span><span class="p">,</span> <span class="n">iso_name</span> <span class="o">=</span> <span class="s1">&#39;199A&#39;</span><span class="p">,</span>
+                                                 <span class="n">abundance</span> <span class="o">=</span> <span class="mf">0.1694</span><span class="p">,</span> <span class="n">mass</span> <span class="o">=</span><span class="mf">198.96825</span><span class="p">,</span> <span class="n">mol_name</span> <span class="o">=</span> <span class="s1">&#39;Hg&#39;</span><span class="p">)</span>
+<span class="n">HITRAN_Hg_isolist</span> <span class="o">=</span> <span class="n">add_to_HITRANstyle_isotope_list</span><span class="p">(</span><span class="n">input_isotope_list</span> <span class="o">=</span> <span class="n">HITRAN_Hg_isolist</span><span class="p">,</span> <span class="n">molec_id</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">local_iso_id</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+                                                 <span class="n">global_isotope_id</span> <span class="o">=</span> <span class="mi">203</span><span class="p">,</span> <span class="n">iso_name</span> <span class="o">=</span> <span class="s1">&#39;199B&#39;</span><span class="p">,</span>
+                                                 <span class="n">abundance</span> <span class="o">=</span> <span class="mf">0.1694</span><span class="p">,</span> <span class="n">mass</span> <span class="o">=</span><span class="mf">198.96825</span><span class="p">,</span> <span class="n">mol_name</span> <span class="o">=</span> <span class="s1">&#39;Hg&#39;</span><span class="p">)</span>
+<span class="n">HITRAN_Hg_isolist</span> <span class="o">=</span> <span class="n">add_to_HITRANstyle_isotope_list</span><span class="p">(</span><span class="n">input_isotope_list</span> <span class="o">=</span> <span class="n">HITRAN_Hg_isolist</span><span class="p">,</span> <span class="n">molec_id</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">local_iso_id</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+                                                 <span class="n">global_isotope_id</span> <span class="o">=</span> <span class="mi">204</span><span class="p">,</span> <span class="n">iso_name</span> <span class="o">=</span> <span class="s1">&#39;200&#39;</span><span class="p">,</span>
+                                                 <span class="n">abundance</span> <span class="o">=</span> <span class="mf">0.2314</span><span class="p">,</span> <span class="n">mass</span> <span class="o">=</span><span class="mf">199.96825</span><span class="p">,</span> <span class="n">mol_name</span> <span class="o">=</span> <span class="s1">&#39;Hg&#39;</span><span class="p">)</span>
+<span class="n">HITRAN_Hg_isolist</span> <span class="o">=</span> <span class="n">add_to_HITRANstyle_isotope_list</span><span class="p">(</span><span class="n">input_isotope_list</span> <span class="o">=</span> <span class="n">HITRAN_Hg_isolist</span><span class="p">,</span> <span class="n">molec_id</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">local_iso_id</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span>
+                                                 <span class="n">global_isotope_id</span> <span class="o">=</span> <span class="mi">205</span><span class="p">,</span> <span class="n">iso_name</span> <span class="o">=</span> <span class="s1">&#39;201a&#39;</span><span class="p">,</span>
+                                                 <span class="n">abundance</span> <span class="o">=</span> <span class="mf">0.1317</span><span class="p">,</span> <span class="n">mass</span> <span class="o">=</span><span class="mf">200.97028</span><span class="p">,</span> <span class="n">mol_name</span> <span class="o">=</span> <span class="s1">&#39;Hg&#39;</span><span class="p">)</span>
+<span class="n">HITRAN_Hg_isolist</span> <span class="o">=</span> <span class="n">add_to_HITRANstyle_isotope_list</span><span class="p">(</span><span class="n">input_isotope_list</span> <span class="o">=</span> <span class="n">HITRAN_Hg_isolist</span><span class="p">,</span> <span class="n">molec_id</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">local_iso_id</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
+                                                 <span class="n">global_isotope_id</span> <span class="o">=</span> <span class="mi">206</span><span class="p">,</span> <span class="n">iso_name</span> <span class="o">=</span> <span class="s1">&#39;201b&#39;</span><span class="p">,</span>
+                                                 <span class="n">abundance</span> <span class="o">=</span> <span class="mf">0.1317</span><span class="p">,</span> <span class="n">mass</span> <span class="o">=</span><span class="mf">200.97028</span><span class="p">,</span> <span class="n">mol_name</span> <span class="o">=</span> <span class="s1">&#39;Hg&#39;</span><span class="p">)</span>
+<span class="n">HITRAN_Hg_isolist</span> <span class="o">=</span> <span class="n">add_to_HITRANstyle_isotope_list</span><span class="p">(</span><span class="n">input_isotope_list</span> <span class="o">=</span> <span class="n">HITRAN_Hg_isolist</span><span class="p">,</span> <span class="n">molec_id</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">local_iso_id</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+                                                 <span class="n">global_isotope_id</span> <span class="o">=</span> <span class="mi">207</span><span class="p">,</span> <span class="n">iso_name</span> <span class="o">=</span> <span class="s1">&#39;201c&#39;</span><span class="p">,</span>
+                                                 <span class="n">abundance</span> <span class="o">=</span> <span class="mf">0.1317</span><span class="p">,</span> <span class="n">mass</span> <span class="o">=</span><span class="mf">200.97028</span><span class="p">,</span> <span class="n">mol_name</span> <span class="o">=</span> <span class="s1">&#39;Hg&#39;</span><span class="p">)</span>
+<span class="n">HITRAN_Hg_isolist</span> <span class="o">=</span> <span class="n">add_to_HITRANstyle_isotope_list</span><span class="p">(</span><span class="n">input_isotope_list</span> <span class="o">=</span> <span class="n">HITRAN_Hg_isolist</span><span class="p">,</span> <span class="n">molec_id</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">local_iso_id</span> <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>
+                                                 <span class="n">global_isotope_id</span> <span class="o">=</span> <span class="mi">208</span><span class="p">,</span> <span class="n">iso_name</span> <span class="o">=</span> <span class="s1">&#39;202&#39;</span><span class="p">,</span>
+                                                 <span class="n">abundance</span> <span class="o">=</span> <span class="mf">0.2974</span><span class="p">,</span> <span class="n">mass</span> <span class="o">=</span><span class="mf">201.97062</span><span class="p">,</span> <span class="n">mol_name</span> <span class="o">=</span> <span class="s1">&#39;Hg&#39;</span><span class="p">)</span>
+<span class="n">HITRAN_Hg_isolist</span> <span class="o">=</span> <span class="n">add_to_HITRANstyle_isotope_list</span><span class="p">(</span><span class="n">input_isotope_list</span> <span class="o">=</span> <span class="n">HITRAN_Hg_isolist</span><span class="p">,</span> <span class="n">molec_id</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">local_iso_id</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+                                                 <span class="n">global_isotope_id</span> <span class="o">=</span> <span class="mi">209</span><span class="p">,</span> <span class="n">iso_name</span> <span class="o">=</span> <span class="s1">&#39;204&#39;</span><span class="p">,</span>
+                                                 <span class="n">abundance</span> <span class="o">=</span> <span class="mf">0.0682</span><span class="p">,</span> <span class="n">mass</span> <span class="o">=</span><span class="mf">203.97347</span><span class="p">,</span> <span class="n">mol_name</span> <span class="o">=</span> <span class="s1">&#39;Hg&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="generate-spectra">
+<h2>Generate Spectra<a class="headerlink" href="#generate-spectra" title="Permalink to this headline">¶</a></h2>
+<p>The simulate spectrum function is used to generate spectra (similar to in the <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> example), but the isotope_list variable is set to use the isotope list that was just generated opposed to using the default HITRAN isotope list defined in HAPI.</p>
+<p>The initial parameter line list should have molecule and local isotope ids that correspond to the new isotope list.  The mole fraction definition should also use the appropriate mole fraction id.  The same would be true for the abundance_ratio_MI term if the sample was not at natural abundance.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">PARAM_LINELIST</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;Hg_Linelist.csv&#39;</span><span class="p">)</span>
+
+<span class="c1">#Generic Fit Parameters</span>
+<span class="n">wave_range</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="c1">#range outside of experimental x-range to simulate</span>
+<span class="n">IntensityThreshold</span> <span class="o">=</span> <span class="mf">1e-30</span> <span class="c1">#intensities must be above this value to be simulated</span>
+<span class="n">Fit_Intensity</span> <span class="o">=</span> <span class="mf">1e-17</span> <span class="c1">#intensities must be above this value for the line to be fit</span>
+<span class="n">order_baseline_fit</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">tau_column</span> <span class="o">=</span> <span class="s1">&#39;Absoprtion Coefficient (ppm/cm)&#39;</span> <span class="c1"># Mean tau/us</span>
+<span class="n">freq_column</span> <span class="o">=</span> <span class="s1">&#39;Frequency (cm-1)&#39;</span> <span class="c1"># Total Frequency /MHz</span>
+<span class="n">pressure_column</span> <span class="o">=</span> <span class="s1">&#39;Pressure (Torr)&#39;</span>
+<span class="n">temperature_column</span> <span class="o">=</span> <span class="s1">&#39;Temperature&#39;</span>
+
+<span class="n">wave_min</span> <span class="o">=</span> <span class="mi">39411</span>
+<span class="n">wave_max</span> <span class="o">=</span> <span class="mf">39413.5</span>
+<span class="n">wave_step</span> <span class="o">=</span> <span class="mf">0.001</span>
+<span class="n">SNR</span> <span class="o">=</span> <span class="mi">1000</span>
+
+
+<span class="n">spec_1</span> <span class="o">=</span> <span class="n">simulate_spectrum</span><span class="p">(</span><span class="n">PARAM_LINELIST</span><span class="p">,</span> <span class="n">wave_min</span><span class="p">,</span> <span class="n">wave_max</span><span class="p">,</span> <span class="n">wave_step</span><span class="p">,</span>
+                     <span class="n">temperature</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">pressure</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">molefraction</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">100</span> <span class="p">:</span><span class="mf">1e-9</span><span class="p">},</span>
+                     <span class="n">isotope_list</span> <span class="o">=</span> <span class="n">HITRAN_Hg_isolist</span><span class="p">,</span> <span class="n">natural_abundance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">SNR</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;100 Torr&#39;</span><span class="p">,)</span>
+
+<span class="n">spec_2</span> <span class="o">=</span> <span class="n">simulate_spectrum</span><span class="p">(</span><span class="n">PARAM_LINELIST</span><span class="p">,</span> <span class="n">wave_min</span><span class="p">,</span> <span class="n">wave_max</span><span class="p">,</span> <span class="n">wave_step</span><span class="p">,</span>
+                     <span class="n">temperature</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">pressure</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span> <span class="n">molefraction</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">100</span> <span class="p">:</span><span class="mf">1e-9</span><span class="p">},</span>
+                     <span class="n">isotope_list</span> <span class="o">=</span> <span class="n">HITRAN_Hg_isolist</span><span class="p">,</span> <span class="n">natural_abundance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">SNR</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span><span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;500 Torr&#39;</span><span class="p">,)</span>
+
+<span class="n">spec_1</span><span class="o">.</span><span class="n">plot_wave_alpha</span><span class="p">()</span>
+<span class="n">spec_2</span><span class="o">.</span><span class="n">plot_wave_alpha</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/Hg_100Torr.png" src="_images/Hg_100Torr.png" />
+<img alt="_images/Hg_500Torr.png" src="_images/Hg_500Torr.png" />
+</section>
+<section id="construct-dataset-and-generate-fit-parameters">
+<h2>Construct Dataset and Generate Fit Parameters<a class="headerlink" href="#construct-dataset-and-generate-fit-parameters" title="Permalink to this headline">¶</a></h2>
+<p>The construction of the dataset and the generate fit parameter classes act as normal.  For the generation of the fit parameter line list, the example below shows how the vary_variable input dictionaries function with multiple isotopes.  Specifically, in the example below the VP is used as the fitting line shape, where the spectra were simulated with the SDVP.  All parameters are constrained across the spectra and the only parameters being floated are the collisional broadening terms for all isotopes.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SPECTRA</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">([</span><span class="n">spec_1</span><span class="p">,</span> <span class="n">spec_2</span><span class="p">],</span> <span class="s1">&#39;Mercury Fitting&#39;</span><span class="p">,</span><span class="n">PARAM_LINELIST</span> <span class="p">)</span>
+
+<span class="c1">#Generate Baseline Parameter list based on number of etalons in spectra definitions and baseline order</span>
+<span class="n">BASE_LINELIST</span> <span class="o">=</span> <span class="n">SPECTRA</span><span class="o">.</span><span class="n">generate_baseline_paramlist</span><span class="p">()</span>
+
+
+
+
+
+<span class="n">FITPARAMS</span> <span class="o">=</span> <span class="n">Generate_FitParam_File</span><span class="p">(</span><span class="n">SPECTRA</span><span class="p">,</span> <span class="n">PARAM_LINELIST</span><span class="p">,</span> <span class="n">BASE_LINELIST</span><span class="p">,</span> <span class="n">lineprofile</span> <span class="o">=</span> <span class="s1">&#39;VP&#39;</span><span class="p">,</span> <span class="n">linemixing</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                               <span class="n">fit_intensity</span> <span class="o">=</span> <span class="n">Fit_Intensity</span><span class="p">,</span> <span class="n">threshold_intensity</span> <span class="o">=</span> <span class="n">IntensityThreshold</span><span class="p">,</span> <span class="n">sim_window</span> <span class="o">=</span> <span class="n">wave_range</span><span class="p">,</span>
+                               <span class="n">nu_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">sw_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">gamma0_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">delta0_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                                <span class="n">aw_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">as_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                                <span class="n">nuVC_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">eta_constrain</span> <span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">linemixing_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                               <span class="n">additional_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;trans_id&#39;</span><span class="p">])</span>
+
+<span class="n">FITPARAMS</span><span class="o">.</span><span class="n">generate_fit_param_linelist_from_linelist</span><span class="p">(</span><span class="n">vary_nu</span> <span class="o">=</span> <span class="p">{</span><span class="mi">100</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">8</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">9</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">10</span><span class="p">:</span> <span class="kc">False</span><span class="p">}},</span>
+                                                 <span class="n">vary_sw</span> <span class="o">=</span><span class="p">{</span><span class="mi">100</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">8</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">9</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">10</span><span class="p">:</span> <span class="kc">False</span><span class="p">}},</span>
+                                                 <span class="n">vary_gamma0</span> <span class="o">=</span> <span class="p">{</span><span class="mi">100</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="mi">8</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="mi">9</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="mi">10</span><span class="p">:</span> <span class="kc">True</span><span class="p">}},</span>
+                                                 <span class="n">vary_delta0</span> <span class="o">=</span> <span class="p">{</span><span class="mi">100</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">8</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">9</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">10</span><span class="p">:</span> <span class="kc">False</span><span class="p">}},</span>
+                                                 <span class="n">vary_aw</span> <span class="o">=</span> <span class="p">{</span><span class="mi">100</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">8</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">9</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">10</span><span class="p">:</span> <span class="kc">False</span><span class="p">}},</span>
+                                                 <span class="n">vary_as</span> <span class="o">=</span> <span class="p">{</span><span class="mi">100</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">8</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">9</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">10</span><span class="p">:</span> <span class="kc">False</span><span class="p">}},</span>
+                                                 <span class="n">vary_nuVC</span> <span class="o">=</span> <span class="p">{</span><span class="mi">100</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">8</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">9</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">10</span><span class="p">:</span> <span class="kc">False</span><span class="p">}},</span>
+                                                 <span class="n">vary_eta</span> <span class="o">=</span> <span class="p">{</span><span class="mi">100</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">8</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">9</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">10</span><span class="p">:</span> <span class="kc">False</span><span class="p">}},</span>
+                                                 <span class="n">vary_linemixing</span> <span class="o">=</span> <span class="p">{</span><span class="mi">100</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">8</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">9</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="mi">10</span><span class="p">:</span> <span class="kc">False</span><span class="p">}})</span>
+
+<span class="n">FITPARAMS</span><span class="o">.</span><span class="n">generate_fit_baseline_linelist</span><span class="p">(</span><span class="n">vary_baseline</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">vary_molefraction</span> <span class="o">=</span> <span class="p">{</span><span class="mi">100</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span> <span class="n">vary_xshift</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                                   <span class="n">vary_etalon_amp</span><span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">vary_etalon_period</span><span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">vary_etalon_phase</span><span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="fit-spectra">
+<h2>Fit Spectra<a class="headerlink" href="#fit-spectra" title="Permalink to this headline">¶</a></h2>
+<p>Fitting follows the same strucutre described in <a class="reference internal" href="Fitting%20Experimental%20Spectra.html#fitting-experimental-spectra"><span class="std std-ref">Fitting Experimental Spectra</span></a>.  The fit results shown below are the result of fitting spectra simulated with the SDVP with the VP and only allowing the collsional broadening terms to float.  The residuals at both pressures show the expected w-shaped residuals.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit_data</span> <span class="o">=</span> <span class="n">Fit_DataSet</span><span class="p">(</span><span class="n">SPECTRA</span><span class="p">,</span><span class="s1">&#39;Baseline_LineList&#39;</span><span class="p">,</span> <span class="s1">&#39;Parameter_LineList&#39;</span><span class="p">,</span> <span class="n">minimum_parameter_fit_intensity</span> <span class="o">=</span> <span class="n">Fit_Intensity</span><span class="p">,</span> <span class="n">weight_spectra</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">fit_data</span><span class="o">.</span><span class="n">generate_params</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">fit_data</span><span class="o">.</span><span class="n">fit_data</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">wing_cutoff</span> <span class="o">=</span> <span class="mi">25</span><span class="p">)</span>
+<span class="n">fit_data</span><span class="o">.</span><span class="n">residual_analysis</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indv_resid_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">fit_data</span><span class="o">.</span><span class="n">update_params</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="n">SPECTRA</span><span class="o">.</span><span class="n">generate_summary_file</span><span class="p">(</span><span class="n">save_file</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">SPECTRA</span><span class="o">.</span><span class="n">plot_model_residuals</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/HG_MS_VP.png" src="_images/HG_MS_VP.png" />
+<p>We can compare the VP fit collisional broadening fit results to the SDVP collisional broadening values used in the simulation.  On the secondary y-axis is a stem plot showing the line intensity for the lines.  This highlights that the lines that deviated the most from the simulated collisional broadening value were weaker and/or closely spaced to other isotope transitions.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Parameter_Linelist</span><span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;Parameter_Linelist.csv&#39;</span><span class="p">,</span> <span class="n">index_col</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">simulated_gamma0_air</span> <span class="o">=</span> <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;gamma0_air&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">])</span>
+<span class="n">ax2</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">stem</span><span class="p">(</span><span class="n">Parameter_Linelist</span><span class="p">[</span><span class="s1">&#39;nu&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span><span class="n">Parameter_Linelist</span><span class="p">[</span><span class="s1">&#39;sw&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">*</span><span class="n">Parameter_Linelist</span><span class="p">[</span><span class="s1">&#39;sw_scale_factor&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">markerfmt</span> <span class="o">=</span> <span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="n">basefmt</span> <span class="o">=</span> <span class="s1">&#39;None&#39;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">Parameter_Linelist</span><span class="p">[</span><span class="s1">&#39;nu&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="n">Parameter_Linelist</span><span class="p">[</span><span class="s1">&#39;gamma0_air&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">simulated_gamma0_air</span><span class="p">)</span><span class="o">/</span> <span class="n">simulated_gamma0_air</span><span class="p">,</span>
+          <span class="n">yerr</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="n">Parameter_Linelist</span><span class="p">[</span><span class="s1">&#39;gamma0_air_err&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">/</span> <span class="n">Parameter_Linelist</span><span class="p">[</span><span class="s1">&#39;gamma0_air&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span><span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;o&quot;</span><span class="p">)</span>
+
+
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">1e-17</span><span class="p">,</span> <span class="mf">1e-14</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">ticklabel_format</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">useOffset</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Wavenumber (cm$^{-1}$)&#39;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Line Intensity (cm molec.$^{-1}$)&#39;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Relative Differnece between </span><span class="se">\n</span><span class="s1"> simulated SDVP $</span><span class="se">\\</span><span class="s1">gamma_</span><span class="si">{0}</span><span class="s1">$ and fit VP (%)&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="_images/Hg_Results.png" src="_images/Hg_Results.png" />
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Including%20instrument%20line%20shapes%20in%20simulation%20and%20fits.html"
+                        title="previous chapter">Including instrument line shapes in simulation and fits</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="MATS.html"
+                        title="next chapter">MATS module</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="MATS.html" title="MATS module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Including%20instrument%20line%20shapes%20in%20simulation%20and%20fits.html" title="Including instrument line shapes in simulation and fits"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="Examples.html" >Examples</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Fitting and Simulating isotopes and molecules not in HITRAN</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.1.
+    </div>
+  </body>
+</html>

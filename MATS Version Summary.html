@@ -4,22 +4,20 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Search &#8212; MATS 2.0 documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>MATS Version Summary &#8212; MATS 2.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
-    
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script src="_static/searchtools.js"></script>
-    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="#" />
-  <script src="searchindex.js" defer></script>
-  
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MATS Summary" href="MATS%20Summary.html" />
+    <link rel="prev" title="Getting Started" href="Getting%20Started.html" />
 <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
   <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
   <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
@@ -49,7 +47,6 @@ $(document).ready(function(){
 <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
 
 
-
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -60,8 +57,14 @@ $(document).ready(function(){
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="MATS%20Summary.html" title="MATS Summary"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Getting%20Started.html" title="Getting Started"
+             accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Search</a></li> 
+        <li class="nav-item nav-item-this"><a href="">MATS Version Summary</a></li> 
       </ul>
     </div>  
 
@@ -70,35 +73,34 @@ $(document).ready(function(){
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <h1 id="search-documentation">Search</h1>
-  
-  <div id="fallback" class="admonition warning">
-  <script>$('#fallback').hide();</script>
-  <p>
-    Please activate JavaScript to enable the search
-    functionality.
-  </p>
-  </div>
-  
-  
-  <p>
-    Searching for multiple words only shows matches that contain
-    all words.
-  </p>
-  
-  
-  <form action="" method="get">
-    <input type="text" name="q" aria-labelledby="search-documentation" value="" />
-    <input type="submit" value="search" />
-    <span id="search-progress" style="padding-left: 10px"></span>
-  </form>
-  
-  
-  
-  <div id="search-results">
-  
-  </div>
-  
+  <section id="mats-version-summary">
+<h1>MATS Version Summary<a class="headerlink" href="#mats-version-summary" title="Permalink to this headline">¶</a></h1>
+<section id="mats-version-2">
+<h2>MATS Version 2<a class="headerlink" href="#mats-version-2" title="Permalink to this headline">¶</a></h2>
+<p>published on 6/10/2021</p>
+<p>NEW FEATURES
+* Beta correction to the Dicke Narrowing accounting for the hardness of coliisions based on broadener and perturber.
+* Added CIA functionality.  Currently, can manually enter CIA for each file
+* Added capability pass non-fitting columns through the fit definition.  This will help for future addition of bandwide functions or for ease of transforming fit outputs to reported results.
+* Add ability to weight the spectra
+* Added beyond HITRAN molecule capabilities, including update of isotope list.
+* Added preliminary instrument line shape functionality.</p>
+<p>BUG FIXES
+* Changed the structure of MATS, so that each class is in its own python file
+* Changed all constant values to be consistent with CODATA values and hardwired the values to definition in the utility script
+* Added warning for floating parameters with an initial guess equal to 0.
+* Changed the etalon_freq variables to etalon_period, since that is how it is coded.
+* Added checks for molecule consistency between dataset and parameter line list.
+* Ability to simulate at infinite SNR
+* Indexing error for the spectrum number in baseline parameters
+* Changed initial baseline guess to 0</p>
+</section>
+<section id="mats-version-1">
+<h2>MATS Version 1<a class="headerlink" href="#mats-version-1" title="Permalink to this headline">¶</a></h2>
+<p>published on 12/27/19</p>
+</section>
+</section>
+
 
             <div class="clearer"></div>
           </div>
@@ -106,6 +108,22 @@ $(document).ready(function(){
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Getting%20Started.html"
+                        title="previous chapter">Getting Started</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="MATS%20Summary.html"
+                        title="next chapter">MATS Summary</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -119,8 +137,14 @@ $(document).ready(function(){
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="MATS%20Summary.html" title="MATS Summary"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Getting%20Started.html" title="Getting Started"
+             >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Search</a></li> 
+        <li class="nav-item nav-item-this"><a href="">MATS Version Summary</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
