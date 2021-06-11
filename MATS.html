@@ -16,7 +16,7 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="MATS Example using Experimental and Synthetic Data" href="Fitting%20and%20Simulating%20isotopes%20and%20molecules%20not%20in%20HITRAN.html" />
+    <link rel="prev" title="Fitting and Simulating isotopes and molecules not in HITRAN" href="Fitting%20and%20Simulating%20isotopes%20and%20molecules%20not%20in%20HITRAN.html" />
 <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
   <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
   <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
@@ -57,7 +57,7 @@ $(document).ready(function(){
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Fitting%20and%20Simulating%20isotopes%20and%20molecules%20not%20in%20HITRAN.html" title="MATS Example using Experimental and Synthetic Data"
+          <a href="Fitting%20and%20Simulating%20isotopes%20and%20molecules%20not%20in%20HITRAN.html" title="Fitting and Simulating isotopes and molecules not in HITRAN"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">MATS module</a></li> 
@@ -82,7 +82,7 @@ $(document).ready(function(){
 <li><p><strong>filename</strong> (<em>str</em>) – file containing spectrum with .csv extension. File extension is not included in the name</p></li>
 <li><p><strong>molefraction</strong> (<em>dict</em>) – mole fraction of each molecule in spectra in the format {molec_id: mole fraction (out of 1), molec_id: molefraction, … }</p></li>
 <li><p><strong>natural_abundance</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for if the molecular species in the spectrum are at natural abundance</p></li>
-<li><p><strong>abundance_ratio_MI</strong> (<em>dict</em><em>, </em><em>optional</em>) – if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, … }</p></li>
+<li><p><strong>abundance_ratio_MI</strong> (<em>dict</em><em>, </em><em>optional</em>) – if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, … }.  The enhancement is the ratio of the new abundance to the natural abundance.</p></li>
 <li><p><strong>isotope_list</strong> (<em>dict</em><em>, </em><em>optional</em>) – provides opportunity to specify the isotope look-up table.  Default is ISO, which is from HAPI.  If not using ISO, then must use this format and suggested you use function to add to ISO</p></li>
 <li><p><strong>diluent</strong> (<em>str</em><em>, </em><em>optional</em>) – sets the diluent for the sample.  Default = ‘air’</p></li>
 <li><p><strong>Diluent</strong> (<em>dict</em><em>, </em><em>optional</em>) – sets the diluent for the sample if there are a combination of several diluents. Format {‘he’: 0.5, ‘air’: 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.</p></li>
@@ -420,7 +420,7 @@ Function can be: SLIT_MICHELSON, SLIT_DIFFRACTION, SLIT_COSINUS, SLIT_DISPERSION
 <li><p><strong>molefraction</strong> (<em>dict</em><em>, </em><em>optional</em>) – mole fraction of each molecule to be simulated in the spectrum in the format {molec_id: mole fraction (out of 1), molec_id: molefraction, … }. The default is {}.</p></li>
 <li><p><strong>molefraction_err</strong> (<em>dict</em><em>, </em><em>optional</em>) – percent error in the mole fraction of each molecule to be simulated in the spectrum in the format {molec_id: percent error in mole fraction, molec_id: percent error in mole fraction, … }. The default is {}.</p></li>
 <li><p><strong>natural_abundance</strong> (<em>bool</em><em>, </em><em>optional</em>) – flag for if the spectrum contains data at natural abundance. The default is True.</p></li>
-<li><p><strong>abundance_ratio_MI</strong> (<em>dict</em><em>, </em><em>optional</em>) – if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, … }. The default is {}.</p></li>
+<li><p><strong>abundance_ratio_MI</strong> (<em>dict</em><em>, </em><em>optional</em>) – if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, … }. The default is {}.  The enhancement is the ratio of the new abundance to the natural abundance.</p></li>
 <li><p><strong>isotope_list</strong> (<em>dict</em><em>, </em><em>optional</em>) – provides opportunity to specify the isotope look-up table.  Default is ISO, which is from HAPI.  If not using ISO, then must use this format and suggested you use function to add to ISO</p></li>
 <li><p><strong>diluent</strong> (<em>str</em><em>, </em><em>optional</em>) – sets the diluent for the sample if only using one broadener. The default is ‘air’.</p></li>
 <li><p><strong>Diluent</strong> (<em>dict</em><em>, </em><em>optional</em>) – sets the diluent for the sample if there are a combination of several. Format {‘he’: 0.5, ‘air’: 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.. The default is {}.</p></li>
@@ -1315,7 +1315,7 @@ DESCRIPTION:</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="Fitting%20and%20Simulating%20isotopes%20and%20molecules%20not%20in%20HITRAN.html"
-                        title="previous chapter">MATS Example using Experimental and Synthetic Data</a></p>
+                        title="previous chapter">Fitting and Simulating isotopes and molecules not in HITRAN</a></p>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
@@ -1340,7 +1340,7 @@ DESCRIPTION:</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Fitting%20and%20Simulating%20isotopes%20and%20molecules%20not%20in%20HITRAN.html" title="MATS Example using Experimental and Synthetic Data"
+          <a href="Fitting%20and%20Simulating%20isotopes%20and%20molecules%20not%20in%20HITRAN.html" title="Fitting and Simulating isotopes and molecules not in HITRAN"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">MATS module</a></li> 
