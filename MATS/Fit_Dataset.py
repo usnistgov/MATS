@@ -407,6 +407,107 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
     return (wavenumbers, np.asarray(Xsect)) 
 
 class Fit_DataSet:
+    """Provides the fitting functionality for a Dataset.
+    
+
+    Parameters
+    ----------
+    dataset : object
+        Dataset Object.
+    base_linelist_file : str
+        filename for file containing baseline parameters.
+    param_linelist_file : str
+        filename for file containing parmeter parameters.
+    CIA_linelist_file : str, optional
+        Future Feature: filename for file constraining CIA parameters
+    minimum_parameter_fit_intensity : float, optional
+        minimum intensity for parameters to be generated for fitting. NOTE: Even if a value is floated in the param_linelist if it is below this threshold then it won't be a floated.. The default is 1e-27.
+    weight_spectra : boolean
+        If True, then the pt by pt percent uncertainty for each spectrum and the spectrum weighting will be used in the calculation of the residuals.  Default is False.
+    baseline_limit : bool, optional
+        If True, then impose min/max limits on baseline parameter solutions. The default is False.
+    baseline_limit_factor : float, optional
+        The factor variable describes the multiplicative factor that the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+    pressure_limit : bool, optional
+        If True, then impose min/max limits on pressure solutions. The default is False.
+    pressure_limit_factor : float, optional
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+    temperature_limit : bool, optional
+        If True, then impose min/max limits on temperature solutions. The default is False.
+    temperature_limit_factor : float, optional
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+    molefraction_limit : bool, optional
+        If True, then impose min/max limits on mole fraction solutions. The default is False.
+    molefraction_limit_factor : float, optional
+        DESCRIPTION. The default is 10.
+    etalon_limit : bool, optional
+        If True, then impose min/max limits on etalon solutions. The default is False.
+    etalon_limit_factor : float, optional
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 50. #phase is constrained to +/- 2pi 
+    x_shift_limit : bool, optional
+        If True, then impose min/max limits on x-shift solutions. The default is False.
+    x_shift_limit_magnitude : float, optional
+        The magnitude variables set the +/- range of the variable in cm-1. The default is 0.1.
+    nu_limit : bool, optional
+        If True, then impose min/max limits on line center solutions. The default is False.
+    nu_limit_magnitude : float, optional
+        The magnitude variables set the +/- range of the variable in cm-1. The default is 0.1.
+    sw_limit : bool, optional
+        If True, then impose min/max limits on line intensity solutions. The default is False.
+    sw_limit_factor : float, optional
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+    gamma0_limit : bool, optional
+        If True, then impose min/max limits on collisional half-width solutions. The default is False.
+    gamma0_limit_factor : float, optional
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+    n_gamma0_limit : bool, optional
+        DESCIf True, then impose min/max limits on temperature exponent for half width solutions. The default is True.
+    n_gamma0_limit_factor : float, optional
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+    delta0_limit : bool, optional
+        If True, then impose min/max limits on collisional shift solutions. The default is False.
+    delta0_limit_factor : float, optional
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+    n_delta0_limit : bool, optional
+        If True, then impose min/max limits on temperature exponent of the collisional shift solutions. The default is True.
+    n_delta0_limit_factor : float, optional
+        DESCRIPTION. The default is 10.
+    SD_gamma_limit : bool, optional
+        If True, then impose min/max limits on the aw solutions. The default is False.
+    SD_gamma_limit_factor : float, optional
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+    n_gamma2_limit : bool, optional
+        If True, then impose min/max limits on temperature exponent of the speed-dependent width solutions. The default is True.
+    n_gamma2_limit_factor : float, optional
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+    SD_delta_limit : bool, optional
+        If True, then impose min/max limits on as solutions. The default is True.
+    SD_delta_limit_factor : float, optional
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+    n_delta2_limit : bool, optional
+        If True, then impose min/max limits on temperature exponent of the speed-dependent shift solutions. The default is True.
+    n_delta2_limit_factor : float, optional
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+    nuVC_limit : bool, optional
+        If True, then impose min/max limits on dicke narrowing solutions. The default is False.
+    nuVC_limit_factor : float, optional
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+    n_nuVC_limit : bool, optional
+        If True, then impose min/max limits on temperature exponent of dicke narrowing solutions. The default is True.
+    n_nuVC_limit_factor : float, optional
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
+    eta_limit : bool, optional
+        If True, then impose min/max limits on correlation parameter solutions.. The default is True.
+    eta_limit_factor : float, optional
+         The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.The default is 10.
+    linemixing_limit : bool, optional
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is False.
+    linemixing_limit_factor : float, optional
+        If True, then impose min/max limits on line-mixing solutions.. The default is 10.
+    beta_formalism : boolean, optional
+        If True, then the beta correction on the Dicke narrowing is used in the simulation model.
+    """
+    
     def __init__(self, dataset, base_linelist_file, param_linelist_file, CIA_linelist_file = None,
                 minimum_parameter_fit_intensity = 1e-27, weight_spectra = False, 
                 baseline_limit = False, baseline_limit_factor = 10, 
@@ -425,108 +526,7 @@ class Fit_DataSet:
                 eta_limit = True, eta_limit_factor  = 10, 
                 linemixing_limit = False, linemixing_limit_factor  = 10, 
                 beta_formalism = False):
-        """Provides the fitting functionality for a Dataset.
         
-
-        Parameters
-        ----------
-        dataset : object
-            Dataset Object.
-        base_linelist_file : str
-            filename for file containing baseline parameters.
-        param_linelist_file : str
-            filename for file containing parmeter parameters.
-        CIA_linelist_file : str, optional
-            Future Feature: filename for file constraining CIA parameters
-        minimum_parameter_fit_intensity : float, optional
-            minimum intensity for parameters to be generated for fitting. NOTE: Even if a value is floated in the param_linelist if it is below this threshold then it won't be a floated.. The default is 1e-27.
-        weight_spectra : boolean
-            If True, then the pt by pt percent uncertainty for each spectrum and the spectrum weighting will be used in the calculation of the residuals.  Default is False.
-        baseline_limit : bool, optional
-            If True, then impose min/max limits on baseline parameter solutions. The default is False.
-        baseline_limit_factor : float, optional
-            The factor variable describes the multiplicative factor that the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-        pressure_limit : bool, optional
-            If True, then impose min/max limits on pressure solutions. The default is False.
-        pressure_limit_factor : float, optional
-            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-        temperature_limit : bool, optional
-            If True, then impose min/max limits on temperature solutions. The default is False.
-        temperature_limit_factor : float, optional
-            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-        molefraction_limit : bool, optional
-            If True, then impose min/max limits on mole fraction solutions. The default is False.
-        molefraction_limit_factor : float, optional
-            DESCRIPTION. The default is 10.
-        etalon_limit : bool, optional
-            If True, then impose min/max limits on etalon solutions. The default is False.
-        etalon_limit_factor : float, optional
-            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 50. #phase is constrained to +/- 2pi 
-        x_shift_limit : bool, optional
-            If True, then impose min/max limits on x-shift solutions. The default is False.
-        x_shift_limit_magnitude : float, optional
-            The magnitude variables set the +/- range of the variable in cm-1. The default is 0.1.
-        nu_limit : bool, optional
-            If True, then impose min/max limits on line center solutions. The default is False.
-        nu_limit_magnitude : float, optional
-            The magnitude variables set the +/- range of the variable in cm-1. The default is 0.1.
-        sw_limit : bool, optional
-            If True, then impose min/max limits on line intensity solutions. The default is False.
-        sw_limit_factor : float, optional
-            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-        gamma0_limit : bool, optional
-            If True, then impose min/max limits on collisional half-width solutions. The default is False.
-        gamma0_limit_factor : float, optional
-            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-        n_gamma0_limit : bool, optional
-            DESCIf True, then impose min/max limits on temperature exponent for half width solutions. The default is True.
-        n_gamma0_limit_factor : float, optional
-            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-        delta0_limit : bool, optional
-            If True, then impose min/max limits on collisional shift solutions. The default is False.
-        delta0_limit_factor : float, optional
-            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-        n_delta0_limit : bool, optional
-            If True, then impose min/max limits on temperature exponent of the collisional shift solutions. The default is True.
-        n_delta0_limit_factor : float, optional
-            DESCRIPTION. The default is 10.
-        SD_gamma_limit : bool, optional
-            If True, then impose min/max limits on the aw solutions. The default is False.
-        SD_gamma_limit_factor : float, optional
-            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-        n_gamma2_limit : bool, optional
-            If True, then impose min/max limits on temperature exponent of the speed-dependent width solutions. The default is True.
-        n_gamma2_limit_factor : float, optional
-            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-        SD_delta_limit : bool, optional
-            If True, then impose min/max limits on as solutions. The default is True.
-        SD_delta_limit_factor : float, optional
-            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-        n_delta2_limit : bool, optional
-            If True, then impose min/max limits on temperature exponent of the speed-dependent shift solutions. The default is True.
-        n_delta2_limit_factor : float, optional
-            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-        nuVC_limit : bool, optional
-            If True, then impose min/max limits on dicke narrowing solutions. The default is False.
-        nuVC_limit_factor : float, optional
-            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-        n_nuVC_limit : bool, optional
-            If True, then impose min/max limits on temperature exponent of dicke narrowing solutions. The default is True.
-        n_nuVC_limit_factor : float, optional
-            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-        eta_limit : bool, optional
-            If True, then impose min/max limits on correlation parameter solutions.. The default is True.
-        eta_limit_factor : float, optional
-             The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.The default is 10.
-        linemixing_limit : bool, optional
-            The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is False.
-        linemixing_limit_factor : float, optional
-            If True, then impose min/max limits on line-mixing solutions.. The default is 10.
-        beta_formalism : boolean, optional
-            If True, then the beta correction on the Dicke narrowing is used in the simulation model.
-
-
-        """
 
         self.dataset = dataset
         self.base_linelist_file = base_linelist_file

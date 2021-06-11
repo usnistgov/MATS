@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from hapi import PYTIPS2017, pcqsdhc, ISO, ISO_INDEX
 from hapi import SLIT_MICHELSON, SLIT_DIFFRACTION, SLIT_COSINUS, SLIT_DISPERSION, SLIT_GAUSSIAN, SLIT_TRIANGULAR, SLIT_RECTANGULAR
-import qgrid
 from bisect import bisect
 import re
 from lmfit import Parameters, Minimizer
@@ -81,10 +80,7 @@ def molecularMass(M,I, isotope_list = ISO):
     ---
     DESCRIPTION:
         Return molecular mass of HITRAN isotolopogue.
-    ---
-    EXAMPLE OF USAGE:
-        mass = molecularMass(1,1) # H2O
-    ---
+  
     """
     return isotope_list[(M,I)][ISO_INDEX['mass']]
 

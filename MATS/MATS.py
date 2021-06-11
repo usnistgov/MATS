@@ -20,7 +20,7 @@ which allows for its use as an error analysis tool.
 from Spectrum import *
 from Dataset import *
 from Generate_FitParam_File import *
-from Fit_Dataset import *
+from Fit_DataSet import *
 
 
 
