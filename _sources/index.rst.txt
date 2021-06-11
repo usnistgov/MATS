@@ -19,10 +19,12 @@ Contents
    :maxdepth: 2
    
    Getting Started
+   MATS Version Summary
    MATS Summary
    Generating Parameter Line lists
-   MATS Example using Experimental and Synthetic Data
+   Examples
    MATS
+   
    
 
 
@@ -56,3 +58,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+

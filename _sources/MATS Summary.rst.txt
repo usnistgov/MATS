@@ -3,36 +3,32 @@ MATS Summary
 
 In multi-spectrum fitting, there are a collection of spectra modeled by the same line-by-line spectroscopic parameters, but each spectrum might vary in pressure, temperature, and sample composition.  
 
-The MATS program is based on :py:class:`MATS.Spectrum` objects, which are defined not only by their wavenumber and absorption data, but also information on the spectrum pressure, temperature, baseline characteristics, and sample composition.  In addition to utilizing real spectra, MATS has a :py:func:`MATS.simulate_spectrum` function, which returns a spectrum object calculated from input simulation parameters.  This is useful for performing error analysis in the same framework as primary data analysis by simply switching from experimental to simulated :py:class:`MATS.Spectrum` objects.  These :py:class:`MATS.Spectrum` objects are combined to form a :py:class:`MATS.Dataset` object, which is the collection of spectra that are being analyzed together in the multi-spectrum analysis.  
+The MATS program is based on :py:class:`Spectrum` objects, which are defined not only by their wavenumber and absorption data, but also information on the spectrum pressure, temperature, baseline characteristics, and sample composition.  In addition to utilizing real spectra, MATS has a :py:func:`Spectrum.simulate_spectrum` function, which returns a spectrum object calculated from input simulation parameters.  This is useful for performing error analysis in the same framework as primary data analysis by simply switching from experimental to simulated :py:class:`Spectrum` objects.  These :py:class:`Spectrum` objects are combined to form a :py:class:`Dataset` object, which is the collection of spectra that are being analyzed together in the multi-spectrum analysis.  
 
-There are two files that contain parameters that are fit in this model, one for spectrum dependent parameters (polynomial baseline parameters, etalons, sample composition, and x-shift term) and the other for line-by-line spectroscopic parameters that are common across all spectra.  These files are saved as .csv files with a column for each parameter and with rows corresponding to either the spectrum number or spectral line number.  In addition to the columns containing the values for the fit parameters, there are two additional columns for each fittable parameter called param_vary and param_err.  The param_vary column is a boolean  (True/False) flag that is toggled to indicate whether a given parameter will be varied in the fit.  The param_err column will be set to zero initially and replaced with the standard error for the parameter determined by the fit results.  Calls of the :py:class:`MATS.Generate_FitParam_File` class not only make these input files, but also set the line shape and define whether a parameter should be varied in the fit and if a parameter should be constrained across all spectra or allowed to vary by spectrum.  The :py:class:`MATS.Edit_Fit_Param_Files` class allows for edits to the parameter files in the Jupyter Notebook interface rather than editing in the .csv file. 
+There are two files that contain parameters that are fit in this model, one for spectrum dependent parameters (polynomial baseline parameters, etalons, sample composition, and x-shift term) and the other for line-by-line spectroscopic parameters that are common across all spectra.  These files are saved as .csv files with a column for each parameter and with rows corresponding to either the spectrum number or spectral line number.  In addition to the columns containing the values for the fit parameters, there are two additional columns for each fittable parameter called param_vary and param_err.  The param_vary column is a boolean  (True/False) flag that is toggled to indicate whether a given parameter will be varied in the fit.  The param_err column will be set to zero initially and replaced with the standard error for the parameter determined by the fit results.  Calls of the :py:class:`Generate_FitParam_File` class not only make these input files, but also set the line shape and define whether a parameter should be varied in the fit and if a parameter should be constrained across all spectra or allowed to vary by spectrum. 
 
-Finally, the :py:class:`MATS.Fit_DataSet` class fits the spectra.  Additionally, it allows the user to impose constraints on the parameters (min and max values), impose convergence criteria, update background and parameter line lists, and plot fit results.  
+Finally, the :py:class:`Fit_DataSet` class fits the spectra.  Additionally, it allows the user to impose constraints on the parameters (min and max values), impose convergence criteria, update background and parameter line lists, and plot fit results.  
 
 Below is the sparse documentation for each of the classes and main functions in the MATS project with links to the full documentation provided.
 
 Spectrum Class and Objects
 ++++++++++++++++++++++++++
 
-.. currentmodule:: MATS.Spectrum
-
-
+.. currentmodule:: Spectrum
 
 .. autosummary::
-   MATS.Spectrum
-   MATS.simulate_spectrum
-   MATS.Spectrum.calculate_QF
-   MATS.Spectrum.fft_spectrum
-   MATS.Spectrum.plot_freq_tau
-   MATS.Spectrum.plot_model_residuals
-   MATS.Spectrum.plot_wave_alpha
-   MATS.Spectrum.save_spectrum_info
-   MATS.Spectrum.segment_wave_alpha
-   
-   
+   Spectrum
+   simulate_spectrum
+   Spectrum.calculate_QF
+   Spectrum.fft_spectrum
+   Spectrum.plot_freq_tau
+   Spectrum.plot_model_residuals
+   Spectrum.plot_wave_alpha
+   Spectrum.save_spectrum_info
+   Spectrum.segment_wave_alpha
 
    
-Line-by-line Model and Etalon Models
+Line-by-line Model
 ++++++++++++++++++++++++++++++++++++
 The line-by-line model is based on the HTP code provided in the `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_.  For the most part the conventions and definitions used by HITRAN are used in the MATS program.  However, for some of the advanced line profile parameters the naming convention and temperature dependence is different.  In the sections below, the temperature and pressure dependence of the various parameters is outlined for clarity.
 
@@ -51,23 +47,19 @@ Hartmann-Tran (HTP): :math:`\Gamma_{D}, \Gamma_{0}, \Delta_{0}, \nu_{VC}, \Gamma
 
 Line Intensity
 --------------
-The line intensity for each line at the experimental temperature is calculated using the EnvironmentDependency_Intensity function in HAPI.  This function takes as arguments the line intensity at 296 K (:math:`S(T_{ref})`), the experimental temperature (:math:`T`), the reference temperature 296 K (:math:`T_{ref}`), the partition function at the experimental temperature (:math:`Q(T)`), the partition function at the reference temperature (:math:`Q(T_{ref})`), the lower state energy (:math:`E"`), and the line center ((:math:`\nu`)), and constant (:math:`c2 = hc/k` = 1.4388028496642257).  The partition functions are calculated using `TIPS-2017 <http://dx.doi.org/10.1016/j.jqsrt.2017.03.045>`_. 
+The line intensity for each line at the experimental temperature is calculated using the EnvironmentDependency_Intensity function in HAPI.  This function takes as arguments the line intensity at 296 K (:math:`S(T_{ref})`), the experimental temperature (:math:`T`), the reference temperature 296 K (:math:`T_{ref}`), the partition function at the experimental temperature (:math:`Q(T)`), the partition function at the reference temperature (:math:`Q(T_{ref})`), the lower state energy (:math:`E"`), and the line center ((:math:`\nu`)), and constant (:math:`c2 = hc/k` = 1.4388028496642257).  The partition functions are calculated using `TIPS-2017 <http://dx.doi.org/10.1016/j.jqsrt.2017.03.045>`_. Constants are defined by CODATA values
 
 .. math::
 
     S(T) = S(T_{ref}) \frac{Q(T_{ref})}{Q(T)}\frac{e^{-c2E"/T}}{e^{-c2E"/T_{ref}}} \frac{1 - e^{-c2\nu / T}}{1 - e^{-c2\nu / T_{ref}}}
 	
-.. todo::
 
-    The MATS line intensity calculation currently uses the HAPI EnvironmentDependency_Intensity function, which has specific values for physical constants. The second ratiation constant, c2, is defined as hc/k and hardwired into the code.  This value includes the Boltzmann constant, which was recently redefined by the CIPM, for the sake of maintining consistency with the SI the next version of MATS will update to use the CODATA values and move from the use of the HAPI EnvironmentDependency_Intensity function.  
-	
-	`CODATA: Boltzmann Constant <https://physics.nist.gov/cgi-bin/cuu/Value?k>`_
 
 	
 	
 Doppler Broadening
 ------------------
-In MATS, the doppler broadening (:math:`\Gamma_{D}`)is not a floatable parameter and is calculated based on the experimental temperature (:math:`T`), line center (:math:`\nu`), and molecular mass (:math:`m`).  The doppler width is calculated as:
+In MATS, the doppler broadening (:math:`\Gamma_{D}`)is not a floatable parameter and is calculated based on the experimental temperature (:math:`T`), line center (:math:`\nu`), and molecular mass (:math:`m`).  Constants are defined by CODATA values.  The doppler width is calculated as:
 
 .. math::
 	
@@ -76,13 +68,7 @@ In MATS, the doppler broadening (:math:`\Gamma_{D}`)is not a floatable parameter
 	k = 1.380648813 x 10^{-16} erg K^{-1}
 	
 	cMassMol = 1.66053873x 10^{-24} mol 
-.. todo::
 
-    MATS uses the above values for the Boltzmann constant and the term cMassMol, which is equal to the inverse of Avogadro's constant.  This is consistent with the HAPI calculation of the doppler width.  However, the Boltzmann and Avogadro's constants were recently redefined by the CIPM, for the sake of maintining consistency with the SI the next version of MATS will update to use the CODATA values.  This will involve re-defining the doppler width to include Avogadro's number and not the cMassMol value.
-	
-	`CODATA: Boltzmann Constant <https://physics.nist.gov/cgi-bin/cuu/Value?k>`_
-	
-	`CODATA: Avogadro constant <https://physics.nist.gov/cgi-bin/cuu/Value?na>`_
 
 
 Collisional Half-Width
@@ -171,66 +157,62 @@ The line mixing is implemented as:
 	
 In MATS nomenclature, the line mixing parameter is referred to as y_diluent_nominaltemperature.  
 
- 
-MATS Functions
---------------
+Line-by-line Models
+-------------------
 
-.. currentmodule:: MATS.HTP_from_DF_select
+.. currentmodule:: Fit_DataSet
 
 .. autosummary::
-   MATS.HTP_from_DF_select
-   MATS.etalon
-
+   HTP_from_DF_select
+   HTP_wBeta_from_DF_select
 
    
 Dataset Class
 ++++++++++++++
 
-.. currentmodule:: MATS.Dataset
+.. currentmodule:: Dataset
 
 .. autosummary::
-   MATS.Dataset
-   MATS.Dataset.generate_baseline_paramlist
-   MATS.Dataset.generate_summary_file
-   MATS.Dataset.get_spectra_extremes
-   MATS.Dataset.get_spectrum_extremes
-   MATS.Dataset.average_QF
-   MATS.Dataset.plot_model_residuals
+   Dataset
+   Dataset.generate_baseline_paramlist
+   Dataset.generate_summary_file
+   Dataset.get_spectra_extremes
+   Dataset.get_spectrum_extremes
+   Dataset.average_QF
+   Dataset.plot_model_residuals
    
 Generate FitParam File Class
 ++++++++++++++++++++++++++++
-.. currentmodule:: MATS.Generate_FitParam_File
+.. currentmodule:: Generate_FitParam_File
 
 .. autosummary::
-   MATS.Generate_FitParam_File
-   MATS.Generate_FitParam_File.generate_fit_baseline_linelist 
-   MATS.Generate_FitParam_File.generate_fit_param_linelist_from_linelist
+   Generate_FitParam_File
+   Generate_FitParam_File.generate_fit_baseline_linelist 
+   Generate_FitParam_File.generate_fit_param_linelist_from_linelist
   
 
-
-Edit Fit Param Files Class
-++++++++++++++++++++++++++
-.. currentmodule:: MATS.Edit_Fit_Param_Files
-
-.. autosummary::
-   MATS.Edit_Fit_Param_Files
-   MATS.Edit_Fit_Param_Files.edit_generated_baselist 
-   MATS.Edit_Fit_Param_Files.edit_generated_paramlist
-   MATS.Edit_Fit_Param_Files.save_editted_baselist
-   MATS.Edit_Fit_Param_Files.save_editted_paramlist
    
-   
-Fit Dataset Class
+Fit DataSet Class
 +++++++++++++++++
 
-.. currentmodule:: MATS.Fit_DataSet
+.. currentmodule:: Fit_DataSet
 
 .. autosummary::
-   MATS.Fit_DataSet
-   MATS.Fit_DataSet.constrained_baseline 
-   MATS.Fit_DataSet.fit_data
-   MATS.Fit_DataSet.generate_params
-   MATS.Fit_DataSet.residual_analysis
-   MATS.Fit_DataSet.simulation_model
-   MATS.Fit_DataSet.update_params
+   Fit_DataSet
+   Fit_DataSet.constrained_baseline 
+   Fit_DataSet.fit_data
+   Fit_DataSet.generate_params
+   Fit_DataSet.residual_analysis
+   Fit_DataSet.simulation_model
+   Fit_DataSet.update_params
    
+Utility Functions
++++++++++++++++++
+
+.. currentmodule:: Utilities
+
+.. autosummary::
+   etalon
+   molecularMass
+   isotope_list_molecules_isotopes 
+   add_to_HITRANstyle_isotope_list

@@ -12,7 +12,7 @@ Main Packages
 
 * `MATS <https://github.com/usnistgov/MATS>`_
 
-* `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_   The version used in development (v1.1.0.9.6) is available in the MATS repository.
+* `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_   The v1.1.1.0 was tested and is available in the MATS repository.
 
 
 Dependent Packages
@@ -35,11 +35,11 @@ Below are a list of the packages used in MATS.
 
 * `numpy <https://www.numpy.org/>`_ - python's fundamental scientific computing package
 * `pandas <https://pandas.pydata.org/>`_ - python data structure package 
-* `qgrid <https://github.com/quantopian/qgrid>`_ - provides interactive sorting, filtering, and editing of pandas dataframes in jupyter notebooks.  Make sure to follow the install instructions for both installation and jupyter installation or this won't work.  This is an optional package that allows for the :py:class:`MATS.Edit_Fit_Param_Files` to function.  
 * os, sys - system variables
 * `lmfit <https://lmfit.github.io/lmfit-py/fitting.html>`_ - non-linear least-squares minimization and curve-fitting for python
 * `matplotlib <https://matplotlib.org/>`_ - python plotting 
 * `seaborn <https://seaborn.pydata.org/>`_ - pretty plotting
 * `scipy.fftpack <https://docs.scipy.org/doc/scipy/reference/fftpack.html>`_ - provides fft functionality
 * `jupyter lab <https://jupyterlab.readthedocs.io/en/stable/>`_ - web-based user interface for Project Jupyter
+
 
