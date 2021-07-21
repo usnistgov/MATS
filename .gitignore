@@ -102,3 +102,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# IDE settings
+.vscode/
+pyrightconfig.json
+.autoenv.zsh
+.autoenv_leave.zsh

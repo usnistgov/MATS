@@ -1,13 +1,19 @@
 #Import Packages
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib import gridspec
 
-from Utilities import *
+from .utilities import (
+    isotope_list_molecules_isotopes,
+)
 
-
+from .hapi import ISO
 
 
 class Dataset:
     """Combines spectrum objects into a Dataset object to enable multi-spectrum fitting.
-    
+
     Parameters
     ----------
     spectra : list
@@ -15,15 +21,15 @@ class Dataset:
     dataset_name : str
         Used to provide a name for the Dataset to use when saving files
     param_linelist : pandas dataframe
-        Reads in the  parameter linelist used in fitting.  This enables for consistency checks between the input spectra and the parameter line list. 
+        Reads in the  parameter linelist used in fitting.  This enables for consistency checks between the input spectra and the parameter line list.
     baseline_order : int
         sets the baseline order for all spectra in the dataset.  This will automatically be set to the maximum baseline order across all spectrum included in the Dataset.
     CIA_model : str
-        Future development will allow CIA model specification.  Default is None and 
+        Future development will allow CIA model specification.  Default is None and
     """
 
-    
-    
+
+
     def __init__(self, spectra, dataset_name, param_linelist, CIA_model = None):
         self.spectra = spectra
         self.dataset_name = dataset_name
@@ -36,7 +42,7 @@ class Dataset:
         self.max_baseline_order()
         self.broadener_list = self.get_broadener_list()
         self.ILS_function_dict = self.get_ILS_function_dict()
-        
+
     def renumber_spectra(self):
         """renumbers the spectra to be sequential starting at 1 (called in the initialization of the class).
          """
@@ -49,32 +55,32 @@ class Dataset:
     def max_baseline_order(self):
         """ sets the baseline order to be equal to the maximum in any of the included spectra.
         """
-        
+
         baseline_order_list = []
         for spectrum in self.spectra:
             baseline_order_list.append(spectrum.baseline_order)
         self.baseline_order = max(baseline_order_list)
 
     def correct_component_list(self):
-        """Corrects so that all spectra and the parameter line list share the same molecules, but the mole fraction is fixed to zero where molecules are not present (called in the initialization of the class). 
+        """Corrects so that all spectra and the parameter line list share the same molecules, but the mole fraction is fixed to zero where molecules are not present (called in the initialization of the class).
         """
-        
+
         dataset_molecule_list = []
         for spectrum in self.spectra:
             dataset_molecule_list += (spectrum.molefraction.keys())
         molecules_in_paramlist = self.param_linelist['molec_id'].unique()
         for i in range(0, len(molecules_in_paramlist)):
             if molecules_in_paramlist[i] not in dataset_molecule_list:
-                dataset_molecule_list.append(molecules_in_paramlist[i]) 
+                dataset_molecule_list.append(molecules_in_paramlist[i])
         for spectrum in self.spectra:
             spectrum_molefraction_dictionary = spectrum.get_molefraction()
             for molecule in dataset_molecule_list:
                 if molecule not in spectrum_molefraction_dictionary:
                     spectrum_molefraction_dictionary[molecule] = 0
             spectrum.set_molefraction(spectrum_molefraction_dictionary)
-        
+
         return dataset_molecule_list
-    
+
     def check_iso_list(self):
         ''' Checks to make sure that all molecules are in the isotope_list and also checks to make sure all spectra use the same isotope list
         '''
@@ -82,17 +88,17 @@ class Dataset:
         molecules_isotopes_in_paramlist= self.param_linelist.groupby(['molec_id','local_iso_id']).size().reset_index().rename(columns={0:'count'})
         molecules_isotopes_in_paramlist = molecules_isotopes_in_paramlist.astype(int)
         molecules_isotopes_in_paramlist_dict = {}
-        for i in molecules_isotopes_in_paramlist.index:            
+        for i in molecules_isotopes_in_paramlist.index:
             molecule = molecules_isotopes_in_paramlist[molecules_isotopes_in_paramlist.index == i]['molec_id'].values[0]
             isotope = molecules_isotopes_in_paramlist[molecules_isotopes_in_paramlist.index == i]['local_iso_id'].values[0]
             if molecule not in molecules_isotopes_in_paramlist_dict.keys():
                 molecules_isotopes_in_paramlist_dict[molecule] = [isotope]
             else:
-                isotope_list = molecules_isotopes_in_paramlist_dict[molecule] 
+                isotope_list = molecules_isotopes_in_paramlist_dict[molecule]
                 isotope_list.append(isotope)
-                molecules_isotopes_in_paramlist_dict[molecule] = isotope_list  
-                
-        
+                molecules_isotopes_in_paramlist_dict[molecule] = isotope_list
+
+
         # check if isotope list is different from ISO
         missing_molecules = {}
         other_isotope_list = []
@@ -113,9 +119,9 @@ class Dataset:
                                     if molecule not in missing_molecules:
                                         missing_molecules[molecule] = isotope
                                     else:
-                                        isotope_list = missing_molecules[molecule] 
+                                        isotope_list = missing_molecules[molecule]
                                         isotope_list.append(isotope)
-                                        missing_molecules[molecule] = isotope_list 
+                                        missing_molecules[molecule] = isotope_list
 
         if len(missing_molecules) == 0 and len(other_isotope_list)== 1:
             for spectrum in self.spectra:
@@ -132,14 +138,14 @@ class Dataset:
             return ISO
         else:
             return ISO
-   
-                
-                    
-                
-    
+
+
+
+
+
     def get_broadener_list(self):
         """Provides a list of all broadeners in the dataset.
-        
+
 
         Returns
         -------
@@ -154,7 +160,7 @@ class Dataset:
         return dataset_broadener_list
     def get_ILS_function_dict(self):
         """Provides a dictionary of all ILS functions used in the dataset and the number of resolution parameters
-        
+
 
         Returns
         -------
@@ -170,13 +176,13 @@ class Dataset:
                         dataset_ILS_function_dict[spectrum.ILS_function.__name__] = 1
                     else:
                         dataset_ILS_function_dict[spectrum.ILS_function.__name__] = len(spectrum.ILS_resolution)
-                        
-      
-        return dataset_ILS_function_dict            
+
+
+        return dataset_ILS_function_dict
 
 
     def correct_etalon_list(self):
-        """Corrects so that all spectrum share the same number of etalons, but the amplitude and period are fixed to zero where appropriate(called in the initialization of the class). 
+        """Corrects so that all spectrum share the same number of etalons, but the amplitude and period are fixed to zero where appropriate(called in the initialization of the class).
         """
 
         dataset_etalon_list = []
@@ -193,7 +199,7 @@ class Dataset:
 
     def get_etalons(self):
         """ Get list of number of etalons for spectra.
-        
+
 
         Returns
         -------
@@ -209,7 +215,7 @@ class Dataset:
 
     def get_molecules(self):
         """ Get list of molecules in spectra.
-        
+
 
         Returns
         -------
@@ -221,9 +227,9 @@ class Dataset:
         dataset_molecule_list = []
         for spectrum in self.spectra:
             dataset_molecule_list += (spectrum.molefraction.keys())
-        dataset_molecule_list = list(set(dataset_molecule_list)) 
+        dataset_molecule_list = list(set(dataset_molecule_list))
         return dataset_molecule_list
-       
+
     def get_spectra(self):
         return list(self.spectra)
     def get_dataset_name(self):
@@ -261,7 +267,7 @@ class Dataset:
 
     def get_spectrum_pressure(self, spectrum_num):
         """Gets spectrum pressure for spectrum in Dataset.
-        
+
 
         Parameters
         ----------
@@ -274,7 +280,7 @@ class Dataset:
             if spectrum_num in Dataset then the pressure (torr) for that the spectrum_number is returned.
 
         """
-        
+
         for spectrum in self.spectra:
             if spectrum.spectrum_number == spectrum_num:
                 return (spectrum.get_pressure_torr())
@@ -282,7 +288,7 @@ class Dataset:
 
     def get_spectrum_temperature(self, spectrum_num):
         """Gets spectrum temperature for spectrum in Dataset.
-        
+
 
         Parameters
         ----------
@@ -315,7 +321,7 @@ class Dataset:
 
     def get_spectrum_extremes(self):
         """Gets the minimum and maximum wavenumber for the entire Dataset.
-        
+
 
         Returns
         -------
@@ -330,10 +336,10 @@ class Dataset:
         for spectrum in self.spectra:
             extreme_dictionary[spectrum.get_spectrum_number()] = [np.min(spectrum.wavenumber), np.max(spectrum.wavenumber)]
         return extreme_dictionary
-            
+
     def get_number_nominal_temperatures(self):
         """ Get the number of nominal temperatures in the .
-        
+
 
         Returns
         -------
@@ -349,10 +355,10 @@ class Dataset:
             if spectrum.nominal_temperature not in nominal_temperatures:
                 nominal_temperatures.append(spectrum.nominal_temperature)
         return len(nominal_temperatures), nominal_temperatures
-         
+
     def average_QF(self):
         """Calculates the Average QF from all spectra.
-        
+
 
         Returns
         -------
@@ -368,21 +374,21 @@ class Dataset:
 
     def get_list_spectrum_numbers(self):
         """ Generates a list of all spectrum_numbers.
-        
+
 
         Returns
         -------
         spec_num_list : list
-            list of all spectrum numbers used in the dataset.  
+            list of all spectrum numbers used in the dataset.
 
-        """        
+        """
         spec_num_list = []
         for spectrum in self.spectra:
             spec_num_list.append(spectrum.spectrum_number)
-        return spec_num_list    
-        
+        return spec_num_list
+
     def generate_baseline_paramlist(self):
-        """Generates a csv file called dataset_name + _baseline_paramlist, which will be used to generate another csv file that is used for fitting spectrum dependent parameters with columns for 
+        """Generates a csv file called dataset_name + _baseline_paramlist, which will be used to generate another csv file that is used for fitting spectrum dependent parameters with columns for
         spectrum number, segment number, x_shift, concentration for each molecule in the dataset, baseline terms (a = 0th order term, b = 1st order, etc), and etalon terms (set an amplitude, period, and phase for the number of etalons listed for each spectrum in the Dataset).
 
         Returns
@@ -391,7 +397,7 @@ class Dataset:
             dataframe containing information describing baseline parameters.  Also saves to .csv.  Either file can be edited before making the baseline parameter list used for fitting.  If editting the .csv file will need to regenerate dataframe from .csv.
 
         """
-        
+
         baseline_paramlist = pd.DataFrame()
         for spectrum in self.spectra:
             for segment in list(set(spectrum.segments)):
@@ -421,14 +427,14 @@ class Dataset:
                             elif (type(spectrum.ILS_resolution) == float) or (type(spectrum.ILS_resolution) == int):
                                 line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution
                             else:
-                                line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution[res_param]           
+                                line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution[res_param]
                 baseline_paramlist  = baseline_paramlist.append(line, ignore_index=True)
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
         baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv', index = True)
         return baseline_paramlist
     def generate_CIA_paramlist(self):
-        """Future development will generates a csv file called dataset_name + _CIA_paramlist, which will be used to generate another csv file that is used for fitting the broadband CIA that is common across all spectra, where the columns will be dependent on the CIA model used.  
-        
+        """Future development will generates a csv file called dataset_name + _CIA_paramlist, which will be used to generate another csv file that is used for fitting the broadband CIA that is common across all spectra, where the columns will be dependent on the CIA model used.
+
 
         Returns
         -------
@@ -444,7 +450,7 @@ class Dataset:
 
     def generate_summary_file(self, save_file = False):
         """ Generates a summary file combining spectral information from all spectra in the Dataset.
-        
+
 
         Parameters
         ----------
@@ -486,4 +492,4 @@ class Dataset:
             ax0.plot(spectrum.wavenumber, spectrum.alpha, plot_color+'.', label = spectrum.filename)
             ax1.plot(spectrum.wavenumber,spectrum.residuals, plot_color+"-")
         ax0.legend(bbox_to_anchor=(1, 1))
-        plt.show()          
+        plt.show()

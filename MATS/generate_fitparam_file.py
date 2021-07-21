@@ -1,11 +1,11 @@
 #Import Packages
-from Utilities import *
+# from .Utilities import *
 #import re
 
 
 class Generate_FitParam_File:
     """Class generates the parameter files used in fitting and sets up fit settings.
-    
+
     Parameters
     ----------
     dataset : object
@@ -54,11 +54,11 @@ class Generate_FitParam_File:
         True indicates that the first-order linemixing term will be a global variable across all spectra. False generates a new value for each spectrum in the datas
     """
 
-    def __init__ (self, dataset, param_linelist, base_linelist, CIA_linelist = None, 
-                  lineprofile = 'VP', linemixing = False, threshold_intensity = 1e-30, fit_intensity = 1e-26, fit_window = 1.5, sim_window = 5, 
-                  param_linelist_savename = 'Parameter_LineList', base_linelist_savename = 'Baseline_LineList', CIA_linelist_savename = 'CIA_LineList', 
-                 nu_constrain = True, sw_constrain = True, gamma0_constrain = True, delta0_constrain = True, aw_constrain = True, as_constrain = True, 
-                 nuVC_constrain = True, eta_constrain =True, linemixing_constrain = True, 
+    def __init__ (self, dataset, param_linelist, base_linelist, CIA_linelist = None,
+                  lineprofile = 'VP', linemixing = False, threshold_intensity = 1e-30, fit_intensity = 1e-26, fit_window = 1.5, sim_window = 5,
+                  param_linelist_savename = 'Parameter_LineList', base_linelist_savename = 'Baseline_LineList', CIA_linelist_savename = 'CIA_LineList',
+                 nu_constrain = True, sw_constrain = True, gamma0_constrain = True, delta0_constrain = True, aw_constrain = True, as_constrain = True,
+                 nuVC_constrain = True, eta_constrain =True, linemixing_constrain = True,
                  additional_columns = []):
         self.dataset = dataset
         self.param_linelist = param_linelist
@@ -97,15 +97,15 @@ class Generate_FitParam_File:
     def get_CIA_linelist(self):
         return self.CIA_linelist
     def generate_fit_param_linelist_from_linelist(self, vary_nu = {7:{1:True, 2:False, 3:False}, 1:{1:False}}, vary_sw = {7:{1:True, 2:False, 3:False}},
-                                   vary_gamma0 = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_gamma0 = {}, 
-                                   vary_delta0 = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_delta0 = {}, 
-                                   vary_aw = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_gamma2 = {}, 
-                                   vary_as = {}, vary_n_delta2 = {}, 
+                                   vary_gamma0 = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_gamma0 = {},
+                                   vary_delta0 = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_delta0 = {},
+                                   vary_aw = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_gamma2 = {},
+                                   vary_as = {}, vary_n_delta2 = {},
                                    vary_nuVC = {}, vary_n_nuVC = {},
                                    vary_eta = {}, vary_linemixing = {}):
         """Generates the parameter line list used in fitting and updates the fitting booleans to desired settings.
-               
-        
+
+
 
         Parameters
         ----------
@@ -141,7 +141,7 @@ class Generate_FitParam_File:
         Returns
         -------
         param_linelist_df : dataframe
-            returns dataframe based on parameter line list with addition of a vary and err column for every floatable parameter.  The vary columns are defined by the inputs and the fit_intensity value.  The err columns will be populated from fit results.  The dataframe is also saved as a .csv file.  line intensity will be normalized by the fit_intensity (set to the sw_scale_factor). The term 'sw' is now equal to the normalized value, such that in the simulation 'sw'*sw_scale_factor is used for the line intensity. Because line intensities are so small it is difficult to fit the value without normalization. 
+            returns dataframe based on parameter line list with addition of a vary and err column for every floatable parameter.  The vary columns are defined by the inputs and the fit_intensity value.  The err columns will be populated from fit results.  The dataframe is also saved as a .csv file.  line intensity will be normalized by the fit_intensity (set to the sw_scale_factor). The term 'sw' is now equal to the normalized value, such that in the simulation 'sw'*sw_scale_factor is used for the line intensity. Because line intensities are so small it is difficult to fit the value without normalization.
 
         """
 
@@ -181,7 +181,7 @@ class Generate_FitParam_File:
         #Re-defines the Line intensity as sw*sw_scale_factor
         param_linelist_df['sw'] = param_linelist_df['sw'] / self.fit_intensity
         param_linelist_df['sw_scale_factor'] = [self.fit_intensity]*len(param_linelist_df)
-        
+
         # Defines the Linecenter parameters in the event that the line center is held constant across all samples and is not
         ## Starting point is equal to the inital value
         order_nu = ['nu']
@@ -201,8 +201,8 @@ class Generate_FitParam_File:
                 if vary_nu != {}:
                     for molecule in vary_nu:
                         for isotope in vary_nu[molecule]:
-                            param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) & (param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'nu_' + str(spec) + '_vary'] = (vary_nu[molecule][isotope])             
-        
+                            param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) & (param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'nu_' + str(spec) + '_vary'] = (vary_nu[molecule][isotope])
+
         # Defines the linestrength in the event that the sw is held constant across all samples and not
         ## Starting point is equal to the initial value
         order_sw = ['sw', 'sw_scale_factor']
@@ -223,8 +223,8 @@ class Generate_FitParam_File:
                     for molecule in vary_sw:
                         for isotope in vary_sw[molecule]:
                             param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'sw_' + str(spec) + '_vary'] = (vary_sw[molecule][isotope])
-        
-        #Loop through other parameters and then set things to 0 based on lineshape 
+
+        #Loop through other parameters and then set things to 0 based on lineshape
         order_gamma0 = []
         order_delta0 = []
         order_SD_gamma = []
@@ -274,7 +274,7 @@ class Generate_FitParam_File:
                             for isotope in vary_delta0[molecule]:
                                 param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'delta0_' +diluent +'_'+str(spec) + '_vary'] = (vary_delta0[molecule][isotope])
             order_delta0.append('n_delta0_' +diluent )
- 
+
             #SD Gamma option for constrain and not constrained
             order_SD_gamma.append('SD_gamma_' + diluent )
             param_linelist_df['SD_gamma_' + diluent + '_vary'] = len(param_linelist_df)*[False]
@@ -327,7 +327,7 @@ class Generate_FitParam_File:
                         if vary_as != {}:
                             for molecule in vary_as:
                                 for isotope in vary_as[molecule]:
-                                    param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'SD_delta_' +diluent +'_'+str(spec) + '_vary'] = (vary_as[molecule][isotope])           
+                                    param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'SD_delta_' +diluent +'_'+str(spec) + '_vary'] = (vary_as[molecule][isotope])
             order_SD_delta.append('n_delta2_' +diluent )
 
             #nuVC option for constrain and not constrained
@@ -348,7 +348,7 @@ class Generate_FitParam_File:
                     param_linelist_df['nuVC_' + diluent + '_'+str(spec) + '_vary'] = len(param_linelist_df)*[False]
                     param_linelist_df['nuVC_' + diluent + '_'+ str(spec) + '_err'] = len(param_linelist_df)*[0]
                     if (self.lineprofile == 'VP') or (self.lineprofile == 'SDVP'):
-                        param_linelist_df.loc[:, 'nuVC_' + diluent + '_'+str(spec)] = 0                       
+                        param_linelist_df.loc[:, 'nuVC_' + diluent + '_'+str(spec)] = 0
                     else:
                         param_linelist_df['nuVC_' +diluent + '_' +str(spec)] = (param_linelist_df['nuVC_' + diluent].values)
 
@@ -376,14 +376,14 @@ class Generate_FitParam_File:
                     param_linelist_df['eta_' + str(spec) + '_vary'] = len(param_linelist_df)*[False]
                     param_linelist_df['eta_' + str(spec) + '_err'] = len(param_linelist_df)*[0]
                     if (self.lineprofile == 'VP') or (self.lineprofile == 'SDVP') or (self.lineprofile == 'NGP') or (self.lineprofile == 'SDNGP'):
-                        param_linelist_df.loc[:, 'eta_' +diluent + '_' +str(spec)] = 0                       
+                        param_linelist_df.loc[:, 'eta_' +diluent + '_' +str(spec)] = 0
                     else:
                         param_linelist_df['eta_' +diluent + '_' +str(spec)] = (param_linelist_df['eta_' + diluent].values)
                         if vary_eta != {}:
                             for molecule in vary_eta:
                                 for isotope in vary_eta[molecule]:
                                     param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'eta_' +diluent +'_'+str(spec) + '_vary'] = (vary_eta[molecule][isotope])
-            
+
             # Linemixing
             for nominal_temp in list_nominal_temps:
                 order_linemixing.append('y_' + diluent + '_'+ str(nominal_temp))
@@ -518,7 +518,7 @@ class Generate_FitParam_File:
             ordered_list.append(item + '_vary')
         param_linelist_df = param_linelist_df[ordered_list]
         param_linelist_df.to_csv(self.param_linelist_savename + '.csv') #
-        
+
         #Warnings of SD_gamma, SD_delta, nuVC, eta are zero and floated
         for param in ordered_list:
             if ('SD_gamma' in param) & ('vary' not in param) & ('err' not in param):
@@ -530,14 +530,14 @@ class Generate_FitParam_File:
             if ('nuVC' in param) & ('vary' not in param) & ('err' not in param) & ('n_nuVC' not in param):
                 if len(param_linelist_df[(param_linelist_df[param]==0) & (param_linelist_df[param + '_vary']==True)])!=0:
                     print (param, ': floating nuVC terms when the initial guess is zero can make it difficult for the solution to converge. Consider setting initial guess to a non-zero value.  This is generally less of an issue than the case where SD_gamma is floated when the initial guess is zero.')
-                    
-        return param_linelist_df 
 
-    def generate_fit_baseline_linelist(self, vary_baseline = True, vary_pressure = False, vary_temperature = False,vary_molefraction = {7:True, 1:False}, vary_xshift = False, 
-                                      vary_etalon_amp= False, vary_etalon_period= False, vary_etalon_phase= False, 
+        return param_linelist_df
+
+    def generate_fit_baseline_linelist(self, vary_baseline = True, vary_pressure = False, vary_temperature = False,vary_molefraction = {7:True, 1:False}, vary_xshift = False,
+                                      vary_etalon_amp= False, vary_etalon_period= False, vary_etalon_phase= False,
                                       vary_ILS_res = False):
         """Generates the baseline line list used in fitting and updates the fitting booleans to desired settings.
-        
+
 
         Parameters
         ----------
@@ -572,14 +572,14 @@ class Generate_FitParam_File:
         base_linelist_df = self.get_base_linelist().copy()
         parameters =  (list(base_linelist_df))
         baseline_param_order = ['Segment Number']
-        
+
         #Generate Fit Baseline file
         for param in parameters:
             if ('Baseline Order' != param) and ('Segment Number' != param):
                 base_linelist_df[param + '_err'] = 0
                 base_linelist_df[param + '_vary']= False
                 baseline_param_order += [param, param + '_err', param + '_vary']
-                
+
             if 'Pressure' in param:
                 base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_pressure)]
                 if (vary_pressure):
@@ -592,24 +592,23 @@ class Generate_FitParam_File:
                 base_linelist_df[param + '_vary'] = len(base_linelist_df)*[(vary_xshift)]
             if 'baseline' in param:
                 order = ord(param.replace('baseline_', '')) - 97
-                base_linelist_df.loc[base_linelist_df['Baseline Order']>= order, param + '_vary'] = vary_baseline         
+                base_linelist_df.loc[base_linelist_df['Baseline Order']>= order, param + '_vary'] = vary_baseline
             if 'molefraction' in param:
                 for molecule in vary_molefraction:
-                    if (self.dataset.isotope_list[(molecule, 1)][4]) in param:  
-                        base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_molefraction[molecule])                                
+                    if (self.dataset.isotope_list[(molecule, 1)][4]) in param:
+                        base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_molefraction[molecule])
             if 'amp' in param:
-                base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_etalon_amp) 
+                base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_etalon_amp)
             if 'period' in param:
-                base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_etalon_period) 
+                base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_etalon_period)
             if 'phase' in param:
                 base_linelist_df.loc[base_linelist_df[param.replace("phase", "period")]!=0, param + '_vary'] = (vary_etalon_phase)
             if '_res_' in param:
-                base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_ILS_res) 
-        
-                
+                base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_ILS_res)
+
+
         #base_linelist_df.drop(['Baseline Order'], axis=1, inplace = True)
         base_linelist_df = base_linelist_df[baseline_param_order]
         #base_linelist_df = base_linelist_df.reindex(sorted(base_linelist_df.columns), axis=1)
         base_linelist_df.to_csv(self.base_linelist_savename + '.csv', index = True)
         return base_linelist_df
-        

@@ -1,0 +1,21 @@
+name: MATS-env
+channels:
+  - conda-forge
+  - wpk-nist
+dependencies:
+  - python=3.8
+  # because using scm versioning
+  - setuptools>=38.4
+  # required packages
+  - numpy
+  - pandas
+  - lmfit
+  - matplotlib
+  - seaborn
+  - scipy
+  # optional
+  - qgrid
+  # - jupyter
+  # - pip
+  - mpmath
+  - jupyter

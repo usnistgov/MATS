@@ -1,0 +1,11 @@
+include CHANGELOG
+include LICENSE
+include README.md
+
+recursive-include tests *
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude MATS/Examples *
+recursive-include MATS/LineList *.csv
+
+recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif

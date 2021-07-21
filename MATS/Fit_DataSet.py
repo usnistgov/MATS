@@ -1,64 +1,74 @@
 #Import Packages
-from Utilities import *
+# from .Utilities import *
+from bisect import bisect
+import re
+
+import numpy as np
+import pandas as pd
+from .hapi import ISO, PYTIPS2017, pcqsdhc
+from .utilities import molecularMass, etalon, convolveSpectrumSame
+from .codata import CONSTANTS
+
+from lmfit import Minimizer,  Parameters
 
 
 def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff',
                 p = 1, T = 296, molefraction = {}, isotope_list = ISO,
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30):
     """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters.
-    
+
     Outline
-    
+
     1.  Uses provided wavenumber axis
-    
+
     2.  Calculates the molecular density from pressure and temperature
-    
+
     3.  Sets up Diluent dictionary if not given as input
-    
+
     4.  Calculates line intensity and doppler width at temperature for all lines
-    
+
     5.  Loops through each line in the line list and loops through each diluent, generating a line parameter at experimental conditions
         that is the appropriate ratio of each diluent species corrected for pressure and temperature.  For each line, simulate the line for the given simulation cutoffs and add to cross section
-    
-    6.  Return wavenumber and cross section arrays 
-    
+
+    6.  Return wavenumber and cross section arrays
+
 
     Parameters
     ----------
     linelist : dataframe
         Pandas dataframe with the following column headers, where species corresponds to each diluent in the spectrum objects included in the dataset and nominal temperature corresponds to the nominal temperatures included in the dataset:
             nu = wavenumber of the spectral line transition (cm-1) in vacuum
-            
+
             sw = The spectral line intensity (cm−1/(molecule⋅cm−2)) at Tref=296K
-            
+
             elower = The lower-state energy of the transition (cm-1)
-            
+
             molec_id = HITRAN molecular ID number
-            
+
             local_iso_id = HITRAN isotopologue ID number
-            
+
             gamma_0_species = half width at half maximum (HWHM) (cm−1/atm) at Tref=296K and reference pressure pref=1atm for a given diluent (air, self, CO2, etc.)
-            
+
             n_gamma0_species = The coefficient of the temperature dependence of the half width
-            
+
             delta_0_species = The pressure shift (cm−1/atm) at Tref=296K and pref=1atm of the line position with respect to the vacuum transition wavenumber νij
-            
+
             n_delta0_species = the coefficient of the temperature dependence of the pressure shift
-            
+
             SD_gamma_species = the ratio of the speed dependent width to the half-width at reference temperature and pressure
-            
+
             n_gamma2_species = the coefficient of the temperature dependence of the speed dependent width NOTE: This is the temperature dependence of the speed dependent width not the ratio of the speed dependence to the half-width
-            
+
             SD_delta_species = the ratio of the speed dependent shift to the collisional shift at reference temperature and pressure
-            
+
             n_delta2_species = the coefficient of the temperature dependence of the speed dependent shift NOTE: This is the temperature dependence of the speed dependent shift not the ratio of the speed dependence to the shift
-            
+
             nuVC_species = dicke narrowing term at reference temperature
-            
+
             n_nuVC_species = coefficient of the temperature dependence of the dicke narrowing term
-            
+
             eta_species = the correlation parameter for the VC and SD effects
-            
+
             y_species_nominaltemperature = linemixing term (as currently written this doesn't have a temperature dependence, so read in a different column for each nominal temperature)
     waves : array
         1-D array comprised of wavenumbers (cm-1) to use as x-axis for simulation.
@@ -93,21 +103,21 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
         wavenumber axis that should match the input waves
     xsect : array
         simulated cross section as a function of wavenumbers (ppm/cm)
-        
+
 
     """
 
     #Generate X-axis for simulation
     wavenumbers = waves
-        
+
     #Set Omegas to X-values
     Xsect = [0]*len(wavenumbers)
-    
+
     #define reference temperature/pressure and calculate molecular density
     Tref = 296. # K
     pref = 1. # atm
-    mol_dens = (p/cpa_atm)/(k*T) 
-    
+    mol_dens = (p/ CONSTANTS['cpa_atm'])/(CONSTANTS['k']*T)
+
     #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
     #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
     if not Diluent:
@@ -123,7 +133,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
     linelist['GammaD'] = 0
     linelist['m'] = 0
     linelist['abun_ratio'] = 1
-    
+
     for molec in linelist['molec_id'].unique():
         for iso in linelist ['local_iso_id'].unique():
             try:
@@ -134,18 +144,18 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
             except:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = 1
-            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso, isotope_list = isotope_list) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion 
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso, isotope_list = isotope_list) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion
             if ( natural_abundance == False) and abundance_ratio_MI != {}:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'abun_ratio'] = abundance_ratio_MI[molec][iso]
-    
+
     #linelist['LineIntensity'] = EnvironmentDependency_Intensity(linelist['sw'],T,Tref,linelist['SigmaT'],linelist['SigmaTref'],linelist['elower'],linelist['nu'])
 
-    linelist['LineIntensity'] = linelist['sw']*linelist['SigmaTref']/linelist['SigmaT']*(np.exp(-c2*linelist['elower']/T)*(1-np.exp(-c2*linelist['nu']/T)))/(np.exp(-c2*linelist['elower']/Tref)*(1-np.exp(-c2*linelist['nu']/Tref)))
+    linelist['LineIntensity'] = linelist['sw']*linelist['SigmaTref']/linelist['SigmaT']*(np.exp(-CONSTANTS['c2']*linelist['elower']/T)*(1-np.exp(-CONSTANTS['c2']*linelist['nu']/T)))/(np.exp(-CONSTANTS['c2']*linelist['elower']/Tref)*(1-np.exp(-CONSTANTS['c2']*linelist['nu']/Tref)))
     if isotope_list != ISO:
         linelist.loc[(linelist['SigmaT'] == 1) & (linelist['SigmaTref'] == 1), 'LineIntensity'] = linelist[(linelist['SigmaT'] == 1) & (linelist['SigmaTref'] == 1)]['sw'].values
-    
+
     #Calculate Doppler Broadening
-    linelist['GammaD'] = np.sqrt(2*k*Na*T*np.log(2)/(linelist['m'].values))*linelist['nu'] / c
+    linelist['GammaD'] = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(linelist['m'].values))*linelist['nu'] / CONSTANTS['c']
     # Calculated Line Parameters across Broadeners
     linelist['Gamma0'] = 0
     linelist['Shift0'] = 0
@@ -170,86 +180,86 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
         linelist['Eta'] += linelist['eta_%s'%species] *abun
         #Line mixing
         linelist['Y'] += abun*(linelist['y_%s'%species] *(p/pref))
-    
-    #Line profile simulation cut-off determination    
+
+    #Line profile simulation cut-off determination
     if wing_method == 'wing_cutoff':
         linelist['line cut-off'] = (0.5346*linelist['Gamma0'] + (0.2166*linelist['Gamma0']**2 + linelist['GammaD']**2)**0.5)*wing_cutoff
     else:
         linelist['line cut-off'] = wing_wavenumbers
-    
+
     #Enforce  Line Intensity Simulation Threshold
-    linelist = linelist[linelist['LineIntensity']>= IntensityThreshold] 
-    
+    linelist = linelist[linelist['LineIntensity']>= IntensityThreshold]
+
     #For each line calculate spectrum and add to the global spectrum
     for index, line in linelist.iterrows():
         BoundIndexLower = bisect(wavenumbers, line['nu'] - line['line cut-off'])
         BoundIndexUpper = bisect(wavenumbers, line['nu'] + line['line cut-off'])
         lineshape_vals_real, lineshape_vals_imag = pcqsdhc(line['nu'],line['GammaD'],line['Gamma0'],line['Gamma2'],line['Shift0'],line['Shift2'],
-                                                    line['NuVC'],line['Eta'],wavenumbers[BoundIndexLower:BoundIndexUpper])    
+                                                    line['NuVC'],line['Eta'],wavenumbers[BoundIndexLower:BoundIndexUpper])
         Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
                                                     molefraction[line['molec_id']] * line['abun_ratio'] * \
-                                                    line['LineIntensity'] * (lineshape_vals_real + line['Y']*lineshape_vals_imag) 
-    
-    # Return two arrays corresponding to the wavenumber axis and the calculated cross-section                                                                                                      
-    return (wavenumbers, np.asarray(Xsect))  
+                                                    line['LineIntensity'] * (lineshape_vals_real + line['Y']*lineshape_vals_imag)
+
+    # Return two arrays corresponding to the wavenumber axis and the calculated cross-section
+    return (wavenumbers, np.asarray(Xsect))
 
 def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff',
-                p = 1, T = 296, molefraction = {}, isotope_list = ISO, 
+                p = 1, T = 296, molefraction = {}, isotope_list = ISO,
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30):
     """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters with capability of incorporating the beta correction to the Dicke Narrowing proposed in Analytical-function correction to the Hartmann–Tran profile for more reliable representation of the Dicke-narrowed molecular spectra.
-    
+
     Outline
-    
+
     1.  Uses provided wavenumber axis
-    
+
     2.  Calculates the molecular density from pressure and temperature
-    
+
     3.  Sets up Diluent dictionary if not given as input
-    
+
     4.  Calculates line intensity and doppler width at temperature for all lines
-    
+
     5.  Loops through each line in the line list and loops through each diluent, generating a line parameter at experimental conditions
         that is the appropriate ratio of each diluent species corrected for pressure and temperature.  For each line, simulate the line for the given simulation cutoffs and add to cross section
-    
-    6.  Return wavenumber and cross section arrays 
-    
+
+    6.  Return wavenumber and cross section arrays
+
 
     Parameters
     ----------
     linelist : dataframe
         Pandas dataframe with the following column headers, where species corresponds to each diluent in the spectrum objects included in the dataset and nominal temperature corresponds to the nominal temperatures included in the dataset:
             nu = wavenumber of the spectral line transition (cm-1) in vacuum
-            
+
             sw = The spectral line intensity (cm−1/(molecule⋅cm−2)) at Tref=296K
-            
+
             elower = The lower-state energy of the transition (cm-1)
-            
+
             molec_id = HITRAN molecular ID number
-            
+
             local_iso_id = HITRAN isotopologue ID number
-            
+
             gamma_0_species = half width at half maximum (HWHM) (cm−1/atm) at Tref=296K and reference pressure pref=1atm for a given diluent (air, self, CO2, etc.)
-            
+
             n_gamma0_species = The coefficient of the temperature dependence of the half width
-            
+
             delta_0_species = The pressure shift (cm−1/atm) at Tref=296K and pref=1atm of the line position with respect to the vacuum transition wavenumber νij
-            
+
             n_delta0_species = the coefficient of the temperature dependence of the pressure shift
-            
+
             SD_gamma_species = the ratio of the speed dependent width to the half-width at reference temperature and pressure
-            
+
             n_gamma2_species = the coefficient of the temperature dependence of the speed dependent width NOTE: This is the temperature dependence of the speed dependent width not the ratio of the speed dependence to the half-width
-            
+
             SD_delta_species = the ratio of the speed dependent shift to the collisional shift at reference temperature and pressure
-            
+
             n_delta2_species = the coefficient of the temperature dependence of the speed dependent shift NOTE: This is the temperature dependence of the speed dependent shift not the ratio of the speed dependence to the shift
-            
+
             nuVC_species = dicke narrowing term at reference temperature
-            
+
             n_nuVC_species = coefficient of the temperature dependence of the dicke narrowing term
-            
+
             eta_species = the correlation parameter for the VC and SD effects
-            
+
             y_species_nominaltemperature = linemixing term (as currently written this doesn't have a temperature dependence, so read in a different column for each nominal temperature)
     waves : array
         1-D array comprised of wavenumbers (cm-1) to use as x-axis for simulation.
@@ -284,21 +294,21 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
         wavenumber axis that should match the input waves
     xsect : array
         simulated cross section as a function of wavenumbers (ppm/cm)
-        
+
 
     """
 
     #Generate X-axis for simulation
     wavenumbers = waves
-        
+
     #Set Omegas to X-values
     Xsect = [0]*len(wavenumbers)
-    
+
     #define reference temperature/pressure and calculate molecular density
     Tref = 296. # K
     pref = 1. # atm
-    mol_dens = (p/cpa_atm)/(k*T) 
-    
+    mol_dens = (p/CONSTANTS['cpa_atm'])/(CONSTANTS['k']*T)
+
     #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
     if not Diluent:
          #Diluent = {diluent:1.}
@@ -309,8 +319,8 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
          else:
             Diluent = {diluent: {'composition':1, 'm':0}}
             print ('THIS IS GOING TO BREAK WITH A DIVISION ERROR.  GO BACK AND USE DILUENT FORMALISM FOR THE SPECTRUM DEFINITION')
-            
-            
+
+
 
     #Calculate line intensity
     linelist['SigmaT'] = 0
@@ -318,7 +328,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
     linelist['GammaD'] = 0
     linelist['m'] = 0
     linelist['abun_ratio'] = 1
-    
+
     for molec in linelist['molec_id'].unique():
         for iso in linelist ['local_iso_id'].unique():
             try:
@@ -329,7 +339,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
             except:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = 1
-                
+
 
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso, isotope_list = isotope_list) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion
             if (len(Diluent) == 1) & ('self' in Diluent):
@@ -340,16 +350,16 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
     mp = 0
     for diluent in Diluent:
         mp += Diluent[diluent]['composition']*Diluent[diluent]['m']
-     
+
     # Get Line Intensity
-    linelist['LineIntensity'] = linelist['sw']*linelist['SigmaTref']/linelist['SigmaT']*(np.exp(-c2*linelist['elower']/T)*(1-np.exp(-c2*linelist['nu']/T)))/(np.exp(-c2*linelist['elower']/Tref)*(1-np.exp(-c2*linelist['nu']/Tref)))
+    linelist['LineIntensity'] = linelist['sw']*linelist['SigmaTref']/linelist['SigmaT']*(np.exp(-CONSTANTS['c2']*linelist['elower']/T)*(1-np.exp(-CONSTANTS['c2']*linelist['nu']/T)))/(np.exp(-CONSTANTS['c2']*linelist['elower']/Tref)*(1-np.exp(-CONSTANTS['c2']*linelist['nu']/Tref)))
     if isotope_list != ISO:
         linelist.loc[(linelist['SigmaT' == 1]) & (linelist['SigmaTref' == 1])] = linelist[(linelist['SigmaT' == 1]) & (linelist['SigmaTref' == 1])]['sw'].values
-    
+
     #Calculate Doppler Broadening
     #linelist['GammaD'] = np.sqrt(2*1.380648813E-16*T*np.log(2)/linelist['m']/2.99792458e10**2)*linelist['nu']
-    linelist['GammaD'] = np.sqrt(2*k*Na*T*np.log(2)/(linelist['m'].values))*linelist['nu'] / c
-    
+    linelist['GammaD'] = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(linelist['m'].values))*linelist['nu'] / CONSTANTS['c']
+
     # Calculated Line Parameters across Broadeners
     linelist['Gamma0'] = 0
     linelist['Shift0'] = 0
@@ -374,7 +384,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
         linelist['Eta'] += linelist['eta_%s'%species] *abun
         #Line mixing
         linelist['Y'] += abun*(linelist['y_%s'%species]*(p/pref))
-        
+
     linelist['alpha'] =  mp / linelist['m']
     linelist['Chi'] = linelist['NuVC'] / linelist['GammaD']
     linelist['A'] = 0.0534 + 0.1585*np.exp(-0.451*linelist['alpha'].values)
@@ -382,33 +392,33 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
     linelist['C'] = -0.0546 + 0.0672*linelist['alpha'].values - 0.0125*linelist['alpha'].values**2+0.0003*linelist['alpha'].values**3
     linelist['D'] = 0.9466 - 0.1585*np.exp(-0.4510*linelist['alpha'].values)
     linelist['Beta'] = linelist['A'].values*np.tanh(linelist['B'].values * np.log10(linelist['Chi'].values) + linelist['C'].values) + linelist['D'].values
-   
-    
-    #Line profile simulation cut-off determination    
+
+
+    #Line profile simulation cut-off determination
     if wing_method == 'wing_cutoff':
         linelist['line cut-off'] = (0.5346*linelist['Gamma0'] + (0.2166*linelist['Gamma0']**2 + linelist['GammaD']**2)**0.5)*wing_cutoff
     else:
         linelist['line cut-off'] = wing_wavenumbers
-    
+
     #Enforce  Line Intensity Simulation Threshold
-    linelist = linelist[linelist['LineIntensity']>= IntensityThreshold] 
-    
+    linelist = linelist[linelist['LineIntensity']>= IntensityThreshold]
+
     #For each line calculate spectrum and add to the global spectrum
     for index, line in linelist.iterrows():
         BoundIndexLower = bisect(wavenumbers, line['nu'] - line['line cut-off'])
         BoundIndexUpper = bisect(wavenumbers, line['nu'] + line['line cut-off'])
         lineshape_vals_real, lineshape_vals_imag = pcqsdhc(line['nu'],line['GammaD'],line['Gamma0'],line['Gamma2'],line['Shift0'],line['Shift2'],
-                                                    line['NuVC']*line['Beta'],line['Eta'],wavenumbers[BoundIndexLower:BoundIndexUpper])    
+                                                    line['NuVC']*line['Beta'],line['Eta'],wavenumbers[BoundIndexLower:BoundIndexUpper])
         Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
                                                     molefraction[line['molec_id']] * line['abun_ratio'] * \
-                                                    line['LineIntensity'] * (lineshape_vals_real + line['Y']*lineshape_vals_imag) 
-    
-    # Return two arrays corresponding to the wavenumber axis and the calculated cross-section                                                                                                      
-    return (wavenumbers, np.asarray(Xsect)) 
+                                                    line['LineIntensity'] * (lineshape_vals_real + line['Y']*lineshape_vals_imag)
+
+    # Return two arrays corresponding to the wavenumber axis and the calculated cross-section
+    return (wavenumbers, np.asarray(Xsect))
 
 class Fit_DataSet:
     """Provides the fitting functionality for a Dataset.
-    
+
 
     Parameters
     ----------
@@ -443,7 +453,7 @@ class Fit_DataSet:
     etalon_limit : bool, optional
         If True, then impose min/max limits on etalon solutions. The default is False.
     etalon_limit_factor : float, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 50. #phase is constrained to +/- 2pi 
+        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 50. #phase is constrained to +/- 2pi
     x_shift_limit : bool, optional
         If True, then impose min/max limits on x-shift solutions. The default is False.
     x_shift_limit_magnitude : float, optional
@@ -507,26 +517,26 @@ class Fit_DataSet:
     beta_formalism : boolean, optional
         If True, then the beta correction on the Dicke narrowing is used in the simulation model.
     """
-    
+
     def __init__(self, dataset, base_linelist_file, param_linelist_file, CIA_linelist_file = None,
-                minimum_parameter_fit_intensity = 1e-27, weight_spectra = False, 
-                baseline_limit = False, baseline_limit_factor = 10, 
+                minimum_parameter_fit_intensity = 1e-27, weight_spectra = False,
+                baseline_limit = False, baseline_limit_factor = 10,
                 pressure_limit = False, pressure_limit_factor = 10,
                 temperature_limit = False, temperature_limit_factor = 10,
-                molefraction_limit = False, molefraction_limit_factor = 10, 
-                etalon_limit = False, etalon_limit_factor = 50, #phase is constrained to +/- 2pi, 
-                x_shift_limit = False, x_shift_limit_magnitude = 0.1, 
-                nu_limit = False, nu_limit_magnitude = 0.1, 
-                sw_limit = False, sw_limit_factor = 10, 
-                gamma0_limit = False, gamma0_limit_factor = 10, n_gamma0_limit= True, n_gamma0_limit_factor = 10, 
-                delta0_limit = False, delta0_limit_factor = 10, n_delta0_limit = True, n_delta0_limit_factor = 10, 
-                SD_gamma_limit = False, SD_gamma_limit_factor  = 10, n_gamma2_limit = True, n_gamma2_limit_factor  = 10, 
-                SD_delta_limit = True, SD_delta_limit_factor  = 10, n_delta2_limit = True, n_delta2_limit_factor  = 10, 
-                nuVC_limit = False, nuVC_limit_factor  = 10, n_nuVC_limit = True, n_nuVC_limit_factor = 10, 
-                eta_limit = True, eta_limit_factor  = 10, 
-                linemixing_limit = False, linemixing_limit_factor  = 10, 
+                molefraction_limit = False, molefraction_limit_factor = 10,
+                etalon_limit = False, etalon_limit_factor = 50, #phase is constrained to +/- 2pi,
+                x_shift_limit = False, x_shift_limit_magnitude = 0.1,
+                nu_limit = False, nu_limit_magnitude = 0.1,
+                sw_limit = False, sw_limit_factor = 10,
+                gamma0_limit = False, gamma0_limit_factor = 10, n_gamma0_limit= True, n_gamma0_limit_factor = 10,
+                delta0_limit = False, delta0_limit_factor = 10, n_delta0_limit = True, n_delta0_limit_factor = 10,
+                SD_gamma_limit = False, SD_gamma_limit_factor  = 10, n_gamma2_limit = True, n_gamma2_limit_factor  = 10,
+                SD_delta_limit = True, SD_delta_limit_factor  = 10, n_delta2_limit = True, n_delta2_limit_factor  = 10,
+                nuVC_limit = False, nuVC_limit_factor  = 10, n_nuVC_limit = True, n_nuVC_limit_factor = 10,
+                eta_limit = True, eta_limit_factor  = 10,
+                linemixing_limit = False, linemixing_limit_factor  = 10,
                 beta_formalism = False):
-        
+
 
         self.dataset = dataset
         self.base_linelist_file = base_linelist_file
@@ -581,10 +591,10 @@ class Fit_DataSet:
         self.linemixing_limit_factor = linemixing_limit_factor
         self.beta_formalism = beta_formalism
 
-        
+
     def generate_params(self):
         """Generates the lmfit parameter object that will be used in fitting.
-        
+
 
         Returns
         -------
@@ -606,35 +616,35 @@ class Fit_DataSet:
                 if self.baseline_list.loc[index][base_param] == 0:
                     params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'])
                 elif ('Pressure' in base_param) and self.pressure_limit:
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
-                              min = (1 / self.pressure_limit_factor)*self.baseline_list.loc[index][base_param], 
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
+                              min = (1 / self.pressure_limit_factor)*self.baseline_list.loc[index][base_param],
                               max = self.pressure_limit_factor*self.baseline_list.loc[index][base_param])
                 elif ('Temperature' in base_param) and self.temperature_limit:
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
-                              min = (1 / self.temperature_limit_factor)*self.baseline_list.loc[index][base_param], 
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
+                              min = (1 / self.temperature_limit_factor)*self.baseline_list.loc[index][base_param],
                               max = self.temperature_limit_factor*self.baseline_list.loc[index][base_param])
                 elif ('molefraction' in base_param) and self.molefraction_limit:
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
-                              min = (1 / self.molefraction_limit_factor)*self.baseline_list.loc[index][base_param], 
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
+                              min = (1 / self.molefraction_limit_factor)*self.baseline_list.loc[index][base_param],
                               max = self.molefraction_limit_factor*self.baseline_list.loc[index][base_param])
                 elif ('baseline' in base_param) and self.baseline_limit:
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
-                              min = (1 / self.baseline_limit_factor)*self.baseline_list.loc[index][base_param], 
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
+                              min = (1 / self.baseline_limit_factor)*self.baseline_list.loc[index][base_param],
                               max = self.baseline_limit_factor *self.baseline_list.loc[index][base_param])
                 elif ('etalon_' in base_param) and self.etalon_limit and ('phase' not in base_param):
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
-                              min = (1 / self.etalon_limit_factor )*self.baseline_list.loc[index][base_param], 
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
+                              min = (1 / self.etalon_limit_factor )*self.baseline_list.loc[index][base_param],
                               max = self.etalon_limit_factor *self.baseline_list.loc[index][base_param])
                 elif ('etalon_' in base_param) and self.etalon_limit and ('phase' in base_param):
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
                               min = -2*np.pi, max = 2*np.pi)
                 elif ('x_shift' in base_param) and self.x_shift_limit:
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'], 
-                              min = (self.baseline_list.loc[index][base_param] - self.x_shift_limit_magnitude), 
-                              max = self.x_shift_limit_magnitude + self.baseline_list.loc[index][base_param])   
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
+                              min = (self.baseline_list.loc[index][base_param] - self.x_shift_limit_magnitude),
+                              max = self.x_shift_limit_magnitude + self.baseline_list.loc[index][base_param])
                 else:
                     params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'])
-            
+
         #Lineshape parameters
         linelist_params = []
         for line_param in list(self.lineparam_list):
@@ -674,7 +684,7 @@ class Fit_DataSet:
             if (sum('nuVC' in param for param in linelist_params)) >  len(diluent_list):
                 nuVC_constrain = False
             if (sum('eta' in param for param in linelist_params)) >  len(diluent_list):
-                eta_constrain = False 
+                eta_constrain = False
         else:
             if (sum('gamma0' in param for param in linelist_params)) >  2*len(diluent_list):
                 gamma0_constrain = False
@@ -687,7 +697,7 @@ class Fit_DataSet:
             if (sum('nuVC' in param for param in linelist_params)) >  2*len(diluent_list) :
                 nuVC_constrain = False
             if (sum('eta' in param for param in linelist_params)) >  len(diluent_list):
-                eta_constrain = False 
+                eta_constrain = False
         if (sum('y' in param for param in linelist_params)) >  len(diluent_list)*(self.dataset.get_number_nominal_temperatures()[0]):
             linemix_constrain = False
         linemix_terms_constrained = []
@@ -702,29 +712,29 @@ class Fit_DataSet:
                     #NU
                     if line_param == 'nu' and nu_constrain:
                         if self.nu_limit:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                      min = self.lineparam_list.loc[spec_line][line_param] - self.nu_limit_magnitude, 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                      min = self.lineparam_list.loc[spec_line][line_param] - self.nu_limit_magnitude,
                                       max = self.lineparam_list.loc[spec_line][line_param] + self.nu_limit_magnitude)
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif (line_param != 'nu') and ('nu' in line_param) and ('nuVC' not in line_param) and (not nu_constrain):
                         if self.nu_limit:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                      min = self.lineparam_list.loc[spec_line][line_param] - self.nu_limit_magnitude, 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                      min = self.lineparam_list.loc[spec_line][line_param] - self.nu_limit_magnitude,
                                       max = self.lineparam_list.loc[spec_line][line_param] + self.nu_limit_magnitude)
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #SW
                     elif line_param == 'sw' and sw_constrain:
                         if self.sw_limit:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.sw_limit_factor)* self.lineparam_list.loc[int(spec_line)][line_param], 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.sw_limit_factor)* self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.sw_limit_factor* self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif (line_param != 'sw') and ('sw' in line_param) and (not sw_constrain) and (line_param != 'sw_scale_factor'):
                         if self.sw_limit:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
                                   min =  (1 / self.sw_limit_factor)* self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.sw_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
@@ -732,99 +742,99 @@ class Fit_DataSet:
                     #GAMMA0
                     elif ('gamma0_' in line_param) and ('n_' not in line_param) and (gamma0_constrain) and (index_length==1):
                         if self.gamma0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
                                   min = (1 / self.gamma0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param] ,
                                   max = self.gamma0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
-                                
+
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('gamma0_' in line_param) and ('n_' not in line_param) and (not gamma0_constrain) and (index_length>1):
                         if self.gamma0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
                                   min = (1 / self.gamma0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.gamma0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('n_gamma0' in line_param):
                         if self.n_gamma0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.n_gamma0_limit_factor) *self.lineparam_list.loc[int(spec_line)][line_param], 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.n_gamma0_limit_factor) *self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.n_gamma0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param],self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #DELTA0
                     elif ('delta0' in line_param) and ('n_' not in line_param) and (delta0_constrain) and (index_length==1):
                         if self.delta0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.delta0_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param], 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.delta0_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.delta0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('delta0_' in line_param) and ('n_' not in line_param) and (not delta0_constrain) and (index_length>1):
                         if self.delta0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.delta0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.delta0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.delta0_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('n_delta0' in line_param):
                         if self.n_delta0_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param],self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.n_delta0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param],self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.n_delta0_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.n_delta0_limit_factor / 100*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #SD Gamma
                     elif ('SD_gamma' in line_param) and (SD_gamma_constrain) and (index_length==2):
                         if self.SD_gamma_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.SD_gamma_limit_factor) *self.lineparam_list.loc[int(spec_line)][line_param], 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.SD_gamma_limit_factor) *self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.SD_gamma_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('SD_gamma' in line_param) and (not SD_gamma_constrain) and (index_length>2):
                         if self.SD_gamma_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.SD_gamma_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.SD_gamma_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.SD_gamma_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('n_gamma2' in line_param):
-                    
+
                         if self.n_gamma2_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                min = (1 / self.n_gamma2_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                min = (1 / self.n_gamma2_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
                                 max = (self.n_gamma2_limit_factor / 100)*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #SD Delta
                     elif ('SD_delta' in line_param) and (SD_delta_constrain) and (index_length==2):
                         if self.SD_delta_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.SD_delta_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param], 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.SD_delta_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.SD_delta_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('SD_delta' in line_param) and (not SD_delta_constrain) and (index_length>2):
                         if self.SD_delta_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.SD_delta_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param], 
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.SD_delta_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max =self.SD_delta_limit_factor / 100*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('n_delta2' in line_param):
 
                         if self.n_delta2_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                min = (1 / self.n_delta2_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param], 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                min = (1 / self.n_delta2_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param],
                                 max = self.n_delta2_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #nuVC
                     elif ('nuVC' in line_param) and ('n_nuVC_' not in line_param) and (nuVC_constrain) and (index_length==1):
                         if self.nuVC_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 /self.nuVC_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 /self.nuVC_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.nuVC_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             if self.beta_formalism:
@@ -833,8 +843,8 @@ class Fit_DataSet:
                                 params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('nuVC' in line_param) and ('n_nuVC' not in line_param) and (not nuVC_constrain) and (index_length>1):
                         if self.nuVC_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.nuVC_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.nuVC_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.nuVC_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             if self.beta_formalism:
@@ -843,48 +853,48 @@ class Fit_DataSet:
                                 params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('n_nuVC' in line_param):
                         if self.n_nuVC_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.n_nuVC_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param], 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.n_nuVC_limit_factor )*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.n_nuVC_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])                    
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     #eta
                     elif ('eta_' in line_param) and (eta_constrain) and (index_length==1):
                         if self.eta_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.eta_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.eta_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = (self.eta_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('eta_' in line_param) and (not eta_constrain) and (index_length>1):
                         if self.eta_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.eta_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.eta_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.eta_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary']) 
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     # linemixing
                     elif ('y_' in line_param) and (linemix_constrain) and (line_param in linemix_terms_constrained):
                         if self.linemixing_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.linemixing_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.linemixing_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.linemixing_limit_factor *self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     elif ('y_' in line_param) and (not linemix_constrain) and (not line_param in linemix_terms_constrained):
                         if self.linemixing_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'], 
-                                  min = (1 / self.linemixing_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param], 
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.linemixing_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
                                   max = self.linemixing_limit_factor / 100*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
-                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary']) 
+                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
         return (params)
 
     def constrained_baseline(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
-                                    etalon_amp_segment_constrained = True, etalon_period_segment_constrained = True, etalon_phase_segment_constrained = True, 
+                                    etalon_amp_segment_constrained = True, etalon_period_segment_constrained = True, etalon_phase_segment_constrained = True,
                                     pressure_segment_constrained = True, temperature_segment_constrained = True):
         """Imposes baseline constraints when using multiple segments per spectrum, ie all baseline parameters can be the same across the entire spectrum except for the etalon phase, which is allowed to vary per segment.
-        
+
 
         Parameters
         ----------
@@ -927,7 +937,7 @@ class Fit_DataSet:
                 indices = [m.start() for m in re.finditer('_', param)]
                 spectrum_num = int(param[indices[0]+1:indices[1]])
                 segment_num = int(param[indices[1]+1:])
-            
+
             elif ('baseline' in param) and baseline_segment_constrained:
                 indices = [m.start() for m in re.finditer('_', param)]
                 spectrum_num = int(param[indices[1]+1:indices[2]])
@@ -963,7 +973,7 @@ class Fit_DataSet:
 
     def simulation_model(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff'):
         """This is the model used for fitting that includes baseline, resonant absorption, and CIA models.
-        
+
 
         Parameters
         ----------
@@ -988,7 +998,7 @@ class Fit_DataSet:
         baseline_params = []
         linelist_params = []
 
-        
+
         # Set-up Baseline Parameters
         for param in (list(params.valuesdict().keys())):
             if ('molefraction' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param) or ('Pressure' in param) or ('Temperature' in param) or ('_res_' in param):
@@ -997,12 +1007,12 @@ class Fit_DataSet:
                 linelist_params.append(param)
 
         for spectrum in self.dataset.spectra:
-            simulated_spectra = len(spectrum.wavenumber)*[0]    
-            residuals = len(spectrum.alpha)*[0]        
+            simulated_spectra = len(spectrum.wavenumber)*[0]
+            residuals = len(spectrum.alpha)*[0]
             wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
             Diluent = spectrum.Diluent
             spectrum_number = spectrum.spectrum_number
-            nominal_temp = spectrum.nominal_temperature          
+            nominal_temp = spectrum.nominal_temperature
             columns = ['molec_id', 'local_iso_id', 'elower', 'nu', 'sw', 'sw_scale_factor']
             for species in Diluent:
                 columns.append('gamma0_' + species)
@@ -1030,8 +1040,8 @@ class Fit_DataSet:
                         elif column.count('_') < 3:
                             rename_dictionary[(column)] = (column[:column.find(str(nominal_temp))-1])
             linelist_for_sim = self.lineparam_list[columns].copy()
-           
-            # Replaces the relevant linelist locations with the 
+
+            # Replaces the relevant linelist locations with the
             for parameter in linelist_params:
                 line = int(parameter[parameter.find('_line_') + 6:])
                 param = parameter[:parameter.find('_line_')]
@@ -1042,7 +1052,7 @@ class Fit_DataSet:
                     else:
                         linelist_for_sim.loc[line, param] = np.float(params[parameter])
             #Renames columns to generic (no scan number)
-            linelist_for_sim=linelist_for_sim.rename(columns = rename_dictionary) 
+            linelist_for_sim=linelist_for_sim.rename(columns = rename_dictionary)
             linelist_for_sim['sw'] = linelist_for_sim['sw']*linelist_for_sim['sw_scale_factor']
             for segment in list(set(spectrum.segments)):
                 wavenumbers = wavenumber_segments[segment]
@@ -1058,16 +1068,16 @@ class Fit_DataSet:
                         fit_molefraction[molecule] = np.float(params[('molefraction_'+ self.dataset.isotope_list[(molecule, 1)][4]) + '_' + str(spectrum_number) + '_' + str(segment)])
                 #Get Environmental Parameters
                 p = np.float(params['Pressure_' + str(spectrum_number) + '_' + str(segment)])
-                T = np.float(params['Temperature_' + str(spectrum_number) + '_' + str(segment)])               
+                T = np.float(params['Temperature_' + str(spectrum_number) + '_' + str(segment)])
                 #Simulate Spectra
-                
+
                 if self.beta_formalism == True:
                     fit_nu, fit_coef = HTP_wBeta_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
-                            p = p, T = T, molefraction = fit_molefraction, isotope_list = self.dataset.isotope_list, 
+                            p = p, T = T, molefraction = fit_molefraction, isotope_list = self.dataset.isotope_list,
                             natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
                 else:
                     fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
-                            p = p, T = T, molefraction = fit_molefraction, isotope_list = self.dataset.isotope_list, 
+                            p = p, T = T, molefraction = fit_molefraction, isotope_list = self.dataset.isotope_list,
                             natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
                 fit_coef = fit_coef * 1e6
                 ## CIA Calculation
@@ -1080,7 +1090,7 @@ class Fit_DataSet:
                         indices = [m.start() for m in re.finditer('_', param)]
                         spectrum_num = int(param[indices[1]+1:indices[2]])
                         segment_num = int(param[indices[2]+1:])
-                        if (spectrum_num == spectrum_number) and (segment_num == segment): 
+                        if (spectrum_num == spectrum_number) and (segment_num == segment):
                             baseline_param_array[ord(param[9:param.find('_',9)])-97] = np.float(params[param])
                 baseline_param_array = baseline_param_array[::-1] # reverses array to be used for polyval
                 baseline = np.polyval(baseline_param_array, wavenumbers_relative)
@@ -1099,7 +1109,7 @@ class Fit_DataSet:
                             fit_etalon_parameters[etalon_num]['phase'] = np.float(params[param])
                 etalons = len(wavenumbers)*[0]
                 for i in range(1, len(spectrum.etalons)+1):
-                    etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase']) 
+                    etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase'])
                 segment_alpha = baseline + etalons + fit_coef + CIA
                 #ILS_Function
                 if spectrum.ILS_function != None:
@@ -1117,11 +1127,11 @@ class Fit_DataSet:
                         weights = len(alpha_segments[segment])*[spectrum.weight]
                     else:
                         pt_by_pt_weights= 1 / (spectrum.tau_stats[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1])
-                        weights = spectrum.weight * pt_by_pt_weights                        
+                        weights = spectrum.weight * pt_by_pt_weights
                     residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = ((segment_alpha) - alpha_segments[segment])*weights
                 else:
                     residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = (segment_alpha) - alpha_segments[segment]
-                   
+
             total_simulated = np.append(total_simulated, simulated_spectra)
             total_residuals = np.append(total_residuals, residuals)
         total_residuals = np.asarray(total_residuals)
@@ -1129,7 +1139,7 @@ class Fit_DataSet:
         return total_residuals
     def fit_data(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', xtol = 1e-7, maxfev = 2000, ftol = 1e-7):
         """Uses the lmfit minimizer to do the fitting through the simulation model function.
-        
+
 
         Parameters
         ----------
@@ -1159,10 +1169,10 @@ class Fit_DataSet:
         result = minner.minimize(method = 'leastsq')#'
         return result
 
-        
+
     def residual_analysis(self, result, indv_resid_plot = False):
         """Updates the model and residual arrays in each spectrum object with the results of the fit and gives the option of generating the combined absorption and residual plot for each spectrum.
-        
+
 
         Parameters
         ----------
@@ -1179,7 +1189,7 @@ class Fit_DataSet:
 
 
             spectrum_residual, residual_array = np.split(residual_array, [len(spectrum.wavenumber)])
-            
+
             if self.weight_spectra:
                 if spectrum.tau_stats.all() == 0:
                     weights = len(spectrum_residual)*[spectrum.weight]
@@ -1189,15 +1199,15 @@ class Fit_DataSet:
                 if spectrum.weight == 0:
                     spectrum_residual = np.asarray(len(spectrum_residual)*[0])
                 else:
-                    spectrum_residual  = spectrum_residual / weights    
-            
+                    spectrum_residual  = spectrum_residual / weights
+
             spectrum.set_residuals(spectrum_residual)
             spectrum.set_model(spectrum_residual + spectrum.alpha)
             if indv_resid_plot:
                 spectrum.plot_model_residuals()
     def update_params(self, result, base_linelist_update_file = None , param_linelist_update_file = None):
-        """Updates the baseline and line parameter files based on fit results with the option to write over the file (default) or save as a new file and updates baseline values in the spectrum objects. 
-        
+        """Updates the baseline and line parameter files based on fit results with the option to write over the file (default) or save as a new file and updates baseline values in the spectrum objects.
+
 
         Parameters
         ----------
@@ -1214,7 +1224,7 @@ class Fit_DataSet:
             base_linelist_update_file = self.base_linelist_file
         if param_linelist_update_file == None:
             param_linelist_update_file = self.param_linelist_file
-        
+
         for key, par in result.params.items():
             if ('Pressure' in par.name) or ('Temperature' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
@@ -1224,7 +1234,7 @@ class Fit_DataSet:
                 self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
                 if par.vary:
                     self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
-                
+
             elif ('molefraction' in par.name) or ('baseline' in par.name) or ('x_shift' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
                 parameter = (par.name[:indices[1]])
@@ -1248,7 +1258,7 @@ class Fit_DataSet:
                 parameter = par.name[:par.name.find('_res_')] + '_res_' + par.name[par.name.find('_res_') + 5:][:indices[0]]
                 self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
                 if par.vary:
-                    self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr  
+                    self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
 
             else:
                 parameter = par.name[:par.name.find('_line')]
@@ -1259,8 +1269,8 @@ class Fit_DataSet:
         self.baseline_list.to_csv(base_linelist_update_file + '.csv', index = False)
         self.lineparam_list.to_csv(param_linelist_update_file + '.csv')
 
-                
-        
+
+
         #Calculate Baseline + Etalons and add to the Baseline term for each spectra
         for spectrum in self.dataset.spectra:
             wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
@@ -1292,7 +1302,7 @@ class Fit_DataSet:
             spectrum.set_background(baseline)
     def generate_beta_output_file(self, beta_summary_filename = None ):
         """ Generates a file that summarizes the beta values used in the fitting in the case that beta was used to correct the Dicke narrowing term (beta_formalism = True).
-        
+
 
         Parameters
         ----------
@@ -1318,7 +1328,7 @@ class Fit_DataSet:
             nu_constrain = True
             nuVC_constrain = True
 
-            
+
             if ((sum(('nu' in param) & ('nuVC' not in param) &( '_err' not in param) & ('_vary' not in param ) for param in beta_summary_list))) > 1:
                 nu_constrain = False
             if (self.dataset.get_number_nominal_temperatures()[0]) == 1:
@@ -1331,7 +1341,7 @@ class Fit_DataSet:
             #Add Column for mass
             for molec in beta_summary_list['molec_id'].unique():
                 for iso in beta_summary_list ['local_iso_id'].unique():
-                    beta_summary_list.loc[(beta_summary_list['molec_id']==molec) & (beta_summary_list['local_iso_id']==iso), 'm'] = molecularMass(molec,iso, isotope_list = self.dataset.isotope_list, ) 
+                    beta_summary_list.loc[(beta_summary_list['molec_id']==molec) & (beta_summary_list['local_iso_id']==iso), 'm'] = molecularMass(molec,iso, isotope_list = self.dataset.isotope_list, )
 
             #Single or MS for nu and nuVC
             for spectrum in self.dataset.spectra:
@@ -1339,7 +1349,7 @@ class Fit_DataSet:
                 mp = 0
                 for diluent in spectrum.Diluent:
                     mp += spectrum.Diluent[diluent]['composition']*spectrum.Diluent[diluent]['m']
-                
+
                 for segment in list(set(spectrum.segments)):
                     p = self.baseline_list[(self.baseline_list['Spectrum Number'] == spectrum.spectrum_number) & (self.baseline_list['Segment Number'] == segment)]['Pressure'].values[0]
                     T = self.baseline_list[(self.baseline_list['Spectrum Number'] == spectrum.spectrum_number) & (self.baseline_list['Segment Number'] == segment)]['Temperature'].values[0]
@@ -1348,16 +1358,16 @@ class Fit_DataSet:
 
                     beta_summary_list['alpha'] = mp / beta_summary_list['m']
                     if nu_constrain:
-                        GammaD = np.sqrt(2*k*Na*T*np.log(2)/(beta_summary_list['m'].values))*beta_summary_list['nu'] / c #change with nu
+                        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['m'].values))*beta_summary_list['nu'] / CONSTANTS['c']#change with nu
                     else:
-                        GammaD = np.sqrt(2*k*Na*T*np.log(2)/(beta_summary_list['m'].values))*beta_summary_list['nu' + '_' + str(spectrum.spectrum_number)] / c #change with nu
+                        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['m'].values))*beta_summary_list['nu' + '_' + str(spectrum.spectrum_number)] / CONSTANTS['c'] #change with nu
                     nuVC = len(GammaD)*[0]
                     for diluent in spectrum.Diluent:
                         abun = spectrum.Diluent[diluent]['composition']
                         if nuVC_constrain:
-                            nuVC += abun*(beta_summary_list['nuVC_%s'%diluent]*(p/1)*((296/T)**(beta_summary_list['n_nuVC_%s'%diluent]))) 
+                            nuVC += abun*(beta_summary_list['nuVC_%s'%diluent]*(p/1)*((296/T)**(beta_summary_list['n_nuVC_%s'%diluent])))
                         else:
-                            nuVC += abun*(beta_summary_list['nuVC_%s'%diluent]*(p/1)*((296/T)**(beta_summary_list['n_nuVC_%s_%s'%(diluent,str(spectrum.spectrum_number))]))) 
+                            nuVC += abun*(beta_summary_list['nuVC_%s'%diluent]*(p/1)*((296/T)**(beta_summary_list['n_nuVC_%s_%s'%(diluent,str(spectrum.spectrum_number))])))
                     Chi = nuVC/ GammaD
                     A = 0.0534 + 0.1585*np.exp(-0.451*beta_summary_list['alpha'].values)
                     B = 1.9595 - 0.1258*beta_summary_list['alpha'].values + 0.0056*beta_summary_list['alpha'].values**2 + 0.0050*beta_summary_list['alpha'].values**3
@@ -1375,4 +1385,4 @@ class Fit_DataSet:
                     select_columns.append(param)
             beta_summary_list = beta_summary_list[select_columns]
             #beta_summary_list  = beta_summary_list[(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max)]
-            beta_summary_list.to_csv(beta_summary_filename + '.csv')          
+            beta_summary_list.to_csv(beta_summary_filename + '.csv')

@@ -1,34 +1,34 @@
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib import gridspec
-from hapi import PYTIPS2017, pcqsdhc, ISO, ISO_INDEX
-from hapi import SLIT_MICHELSON, SLIT_DIFFRACTION, SLIT_COSINUS, SLIT_DISPERSION, SLIT_GAUSSIAN, SLIT_TRIANGULAR, SLIT_RECTANGULAR
-from bisect import bisect
-import re
-from lmfit import Parameters, Minimizer
-
+# import pandas as pd
+# import matplotlib.pyplot as plt
+# from matplotlib import gridspec
+# from .hapi import PYTIPS2017, pcqsdhc, ISO, ISO_INDEX
+from .hapi import ISO, ISO_INDEX, SLIT_RECTANGULAR
+#from .hapi import SLIT_MICHELSON, SLIT_DIFFRACTION, SLIT_COSINUS, SLIT_DISPERSION, SLIT_GAUSSIAN, SLIT_TRIANGULAR, SLIT_RECTANGULAR
+#from bisect import bisect
+#import re
+# from lmfit import Parameters, Minimizer
 
 
 #Constants
-h = 6.62607015e-27 #erg s https://physics.nist.gov/cgi-bin/cuu/Value?h|search_for=h as of 5/21/2020
-c = 29979245800 #cm/s # https://physics.nist.gov/cgi-bin/cuu/Value?c|search_for=c as of 5/21/2020
-k = 1.380649e-16 # erg / K https://physics.nist.gov/cgi-bin/cuu/Value?k as of 5/21/2020     
-Na = 6.02214076e23 # mol-1 https://physics.nist.gov/cgi-bin/cuu/Value?na as of 5/21/2020
-cpa_atm = (10*101325)**-1 #convert from cpa to atm  https://physics.nist.gov/cgi-bin/cuu/Value?stdatm|search_for=atmosphere as of 5/21/2020
-c2 =  (h*c)/k
+# h = 6.62607015e-27 #erg s https://physics.nist.gov/cgi-bin/cuu/Value?h|search_for=h as of 5/21/2020
+# c = 29979245800 #cm/s # https://physics.nist.gov/cgi-bin/cuu/Value?c|search_for=c as of 5/21/2020
+# k = 1.380649e-16 # erg / K https://physics.nist.gov/cgi-bin/cuu/Value?k as of 5/21/2020
+# Na = 6.02214076e23 # mol-1 https://physics.nist.gov/cgi-bin/cuu/Value?na as of 5/21/2020
+# cpa_atm = (10*101325)**-1 #convert from cpa to atm  https://physics.nist.gov/cgi-bin/cuu/Value?stdatm|search_for=atmosphere as of 5/21/2020
+# c2 =  (h*c)/k
 
 
-           
+
 def max_iter(pars, iter, resid, *args, **kws):
         if iter > 2500:
             return True
         else:
             return False
-                   
+
 def etalon(x, amp, period, phase):
     """Etalon definition
-    
+
 
     Parameters
     ----------
@@ -48,10 +48,10 @@ def etalon(x, amp, period, phase):
 
     """
 
-    return amp*np.sin((2*np.pi * period)*x+ phase)   
- 
+    return amp*np.sin((2*np.pi * period)*x+ phase)
+
 def hasNumbers(inputString):
-    """Determines whether there are numbers in a string    
+    """Determines whether there are numbers in a string
 
     Parameters
     ----------
@@ -72,21 +72,21 @@ def hasNumbers(inputString):
 
 def molecularMass(M,I, isotope_list = ISO):
     """ molecular mass look-up based on the HAPI definition adapted to allow used to specify ISO list
-    INPUT PARAMETERS: 
+    INPUT PARAMETERS:
         M: HITRAN molecule number
         I: HITRAN isotopologue number
-    OUTPUT PARAMETERS: 
+    OUTPUT PARAMETERS:
         MolMass: molecular mass
     ---
     DESCRIPTION:
         Return molecular mass of HITRAN isotolopogue.
-  
+
     """
     return isotope_list[(M,I)][ISO_INDEX['mass']]
 
 def isotope_list_molecules_isotopes(isotope_list = ISO):
     ''' The HITRAN style isotope list in the format (M,I), this function creates a dictionary from this with M as the keys and lists of I as values.
-    
+
 
     Parameters
     ----------
@@ -105,15 +105,15 @@ def isotope_list_molecules_isotopes(isotope_list = ISO):
         if MI[0] not in molecule_isotope_dictionary.keys():
             molecule_isotope_dictionary[MI[0]] = [MI[1]]
         else:
-            isotope_list = molecule_isotope_dictionary[MI[0]] 
+            isotope_list = molecule_isotope_dictionary[MI[0]]
             isotope_list.append(MI[1])
-            molecule_isotope_dictionary[MI[0]] = isotope_list    
+            molecule_isotope_dictionary[MI[0]] = isotope_list
     return molecule_isotope_dictionary
 
-def add_to_HITRANstyle_isotope_list(input_isotope_list = ISO, molec_id = 100, local_iso_id = 1, global_isotope_id = 200, iso_name = '', 
+def add_to_HITRANstyle_isotope_list(input_isotope_list = ISO, molec_id = 100, local_iso_id = 1, global_isotope_id = 200, iso_name = '',
                                     abundance = 1, mass = 1, mol_name = ''):
     '''  Allows for used to add to an existing isotope line list in the HITRAN format
-    
+
 
     Parameters
     ----------
@@ -141,7 +141,7 @@ def add_to_HITRANstyle_isotope_list(input_isotope_list = ISO, molec_id = 100, lo
 
     '''
     # check that there is not another entry
-    
+
     if (molec_id, local_iso_id) in input_isotope_list:
         print ('Already entry with that molec_id and local_iso_id.  This result will write over that entry.')
     elif (molec_id, 1) in  input_isotope_list:
@@ -154,9 +154,9 @@ def add_to_HITRANstyle_isotope_list(input_isotope_list = ISO, molec_id = 100, lo
         print ('There is another entry with this global isotope id.  Consider changing the value for consistency')
     output_isotope_list = input_isotope_list.copy()
     output_isotope_list[(molec_id, local_iso_id)] = [global_isotope_id, iso_name, abundance, mass, mol_name]
-    
-    
-    
+
+
+
     return output_isotope_list
 def arange_(lower,upper,step):
     '''
@@ -167,12 +167,12 @@ def arange_(lower,upper,step):
     upper_new = lower + step*(npnt-1)
     if abs((upper-upper_new)-step) < 1e-10:
         upper_new += step
-        npnt += 1   
+        npnt += 1
     return np.linspace(lower,upper_new,int(npnt))
 
 def convolveSpectrumSame(Omega,CrossSection,Resolution=0.1,AF_wing=10.,
                          SlitFunction=SLIT_RECTANGULAR,Wavenumber=None):
-    """ 
+    """
     Convolves cross section with a slit function with given parameters.
     Originally from HAPI 1.1.0.9.6 with correction to arange_ to prevent float/int error
     """
@@ -188,4 +188,3 @@ def convolveSpectrumSame(Omega,CrossSection,Resolution=0.1,AF_wing=10.,
     right_bnd = len(Omega)
     CrossSectionLowRes = np.convolve(CrossSection,slit,mode='same')*step
     return Omega[left_bnd:right_bnd],CrossSectionLowRes[left_bnd:right_bnd],left_bnd,right_bnd,slit
-        

@@ -1,14 +1,22 @@
 #Import Packages
-from Utilities import *
-from Fit_DataSet import HTP_from_DF_select, HTP_wBeta_from_DF_select
+#from .utilities import ...
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib import gridspec
 
+from .utilities import etalon, convolveSpectrumSame
+
+from .fit_dataset import HTP_from_DF_select, HTP_wBeta_from_DF_select
+from .hapi import ISO
+from .codata import CONSTANTS
 
 
 
 
 class Spectrum:
     """Spectrum class provides all information describing experimental or simulated spectrum.
-    
+
     Parameters
     ----------
     filename : str
@@ -52,24 +60,24 @@ class Spectrum:
     baseline_order : int, optional
         sets the baseline order for this spectrum. Allows you to change the baseline order across the broader dataset.()
     weight : float, optional,
-        set the weighting to used for the spectrum if using weighted fits.  This can be used to weight a whole spectrum in addition to the pt by pt weighting using the stats column.  
+        set the weighting to used for the spectrum if using weighted fits.  This can be used to weight a whole spectrum in addition to the pt by pt weighting using the stats column.
     ILS_function: string, optional
-        Default is None and means that no instrument line shape is used in the fitting.  
+        Default is None and means that no instrument line shape is used in the fitting.
         Function can be: SLIT_MICHELSON, SLIT_DIFFRACTION, SLIT_COSINUS, SLIT_DISPERSION, SLIT_GAUSSIAN, SLIT_TRIANGULAR, SLIT_RECTANGULAR corresponding to the ILS functions defined in HAPI or a user defined function.
-    ILS_resolution: float/array, optional   
+    ILS_resolution: float/array, optional
         Resolution is a float or array of ILS resolutions in wavenumbers.  The SlitFunctions defined in HAPI have 1 resolution, but this opens the option for the user defined function to be comprised of several functions with varying resolutions.  Default is 0.1 cm-1.
     ILS_wing: float/array, optional
-        AF_wing is the a float or array consisting of the range the ILS is calculted over in cm-1.  This is a single value fort he HAPI slit functions, but could be an array of multiple values for user-defined functions.  Default is 10 cm-1 
-    
+        AF_wing is the a float or array consisting of the range the ILS is calculted over in cm-1.  This is a single value fort he HAPI slit functions, but could be an array of multiple values for user-defined functions.  Default is 10 cm-1
+
     """
 
 
-    
-    def __init__(self, filename, molefraction = {}, natural_abundance = True, isotope_list = ISO, diluent = 'air', Diluent = {}, abundance_ratio_MI = {}, spectrum_number = 1, 
-                    input_freq = True, input_tau = True, 
-                    pressure_column = 'Cavity Pressure /Torr', temperature_column = 'Cavity Temperature Side 2 /C', frequency_column = 'Total Frequency /MHz', 
-                    tau_column = 'Mean tau/us', tau_stats_column = None, segment_column = None, 
-                    etalons = {}, nominal_temperature = 296, x_shift = 0, baseline_order = 1, weight = 1, 
+
+    def __init__(self, filename, molefraction = {}, natural_abundance = True, isotope_list = ISO, diluent = 'air', Diluent = {}, abundance_ratio_MI = {}, spectrum_number = 1,
+                    input_freq = True, input_tau = True,
+                    pressure_column = 'Cavity Pressure /Torr', temperature_column = 'Cavity Temperature Side 2 /C', frequency_column = 'Total Frequency /MHz',
+                    tau_column = 'Mean tau/us', tau_stats_column = None, segment_column = None,
+                    etalons = {}, nominal_temperature = 296, x_shift = 0, baseline_order = 1, weight = 1,
                     ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10):
         self.filename = filename
         self.molefraction = molefraction
@@ -80,19 +88,19 @@ class Spectrum:
         if Diluent == {}: #if Diluent was not set as the dictionary of various broadeners, then define dictionary with all of the broadening contribution coming from the diluent broadener
             if self.diluent == 'air':
                 self.Diluent = {self.diluent: {'composition':1, 'm': 28.95734}}
-            elif self.diluent == 'self': 
+            elif self.diluent == 'self':
                 self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
-                #mass will be set during HTP_wBeta_from_DF_select if necessary 
+                #mass will be set during HTP_wBeta_from_DF_select if necessary
                 print ("If using the self broadening term, then consider explicitly labeling the broadener (ie in an oxygen spectra use 'O2' instead of self).  This may avoid confusion in multiple species fits. ")
             else:
                 print ('If using the HTP_wBeta_from_DF_select then you need to go back and use the Diluent{diluent:{"composition": 1, "m": mass}} format')
                 self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
-                
-                
+
+
         else:
             self.Diluent = Diluent
             if 'self' in self.Diluent:
-                print ("You are using the 'self' term, consider explicitly labeling the broadener (ie in an oxygen spectra use 'O2' instead of 'self').  This may avoid confusion in multiple species fits. For single species fits it should not matter.")  
+                print ("You are using the 'self' term, consider explicitly labeling the broadener (ie in an oxygen spectra use 'O2' instead of 'self').  This may avoid confusion in multiple species fits. For single species fits it should not matter.")
                 print ("Double check that you did not include the equivalent of the self term explicitly (ie in an oxygen spectra having both 'O2' and 'self').")
         self.spectrum_number = spectrum_number
         self.pressure_column = pressure_column
@@ -113,27 +121,27 @@ class Spectrum:
         self.ILS_function = ILS_function
         self.ILS_resolution = ILS_resolution
         self.ILS_wing = ILS_wing
-        
+
 
         self.diluent_sum_check() # Makes sure that the diluent contributions sum to 1
-        
+
         #Defined from contents of file
         file_contents = pd.read_csv(self.filename + '.csv',float_precision = 'high')
         self.pressure = file_contents[self.pressure_column].mean() / 760
         self.temperature = file_contents[self.temperature_column].mean() + 273.15
         if self.input_freq:
             self.frequency = file_contents[self.frequency_column].values
-            self.wavenumber = self.frequency*10**6 / c
+            self.wavenumber = self.frequency*10**6 / CONSTANTS['c']
         else:
             self.wavenumber = file_contents[self.frequency_column].values
-            self.frequency = self.wavenumber*c / 10**6
+            self.frequency = self.wavenumber* CONSTANTS['c'] / 10**6
         if self.input_tau:
             self.tau = file_contents[self.tau_column].values
-            self.alpha = (self.tau*c / 1e12)**-1
+            self.alpha = (self.tau* CONSTANTS['c'] / 1e12)**-1
         else:
             self.alpha = file_contents[self.tau_column].values
-            self.tau = (self.alpha*c / 1e12)**-1
-            
+            self.tau = (self.alpha*CONSTANTS['c'] / 1e12)**-1
+
         if self.tau_stats_column != None:
             stats = file_contents[self.tau_stats_column].values
             stats= np.nan_to_num(stats)
@@ -145,15 +153,15 @@ class Spectrum:
         if self.segment_column != None:
             self.segments = file_contents[self.segment_column].values
         else:
-            self.segments = len(file_contents)*[1] 
+            self.segments = len(file_contents)*[1]
         self.model = len(self.alpha)*[0]
         self.residuals = self.alpha - self.model
         self.background = len(self.alpha)*[0]
         self.cia = len(self.alpha)*[0]
-    
+
     def diluent_sum_check(self):
         """Checks that if multiple broadeners are used that the contributions sum to one.
-               
+
 
         Returns
         -------
@@ -170,7 +178,7 @@ class Spectrum:
 
     def segment_wave_alpha(self):
         """Defines the wavenumber, alpha, and indices of spectrum that correspond to a given spectrum segment.
-        
+
 
         Returns
         -------
@@ -182,7 +190,7 @@ class Spectrum:
             dictionary where the key corresponds to a segment number and the values correspond to the array indices for that segment.
 
         """
-        
+
         wavenumber_segments = {}
         alpha_segments = {}
         indices_segments = {}
@@ -192,8 +200,8 @@ class Spectrum:
             wavenumber_segments[segment] = self.wavenumber[indices]
             alpha_segments[segment] = self.alpha[indices]
         return wavenumber_segments, alpha_segments, indices_segments
- 
-    ## GETTERS    
+
+    ## GETTERS
     def get_filename(self):
         return self.filename
     def get_molefraction(self):
@@ -239,7 +247,7 @@ class Spectrum:
     def get_nominal_temperature(self):
         return self.nominal_temperature
 
-    ##SETTERS 
+    ##SETTERS
     def set_weight(self, new_weight):
         self.weight = new_weight
         if new_weight == 0:
@@ -254,9 +262,9 @@ class Spectrum:
         self.diluent = new_diluent
         if self.diluent == 'air':
             self.Diluent = {self.diluent: {'composition':1, 'm': 28.95734}}
-        elif self.diluent == 'self': 
+        elif self.diluent == 'self':
             self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
-                #mass will be set during HTP_wBeta_from_DF_select if necessary 
+                #mass will be set during HTP_wBeta_from_DF_select if necessary
         else:
             print ('If using the HTP_wBeta_from_DF_select then you need to go back and use the Diluent{diluent:{"composition": 1, "m": mass}} format')
             self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
@@ -276,12 +284,12 @@ class Spectrum:
         self.frequency_column = new_frequency_column
         file_contents = pd.read_csv(self.filename + '.csv')
         self.frequency = file_contents[self.frequency_column].values
-        self.wavenumber = self.frequency*10**6 / c
+        self.wavenumber = self.frequency*10**6 / CONSTANTS['c']
     def set_tau_column(self, new_tau_column):
         self.tau_column = new_tau_column
         file_contents = pd.read_csv(self.filename + '.csv')
         self.tau = file_contents[self.tau_column].values
-        self.alpha = (self.tau*c*1e-12)**-1
+        self.alpha = (self.tau* CONSTANTS['c']*1e-12)**-1
     def set_tau_stats_column(self, new_tau_stats_column):
         self.tau_stats_column = new_tau_stats_column
         file_contents = pd.read_csv(self.filename + '.csv')
@@ -290,25 +298,25 @@ class Spectrum:
         median_tau_stats = np.median(stats [stats  > 0])
         stats[stats <= 0] = median_tau_stats
         self.tau_stats = stats
-        
+
     def set_etalons(self, new_etalons):
         self.etalons = new_etalons
     def set_model(self, new_model):
         self.model = new_model
     def set_residuals(self, new_residuals):
-        self.residuals = new_residuals     
+        self.residuals = new_residuals
     def set_background(self, new_background):
         self.background = new_background
     def set_cia(self, new_cia):
         self.cia = new_cia
     def set_nominal_temperature(self, new_nominal_temperature):
-        self.nominal_temperature = new_nominal_temperature 
+        self.nominal_temperature = new_nominal_temperature
 
     ##Other Functions
     def plot_freq_tau(self):
         """Generates a plot of tau (us) as a function of frequency (MHz).
         """
-        
+
         plt.plot(self.frequency, self.tau)
         plt.xlabel('Frequency (MHz)')
         plt.ylabel('$\\tau (\mu s)$')
@@ -317,7 +325,7 @@ class Spectrum:
     def plot_wave_alpha(self):
         """Generates a plot of alpha (ppm/cm) as a function of wavenumber (cm-1).
         """
-        
+
         plt.plot(self.wavenumber, self.alpha)
         plt.xlabel('Wavenumber ($cm^{-1}$)')
         plt.ylabel('$\\alpha (\\frac{ppm}{cm})$')
@@ -338,7 +346,7 @@ class Spectrum:
     def plot_model_residuals(self):
         """Generates a plot of the alpha and model (ppm/cm) as a function of wavenumber (cm-1) and on lower plot shows the residuals (ppm/cm) as a function of wavenumber (cm-1).
         """
-        
+
         fig = plt.figure(figsize = (16,10))
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
         QF = self.calculate_QF()
@@ -358,7 +366,7 @@ class Spectrum:
 
     def save_spectrum_info(self, save_file = False):
         """Saves spectrum information to a pandas dataframe with option to also save as as a csv file.
-        
+
 
         Parameters
         ----------
@@ -372,7 +380,7 @@ class Spectrum:
 
         """
 
-        file_contents = pd.read_csv(self.filename + '.csv')       
+        file_contents = pd.read_csv(self.filename + '.csv')
         new_file = pd.DataFrame()
         new_file['Spectrum Number'] = [self.spectrum_number]*len(self.alpha)
         new_file['Spectrum Name'] = [self.filename]*len(self.alpha)
@@ -387,18 +395,18 @@ class Spectrum:
         new_file['Residuals (ppm/cm)'] = self.residuals
         new_file['QF'] = [self.calculate_QF()]*len(new_file)
         new_file['Background'] = self.background
-        new_file['CIA (ppm/cm)'] = self.cia 
+        new_file['CIA (ppm/cm)'] = self.cia
         if save_file:
             new_file.to_csv(self.filename + '_saved.csv', index = False)
         return (new_file)
 
     def fft_spectrum(self):
-        
-        """Takes the FFT of the residuals of the spectrum, generates a plot of frequency (cm-1) versus amplitude (ppm/cm), and prints a dataframe with the 20 highest amplitude frequencies with the FFT frequency (period), amplitude, FFT phase, and frequency (cm-1).  
-     
+
+        """Takes the FFT of the residuals of the spectrum, generates a plot of frequency (cm-1) versus amplitude (ppm/cm), and prints a dataframe with the 20 highest amplitude frequencies with the FFT frequency (period), amplitude, FFT phase, and frequency (cm-1).
+
         """
 
-        
+
         wave = self.wavenumber
         y = self.residuals
         wave_step = wave[1] - wave[0]
@@ -421,16 +429,16 @@ class Spectrum:
         plt.ylabel('Amplitude (ppm/cm')
         plt.show()
 
-def simulate_spectrum(parameter_linelist, 
-                        wave_min=None, wave_max= None, wave_space=None, wavenumbers = [],  wave_error = 0, 
-                        SNR = None, baseline_terms = [0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760, 
-                        pressure_err = {'per_bias': 0, 'function': None, 'params': {}}, 
+def simulate_spectrum(parameter_linelist,
+                        wave_min=None, wave_max= None, wave_space=None, wavenumbers = [],  wave_error = 0,
+                        SNR = None, baseline_terms = [0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760,
+                        pressure_err = {'per_bias': 0, 'function': None, 'params': {}},
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
-                        isotope_list = ISO, natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {}, 
-                        nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False, 
+                        isotope_list = ISO, natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {},
+                        nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False,
                         ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10):
     """Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.
-    
+
 
     Parameters
     ----------
@@ -493,13 +501,13 @@ def simulate_spectrum(parameter_linelist,
     beta_formalism : boolean, optional
         Indicates whether the beta correction for Dicke Narrowing should be used.  The default is False.
     ILS_function: string, optional
-        Default is None and means that no instrument line shape is used in the fitting.  
+        Default is None and means that no instrument line shape is used in the fitting.
         Function can be: SLIT_MICHELSON, SLIT_DIFFRACTION, SLIT_COSINUS, SLIT_DISPERSION, SLIT_GAUSSIAN, SLIT_TRIANGULAR, SLIT_RECTANGULAR corresponding to the ILS functions defined in HAPI or a user defined function.
-    ILS_resolution: float/array, optional   
+    ILS_resolution: float/array, optional
         Resolution is a float or array of ILS resolutions in wavenumbers.  The SlitFunctions defined in HAPI have 1 resolution, but this opens the option for the user defined function to be comprised of several functions with varying resolutions.  Default is 0.1 cm-1.
     ILS_wing: float, optional
-        AF_wing is the a float consisting of the range the ILS is calculted over in cm-1. Default is 10 cm-1 
-    
+        AF_wing is the a float consisting of the range the ILS is calculted over in cm-1. Default is 10 cm-1
+
     Returns
     -------
     spectrum_file : .csv
@@ -509,7 +517,7 @@ def simulate_spectrum(parameter_linelist,
 
     """
 
-    #Checks to make a Diluent dictionary has been assigned    
+    #Checks to make a Diluent dictionary has been assigned
     if not Diluent:
          if diluent == 'air':
              Diluent = {diluent: {'composition':1, 'm':28.95734}}
@@ -535,14 +543,14 @@ def simulate_spectrum(parameter_linelist,
     dataset_molecule_list = list(molefraction.keys())
     molecules_in_paramlist = parameter_linelist['molec_id'].unique()
     for i in range(0, len(molecules_in_paramlist)):
-        dataset_molecule_list.append(molecules_in_paramlist[i]) 
+        dataset_molecule_list.append(molecules_in_paramlist[i])
     dataset_molecule_list = list(set(dataset_molecule_list))
     for molecule in dataset_molecule_list:
         if molecule not in molefraction:
             molefraction[molecule] = 0
 
-    
-    molefraction_w_error = {}        
+
+    molefraction_w_error = {}
     for species in molefraction:
         if molefraction_err == {}:
             molefraction_err[species] = 0
@@ -551,16 +559,16 @@ def simulate_spectrum(parameter_linelist,
         molefraction_w_error[species] = molefraction[species] + molefraction[species]*(molefraction_err[species]/100)
     #pressure error
     pressure_w_error = pressure_atm + pressure_atm*(pressure_err['per_bias']/100)#adds the pressure bias based on the percent bias of the pressure measaurement.  Can loop this or set this to be constant for all spectra
-    pressure_w_error = len(wavenumbers)*[pressure_w_error]   
+    pressure_w_error = len(wavenumbers)*[pressure_w_error]
     if pressure_err['function'] == 'linear':
         if 'params' in pressure_err:
             pressure_w_error += pressure_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + pressure_err['params']['b']
     elif pressure_err['function'] == 'sine':
         if 'params' in pressure_err:
             pressure_w_error += etalon((wavenumbers-np.min(wavenumbers)), pressure_err['params']['amp'], pressure_err['params']['period'], pressure_err['params']['phase'])
-    #temperature error  
+    #temperature error
     temperature_w_error = temperature_K + temperature_err['bias']
-    temperature_w_error = len(wavenumbers)*[temperature_w_error] 
+    temperature_w_error = len(wavenumbers)*[temperature_w_error]
     if temperature_err['function'] == 'linear':
         if 'params' in pressure_err:
             temperature_w_error += temperature_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + temperature_err['params']['b']
@@ -585,12 +593,12 @@ def simulate_spectrum(parameter_linelist,
         if beta_formalism:
             waves, alpha = HTP_wBeta_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
                                 p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, isotope_list = isotope_list,
-                                natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,  
+                                natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,
                                 Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold)
         else:
             waves, alpha = HTP_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
                     p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, isotope_list = isotope_list,
-                    natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,  
+                    natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,
                     Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold)
         alpha_array[np.min(segment_array): np.max(segment_array)+1] = alpha * 1e6
 
@@ -598,7 +606,7 @@ def simulate_spectrum(parameter_linelist,
         temperature_array[np.min(segment_array): np.max(segment_array)+1] = len(alpha)*[segment_temperature]
     pressure_array = np.asarray(pressure_array) - pressure_atm*(pressure_err['per_bias'] / 100)
     temperature_array = np.asarray(temperature_array) - temperature_err['bias']
-    
+
     #Calculate Baseline
     baseline = np.polyval(baseline_terms, wavenumbers -np.min(wavenumbers) )
     # Calculate Etalons
@@ -608,23 +616,23 @@ def simulate_spectrum(parameter_linelist,
         period = etalons[r][1]
         phase = np.random.rand()
         x = wavenumbers - np.min(wavenumbers)
-        etalon_model += amp*np.sin((2*np.pi * period)*x+ phase) 
+        etalon_model += amp*np.sin((2*np.pi * period)*x+ phase)
     alpha_array += (baseline + etalon_model)
     if ILS_function != None:
-        wavenumbers, alpha_array, i1, i2m, slit = convolveSpectrumSame(wavenumbers, alpha_array, SlitFunction = ILS_function, Resolution = ILS_resolution ,AF_wing=ILS_wing)  
+        wavenumbers, alpha_array, i1, i2m, slit = convolveSpectrumSame(wavenumbers, alpha_array, SlitFunction = ILS_function, Resolution = ILS_resolution ,AF_wing=ILS_wing)
     #Calculate Noisy Spectrum
     if SNR == None:
         alpha_noise = alpha_array
-    else:   
+    else:
         alpha_noise = alpha_array + np.max(alpha_array)*np.random.normal(loc = 0, scale =1, size = len(alpha_array))*1/SNR
- 
-    
+
+
     #Generate and save Simulated Spectrum File
     spectrum = pd.DataFrame()
     spectrum['Segment Number'] = seg_number
     spectrum['Wavenumber (cm-1)'] = wavenumbers
     spectrum['Wavenumber + Noise (cm-1)'] = wavenumbers_err
-    spectrum['Alpha (ppm/cm)'] = alpha_array 
+    spectrum['Alpha (ppm/cm)'] = alpha_array
     spectrum['Alpha + Noise (ppm/cm)'] = alpha_noise
     spectrum['Noise (%)'] = 100 *(alpha_noise - (alpha_array + baseline + etalon_model)) / np.max(alpha_noise)
     spectrum['Pressure (Torr)'] = pressure_array*760
@@ -632,8 +640,8 @@ def simulate_spectrum(parameter_linelist,
     spectrum.to_csv(filename + '.csv', index = False)
     # Returns a spectrum class object for facile integration into the fitting workflow
     return Spectrum(filename, molefraction = molefraction, natural_abundance = natural_abundance, diluent = diluent, Diluent = Diluent, abundance_ratio_MI = abundance_ratio_MI, isotope_list = isotope_list,
-                    spectrum_number = 1, input_freq = False, input_tau = False, 
-                pressure_column = 'Pressure (Torr)', temperature_column = 'Temperature (C)', frequency_column = 'Wavenumber + Noise (cm-1)', 
+                    spectrum_number = 1, input_freq = False, input_tau = False,
+                pressure_column = 'Pressure (Torr)', temperature_column = 'Temperature (C)', frequency_column = 'Wavenumber + Noise (cm-1)',
                 tau_column = 'Alpha + Noise (ppm/cm)', tau_stats_column = 'Noise (%)', segment_column = 'Segment Number',
-                etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1, weight = 1, 
+                etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1, weight = 1,
                 ILS_function = ILS_function, ILS_resolution = ILS_resolution ,ILS_wing=ILS_wing)
