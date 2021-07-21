@@ -27,3 +27,11 @@ This requires git also be installed.
 ``` shell
 pip install git+https://github.com/wpk-nist-gov/MATS.git@feature/master-reformat
 ```
+
+# With pip from github using wheel
+Note, this is experimental.  Do the following
+
+
+``` shell
+pip install https://raw.githubusercontent.com/wpk-nist-gov/MATS/feature/master-reformat/wheel/MATS-3.dev6+g0d2dc84-py3-none-any.whl
+```
