@@ -22,7 +22,7 @@ To install an editable version, use option `-e`.  To exclude dependencies, use o
 
 # With pip from github
 
-This requires git also be installed.
+This requires git also be installed.  Downside is that the whole repo (including all examples) are clones.
 
 ``` shell
 pip install git+https://github.com/wpk-nist-gov/MATS.git@feature/master-reformat
@@ -43,3 +43,10 @@ Alternatively, download the wheel and run
 ``` shell
 pip install path-to-wheel.whl
 ```
+
+
+# Install everything with pip
+
+(Still testing)
+
+Just run the pip install command to install everything (sans python) with pip.
