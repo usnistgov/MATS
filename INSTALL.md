@@ -1,13 +1,20 @@
-Basic `MATS` installation instructions.
+Basic `MATS` installation instructions.  Note that development is alpha.  In the future, full pypi/conda installs will be made available.
 
-# Create a conda environment with everything you need
+# Create a conda environment with MATS dependencies
 
 Download the [environment](environment.yml) file.  Note that without setting the environment name below,
 by default an evironment `MATS-env` will be created.
 
 
 ``` shell
-conda create -n {optional-name-of-environment} -f environment.yml
+conda env create -n {optional-name-of-environment} -f environment.yml
+```
+
+Alternatively, we provide a conda metapackage `mats-dependencies`, which includes all dependencies for `MATS`` (excluding python).
+This can be installed using
+
+``` shell
+conda install -n {optional-name-of-environment} -c wpk-nist mats-dependencies
 ```
 
 # From source

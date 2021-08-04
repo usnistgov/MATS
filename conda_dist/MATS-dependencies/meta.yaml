@@ -1,0 +1,45 @@
+{% set name = "MATS" %}
+{% set version = "0.0.1" %}
+
+
+package:
+  name: {{ name|lower }}-dependencies
+  version: {{ version }}
+
+
+build:
+  entry_points: []
+  number: 0
+  noarch: python
+  string: 'py_0'
+
+requirements:
+  build: []
+  run:
+    - setuptools>=38.4
+    # required packages
+    - numpy
+    - pandas
+    - lmfit
+    - matplotlib
+    - seaborn
+    - scipy
+    # optional
+    - qgrid
+    # - jupyter
+    # - pip
+    - mpmath
+    - jupyter
+
+
+about:
+  home: https://github.com/usnistgov/MATS
+  summary: Dependencies for MATS, A NIST based multi-spectrum fitting tool for spectroscopic data
+  license: MIT
+
+
+extra:
+  copy_test_source_files: true
+  final: true
+  recipe-maintainers:
+    - wpk
