@@ -1,0 +1,2 @@
+molec_id,local_iso_id,nu,sw,a,elower,global_upper_quanta,global_lower_quanta,local_lower_quanta,gamma0_air,n_gamma0_air,delta0_air,n_delta0_air,SD_gamma_air,n_gamma2_air,SD_delta_air,n_delta2_air,nuVC_air,n_nuVC_air,eta_air,y_air_296,Branch,J,m
+2,1,6359.967246,1.76E-23,0.007467,106.1297,30012,1,R16e,0.074491634,0.67,-0.005407741,0,0.0884,0.67,0.055,0,0.003099312,1,0,0,R,16,17
