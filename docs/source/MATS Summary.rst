@@ -3,9 +3,19 @@ MATS Summary
 
 In multi-spectrum fitting, there are a collection of spectra modeled by the same line-by-line spectroscopic parameters, but each spectrum might vary in pressure, temperature, and sample composition.  
 
-The MATS program is based on :py:class:`Spectrum` objects, which are defined not only by their wavenumber and absorption data, but also information on the spectrum pressure, temperature, baseline characteristics, and sample composition.  In addition to utilizing real spectra, MATS has a :py:func:`Spectrum.simulate_spectrum` function, which returns a spectrum object calculated from input simulation parameters.  This is useful for performing error analysis in the same framework as primary data analysis by simply switching from experimental to simulated :py:class:`Spectrum` objects.  These :py:class:`Spectrum` objects are combined to form a :py:class:`Dataset` object, which is the collection of spectra that are being analyzed together in the multi-spectrum analysis.  
+.. currentmodule:: MATS.spectrum
+
+The MATS program is based on :py:class:`Spectrum` objects, which are defined not only by their wavenumber and absorption data, but also information on the spectrum pressure, temperature, baseline characteristics, and sample composition.  In addition to utilizing real spectra, MATS has a :py:func:`simulate_spectrum` function, which returns a spectrum object calculated from input simulation parameters.  This is useful for performing error analysis in the same framework as primary data analysis by simply switching from experimental to simulated :py:class:`Spectrum` objects.  
+
+.. currentmodule:: MATS.dataset
+
+These objects are combined to form a :py:class:`Dataset` object, which is the collection of spectra that are being analyzed together in the multi-spectrum analysis.  
+
+.. currentmodule:: MATS.generate_fitparam_file
 
 There are two files that contain parameters that are fit in this model, one for spectrum dependent parameters (polynomial baseline parameters, etalons, sample composition, and x-shift term) and the other for line-by-line spectroscopic parameters that are common across all spectra.  These files are saved as .csv files with a column for each parameter and with rows corresponding to either the spectrum number or spectral line number.  In addition to the columns containing the values for the fit parameters, there are two additional columns for each fittable parameter called param_vary and param_err.  The param_vary column is a boolean  (True/False) flag that is toggled to indicate whether a given parameter will be varied in the fit.  The param_err column will be set to zero initially and replaced with the standard error for the parameter determined by the fit results.  Calls of the :py:class:`Generate_FitParam_File` class not only make these input files, but also set the line shape and define whether a parameter should be varied in the fit and if a parameter should be constrained across all spectra or allowed to vary by spectrum. 
+
+.. currentmodule:: MATS.fit_dataset
 
 Finally, the :py:class:`Fit_DataSet` class fits the spectra.  Additionally, it allows the user to impose constraints on the parameters (min and max values), impose convergence criteria, update background and parameter line lists, and plot fit results.  
 
@@ -14,7 +24,7 @@ Below is the sparse documentation for each of the classes and main functions in 
 Spectrum Class and Objects
 ++++++++++++++++++++++++++
 
-.. currentmodule:: Spectrum
+.. currentmodule:: MATS.spectrum
 
 .. autosummary::
    Spectrum
@@ -30,7 +40,7 @@ Spectrum Class and Objects
    
 Line-by-line Model
 ++++++++++++++++++++++++++++++++++++
-The line-by-line model is based on the HTP code provided in the `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_.  For the most part the conventions and definitions used by HITRAN are used in the MATS program.  However, for some of the advanced line profile parameters the naming convention and temperature dependence is different.  In the sections below, the temperature and pressure dependence of the various parameters is outlined for clarity.
+The line-by-line model is based on the HTP code provided in the `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_.  For the most part the conventions and definitions used by HITRAN are used in the MATS program.  However, for some of the advanced line profile parameters the naming convention and temperature dependence is different.  In the sections below, the temperature and pressure dependence of the various parameters is outlined for clarity.  Additionally, MATS uses the CODATA values for calculations.
 
 The Hartmann-Tran profile limiting cases that correspond to several commonly used line profiles.  These limiting cases are achieved by setting line shape parameters equal to 0. The list below indicates the parameters that are not fixed equal to zero in each of the HTP limiting case line shapes.  For more information about the HTP see the following references: `Recommended isolated-line profile for representing high-resolution spectroscopic transitions (IUPAC Technical Report) <https://www.degruyter.com/view/journals/pac/86/12/article-p1931.xml>`_ and `An isolated line-shape model to go beyond the Voigt profile in spectroscopic databases and radiative transfer codes <https://www.sciencedirect.com/science/article/pii/S0022407313002422>`_
 
@@ -47,7 +57,7 @@ Hartmann-Tran (HTP): :math:`\Gamma_{D}, \Gamma_{0}, \Delta_{0}, \nu_{VC}, \Gamma
 
 Line Intensity
 --------------
-The line intensity for each line at the experimental temperature is calculated using the EnvironmentDependency_Intensity function in HAPI.  This function takes as arguments the line intensity at 296 K (:math:`S(T_{ref})`), the experimental temperature (:math:`T`), the reference temperature 296 K (:math:`T_{ref}`), the partition function at the experimental temperature (:math:`Q(T)`), the partition function at the reference temperature (:math:`Q(T_{ref})`), the lower state energy (:math:`E"`), and the line center ((:math:`\nu`)), and constant (:math:`c2 = hc/k` = 1.4388028496642257).  The partition functions are calculated using `TIPS-2017 <http://dx.doi.org/10.1016/j.jqsrt.2017.03.045>`_. Constants are defined by CODATA values
+The line intensity for each line at the experimental temperature is calculated using the EnvironmentDependency_Intensity function in HAPI.  This function takes as arguments the line intensity at 296 K (:math:`S(T_{ref})`), the experimental temperature (:math:`T`), the reference temperature 296 K (:math:`T_{ref}`), the partition function at the experimental temperature (:math:`Q(T)`), the partition function at the reference temperature (:math:`Q(T_{ref})`), the lower state energy (:math:`E"`), and the line center ((:math:`\nu`)), and constant (:math:`c2 = hc/k`).  The partition functions are calculated using `TIPS-2017 <http://dx.doi.org/10.1016/j.jqsrt.2017.03.045>`_. Constants are defined by CODATA values
 
 .. math::
 
@@ -143,7 +153,10 @@ In MATS nomenclature, the correlation parameter is referred to as eta_diluent.
 
 Line Mixing
 -----------
-The nearest-neighbor line mixing (:math:`Y`) can be calculated from the imaginary portion of any of the HTP derivative line profiles.  Currently, there is no temperature dependence imposed on the line mixing, so there a different value is used for each nominal temperature, where the nominal temperature is specified in the :py:class:`MATS.Spectrum` definition.  However, contributions from each diluent (:math:`k`) can be scaled by the diluent composition fraction (:math:`abun`) and  summed to model the ensemble line mixing.  
+
+.. currentmodule:: MATS.spectrum
+
+The nearest-neighbor line mixing (:math:`Y`) can be calculated from the imaginary portion of any of the HTP derivative line profiles.  Currently, there is no temperature dependence imposed on the line mixing, so there a different value is used for each nominal temperature, where the nominal temperature is specified in the :py:class:`Spectrum` definition.  However, contributions from each diluent (:math:`k`) can be scaled by the diluent composition fraction (:math:`abun`) and  summed to model the ensemble line mixing.  
 
 .. math::
 
@@ -160,7 +173,7 @@ In MATS nomenclature, the line mixing parameter is referred to as y_diluent_nomi
 Line-by-line Models
 -------------------
 
-.. currentmodule:: Fit_DataSet
+.. currentmodule:: MATS.fit_dataset
 
 .. autosummary::
    HTP_from_DF_select
@@ -170,7 +183,7 @@ Line-by-line Models
 Dataset Class
 ++++++++++++++
 
-.. currentmodule:: Dataset
+.. currentmodule:: MATS.dataset
 
 .. autosummary::
    Dataset
@@ -183,7 +196,7 @@ Dataset Class
    
 Generate FitParam File Class
 ++++++++++++++++++++++++++++
-.. currentmodule:: Generate_FitParam_File
+.. currentmodule:: MATS.generate_fitparam_file
 
 .. autosummary::
    Generate_FitParam_File
@@ -195,7 +208,7 @@ Generate FitParam File Class
 Fit DataSet Class
 +++++++++++++++++
 
-.. currentmodule:: Fit_DataSet
+.. currentmodule:: MATS.fit_dataset
 
 .. autosummary::
    Fit_DataSet
@@ -206,13 +219,19 @@ Fit DataSet Class
    Fit_DataSet.simulation_model
    Fit_DataSet.update_params
    
-Utility Functions
-+++++++++++++++++
-
-.. currentmodule:: Utilities
+Support Modules
++++++++++++++++
+   
+.. currentmodule:: MATS.utilities
 
 .. autosummary::
    etalon
    molecularMass
    isotope_list_molecules_isotopes 
    add_to_HITRANstyle_isotope_list
+
+.. currentmodule:: MATS.linelistdata
+
+.. autosummary::
+   LoadLineListData
+   

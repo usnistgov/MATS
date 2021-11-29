@@ -1,6 +1,24 @@
 MATS Version Summary
 ====================
 
+MATS Version 2.1
+++++++++++++++++
+published on 11/29/2021
+
+**Focus of version update is cleanup to make package git installable**
+
+- renamed python files to lowercase, as this is the preferred python style.
+- added __init__.py to include the most important functionality at the top level
+- reformatted constants.  Added codata.py file with includes CODATA dictionary (with values and metadata) and CONSTANTS dictionary (with only values)
+- Added linelistdata.py file to autoload csv files from MATS/LineList.
+- Got rid of all `from package import *` commands.  Use explicit imports only
+- Reworked example notebooks to reflect updates.
+- Added INSTALL.md file to explain the install options.  
+
+
+
+
+
 MATS Version 2
 ++++++++++++++
 published on 6/10/2021

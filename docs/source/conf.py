@@ -17,24 +17,7 @@ sys.path.insert(0,"C:\\Users\\ema3\\Documents\\MATS\\MATS")
 
 
 
-# NIST required stuff
-'''
-def setup(app):
-    #NIST header and footer
-    app.add_stylesheet('https://pages.nist.gov/nist-header-footer/css/nist-combined.css')
-    app.add_javascript('https://pages.nist.gov/nist-header-footer/js/jquery-1.9.0.min.js')
-    app.add_javascript('https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js')
-    
-    #Google analytics
-    app.add_javascript('https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-42404149-54&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c',id='_fed_an_ua_tag')
-    
-    #LeaveNotice
-    app.add_javascript('https://code.jquery.com/jquery.1.12.4.min.js')
-    app.add_javascript('https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js')
-    app.add_stylesheet('https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css')
-    app.add_javascript('leave_notice.js')
-    return
-'''
+
 
 # -- Project information -----------------------------------------------------
 
@@ -45,8 +28,8 @@ html_show_copyright = False
 
 # The full version, including alpha/beta/rc tags
 
-version = '2.0'
-release = '2.0'
+version = '2.1'
+release = '2.1'
 
 
 # -- General configuration ---------------------------------------------------
