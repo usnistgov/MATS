@@ -1,22 +1,5 @@
 import numpy as np
-# import pandas as pd
-# import matplotlib.pyplot as plt
-# from matplotlib import gridspec
-# from .hapi import PYTIPS2017, pcqsdhc, ISO, ISO_INDEX
 from .hapi import ISO, ISO_INDEX, SLIT_RECTANGULAR
-#from .hapi import SLIT_MICHELSON, SLIT_DIFFRACTION, SLIT_COSINUS, SLIT_DISPERSION, SLIT_GAUSSIAN, SLIT_TRIANGULAR, SLIT_RECTANGULAR
-#from bisect import bisect
-#import re
-# from lmfit import Parameters, Minimizer
-
-
-#Constants
-# h = 6.62607015e-27 #erg s https://physics.nist.gov/cgi-bin/cuu/Value?h|search_for=h as of 5/21/2020
-# c = 29979245800 #cm/s # https://physics.nist.gov/cgi-bin/cuu/Value?c|search_for=c as of 5/21/2020
-# k = 1.380649e-16 # erg / K https://physics.nist.gov/cgi-bin/cuu/Value?k as of 5/21/2020
-# Na = 6.02214076e23 # mol-1 https://physics.nist.gov/cgi-bin/cuu/Value?na as of 5/21/2020
-# cpa_atm = (10*101325)**-1 #convert from cpa to atm  https://physics.nist.gov/cgi-bin/cuu/Value?stdatm|search_for=atmosphere as of 5/21/2020
-# c2 =  (h*c)/k
 
 
 

@@ -29,10 +29,8 @@ class LoadLineListData(object):
     """
     # _names = [
     #     "O2_ABand_Drouin_2017_linelist",
-    #     "O2_ABand_Long_2010_linelist",
-    #     "O2_SingletDelta_HITRAN",
-    #     "O2_SingletDelta_Mendonca",
-    #     "CO2_30012_NIST",
+    #     "JQSRT2021_SDNGP_2015",
+    #     "CO2_30012",
     # ]
 
     # _prefix_web = (

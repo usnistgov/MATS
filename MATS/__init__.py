@@ -20,7 +20,6 @@ from .dataset import Dataset
 from .generate_fitparam_file import Generate_FitParam_File
 from .fit_dataset import Fit_DataSet
 from .utilities import add_to_HITRANstyle_isotope_list
-
 from .linelistdata import linelistdata
 
 try:
