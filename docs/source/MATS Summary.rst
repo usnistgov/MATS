@@ -11,6 +11,11 @@ The MATS program is based on :py:class:`Spectrum` objects, which are defined not
 
 These objects are combined to form a :py:class:`Dataset` object, which is the collection of spectra that are being analyzed together in the multi-spectrum analysis.  
 
+.. currentmodule:: MATS.linelistdata
+
+The analysis of spectra in MATS requires an inital spectroscopic linelist.  Details about the format of this linelist and how to generate it using the HITRAN Application Programming Interface are outlined on the  :doc:`Generating Parameter Line lists` page.  A few example line lists have been provided in the `Line list folder <https://github.com/usnistgov/MATS/tree/master/MATS/Linelists>`_ , which can be accessed using the :py:func:`LoadLineListData` helper function.  It should be noted that these linelists are provided for use with the examples and to provide an example of line list formatting.  These linelists should not be used as reference data.
+
+
 .. currentmodule:: MATS.generate_fitparam_file
 
 There are two files that contain parameters that are fit in this model, one for spectrum dependent parameters (polynomial baseline parameters, etalons, sample composition, and x-shift term) and the other for line-by-line spectroscopic parameters that are common across all spectra.  These files are saved as .csv files with a column for each parameter and with rows corresponding to either the spectrum number or spectral line number.  In addition to the columns containing the values for the fit parameters, there are two additional columns for each fittable parameter called param_vary and param_err.  The param_vary column is a boolean  (True/False) flag that is toggled to indicate whether a given parameter will be varied in the fit.  The param_err column will be set to zero initially and replaced with the standard error for the parameter determined by the fit results.  Calls of the :py:class:`Generate_FitParam_File` class not only make these input files, but also set the line shape and define whether a parameter should be varied in the fit and if a parameter should be constrained across all spectra or allowed to vary by spectrum. 

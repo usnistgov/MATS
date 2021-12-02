@@ -13,33 +13,36 @@ This example starts with importing modules and setting up file locations
 
 .. code:: ipython3
 
-   import numpy as np
-   import pandas as pd
-   import os, sys
-   import matplotlib.pyplot as plt
-   from matplotlib import gridspec
+	import numpy as np
+	import pandas as pd
+	import os, sys
+	import matplotlib.pyplot as plt
+	from matplotlib import gridspec
+	%matplotlib inline
+	import MATS
+	
 
-Append the system path to include the location of both the hapi and MATS modules
+Optional import of seaborn package for figure generation
 
 .. code:: ipython3
 
-   sys.path.append(r'C:\Users\Documents\MATS\MATS')# set location of HAPI.py module
+	import seaborn as sns
+	sns.set_style("whitegrid")
+	sns.set_style("ticks")
+	sns.set_context("poster")
 
-   from hapi import *
-   from MATS import *
   
-Change the path to the working directory that contains experimental spectra or to the folder that you want to work in.
+If not working within the MATS file structure, change the path to the working directory that contains experimental spectra or to the folder that you want to work in.
 
 .. code:: ipython3
 
-   path = r'C:\Users\Documents\MATS\MATS\Examples\Experimental_Spectra'
    os.chdir(path)
   
  
    
 Load Spectra from files
 +++++++++++++++++++++++
-.. currentmodule:: Spectrum
+.. currentmodule:: MATS.spectrum
 
 There are two options for generating :py:class:`Spectrum` objects.  The first is from a file by instantiating an instance of the class, which is the focus of this example.  The second option is by using the :py:func:`simulate_spectrum` function described in the `fitting synthetic spectra example <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/Synthetic_Spectra>`_.  
 
@@ -60,28 +63,28 @@ After that, 4 instances of the :py:class:`Spectrum` class are instantiated from 
 
 .. code:: ipython3
 
-   spec_1 = Spectrum('190510_2per_43_forfit', 
+   spec_1 = MATS.Spectrum('190510_2per_43_forfit', 
                         molefraction = { 7 :0.01949}, natural_abundance = True, diluent = 'air', 
                         etalons = {1:[0.001172, 1.19574]}, 
                         input_freq = True, frequency_column = freq_column,
                         input_tau = True, tau_column = tau_column, tau_stats_column = None, 
                         pressure_column = pressure_column, temperature_column = temperature_column, 
                         nominal_temperature = 296, x_shift = 0.00)
-   spec_2 = Spectrum('190510_2per_55_forfit', 
+   spec_2 = MATS.Spectrum('190510_2per_55_forfit', 
                         molefraction = { 7 : 0.01949}, natural_abundance = True, diluent = 'air', 
                         etalons = {1:[0.001172, 1.19574]}, 
                         input_freq = True, frequency_column = freq_column,
                         input_tau = True, tau_column = tau_column, tau_stats_column = None, 
                         pressure_column = pressure_column, temperature_column = temperature_column, 
                         nominal_temperature = 296, x_shift = 0.00)
-   spec_3 = Spectrum('190513_2per_82_forfit', 
+   spec_3 = MATS.Spectrum('190513_2per_82_forfit', 
                         molefraction = { 7 :0.01949}, natural_abundance = True, diluent = 'air', 
                         etalons = {1:[0.001172, 1.19574]}, 
                         input_freq = True, frequency_column = freq_column,
                         input_tau = True, tau_column = tau_column, tau_stats_column = None, 
                         pressure_column = pressure_column, temperature_column = temperature_column, 
                         nominal_temperature = 296, x_shift = 0.00)
-   spec_4 = Spectrum('190514_2per_126_forfit', 
+   spec_4 = MATS.Spectrum('190514_2per_126_forfit', 
                         molefraction = { 7 :0.01949}, natural_abundance = True, diluent = 'air', 
                         etalons = {1:[0.001172, 1.19574]}, 
                         input_freq = True, frequency_column = freq_column,
@@ -102,22 +105,22 @@ The :py:func:`Spectrum.plot_wave_alpha` function can be called to plot any of th
 Generate a Dataset
 ++++++++++++++++++
 
-.. currentmodule:: Dataset
+.. currentmodule:: MATS.linelistdata
 
-If the parameter line list hasn't been read in from a .csv file, then do that now making sure to switch to the appropriate directories as needed.  This file can be generated following the :ref:`Generating Parameter Line lists`. 
+If the parameter line list hasn't been read in from a .csv file, then do that now making sure to switch to the appropriate directories as needed.  This file can be generated following the :ref:`Generating Parameter Line lists`.  Alternatively, the code block below shows how to use the py:func:`LoadLineListData` function to read in the line list provided for the Oxygen A-Band.
 
 .. code:: ipython3
 
-   hapi = r'C:\Users\Documents\MATS\MATS\Linelists'
-   os.chdir(hapi)
-   PARAM_LINELIST = pd.read_csv('O2_ABand_Drouin_2017_linelist.csv')
-   os.chdir(path)
-
+	from MATS.linelistdata import linelistdata
+	PARAM_LINELIST = linelistdata['O2_ABand_Drouin_2017_linelist']
+	
+.. currentmodule:: MATS.dataset
+	
 The next step is to combine all desired :py:class:`Spectrum` objects  into a :py:class:`Dataset` object, where we give the dataset a name and specify the initial parameter line list to use for the fits.
 
 .. code:: ipython3
 
-   SPECTRA = Dataset([spec_1, spec_2, spec_3, spec_4], 'Line Intensity', baseline_order = order_baseline_fit)
+   SPECTRA = MATS.Dataset([spec_1, spec_2, spec_3, spec_4], 'Line Intensity', baseline_order = order_baseline_fit)
    
 The :py:class:`Dataset` class contains a function to generate a baseline line list, analogous to the one for the parameter line list (done outside of this example), based on the order of the baselines, etalons, molecules, x-shift parameters, and segments as defined by both the spectrum objects.
 
@@ -131,13 +134,13 @@ The :py:class:`Dataset` class contains a function to generate a baseline line li
 Generate Fit Parameter Files
 ++++++++++++++++++++++++++++
 
-.. currentmodule:: Generate_FitParam_File
+.. currentmodule:: MATS.generate_fitparam_file
 
 The next section of code uses the :py:class:`Generate_FitParam_File` class to define what line shape to use for the initial fits, whether to use line mixing, the minimum line intensity to fit a line, mimimum intensity to included in the simulation, and for each line parameter whether that parameter is going to be constrained across all spectra or whether there will be a parameter for each spectrum (multi-spectrum vs single-spectrum fits) on a parameter by parameter basis. In the example below, the SDVP line profile without line mixing will be used to fit lines with line intensities greater than 1e-24 and the line centers and line intensities will be allowed to float for each line, while all other lines are constrained across all spectra in the dataset. The additional_columns parameter allows for inclusion of additional columns in the line shape parameter line list to be included in the output file.
 
 .. code:: ipython3
 
-   FITPARAMS = Generate_FitParam_File(SPECTRA, PARAM_LINELIST, BASE_LINELIST, lineprofile = 'SDVP', linemixing = False, 
+   FITPARAMS = MATS.Generate_FitParam_File(SPECTRA, PARAM_LINELIST, BASE_LINELIST, lineprofile = 'SDVP', linemixing = False, 
                                   fit_intensity = Fit_Intensity, threshold_intensity = IntensityThreshold, sim_window = wave_range,
                                   nu_constrain = False, sw_constrain = False, gamma0_constrain = True, delta0_constrain = True, 
                                   aw_constrain = True, as_constrain = True, 
@@ -165,13 +168,13 @@ These functions will generate .csv files corresponding to these selections, whic
 Fit Dataset
 +++++++++++
 
-.. currentmodule:: Fit_DataSet
+.. currentmodule:: MATS.fit_dataset
 
 Instantiating the :py:class:`Fit_DataSet` class reads in the information from the baseline and parameter linelists generated in the previous step. It also allows for limits to be placed on the parameters, so that they don’t result in divergent solutions. The example below includes several limits including limiting the line center to be within 0.1 cm-1 of the initial guess and the Line intensity to be within a factor of 2 of the intial guess. Placing limits on the parameters can be restrictive on the solution and cause the fit to not converge or return NaN for the standard error if it doesn’t allow for a local minima to be found.  The :py:class:`Fit_DataSet` class also allows for the option to weight_spectra, currently this is set to False. Later in this example we will explore using weights in fitting.
 
 .. code:: ipython3
 
-   fit_data = Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList', minimum_parameter_fit_intensity = Fit_Intensity, weight_spectra = False,
+   fit_data = MATS.Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList', minimum_parameter_fit_intensity = Fit_Intensity, weight_spectra = False,
                 baseline_limit = False, baseline_limit_factor = 10, 
                 molefraction_limit = False, molefraction_limit_factor = 1.1, 
                 etalon_limit = False, etalon_limit_factor = 2, #phase is constrained to +/- 2pi, 
@@ -268,17 +271,17 @@ The params file is then used to fit the spectra in the dataset using the :py:fun
 
 The last segment of code provides residual plots and updates residuals through the :py:func:`Fit_DataSet.residual_analysis` and 
 
-.. currentmodule:: Dataset 
+.. currentmodule:: MATS.dataset 
 
 :py:func:`Dataset.plot_model_residuals` functions, updates the parameter and baseline line lists through 
 
-.. currentmodule:: Fit_DataSet 
+.. currentmodule:: MATS.fit_dataset 
 
 :py:func:`Fit_DataSet.update_params`, and generates a summary file with the fit results using 
 
-.. currentmodule:: Dataset
+.. currentmodule:: MATS.dataset
 
-:py:func:`Dataset.plot_model_residuals`.
+:py:func:`Dataset.generate_summary_file`.
 
 .. code:: ipython3
 
@@ -289,7 +292,7 @@ The last segment of code provides residual plots and updates residuals through t
 
 .. image:: example_files/spectra_residuals.png
 
-.. currentmodule:: Spectrum  
+.. currentmodule:: MATS.spectrum  
 
 Call to the :py:func:`Spectrum.fft_spectrum` function takes an FFT of the residuals. If we hadn’t included the etalon, the result of the :py:func:`Spectrum.fft_spectrum` function would show a peak with the most abundant period being 1.271443 cm-1 and an amplitude of 0.001364, which were used as the initial guess for the etalon in the spectrum class definitions. The more etalon periods present in the spectral region being fit the more precise the etalon amplitude and frequency determined by the FFT will be.
 
@@ -307,11 +310,17 @@ Using these values as the etalon period and amplitude give the fit residuals sho
 Explore the Ability to Weight Spectra
 +++++++++++++++++++++++++++++++++++++
 
-MATS v2 introduced the ability to weight spectra in two different ways, using the stats column defined for each spectrum or weighting the entire spectrum.  In the first example below, we use use the same code that was introduced previously, but set the weight_spectra variable in the :py:class:`Fit_DataSet` definitions to True.  This weights the contribution to the solution at each point in each spectrum by 1/tau_stats_column.  If the tau_stats_column is not defined in the :py:class:`Spectrum` then this will default to equal weights for all data points.   
+.. currentmodule:: MATS.fit_dataset 
+
+MATS v2 introduced the ability to weight spectra in two different ways, using the stats column defined for each spectrum or weighting the entire spectrum.  In the first example below, we use use the same code that was introduced previously, but set the weight_spectra variable in the :py:class:`Fit_DataSet` definitions to True.  
+
+.. currentmodule:: MATS.spectrum  
+
+This weights the contribution to the solution at each point in each spectrum by 1/tau_stats_column.  If the tau_stats_column is not defined in the :py:class:`Spectrum` then this will default to equal weights for all data points.   
 
 .. code:: ipython3
 
-   fit_data = Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList', minimum_parameter_fit_intensity = Fit_Intensity, weight_spectra = True,
+   fit_data = MATS.Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList', minimum_parameter_fit_intensity = Fit_Intensity, weight_spectra = True,
                 baseline_limit = False, baseline_limit_factor = 10, 
                 molefraction_limit = False, molefraction_limit_factor = 1.1, 
                 etalon_limit = False, etalon_limit_factor = 2, #phase is constrained to +/- 2pi, 
@@ -347,7 +356,7 @@ MATS v2 introduced the ability to weight spectra in two different ways, using th
    SPECTRA.generate_summary_file(save_file = True)
    SPECTRA.plot_model_residuals()
    
-For this example the statitics are relatively consistent across all points in the dataset, as shown in the plot below, so the fit residuals are very similar with some slight differences in the quality of fits and the parameter fit results.  
+For this example the statistics are relatively consistent across all points in the dataset, as shown in the plot below, so the fit residuals are very similar with some slight differences in the quality of fits and the parameter fit results.  
 
 .. image:: example_files/spectra_residuals_ptbypt_weight.png
 
@@ -358,7 +367,7 @@ For all weighting options, the residuals are adjusted by the weight factors.  Fo
 .. code:: ipython3
 
    spec_1.set_weight(0)
-   FITPARAMS = Generate_FitParam_File(SPECTRA, PARAM_LINELIST, BASE_LINELIST, lineprofile = 'SDVP', linemixing = False, 
+   FITPARAMS = MATS.Generate_FitParam_File(SPECTRA, PARAM_LINELIST, BASE_LINELIST, lineprofile = 'SDVP', linemixing = False, 
                                   fit_intensity = Fit_Intensity, threshold_intensity = IntensityThreshold, sim_window = wave_range,
                                   nu_constrain = False, sw_constrain = False, gamma0_constrain = True, delta0_constrain = True, 
                                    aw_constrain = True, as_constrain = True, 
@@ -378,7 +387,7 @@ For all weighting options, the residuals are adjusted by the weight factors.  Fo
 
 
  
-   fit_data = Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList', minimum_parameter_fit_intensity = Fit_Intensity, weight_spectra = True,
+   fit_data = MATS.Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList', minimum_parameter_fit_intensity = Fit_Intensity, weight_spectra = True,
                 baseline_limit = False, baseline_limit_factor = 10, 
                 molefraction_limit = False, molefraction_limit_factor = 1.1, 
                 etalon_limit = False, etalon_limit_factor = 2, #phase is constrained to +/- 2pi, 

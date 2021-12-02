@@ -15,11 +15,14 @@ Simulate Spectrum Objects
 
 Module import follows from the :ref:`Fitting Experimental Spectra` and :ref:`Fitting Synthetic Spectra` examples with additional details on how to simulate spectra found in :ref:`Fitting Synthetic Spectra` and the source documentation.  
 
+.. currentmodule:: MATS.linelistdata
 
-
-After the generic parameters are introduced the line list for simulations is read in.  In this example we are making some adjustments to the line list before simulating.  In the MATS fitting, simulations are only conducted to some user-defined range outside of the spectral frequency range (wave_range = 1.5 :math:`cm^{-1}` in the current example).  This same constraint is not imposed when simulating spectra.  This can lead to some far-wing issues between simulation and fitting if care is not taken to match the wave_range to the lines in the parameter linelist and the simulation wing_cutoff magnitude, which should also match the fit wing_cutoff magnitude. For this example, we are truncating the simulation line list to [wave_min - wave_range, wave_max + wave_range].  Additionally, values for the Dicke Narrowing air and self parameters are set and the line mixing terms are set to 0.
+After the generic parameters are introduced the line list for simulations is read in using the :py:func:`LoadLineListData` function.  In this example we are making some adjustments to the line list before simulating.  In the MATS fitting, simulations are only conducted to some user-defined range outside of the spectral frequency range (wave_range = 1.5 :math:`cm^{-1}` in the current example).  This same constraint is not imposed when simulating spectra.  This can lead to some far-wing issues between simulation and fitting if care is not taken to match the wave_range to the lines in the parameter linelist and the simulation wing_cutoff magnitude, which should also match the fit wing_cutoff magnitude. For this example, we are truncating the simulation line list to [wave_min - wave_range, wave_max + wave_range].  Additionally, values for the Dicke Narrowing air and self parameters are set and the line mixing terms are set to 0.
 
 .. code:: ipython3
+
+   from MATS.linelistdata import linelistdata
+   from MATS import simulate_spectrum
 
    #Generic Fit Parameters
    wave_range = 1.5 #range outside of experimental x-range to simulate
@@ -33,8 +36,7 @@ After the generic parameters are introduced the line list for simulations is rea
    etalon = {}
 
    #Read in  linelists
-   hapi = r'C:\Users\ema3\Documents\MATS\MATS\Linelists'
-   os.chdir(hapi)
+   PARAM_LINELIST = linelistdata['CO2_30012']
    ##Adjust the linelist before simualting spectra
    PARAM_LINELIST = pd.read_csv('CO2_30012.csv')
    PARAM_LINELIST = PARAM_LINELIST[(PARAM_LINELIST['nu']>= wave_min - wave_range) & (PARAM_LINELIST['nu']<= wave_min + wave_range)]
@@ -45,7 +47,7 @@ After the generic parameters are introduced the line list for simulations is rea
 
 For the purpose of showing the mechanism, we will be simulating data for :math:`CO_{2}`, air, and 10% :math:`CO_{2}` in air samples between 1 and 500 torr.  The structure of the script follows that outlined in the :ref:`Fitting Synthetic Spectra` example.  
 
-.. currentmodule:: Spectrum
+.. currentmodule:: MATS.spectrum
 
 The :py:func:`simulate_spectrum` function is used to generate several spectrum class objects.  The beta_formalism variable is set to True, which simulates the spectra accounting for the change in Dicke Narrowing with the hardness of the collision.  The synthetic spectra span 3 samples: :math:`CO_{2}`, air, and 10% :math:`CO_{2}` in air.  The air and :math:`CO_{2}` samples can use the diluent = 'air' and 'self' variables as the Diluent variable can be auto-generated.  However, the 10% :math:`CO_{2}` in air sample requires the explicit definition of the Diluent variable, which is a dictionary of dictionaries where each diluent is a dictionary with composition and mass (m) keys.  This allows the calculation of the mass of perturber, which is necessary for the :math:`\beta` implementation.  The use of the self term will generate a warning to consider switching to an explicitly name the broadener.  This warning is to have the user consider if this is causing ambiguity or unanticipated behavior.  Specifically, this could be an issue in multi-species fits or if the explict broadener and self term are both used.  To remove the use of the self broadening, have the line shape parameter file with the explicit broadener (ie. gamma0_CO2 instead of gamma0_self) and use the Diluent sample definition as modeled for the 10% :math:`CO_{2}` in air sample (ie pure :math:`CO_{2}` would be Diluent = {'CO2':{'composition':1, 'm':43.98983} }).
 
@@ -132,11 +134,12 @@ Generate Dataset and Fit Parameter Files
 Following the procedure outlined in :ref:`Fitting Synthetic Spectra` and :ref:`Fitting Experimental Spectra`.  This example is using the SDNGP without line mixing, is constraining all parameters to multi-spectrum fits, and is floating the line center, line intensity, collisional broadening, pressure shift, speed-dependent broadening, and Dicke narrowing terms.  
 
 .. code:: ipython3
-   SPECTRA = Dataset([spec_1, spec_2, spec_3, spec_4, spec_5, spec_6, spec_7, spec_8, spec_9, spec_10, spec_11, spec_12, spec_13, spec_14, spec_15], 'CO2 Study',PARAM_LINELIST ) 
+
+   SPECTRA = MATS.Dataset([spec_1, spec_2, spec_3, spec_4, spec_5, spec_6, spec_7, spec_8, spec_9, spec_10, spec_11, spec_12, spec_13, spec_14, spec_15], 'CO2 Study',PARAM_LINELIST ) 
 
    #Generate Baseline Parameter list based on number of etalons in spectra definitions and baseline order
    BASE_LINELIST = SPECTRA.generate_baseline_paramlist()
-   FITPARAMS = Generate_FitParam_File(SPECTRA, PARAM_LINELIST, BASE_LINELIST, lineprofile = 'SDNGP', linemixing = False, 
+   FITPARAMS = MATS.Generate_FitParam_File(SPECTRA, PARAM_LINELIST, BASE_LINELIST, lineprofile = 'SDNGP', linemixing = False, 
                                   fit_intensity = Fit_Intensity, threshold_intensity = IntensityThreshold, sim_window = wave_range,
                                   nu_constrain = True, sw_constrain = True, gamma0_constrain = True, delta0_constrain = True, 
                                    aw_constrain = True, as_constrain = True, 
@@ -151,18 +154,20 @@ Following the procedure outlined in :ref:`Fitting Synthetic Spectra` and :ref:`F
                                                     vary_nuVC = {2:{1:True}}, vary_n_nuVC = {2:{1:False}},
                                                     vary_eta = {}, vary_linemixing = {2:{1:False}})
 
-FITPARAMS.generate_fit_baseline_linelist(vary_baseline = False, vary_molefraction = {7:False, 1:Fa   lse}, vary_xshift = False, 
+   FITPARAMS.generate_fit_baseline_linelist(vary_baseline = False, vary_molefraction = {7:False, 1:Fa   lse}, vary_xshift = False, 
                                       vary_etalon_amp= False, vary_etalon_period= False, vary_etalon_phase= False)
 
 
 Fit Data
 ++++++++
 
-In this first iteration, we are fitting the data without including the beta_formalism to correct for the hardness of the collisions by setting the beta_formalism to False in the :py:classs:Fit_Dataset instance, which is the default.  The results show systematic residuals at the line core based on the large range of pressures.  
+.. currentmodule:: MATS.fit_dataset
+
+In this first iteration, we are fitting the data without including the beta_formalism to correct for the hardness of the collisions by setting the beta_formalism to False in the :py:class:`Fit_DataSet`  instance, which is the default.  The results show systematic residuals at the line core based on the large range of pressures.  
 
 .. code:: ipython3
 
-   fit_data = Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList', minimum_parameter_fit_intensity = 1e-24, 
+   fit_data = MATS.Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList', minimum_parameter_fit_intensity = 1e-24, 
                       beta_formalism = False)
    params = fit_data.generate_params()
    result = fit_data.fit_data(params, wing_cutoff = 25,wing_method = 'wing_wavenumbers')
@@ -179,7 +184,7 @@ In the second iteration, the beta_formalism term is set to True.  Unsuprisingly,
 
 .. code:: ipython3
   
-   fit_data = Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList', minimum_parameter_fit_intensity = 1e-24, 
+   fit_data = MATS.Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList', minimum_parameter_fit_intensity = 1e-24, 
                       beta_formalism = True)
    params = fit_data.generate_params()
    result = fit_data.fit_data(params, wing_cutoff = 25,wing_method = 'wing_wavenumbers')
@@ -194,7 +199,7 @@ In the second iteration, the beta_formalism term is set to True.  Unsuprisingly,
 
 .. image:: example_files/Beta.png
 
-.. currentmodule:: Fit_DataSet
+.. currentmodule:: MATS.fit_dataset
 
 The :py:func:`Fit_DataSet.generate_beta_output_file` definition can be used to tabulate a value of the math:`\beta` parameters that are used for all lines and each spectrum. By default this is saved in a file called Beta Summary File.csv.  This plot shows how this math:`\beta`  parameter changes with sample and pressure.
 

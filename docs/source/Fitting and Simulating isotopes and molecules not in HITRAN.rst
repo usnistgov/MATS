@@ -5,7 +5,7 @@ Provided in the MATS v2 release are several examples highlighting MATS capabilit
 
 HITRAN's focus is on atmospherically relevent molecules.  This was the original focus of MATS, however recent feature development has allowed for adaption of to include non-HITRAN molecules.  
 
-The example shows how to supplement the HITRAN isotope list and then use that in simulations and fits. This example uses Mercury as an examaple case `This example uses Mercury as an examaple case <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/nonHITRAN_Molecules>`_.
+The example shows how to supplement the HITRAN isotope list and then use that in simulations and fits. This example uses Mercury as an examaple case `This example uses Mercury as an example case <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/nonHITRAN_Molecules>`_.
 
 
 Append to the HITRAN isotope list to include desired isotopes
@@ -13,9 +13,9 @@ Append to the HITRAN isotope list to include desired isotopes
 
 Module import follows from the :ref:`Fitting Experimental Spectra` and :ref:`Fitting Synthetic Spectra` examples.  
 
-.. currentmodule:: Utilities
+.. currentmodule:: MATS.utilities
 
-The :py:func:`add_to_HITRANstyle_isotope_list`:py:func:`add_to_HITRANstyle_isotope_list` function allows you to ammend a given isotope list to include additional molecules and/or isotopes using the HITRAN-style molcule_id, local_isotope id, and global isotope id parameterization.  This function has some checks to verify expected behavior
+The :py:func:`add_to_HITRANstyle_isotope_list` function allows you to ammend a given isotope list to include additional molecules and/or isotopes using the HITRAN-style molcule_id, local_isotope id, and global isotope id parameterization.  This function has some checks to verify expected behavior
 - if the molecule id and isotope id are in the initial isotope line list, it will return 'Already entry with that molec_id and local_iso_id.  This result will write over that entry.
 - if the molecule id is in the initial isotope list it will return 'This is being added as a new isotope of molecule name.  Proceed if that was the intention.
 - if the global isotope id is already in the isotope list it will return, 'There is another entry with this global isotope id.  Consider changing the value for consistency'
@@ -24,6 +24,9 @@ Mercury line shape parameters are not included in the HITRAN database.  The code
 
 
 .. code:: ipython3
+
+   from MATS.hapi import ISO
+   from MATS import add_to_HITRANstyle_isotope_list
 
    HITRAN_Hg_isolist = add_to_HITRANstyle_isotope_list(input_isotope_list = ISO, molec_id = 100, local_iso_id = 1, 
                                                     global_isotope_id = 200, iso_name = '196', 
@@ -84,11 +87,11 @@ The initial parameter line list should have molecule and local isotope ids that 
    SNR = 1000
 
 
-   spec_1 = simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
+   spec_1 = MATS.simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
                         temperature = 25, pressure = 100, molefraction = { 100 :1e-9},
                         isotope_list = HITRAN_Hg_isolist, natural_abundance = True, SNR = 1000, filename = '100 Torr',)
 
-   spec_2 = simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
+   spec_2 = MATS.simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
                         temperature = 25, pressure = 500, molefraction = { 100 :1e-9},
                         isotope_list = HITRAN_Hg_isolist, natural_abundance = True, SNR = 1000,filename = '500 Torr',)
 
@@ -107,7 +110,7 @@ The construction of the dataset and the generate fit parameter classes act as no
 
 .. code:: ipython3
 
-   SPECTRA = Dataset([spec_1, spec_2], 'Mercury Fitting',PARAM_LINELIST )
+   SPECTRA = MATS.Dataset([spec_1, spec_2], 'Mercury Fitting',PARAM_LINELIST )
 
    #Generate Baseline Parameter list based on number of etalons in spectra definitions and baseline order
    BASE_LINELIST = SPECTRA.generate_baseline_paramlist()
@@ -144,7 +147,7 @@ Fitting follows the same strucutre described in :ref:`Fitting Experimental Spect
 
 .. code:: ipython3
 
-   fit_data = Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList', minimum_parameter_fit_intensity = Fit_Intensity, weight_spectra = False)
+   fit_data = MATS.Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList', minimum_parameter_fit_intensity = Fit_Intensity, weight_spectra = False)
    params = fit_data.generate_params()
    result = fit_data.fit_data(params, wing_cutoff = 25)
    fit_data.residual_analysis(result, indv_resid_plot=False)
