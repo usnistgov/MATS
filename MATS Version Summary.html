@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>MATS Version Summary &#8212; MATS 2.0 documentation</title>
+    <title>MATS Version Summary &#8212; MATS 2.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -63,7 +63,7 @@ $(document).ready(function(){
         <li class="right" >
           <a href="Getting%20Started.html" title="Getting Started"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">MATS Version Summary</a></li> 
       </ul>
     </div>  
@@ -75,6 +75,20 @@ $(document).ready(function(){
             
   <section id="mats-version-summary">
 <h1>MATS Version Summary<a class="headerlink" href="#mats-version-summary" title="Permalink to this headline">¶</a></h1>
+<section id="mats-version-2-1">
+<h2>MATS Version 2.1<a class="headerlink" href="#mats-version-2-1" title="Permalink to this headline">¶</a></h2>
+<p>published on 12/03/2021</p>
+<p><strong>Focus of version update is cleanup to make package git installable</strong></p>
+<ul class="simple">
+<li><p>renamed python files to lowercase, as this is the preferred python style.</p></li>
+<li><p>added __init__.py to include the most important functionality at the top level</p></li>
+<li><p>reformatted constants.  Added codata.py file with includes CODATA dictionary (with values and metadata) and CONSTANTS dictionary (with only values)</p></li>
+<li><p>Added linelistdata.py file to autoload csv files from MATS/LineList.</p></li>
+<li><p>Got rid of all <cite>from package import *</cite> commands.  Use explicit imports only</p></li>
+<li><p>Reworked example notebooks to reflect updates.</p></li>
+<li><p>Added INSTALL.md file to explain the install options.</p></li>
+</ul>
+</section>
 <section id="mats-version-2">
 <h2>MATS Version 2<a class="headerlink" href="#mats-version-2" title="Permalink to this headline">¶</a></h2>
 <p>published on 6/10/2021</p>
@@ -147,12 +161,12 @@ $(document).ready(function(){
         <li class="right" >
           <a href="Getting%20Started.html" title="Getting Started"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">MATS Version Summary</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
     </div>
   </body>
 </html>
