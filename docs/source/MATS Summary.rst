@@ -161,7 +161,7 @@ Line Mixing
 
 .. currentmodule:: MATS.spectrum
 
-The nearest-neighbor line mixing (:math:`Y`) can be calculated from the imaginary portion of any of the HTP derivative line profiles.  Currently, there is no temperature dependence imposed on the line mixing, so there a different value is used for each nominal temperature, where the nominal temperature is specified in the :py:class:`Spectrum` definition.  However, contributions from each diluent (:math:`k`) can be scaled by the diluent composition fraction (:math:`abun`) and  summed to model the ensemble line mixing.  
+The first order line mixing (:math:`Y`) can be calculated from the imaginary portion of any of the HTP derivative line profiles.  Currently, there is no temperature dependence imposed on the line mixing, so there a different value is used for each nominal temperature, where the nominal temperature is specified in the :py:class:`Spectrum` definition.  However, contributions from each diluent (:math:`k`) can be scaled by the diluent composition fraction (:math:`abun`) and  summed to model the ensemble line mixing.  
 
 .. math::
 

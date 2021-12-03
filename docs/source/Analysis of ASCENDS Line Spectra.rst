@@ -1,11 +1,11 @@
-Fitting and Simulating isotopes and molecules not in HITRAN
-===========================================================
+Analysis of ASCENDS Line Spectra
+================================
 
 Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/MATS/Examples>`_. 
 
 The 30012<--00001 CO2 band is frequently used for remote sensing applications, where the R16e line in this band centered at 6359.967 cm-1 is the target line for the ASCENDS - Active Sensing of CO2 Emissions over Nights, Days, and Seasons mission.  This makes this line an important target for spectroscopic reference data and thus a convenient target for single line spectroscopic studies or examples.  
 
-Data originally reported in Long, D., et al., Frequency-agile, rapid scanning cavity ring-down spectroscopy (FARS-CRDS) measurements of the (30012)←(00001) near-infrared carbon dioxide band. Journal of Quantitative Spectroscopy and Radiative Transfer, 2015. 161: p. 35-40.  Fitting of this data is used in the Adkins and Hodges, Assessment of the precision, bias and numerical correlation of fitted parameters obtained by multi-spectrum fits of the Hartmann-Tran line profile to simulated spectra, JQSRT (under review).
+Data originally reported in `Long, D., et al., Frequency-agile, rapid scanning cavity ring-down spectroscopy (FARS-CRDS) measurements of the (30012)←(00001) near-infrared carbon dioxide band. Journal of Quantitative Spectroscopy and Radiative Transfer, 2015. 161: p. 35-40 <https://www.sciencedirect.com/science/article/pii/S0022407315001338>`_.  This example is explicitly referenced in the Adkins and Hodges, Assessment of the precision, bias and numerical correlation of fitted parameters obtained by multi-spectrum fits of the Hartmann-Tran line profile to simulated spectra, JQSRT (under review).
 
 `This example <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/nonHITRAN_Molecules>`_. shows the fitting of real experimental data.  This data has a non-zero baseline and several etalons that need to be considered in order to effectively fit the spectra.  In addition to fitting the experimental spectra, this example also uses simulations to explore the anticipated impact of improving the SNR of the data and increasing the pressure range of the dataset.  
 
@@ -13,7 +13,12 @@ Data originally reported in Long, D., et al., Frequency-agile, rapid scanning ca
 Define Spectra 
 ++++++++++++++
 
-Module import follows from the :ref:`Fitting Experimental Spectra` and :ref:`Fitting Synthetic Spectra` examples.  The experimental spectra and the linelists are read-in in the same manner as described in the :ref:`Fitting Experimental Spectra` example.  In this example three etalons are included in the simulation and linear baseine is considered for each spectrum in the dataset.  These fits also make use of the segment column, which allows the spectrum-specific parameters (baseline, etalons) to be treated on smaller segments of the spectrum, opposed to across the whole spectrum.  This is especially useful for treatment of faster etalons, which may not maintain a consistent phase over entire spectrum.  Additional constraints can be imposed help with fit convergence and physical modeling. 
+.. currentmodule:: MATS.spectrum
+
+Module import follows from the :ref:`Fitting Experimental Spectra` and :ref:`Fitting Synthetic Spectra` examples.  The experimental spectra and the linelists are read-in in the same manner as described in the :ref:`Fitting Experimental Spectra` example.  
+
+
+In this example three etalons are included in the simulation and linear baseine is considered for each spectrum in the dataset.  These fits also make use of the segment column, which allows the spectrum-specific parameters (baseline, etalons) to be treated on smaller segments of the spectrum, opposed to across the whole spectrum. The segment column is set using the segment_column parameter in the :py:class:`Spectrum` definition and is simply the name of a column in the spectrum .csv that contains integers that are common for continuous segments of the spectrum.   This is especially useful for treatment of faster etalons, which may not maintain a consistent phase over entire spectrum.  Additional constraints can be imposed to help with fit convergence and physical modeling. 
 
 
 .. code:: ipython3
@@ -111,10 +116,17 @@ Module import follows from the :ref:`Fitting Experimental Spectra` and :ref:`Fit
 
 Construct Dataset and Generate Fit Parameters
 +++++++++++++++++++++++++++++++++++++++++++++
-The baseline and parameter fit parameter files are generated.  In this example, the line intensity is allowed to float for each spectrum, but all other line shape parameters are constrained to their pressure dependence.  In the Long et al. fixed the beyond Voigt SDNGP line shape parameters to those reported by Lin, H., et al., Cavity ring-down spectrometer for high-fidelity molecular absorption measurements. Journal of Quantitative Spectroscopy and Radiative Transfer, 2015. 161: p. 11-20, while allowing the VP parameters and line mixing to float.  In this example, we are allowing all SDNGP parameters to float using the Lin et al. values as the initial guess, but only considering spectra in the isolated transition pressure regime, where line mixing can be ignored.  
+.. currentmodule:: MATS.dataset
 
-The slope and intercept for the baseline of each spectra are floated, along with the amplitude, period, and phase of each etalon.  Because this example uses the segment function, you can see that each spectrum has 4 segments, so the number of rows in the baseline fit parameter list is four times larger than the number of spectra.  Additional constraints will be added to the etalon parameters in the next section.  
- 
+The :py:class:`Dataset` object is defined as is outlined in the :ref:`Fitting Experimental Spectra` and :ref:`Fitting Synthetic Spectra` examples.
+
+.. currentmodule:: MATS.generate_fitparam_file
+
+
+The baseline and parameter fit parameter files are generated using the :py:class:`Generate_FitParam_File` class.  In this example, the line intensity is allowed to float for each spectrum, but all other line shape parameters are constrained to their pressure dependence.  `Long et al.  <https://www.sciencedirect.com/science/article/pii/S0022407315001338>`_ fixed the beyond Voigt SDNGP line shape parameters to those reported by `Lin, H., et al., Cavity ring-down spectrometer for high-fidelity molecular absorption measurements. Journal of Quantitative Spectroscopy and Radiative Transfer, 2015. 161: p. 11-20 <https://www.sciencedirect.com/science/article/pii/S0022407315001284>`_ , while allowing the VP parameters and line mixing to float.  In this example, we are allowing all SDNGP parameters to float using the `Lin et al. values <https://www.sciencedirect.com/science/article/pii/S0022407315001284>`_ as the initial guess, but only considering spectra in the isolated transition pressure regime, where line mixing can be ignored.  
+
+The slope and intercept for the baseline of each spectra are floated, along with the amplitude, period, and phase of each etalon.  Because this example uses the segment function, you can see that each spectrum has 4 segments in the print out of the baseline linelist, so the number of rows in the baseline fit parameter list is four times larger than the number of spectra.  Additional constraints will be added to the etalon parameters in the next section.  
+
 
 .. code:: ipython3
 
@@ -143,12 +155,19 @@ The slope and intercept for the baseline of each spectra are floated, along with
 											vary_etalon_amp= True, vary_etalon_period= True, vary_etalon_phase= True)
 
 
+.. image:: example_files/ASCENDS_baselineparameters.png
+
+
+
 
 Fit Spectra
 +++++++++++
-The fitting of the dataset is looped to iterate on the fit results.  The result and residual plots are shown after each iteration.  In the first few iterations not all of the etalons are well modeled leading to systematic residuals, iterating on the best fit results helps better model the etalons minimizing the residauls.
 
-Using the segments in a spectrum, allows us to model the spectrum specific parameters by segment opposed to across the whole spectrum.  However, this flexibility can lead to divergent solutions if additional constraints aren't included.  This example will constrain these parameters using the constrained baseline function and by setting constraits directly in the lmfit parameter dictionary.  The constrained baseline function indicates the baseline parameters that should be constrained to be equal across the entire spectrum (parameters that won't take advantage of the segment structure).  For this example the baseline and etalon periods are constrained to be equal equal across the entire spectrum.  
+.. currentmodule:: MATS.fit_dataset
+
+The fitting of the dataset is looped to iterate on the fit results.  The result and residual plots are shown after each iteration (with the first and last iteration shown below).  In the first few iterations not all of the etalons are well modeled leading to systematic residuals, iterating on the best fit results helps better model the etalons minimizing the residuals.
+
+Using the segments in a spectrum, allows us to model the spectrum specific parameters by segment opposed to across the whole spectrum.  However, this flexibility can lead to divergent solutions if additional constraints aren't included.  This example will constrain these parameters using the :py:func:`Fit_DataSet.constrained_baseline` function and by setting constraints directly in the lmfit parameter dictionary.  The :py:func:`Fit_DataSet.constrained_baseline` function indicates the baseline parameters that should be constrained to be equal across the entire spectrum (parameters that won't take advantage of the segment structure).  For this example the baseline and etalon periods are constrained to be equal equal across the entire spectrum.  
 
 This example also sets a few additional constraints on the etalons.  First, the period of each etalon is set to be equal across all spectra in the dataset.  Second, the phase of the first etalon is constrained to be equal across each spectrum.   
 
@@ -210,12 +229,20 @@ This example also sets a few additional constraints on the etalons.  First, the 
 		
 		if counter == iterations:
 			print (result.params.pretty_print())
+			
+ITERATION 1
+
+.. image:: example_files/ASCENDS_Iteration_1.png
+
+ITERATION 2
+
+.. image:: example_files/ASCENDS_Iteration_5.png
 
 Compare to Literature
 +++++++++++++++++++++
-The Lin et al. work reported spectra with QFs between 11000 and 29000 for pressures between 1.33kPa and 26.7kPa.  The current example work was conducted over a slightly higher pressure range of  7.5 to 36 kPa and had QFs of about 1500.
+The `Lin et al. <https://www.sciencedirect.com/science/article/pii/S0022407315001284>`_ work reported spectra with QFs between 11000 and 29000 for pressures between 1.33kPa and 26.7kPa.  The current example work was conducted over a slightly higher pressure range of  7.5 to 36 kPa and had QFs of about 1500.
 
-The Lin work reports uncertainty on the collisional broadening of 0.1%, the pressure shift of 0.35%, the speed-dependent broadening of 0.2%, the speed-dependent shift of 20%, and the Dicke narrowing of 1%.  The code below compares the results from the Lin et al and current fit example including a plot highlighting the reported relative uncertainty in line shape parameters reported by the fits.  The current example shows much higher fit uncertainties for speed-dependent width and Dicke narrowing, which indicates that at this QF and pressure range the spectra used in this analysis have a difficult time distinguishing between these narrowing mechanisms.  This motivates a Monte Carlo analysis that answers the question how would improving the SNR and pressure range improve the uncertainty in the reported line shape parameters.   
+The  `Lin et al. <https://www.sciencedirect.com/science/article/pii/S0022407315001284>`_ work reports uncertainty on the collisional broadening of 0.1%, the pressure shift of 0.35%, the speed-dependent broadening of 0.2%, the speed-dependent shift of 20%, and the Dicke narrowing of 1%.  The code below compares the results from the `Lin et al. <https://www.sciencedirect.com/science/article/pii/S0022407315001284>`_ and current fit example including a plot highlighting the reported relative uncertainty in line shape parameters reported by the fits.  The current example shows much higher fit uncertainties for speed-dependent width and Dicke narrowing, which indicates that at this QF and pressure range the spectra used in this analysis have a difficult time distinguishing between these narrowing mechanisms.  This motivates a Monte Carlo analysis that explores how improving the SNR and pressure range would decrease the uncertainty in the reported line shape parameters.   
 
  
 .. code:: ipython3
@@ -260,10 +287,14 @@ The Lin work reports uncertainty on the collisional broadening of 0.1%, the pres
 
 	Compare_Results
 	
+
+.. image:: example_files/ASCENDS_FitUncertaintyComparison.png	
+
+	
 Monte Carlo Analysis
 ++++++++++++++++++++
 
-The Monte Carlo uncertainty analysis involves running numerous iterations fitting synthetic spectra at experimental conditions.  To simplify the analysis the simulation line list only includes the R16e line and will use the results of the experimental fits as the simulation values.  Additionally, a dataframe summarizing the pressures and SNR (approximated by the QF from fits to the experimental spectra) are necessary for defining the simulation conditions.  In this analysis we are comparing the synthetic results at experimetnal conditions, to those with three addtional low pressure spectra and with SNR of 5000 (about three times larger than observed in the experimental spectra).
+The Monte Carlo uncertainty analysis involves running numerous iterations fitting synthetic spectra at experimental conditions.  To simplify the analysis the simulation line list only includes the R16e line and will use the results of the experimental fits as the simulation values.  
 
 .. code:: ipython3
 
@@ -280,6 +311,7 @@ The Monte Carlo uncertainty analysis involves running numerous iterations fittin
 	SIMULATION_LINELIST.loc[SIMULATION_LINELIST.index == 0, 'y_air_296'] = 0
 	SIMULATION_LINELIST['nuVC_air']
 	
+Additionally, a dataframe summarizing the pressures and SNR (approximated by the QF from fits to the experimental spectra) are necessary for defining the simulation conditions.  In this analysis we are comparing the synthetic results at experimetnal conditions, to those with three addtional low pressure spectra and with SNR of 5000 (about three times larger than observed in the experimental spectra).
 
 .. code:: ipython3
 
@@ -294,6 +326,8 @@ The Monte Carlo uncertainty analysis involves running numerous iterations fittin
 	New_Simulation_conditions['SNR'] = 5000
 	new_pressures = pd.DataFrame(data = {'Pressures' : [5, 10, 25], 'SNR': [5000, 5000, 5000]})
 	New_Simulation_conditions = New_Simulation_conditions.append(new_pressures)
+	
+In the Monte Carlo simulation the inital guesses will be perturbed from the simulation value by the uncertainty reported in the experimental fit.  
 
 .. code:: ipython3
 
@@ -303,30 +337,32 @@ The Monte Carlo uncertainty analysis involves running numerous iterations fittin
 	as_err = Compare_Results[Compare_Results['Parameters'] == 'SD_delta_air']['Fit Uncertainty (%)'].values[0]/100 #per
 	nuVC_err = Compare_Results[Compare_Results['Parameters'] == 'nuVC_air']['Fit Uncertainty (%)'].values[0]/100 #per
 	
+We define a function to generate spectrum based on the input simulation conditions (SNR and pressure) and with a given input linelist.
+	
 .. code:: ipython3
 
 	def gen_spec(simulation_conditions, i, simulation_linelist):
-    sample_molefraction =  {2:0.0004254}
-    wave_min = 6358.972 #cm-1
-    wave_max = 6360.963 #cm-1
-    wave_space = 0.006772 #cm-1
-    wave_error = 4.67e-7
-    
-    etalons = {1:[0.004321,1.168], 2:[0.001377, 59.38], 3:[0.0004578, 29.75]}
+		sample_molefraction =  {2:0.0004254}
+		wave_min = 6358.972 #cm-1
+		wave_max = 6360.963 #cm-1
+		wave_space = 0.006772 #cm-1
+		wave_error = 4.67e-7
+		
+		etalons = {1:[0.004321,1.168], 2:[0.001377, 59.38], 3:[0.0004578, 29.75]}
 
-    spec = MATS.simulate_spectrum(simulation_linelist, 
-                             baseline_terms = [0,0],
-                            wave_min = wave_min, wave_max = wave_max,  wave_space = wave_space, wave_error = wave_error,
-                            SNR = simulation_conditions['SNR'].values[i], etalons = etalons, 
-                            temperature = 23.25,
-                            pressure = simulation_conditions['Pressures'].values[i], 
-                            wing_cutoff = 25,  wing_method = 'wing_cutoff', 
-                            filename = str(int(simulation_conditions['Pressures'].values[i])) + 'torr', 
-                            molefraction = sample_molefraction, 
-                            natural_abundance = True, nominal_temperature = 296, IntensityThreshold = 1e-30, num_segments = 1)
-    return spec
+		spec = MATS.simulate_spectrum(simulation_linelist, 
+								 baseline_terms = [0,0],
+								wave_min = wave_min, wave_max = wave_max,  wave_space = wave_space, wave_error = wave_error,
+								SNR = simulation_conditions['SNR'].values[i], etalons = etalons, 
+								temperature = 23.25,
+								pressure = simulation_conditions['Pressures'].values[i], 
+								wing_cutoff = 25,  wing_method = 'wing_cutoff', 
+								filename = str(int(simulation_conditions['Pressures'].values[i])) + 'torr', 
+								molefraction = sample_molefraction, 
+								natural_abundance = True, nominal_temperature = 296, IntensityThreshold = 1e-30, num_segments = 1)
+		return spec
 	
-The mc_ function defined below simply takes the simulation conditions and number of iterations as inputs.  Spectra are simulated at the experimental conditions for just the R16e line using the linelist determined from the fits to the experimental spectra.  The inital guesses for the fitting are perturbed randomly at the magnitude of the reported fit error of the fits to the experimental data.  The fits are conducted in the same manner as those to the experimental data without the use of the segment function.  Results from each iteration are saved the MC_result file.  
+The mc_ function defined below simply takes the simulation conditions and number of iterations as inputs.  Spectra are simulated at the conditions outlined in the simulation condition dataframe for just the R16e line using the linelist determined from the fits to the experimental spectra.  Again, the inital guesses for the fitting are perturbed randomly at the magnitude of the reported fit error of the fits to the experimental data.  The fits are conducted in the same manner as those to the experimental data without the use of the segment function.  Results from each iteration are saved to a MC_result .csv file.  
 
 .. code:: ipython3
 
@@ -457,6 +493,8 @@ The mc_ function defined below simply takes the simulation conditions and number
 				
 
 			MC_Results.to_csv(MC_result_file + '.csv', index = False)
+
+Below are the calls to the mc_ function at the experimental and new simulation conditions, which will generate and fit 50 iterations of synthetic data for each case. 
 			
 .. code:: ipython3
 
@@ -527,9 +565,6 @@ The parameter_eval function summarizes the MC results comparing the fit average 
 
 The Experimental parameter result table shows good agreement in the fit uncertainty reported in the experimental data and averaged over the iterations of the MC analysis conducted at experimental conditions.  This also provides a measure of the ratio between the standard deviations in the fit values across the iterations compared to the average fit uncertainty.  Ratios greater than one indicate that the fit uncertainty reported by one iteration might under represent the uncertainty, most likely because of correlation between parameters that aren't included in the calculation of the fit uncertainty.  This ratio, when greater than one, could act as a correction factor to increase the experiment fit uncertainty.
 
-By comparing the average fit uncertainties over MC simulations in the new conditions (higher SNR and 3 extra pressures) to the experimental conditions indicate that the proposed improvements to the experiments can be expected to reduce the uncertainties in the spectroscopic parameters by factors of 2.8 to 3.7.  The largest improvement would be to the Dicke narrowing parameter, which is aided by not only the higher SNR, but also by the inclusion of additional low-pressure spectra that fall in a domain where the Dicke narrowing mechanism dominates over the speed-dependent narrowing.  
-
-
 .. code:: ipython3
 
 	exp_MC = pd.read_csv('Experimental_Conditions_MC.csv')
@@ -547,11 +582,21 @@ By comparing the average fit uncertainties over MC simulations in the new condit
 	NEW_SUMMARY = EXP_SUMMARY.copy()
 
 	EXP_SUMMARY = parameter_eval(exp_MC, EXP_SUMMARY)
-	NEW_SUMMARY= parameter_eval(new_MC, NEW_SUMMARY)
 	EXP_SUMMARY
+	
+.. image:: example_files/ASCENDS_MC_Exp.png	
+
+.. image:: example_files/ASCENDS_MC_Exp_Summary.png	
+
+By comparing the average fit uncertainties over MC simulations in the new conditions (higher SNR and 3 extra pressures) to the experimental conditions indicate that the proposed improvements to the experiments can be expected to reduce the uncertainties in the spectroscopic parameters by factors of 2.8 to 3.7.  The largest improvement would be to the Dicke narrowing parameter, which is aided by not only the higher SNR, but also by the inclusion of additional low-pressure spectra that fall in a domain where the Dicke narrowing mechanism dominates over the speed-dependent narrowing.  
+
 	
 .. code:: ipython3
 
+	NEW_SUMMARY= parameter_eval(new_MC, NEW_SUMMARY)
 	NEW_SUMMARY['Improvement Over Experiment'] = EXP_SUMMARY['Parameter Fit Error'].values/NEW_SUMMARY['Parameter Fit Error'].values
-
 	NEW_SUMMARY
+
+.. image:: example_files/ASCENDS_MC_New.png	
+
+.. image:: example_files/ASCENDS_MC_New_Summary.png	
