@@ -1,14 +1,14 @@
 Applying Analytical Correction to hardness of collisions for HTP
 ================================================================
 
-Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/MATS/Examples>`_. 
+Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/Examples>`_. 
 
 
 Dicke narrowing accounts for effective narrowing of the doppler width because of velocity changing collisions.  The magnitude of this effect is dependent on the hardness of the collisions.  Different line shapes make different assumptions on the hardness of the collision with the Nelkhin-Ghatak making the assumption that collisions are hard, meaning that the molecular velocity before a collision is forgotten after the collision, and  the Galatry profile assuming collisions are soft, meaning that many collisions are necessary to change the velocity. In reality, the hardness of the collision is related to the perturbers and absorbers being studied and acts on a continuum.  In a `paper by  Konefał et al. <https://doi.org/10.1016/j.jqsrt.2019.106784>`_ (citation below), authors map the hard Dicke Narrowing term onto the billiard ball collision model, based on a parameter beta, which is related to the pressure (parameterized as the Dicke narrowing at a pressure relative to the doppler width) and the ratio of the masses between the perturber and absorber.  As Beta can be calculated, this correction provides a more robust modeling of the Dicke Narrowing without the addition of additional floated parameters. 
 
 `M. Konefał, M. Słowiński, M. Zaborowski, R. Ciuryło, D. Lisak, P. Wcisło, Analytical-function correction to the Hartmann–Tran profile for more reliable representation of the Dicke-narrowed molecular spectra, Journal of Quantitative Spectroscopy and Radiative Transfer, Volume 242, 2020,106784,ISSN 0022-4073. <https://doi.org/10.1016/j.jqsrt.2019.106784>`_
 
-`The Beta correction has been included in the MATS software and the following example provides an example of how to use it. <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/Beta_Parameterization>`_
+`The Beta correction has been included in the MATS software and the following example provides an example of how to use it. <https://github.com/usnistgov/MATS/tree/master/Examples/Beta_Parameterization>`_
 
 Simulate Spectrum Objects
 +++++++++++++++++++++++++

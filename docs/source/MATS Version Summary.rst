@@ -3,7 +3,7 @@ MATS Version Summary
 
 MATS Version 2.1
 ++++++++++++++++
-published on 11/29/2021
+published on 12/03/2021
 
 **Focus of version update is cleanup to make package git installable**
 
@@ -14,9 +14,6 @@ published on 11/29/2021
 - Got rid of all `from package import *` commands.  Use explicit imports only
 - Reworked example notebooks to reflect updates.
 - Added INSTALL.md file to explain the install options.  
-
-
-
 
 
 MATS Version 2

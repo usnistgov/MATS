@@ -1,9 +1,9 @@
 Fitting Synthetic Spectra
 =========================
 
-Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/MATS/Examples>`_. 
+Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/Examples>`_. 
 
-This example `simulates and fits Oxygen A-Band spectra <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/Synthetic_Spectra>`_
+This example `simulates and fits Oxygen A-Band spectra <https://github.com/usnistgov/MATS/tree/master/Examples/Synthetic_Spectra>`_
 
 
 Import Modules and Set-Up

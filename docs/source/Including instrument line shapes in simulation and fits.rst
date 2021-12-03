@@ -1,11 +1,11 @@
 Including instrument line shapes in simulation and fits
 =======================================================
 
-Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/MATS/Examples>`_. 
+Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/Examples>`_. 
 
 MATS has added the capability to simulate and fit spectra using an instrument lineshape.  MATS automatically loads the slit functions defined in HAPI, but could use any slit function with the form slit_function(x, resolution) or slit_function(x, [resolutions]).  MATS uses a slight variation of the HAPI convolveSpectrumSame, where the arange_ function was redefined to address an integer/float bug in the underlying np.linspace call.  This implementation currently assumes an equal wavenumber spacing based on the application of the slit function calculation.
 
-`The example below simulates the same spectrum and applies the different HAPI instrument line shapes. <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/Instrument_Lineshape>`_   The simulated molefraction is perturbted and then floated during a fit. 
+`The example below simulates the same spectrum and applies the different HAPI instrument line shapes. <https://github.com/usnistgov/MATS/tree/master/Examples/Instrument_Lineshape>`_   The simulated molefraction is perturbted and then floated during a fit. 
 
  
 Simulate Spectra with ILS

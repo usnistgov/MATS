@@ -1,9 +1,9 @@
 Fitting Experimental Spectra
 ============================
 
-Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/MATS/Examples>`_. 
+Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/Examples>`_. 
 
-This example fits isolated Oxygen A-Band transitions in `experimental spectra  <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/Experimental_Spectra>`_
+This example fits isolated Oxygen A-Band transitions in `experimental spectra  <https://github.com/usnistgov/MATS/tree/master/Examples/Experimental_Spectra>`_
 
 
 

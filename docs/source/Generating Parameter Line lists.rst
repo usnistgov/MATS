@@ -27,7 +27,7 @@ Generating Parameter Line list from HITRAN
 ++++++++++++++++++++++++++++++++++++++++++
 
 The parameter line list .csv file can be generated manually, but `this notebook 
-<https://github.com/usnistgov/MATS/tree/master/MATS/Examples/HITRAN_to_Dataframe>`_ generates a parameter list using the `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_.  The overview below walks through this notebook.  
+<https://github.com/usnistgov/MATS/tree/master/Examples/HITRAN_to_Dataframe>`_ generates a parameter list using the `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_.  The overview below walks through this notebook.  
 
 
 Imports
