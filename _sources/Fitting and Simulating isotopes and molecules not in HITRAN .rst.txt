@@ -1,11 +1,11 @@
 Fitting and Simulating isotopes and molecules not in HITRAN
 ===========================================================
 
-Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/Examples>`_. 
+Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/MATS/Examples>`_. 
 
 HITRAN's focus is on atmospherically relevent molecules.  This was the original focus of MATS, however recent feature development has allowed for adaption of to include non-HITRAN molecules.  
 
-The example shows how to supplement the HITRAN isotope list and then use that in simulations and fits. This example uses Mercury as an examaple case `This example uses Mercury as an example case <https://github.com/usnistgov/MATS/tree/master/Examples/nonHITRAN_Molecules>`_.
+The example shows how to supplement the HITRAN isotope list and then use that in simulations and fits. This example uses Mercury as an examaple case `This example uses Mercury as an example case <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/nonHITRAN_Molecules>`_.
 
 
 Append to the HITRAN isotope list to include desired isotopes

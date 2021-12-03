@@ -4,7 +4,7 @@ Getting Started
 Set-Up
 ++++++
 
-The MATS code was orginally developed using the `Enthought Canopy python package distribution <https://www.enthought.com/product/canopy/>`_.  However, further development will use `Anaconda <https://www.anaconda.com/>`_. Example scripts have typically been written and run using  `jupyter notebooks <https://jupyter.org/>`_ (run in jupyter lab), as this allows for code to be run in segments and for iteration on certain code segments.  Any python package distribution should work with the code as long as the dependent packages are installed.
+The MATS package was developed and tested using the `Anaconda <https://www.anaconda.com/>`_ python environment. Example scripts have typically been written and run using  `jupyter notebooks <https://jupyter.org/>`_ (run in jupyter lab), as this allows for code to be run in segments and for iteration on certain code segments.  Any python package distribution should work with the code as long as the dependent packages are installed.
 
 
 Main Packages
@@ -12,7 +12,7 @@ Main Packages
 
 * `MATS <https://github.com/usnistgov/MATS>`_
 
-* `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_   The v1.1.1.0 was tested and is available in the MATS repository.
+* `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_   The v1.1.1.0 was tested and is available in the MATS repository.  
 
 
 Dependent Packages
@@ -41,5 +41,70 @@ Below are a list of the packages used in MATS.
 * `seaborn <https://seaborn.pydata.org/>`_ - pretty plotting
 * `scipy.fftpack <https://docs.scipy.org/doc/scipy/reference/fftpack.html>`_ - provides fft functionality
 * `jupyter lab <https://jupyterlab.readthedocs.io/en/stable/>`_ - web-based user interface for Project Jupyter
+
+
+Install
++++++++
+Taken from the INSTALL.md file
+
+Basic `MATS` installation instructions.  Note that development is alpha.  In the future, full pypi/conda installs will be made available.
+
+**Create a conda environment with MATS dependencies**
+
+Download the [environment](environment.yml) file.  Note that without setting the environment name below,
+by default an evironment `MATS-env` will be created.
+
+.. code-block:: python
+
+	conda env create -n {optional-name-of-environment} -f environment.yml
+
+
+Alternatively, we provide a conda metapackage `mats-dependencies`, which includes all dependencies for `MATS`` (excluding python).
+This can be installed using
+
+.. code-block:: python
+
+	conda install -n {optional-name-of-environment} -c wpk-nist mats-dependencies
+
+
+**From source**
+
+After cloning the repo, you can do the following.
+
+.. code-block:: python
+
+	pip install .
+
+
+To install an editable version, use option `-e`.  To exclude dependencies, use option `--no-deps`
+
+**With pip from github**
+
+This requires git also be installed.  Downside is that the whole repo (including all examples) are clones.
+
+.. code-block:: python
+
+	pip install git+https://github.com/wpk-nist-gov/MATS.git@feature/master-reformat
+
+
+**With pip from github using wheel**
+Note, this is experimental.  Do the following
+
+
+.. code-block:: python
+
+	pip install https://raw.githubusercontent.com/wpk-nist-gov/MATS/feature/master-reformat/wheel/MATS-3-py3-none-any.whl
+
+
+(Note that the actual version will not be 3)
+
+Alternatively, download the wheel and run
+
+.. code-block:: python
+
+	pip install path-to-wheel.whl
+
+
+
 
 

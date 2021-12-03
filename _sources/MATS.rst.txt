@@ -1,27 +1,38 @@
 MATS module
 ===========
 
-.. automodule:: Spectrum
-   :members:
+.. automodule:: MATS.codata
+   :members: 
    :undoc-members:
    :show-inheritance:
-
-.. automodule:: Dataset
+   
+.. automodule:: MATS.dataset
    :members:
    :undoc-members:
    :show-inheritance:
    
-.. automodule:: Generate_FitParam_File
+.. automodule:: MATS.fit_dataset
    :members:
    :undoc-members:
    :show-inheritance:
    
-.. automodule:: Fit_DataSet
+.. automodule:: MATS.generate_fitparam_file
    :members:
    :undoc-members:
    :show-inheritance:
    
-.. automodule:: Utilities
+.. automodule:: MATS.linelistdata
    :members:
    :undoc-members:
    :show-inheritance:
+   
+.. automodule:: MATS.spectrum
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   
+.. automodule:: MATS.utilities
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   

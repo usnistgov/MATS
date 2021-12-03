@@ -11,10 +11,13 @@ The MATS package includes examples highlighting major features.
    
    Fitting Experimental Spectra
    Fitting Synthetic Spectra
+   Analysis of ASCENDS Line Spectra
    Applying Analytical Correction to hardness of collisions for HTP
    Incorporating CIA into fits
    Including instrument line shapes in simulation and fits
    Fitting and Simulating isotopes and molecules not in HITRAN
+   Generating Parameter Line lists
+   
 
 
 Publications that used MATS

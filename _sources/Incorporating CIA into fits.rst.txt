@@ -1,23 +1,21 @@
 Incorporating CIA into fits
 ===========================
 
-Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/MATS/Examples>`_. 
+Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/Examples>`_. 
 
-Collision induced absorption (CIA) is a broadband effect stemming from intermolecular interactions leading to a collisionally-induced dipole. Traditionally, CIA is treated as the remaining absorption after modeling baseline and resonant absorption. To accomodate this approach, MATS allows for the input of a static CIA for each spectrum to account for in the fitting solution. `The example <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/Generic_CIA>`_ below takes synthetic spectra that include CIA, evalutates using the initial line list, generates a CIA for each spectrum, and then fits the line shape parameters.
+Collision induced absorption (CIA) is a broadband effect stemming from intermolecular interactions leading to a collisionally-induced dipole. Traditionally, CIA is treated as the remaining absorption after modeling baseline and resonant absorption. To accomodate this approach, MATS allows for the input of a static CIA for each spectrum to account for in the fitting solution. `The example <https://github.com/usnistgov/MATS/tree/master/Examples/Generic_CIA>`_ below takes synthetic spectra that include CIA, evalutates using the initial line list, generates a CIA for each spectrum, and then fits the line shape parameters.
 
 
 Generate Spectrum Objects
 +++++++++++++++++++++++++
 
-Module import follows from the :ref:`Fitting Experimental Spectra` and :ref:`Fitting Synthetic Spectra` examples with additional details on how to simulate spectra found in :ref:`Fitting Synthetic Spectra` and the source documentation.  
+Module import follows from the :ref:`Fitting Experimental Spectra` and :ref:`Fitting Synthetic Spectra` examples with additional details on how to simulate spectra found in :ref:`Fitting Synthetic Spectra` and the source documentation. 
+
+.. currentmodule:: MATS.spectrum 
 
 The provided spectra were simulated in MATS offline using the `Drouin 2017 Multispectrum analysis of the Oxygen A-Band <https://doi.org/10.1016/j.jqsrt.2016.03.037>`_ line list and also includes the CIA reported in that work. The code below generates :py:class:`Spectrum` objects from these spectra. 
 
 .. code:: ipython3
-
-   path = r'C:\Users\ema3\Documents\MATS\MATS\Examples\Generic_CIA' # Location of the Summary Data File
-   os.chdir(path)
-
 
    IntensityThreshold = 1e-30 #intensities must be above this value to be simulated
    Fit_Intensity = 1e-26#intensities must be above this value for the line to be fit
@@ -36,49 +34,49 @@ The provided spectra were simulated in MATS offline using the `Drouin 2017 Multi
 
 
 
-   spec_1 = Spectrum(  '100 Torr', 
+   spec_1 = MATS.Spectrum(  '100 Torr', 
                             molefraction = sample_concentration, natural_abundance = True, diluent = 'air', 
                             etalons = etalon, 
                             input_freq = False, frequency_column = freq_column,
                             input_tau = False, tau_column = tau_column, tau_stats_column = None, 
                             pressure_column = pressure_column, temperature_column = temp_column,#segment_column = segment_column, 
                             nominal_temperature = 296, x_shift = 0, baseline_order = order_baseline_fit)
-   spec_2 = Spectrum(  '200 Torr', 
+   spec_2 = MATS.Spectrum(  '200 Torr', 
                             molefraction = sample_concentration, natural_abundance = True, diluent = 'air', 
                             etalons = etalon, 
                             input_freq = False, frequency_column = freq_column,
                             input_tau = False, tau_column = tau_column, tau_stats_column = None, 
                             pressure_column = pressure_column, temperature_column = temp_column,#segment_column = segment_column, 
                             nominal_temperature = 296, x_shift = 0, baseline_order = order_baseline_fit)
-   spec_3 = Spectrum(  '400 Torr', 
+   spec_3 = MATS.Spectrum(  '400 Torr', 
                             molefraction = sample_concentration, natural_abundance = True, diluent = 'air', 
                             etalons = etalon, 
                             input_freq = False, frequency_column = freq_column,
                             input_tau = False, tau_column = tau_column, tau_stats_column = None, 
                             pressure_column = pressure_column, temperature_column = temp_column,#segment_column = segment_column, 
                             nominal_temperature = 296, x_shift = 0, baseline_order = order_baseline_fit)
-   spec_4 = Spectrum(  '700 Torr', 
+   spec_4 = MATS.Spectrum(  '700 Torr', 
                             molefraction = sample_concentration, natural_abundance = True, diluent = 'air', 
                             etalons = etalon, 
                             input_freq = False, frequency_column = freq_column,
                             input_tau = False, tau_column = tau_column, tau_stats_column = None, 
                             pressure_column = pressure_column, temperature_column = temp_column,#segment_column = segment_column, 
                             nominal_temperature = 296, x_shift = 0, baseline_order = order_baseline_fit)
-   spec_5 = Spectrum(  '1000 Torr', 
+   spec_5 = MATS.Spectrum(  '1000 Torr', 
                             molefraction = sample_concentration, natural_abundance = True, diluent = 'air', 
                             etalons = etalon, 
                             input_freq = False, frequency_column = freq_column,
                             input_tau = False, tau_column = tau_column, tau_stats_column = None, 
                             pressure_column = pressure_column, temperature_column = temp_column,#segment_column = segment_column, 
                             nominal_temperature = 296, x_shift = 0, baseline_order = order_baseline_fit)
-   spec_6 = Spectrum(  '2000 Torr', 
+   spec_6 = MATS.Spectrum(  '2000 Torr', 
                             molefraction = sample_concentration, natural_abundance = True, diluent = 'air', 
                             etalons = etalon, 
                             input_freq = False, frequency_column = freq_column,
                             input_tau = False, tau_column = tau_column, tau_stats_column = None, 
                             pressure_column = pressure_column, temperature_column = temp_column,#segment_column = segment_column, 
                             nominal_temperature = 296, x_shift = 0, baseline_order = order_baseline_fit)
-   spec_7 = Spectrum(  '3000 Torr', 
+   spec_7 = MATS.Spectrum(  '3000 Torr', 
                             molefraction = sample_concentration, natural_abundance = True, diluent = 'air', 
                             etalons = etalon, 
                             input_freq = False, frequency_column = freq_column,
@@ -89,17 +87,15 @@ The provided spectra were simulated in MATS offline using the `Drouin 2017 Multi
    
 Generate Dataset
 ++++++++++++++++
+
+.. currentmodule:: MATS.dataset
+
 A line list generated from the Drouin 2017 Oxygen A-Band data combined with HITRAN 2016 values is used as the initial guess.  A similar line list was used in the generation of the spectra, with truncation errors being the most like cause of discrepencies.  Spectra are combined to form a :py:class:`Dataset` object.
 
 .. code:: ipython3
 
-   #Put Together Dataset
-   linelist = r'C:\Users\ema3\Documents\MATS\MATS\Linelists' # Location of the Summary Data File
-   os.chdir(linelist)
-   PARAM_LINELIST = pd.read_csv('O2_ABand_Drouin_2017_linelist.csv')
-
-
-   os.chdir(path)
+   from MATS.linelistdata import linelistdata
+   PARAM_LINELIST = linelistdata['O2_ABand_Drouin_2017_linelist']
 
    SPECTRA = Dataset([spec_1, spec_2, spec_3, spec_4, spec_5, spec_6, spec_7], 'CIA Spectra Study', PARAM_LINELIST) 
 
@@ -112,7 +108,7 @@ Inital fit doesn't float any parameters.  The residual plots shown are only for 
 
 .. code:: ipython3
 
-   FITPARAMS = Generate_FitParam_File(SPECTRA, PARAM_LINELIST, BASE_LINELIST,
+   FITPARAMS = MATS.Generate_FitParam_File(SPECTRA, PARAM_LINELIST, BASE_LINELIST,
                                    lineprofile = 'SDVP', linemixing = True, 
                                       fit_intensity = Fit_Intensity, threshold_intensity = Fit_Intensity, 
                                       nu_constrain = True, sw_constrain = True, gamma0_constrain = True, delta0_constrain = True, 
@@ -132,7 +128,7 @@ Inital fit doesn't float any parameters.  The residual plots shown are only for 
                                       vary_etalon_amp= False, vary_etalon_period= False, vary_etalon_phase= False)
 
 
-   fit_data = Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList',
+   fit_data = MATS.Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList',
                        minimum_parameter_fit_intensity = Fit_Intensity)
    params = fit_data.generate_params()
     
@@ -147,7 +143,7 @@ Inital fit doesn't float any parameters.  The residual plots shown are only for 
 
 .. image:: example_files/CIA_high.png
 
-.. currentmodule:: Spectrum 
+.. currentmodule:: MATS.spectrum 
 
 A simple function is defined to  treat the CIA as the smooth residuals.  To do this we will use a filter to smooth over any resonant absorbance and then define the CIA as the negative of what is leftover.  This is done for all spectra making up the dataset.  Note that this defininition includes the :py:func:`Spectrum.set_cia` function to assign this array to a given :py:class:`Spectrum` instance.  Again the plots below show this process for the lowest and highest pressure spectra, where the blue lines are the residuals and the orange lines are the smoothed residuals that will define the magnitude of the CIA.  
 
@@ -183,7 +179,8 @@ A simple function is defined to  treat the CIA as the smooth residuals.  To do t
 The spectra are evaluated again and we see that the residuals have improved.  To further improve fits, I would optimize line parameters in small wavenumber sections using the baseline parameter to account for remaining CIA.  These line shape parameters  could then be used in evaluation of the full band (like above) and then the CIA column could be ammended based on those results.  Iterating on these steps should allow for optimization of both the line shape parameters and the CIA.
 
 .. code:: ipython3
-   fit_data = Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList',
+
+   fit_data = MATS.Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList',
                        minimum_parameter_fit_intensity = Fit_Intensity)
    params = fit_data.generate_params()
    result = fit_data.fit_data(params, wing_wavenumbers = 25, wing_method = 'wing_cutoff', xtol = 1e-7, maxfev = 2000, ftol = 1e-7)

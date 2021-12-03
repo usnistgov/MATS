@@ -1,11 +1,11 @@
 Including instrument line shapes in simulation and fits
 =======================================================
 
-Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/MATS/Examples>`_. 
+Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/Examples>`_. 
 
 MATS has added the capability to simulate and fit spectra using an instrument lineshape.  MATS automatically loads the slit functions defined in HAPI, but could use any slit function with the form slit_function(x, resolution) or slit_function(x, [resolutions]).  MATS uses a slight variation of the HAPI convolveSpectrumSame, where the arange_ function was redefined to address an integer/float bug in the underlying np.linspace call.  This implementation currently assumes an equal wavenumber spacing based on the application of the slit function calculation.
 
-`The example below simulates the same spectrum and applies the different HAPI instrument line shapes. <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/Instrument_Lineshape>`_   The simulated molefraction is perturbted and then floated during a fit. 
+`The example below simulates the same spectrum and applies the different HAPI instrument line shapes. <https://github.com/usnistgov/MATS/tree/master/Examples/Instrument_Lineshape>`_   The simulated molefraction is perturbted and then floated during a fit. 
 
  
 Simulate Spectra with ILS
@@ -14,6 +14,9 @@ Simulate Spectra with ILS
 Module import follows from the :ref:`Fitting Experimental Spectra` and :ref:`Fitting Synthetic Spectra` examples with additional details on how to simulate spectra found in :ref:`Fitting Synthetic Spectra` and the source documentation.  
 
 .. code:: ipython3
+
+   from MATS.linelistdata import linelistdata
+   import MATS.hapi as hapi
 
    # Shared Simulation and Fit Parameters
    IntensityThreshold = 1e-30 #intensities must be above this value to be simulated
@@ -34,16 +37,16 @@ When fitting spectra, the simulated spectral range is the minimum and maximum wa
 
 ..  code:: ipython3
 
-   linelist = r'C:\Users\ema3\Documents\MATS\MATS\Linelists' # Location of the Summary Data File
-   os.chdir(linelist)
-   PARAM_LINELIST = pd.read_csv('CO2_30012.csv')
+   PARAM_LINELIST = linelistdata['CO2_30012']
    PARAM_LINELIST = PARAM_LINELIST[(PARAM_LINELIST['nu'] <= wave_max + wave_range) & (PARAM_LINELIST['nu']>= wave_min - wave_step)]
+   
+.. currentmodule:: MATS.spectrum
 
 The :py:class:`Spectrum` object definitions below show how to use the ILS_function, ILS_resolution, and ILS_wing (defines the length of the ILS slit function to use in the convolution, such that the length is +/- ILS_wing / spectrum stepsize) to define the ILS function. The outputs below show the generated spectrum for each ILS_function
 
 .. code:: ipython3
 
-   spec_rectangular =  simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
+   spec_rectangular =  MATS.simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
                                 SNR = SNR, baseline_terms = [0], temperature = 22.85,  
                                 pressure = 150, 
                                  filename = 'Rectangular', 
@@ -53,7 +56,7 @@ The :py:class:`Spectrum` object definitions below show how to use the ILS_functi
 							   
 .. code:: ipython3							   
 							   
-   spec_triangular=  simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
+   spec_triangular=  MATS.simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
                                 SNR = SNR, baseline_terms = [0], temperature = 22.85,  
                                 pressure = 150, 
                                  filename = 'Triangular', 
@@ -63,7 +66,7 @@ The :py:class:`Spectrum` object definitions below show how to use the ILS_functi
 								   							   
 .. code:: ipython3							   
 			
-   spec_gaussian =  simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
+   spec_gaussian =  MATS.simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
                                 SNR = SNR, baseline_terms = [0], temperature = 22.85,  
                                 pressure = 150, 
                                  filename = 'Gaussian', 
@@ -73,7 +76,7 @@ The :py:class:`Spectrum` object definitions below show how to use the ILS_functi
 								   							   
 .. code:: ipython3							   
 			
-   spec_dispersion =  simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
+   spec_dispersion =  MATS.simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
                                 SNR = SNR, baseline_terms = [0], temperature = 22.85,  
                                 pressure = 150, 
                                  filename = 'Dispersion', 
@@ -83,7 +86,7 @@ The :py:class:`Spectrum` object definitions below show how to use the ILS_functi
 								   							   
 .. code:: ipython3							   
 			
-   spec_cosinus =  simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
+   spec_cosinus =  MATS.simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
                                 SNR = SNR, baseline_terms = [0], temperature = 22.85,  
                                 pressure = 150, 
                                  filename = 'Cosinus', 
@@ -93,7 +96,7 @@ The :py:class:`Spectrum` object definitions below show how to use the ILS_functi
 								   							   
 .. code:: ipython3							   
 			
-   spec_diffraction =  simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
+   spec_diffraction =  MATS.simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
                                 SNR = SNR, baseline_terms = [0], temperature = 22.85,  
                                 pressure = 150, 
                                  filename = 'Diffraction', 
@@ -103,7 +106,7 @@ The :py:class:`Spectrum` object definitions below show how to use the ILS_functi
 								   							   
 .. code:: ipython3							   
 			
-   spec_michelson =  simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
+   spec_michelson =  MATS.simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_step,
                                 SNR = SNR, baseline_terms = [0], temperature = 22.85,  
                                 pressure = 150, 
                                  filename = 'Michelson', 
@@ -115,11 +118,16 @@ The :py:class:`Spectrum` object definitions below show how to use the ILS_functi
 Generate Dataset and Fit Parameters
 +++++++++++++++++++++++++++++++++++
 
-The dataset and fit parameters are generated with instances of the :py:class:`Dataset` and :py:class:`Generate_FitParam_File` classes. Additionally, the initial CO2 molefraction is perturbed within 2% of the simulated mole fraction. 
+.. currentmodule:: MATS.dataset
+
+The dataset and fit parameters are generated with instances of the :py:class:`Dataset` and 
+
+.. currentmodule:: MATS.generate_fitparam_file
+:py:class:`Generate_FitParam_File` classes. Additionally, the initial CO2 molefraction is perturbed within 2% of the simulated mole fraction. 
 
 .. code:: ipython3
 
-   SPECTRA = Dataset([ spec_rectangular, spec_triangular, spec_gaussian, spec_dispersion, spec_cosinus, 
+   SPECTRA = MATS.Dataset([ spec_rectangular, spec_triangular, spec_gaussian, spec_dispersion, spec_cosinus, 
                                spec_diffraction, spec_michelson],  'ILS Study', PARAM_LINELIST) 
    BASE_LINELIST = SPECTRA.generate_baseline_paramlist()
 
@@ -128,7 +136,7 @@ The dataset and fit parameters are generated with instances of the :py:class:`Da
 
 
 
-   FITPARAMS = Generate_FitParam_File(SPECTRA, PARAM_LINELIST, BASE_LINELIST,
+   FITPARAMS = MATS.Generate_FitParam_File(SPECTRA, PARAM_LINELIST, BASE_LINELIST,
                                            lineprofile = 'SDNGP', linemixing = True, 
                                               fit_intensity = Fit_Intensity, threshold_intensity = IntensityThreshold, 
                                               nu_constrain = True, sw_constrain = True, gamma0_constrain = True, delta0_constrain = True, 
@@ -146,7 +154,7 @@ The dataset and fit parameters are generated with instances of the :py:class:`Da
 
    FITPARAMS.generate_fit_baseline_linelist(vary_baseline = False, vary_molefraction = {2:True}, vary_ILS_res = False)
 
-.. currentmodule:: Generate_FitParam_File 
+.. currentmodule:: MATS.generate_fitparam_file 
 
 In the :py:func:`Generate_FitParam_File.generate_fit_baseline_linelist` function, in addition to the normal baseline parameters the ILS resolution parameters are also fittable parameters.  Additionally, this is coded in such a way that each ILS_function has a unique resolution parameter.  This allows for different spectra to have different ILS functions and the baseline linelist table adequately accounts for this. Subset of a :py:func:`Generate_FitParam_File.generate_fit_baseline_linelist` output highlights this.  While floating the resolution parameters is possible, it should be done with caution as all other parameters are dependent on this value, so correlation and poor fits are likely.   
 
@@ -161,12 +169,12 @@ In the :py:func:`Generate_FitParam_File.generate_fit_baseline_linelist` function
 Fit Data
 ++++++++
 
-In this example only the sample concentration is allowed to float, which is a spectrum dependent parameter.  At this SNR all of the results yield fit mole fractions very similar to the simulated value.  The plot below shows the relative Bias in the fit mole fraction with error bars equal to the relative fit uncertainty for each ILS.   
+In this example only the sample concentration is allowed to float, which is a spectrum dependent parameter.  At this SNR all of the results yield fit mole fractions very similar to the simulated value.  The plot below shows the relative Bias in the fit mole fraction with error bars equal to the relative fit uncertainty for each ILS.  Note that this is only one iteration and not generalizable. 
 
 .. code:: ipython3
 
 
-   fit_data = Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList', minimum_parameter_fit_intensity = Fit_Intensity)
+   fit_data = MATS.Fit_DataSet(SPECTRA,'Baseline_LineList', 'Parameter_LineList', minimum_parameter_fit_intensity = Fit_Intensity)
    params = fit_data.generate_params()
    for param in params:
     if ('_res_' in param) and (params[param].vary == True):

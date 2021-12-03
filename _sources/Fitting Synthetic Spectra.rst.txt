@@ -1,9 +1,9 @@
 Fitting Synthetic Spectra
 =========================
 
-Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/MATS/Examples>`_. 
+Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS `examples folder <https://github.com/usnistgov/MATS/tree/master/Examples>`_. 
 
-This example `simulates and fits Oxygen A-Band spectra <https://github.com/usnistgov/MATS/tree/master/MATS/Examples/Synthetic_Spectra>`_
+This example `simulates and fits Oxygen A-Band spectra <https://github.com/usnistgov/MATS/tree/master/Examples/Synthetic_Spectra>`_
 
 
 Import Modules and Set-Up
@@ -13,26 +13,26 @@ This example starts with importing modules and setting up file locations
 
 .. code:: ipython3
 
-   import numpy as np
-   import pandas as pd
-   import os, sys
-   import matplotlib.pyplot as plt
-   from matplotlib import gridspec
+	import numpy as np
+	import pandas as pd
+	import os
+	import matplotlib.pyplot as plt
+	from matplotlib import gridspec
+	import MATS
 
-Append the system path to include the location of both the hapi and MATS modules
+Optional import of seaborn package for figure generation
 
 .. code:: ipython3
 
-   sys.path.append(r'C:\Users\Documents\MATS\MATS')# set location of HAPI.py module
-
-   from hapi import *
-   from MATS import *
+	import seaborn as sns
+	sns.set_style("whitegrid")
+	sns.set_style("ticks")
+	sns.set_context("poster")
   
-Change the path to the working directory that contains experimental spectra or to the folder that you want to work in.
+If you aren't using the MATS file strucutre, change the path to the working directory that contains experimental spectra or to the folder that you want to work in.
 
 .. code:: ipython3
 
-   path = r'C:\Users\ema3\Documents\MATS\MATS\Examples\Synthetic_Spectra'
    os.chdir(path)
   
  
@@ -40,20 +40,19 @@ Change the path to the working directory that contains experimental spectra or t
 Simulate Spectra
 ++++++++++++++++
 
-.. currentmodule:: Spectrum
+.. currentmodule:: MATS.spectrum
 
 If you are simulating spectra, opposed to reading them in from a file as discussed above, then you can use the :py:func:`simulate_spectrum` function.
 
-When simulating spectra, the first step is to read in the reference line list.  This file can be generated following the :ref:`Generating Parameter Line lists`. The following code reads in the reference line list as a pandas dataframe, then resets the working directory.  
+.. currentmodule:: MATS.linelistdata
+
+
+When simulating spectra, the first step is to read in the reference line list.  This file can be generated following the :ref:`Generating Parameter Line lists` and read in using pd.read_csv function. The following code reads in the reference line list using the py:func:`LoadLineListData` function to read in the line list provided for the Oxygen A-Band.  
 
 .. code:: ipython3
 
-   hapi = r'C:\Users\Documents\MATS\MATS\Linelists'
-   os.chdir(hapi)
-   PARAM_LINELIST = pd.read_csv('O2_ABand_Drouin_2017_linelist.csv')
-
-   path = r'C:\Users\Documents\MATS\MATS\Examples\A-Band - Synthetic Spectra'
-   os.chdir(path)   
+	from MATS.linelistdata import linelistdata
+	PARAM_LINELIST = linelistdata['O2_ABand_Drouin_2017_linelist'] 
 
 Just as you would do if reading in the experimental spectrum, this example defines some common simulation and fit variables.  In addition to variables that would be used in fitting experimental spectra, the minimum and maximum wavenumbers for the simulation and the simulation wavenumber spacing are defined.  Alternatively, a wavenumbers term can be used and an array can be used as the input defining the x-axis.  This feature allows the use of a non-uniform x-axis and will take precident of the use of wave_min, wave_max, and wave_step parameterization.
 
@@ -72,6 +71,7 @@ The baseline is defined by a polynomial where the array index is the parameter c
    wavenumbers = np.arange(13155, 13158, 0.02)
    baseline_terms = [0] #polynomial baseline coefficients where the index is equal to the coefficient order  
    
+.. currentmodule:: MATS.spectrum
 
 The :py:func:`simulate_spectrum` function also allows for error to be added in the following ways:
 
@@ -92,22 +92,22 @@ These parameters and the additional settings for filenames and number of segment
 
 .. code:: ipython3   
    
-   spec_1 =  simulate_spectrum(PARAM_LINELIST, wavenumbers = wavenumbers, wave_error = wave_error, 
+   spec_1 =  MATS.simulate_spectrum(PARAM_LINELIST, wavenumbers = wavenumbers, wave_error = wave_error, 
                         SNR = SNR, baseline_terms = baseline_terms, temperature = 25, temperature_err = temperature_err, pressure = 25, 
                         pressure_err = pressure_err, 
                         wing_cutoff = 50,  wing_method = 'wing_cutoff', filename = '25_torr', molefraction = sample_molefraction, molefraction_err = molefraction_err,
                         natural_abundance = True, nominal_temperature = 296, IntensityThreshold = 1e-30, num_segments = 1)
-   spec_2 =  simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_space, wave_error = wave_error, 
+   spec_2 =  MATS.simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_space, wave_error = wave_error, 
                         SNR = SNR, baseline_terms = baseline_terms, temperature = 25, temperature_err = temperature_err, pressure = 50, 
                         pressure_err = pressure_err, 
                         wing_cutoff = 50,  wing_method = 'wing_cutoff', filename = '50_torr', molefraction = sample_molefraction, molefraction_err = molefraction_err,
                         natural_abundance = True, nominal_temperature = 296, IntensityThreshold = 1e-30, num_segments = 1)
-   spec_3 =  simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_space, wave_error = wave_error, 
+   spec_3 =  MATS.simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_space, wave_error = wave_error, 
                         SNR = SNR, baseline_terms = baseline_terms, temperature = 25, temperature_err = temperature_err, pressure = 100, 
                         pressure_err = pressure_err, 
                         wing_cutoff = 50,  wing_method = 'wing_cutoff', filename = '100_torr', molefraction = sample_molefraction, molefraction_err = molefraction_err,
                         natural_abundance = True, nominal_temperature = 296, IntensityThreshold = 1e-30, num_segments = 1)
-   spec_4 =  simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_space, wave_error = wave_error, 
+   spec_4 =  MATS.simulate_spectrum(PARAM_LINELIST, wave_min, wave_max, wave_space, wave_error = wave_error, 
                         SNR = SNR, baseline_terms = baseline_terms, temperature = 25, temperature_err = temperature_err, pressure = 200, 
                         pressure_err = pressure_err, 
                         wing_cutoff = 50,  wing_method = 'wing_cutoff', filename = '200_torr', molefraction = sample_molefraction, molefraction_err = molefraction_err,
@@ -117,15 +117,18 @@ These parameters and the additional settings for filenames and number of segment
 Generate a Dataset
 ++++++++++++++++++
 
-.. currentmodule:: Dataset
+.. currentmodule:: MATS.spectrum
 
-The procedure for analysis for both simulating and loading spectrum are the same as described in :ref:`Fitting Experimental Spectra`. The next step is to combine all desired :py:class:`Spectrum` objects into a :py:class:`Dataset` object, where we give the dataset a name and specify the parameter line list to use for analysis/
+The procedure for analysis for both simulating and loading spectrum are the same as described in :ref:`Fitting Experimental Spectra`. The next step is to combine all desired :py:class:`Spectrum` objects 
+
+.. currentmodule:: MATS.dataset
+into a :py:class:`Dataset` object, where we give the dataset a name and specify the parameter line list to use for analysis/
 
 
 
 .. code:: ipython3
 
-   SPECTRA = Dataset([spec_1, spec_2, spec_3, spec_4], 'Line Intensity', PARAM_LINELIST)
+   SPECTRA = MATS.Dataset([spec_1, spec_2, spec_3, spec_4], 'Line Intensity', PARAM_LINELIST)
    
 The :py:class:`Dataset` class contains a function to generate a baseline line list, analogous to the one for the parameter line list done outside of this example, based on the order of the baseline fit, etalons, molecules, x-shift parameters, and segments as defined by both the spectrum and dataset objects.
 
@@ -139,13 +142,13 @@ The :py:class:`Dataset` class contains a function to generate a baseline line li
 Generate Fit Parameter Files
 ++++++++++++++++++++++++++++
 
-.. currentmodule:: Generate_FitParam_File
+.. currentmodule:: MATS.generate_fitparam_file
 
 The next section of code uses the :py:class:`Generate_FitParam_File` class to define what line shape to use for the initial fits, whether to use line mixing, the minimum line intensity to fit a line, mimimum intensity to included in the simulation, and for each line parameter whether that parameter is going to be constrained across all spectra or whether there will be a parameter for each spectrum (multi-spectrum vs single-spectrum fits) on a parameter by parameter basis.  In the example below, the SDVP line profile without line mixing will be used to fit lines with line intensities greater than 1e-24 with no parameters floated.
 
 .. code:: ipython3
 
-   FITPARAMS = Generate_FitParam_File(SPECTRA, PARAM_LINELIST, BASE_LINELIST, lineprofile = 'SDVP', linemixing = False, 
+   FITPARAMS = MATS.Generate_FitParam_File(SPECTRA, PARAM_LINELIST, BASE_LINELIST, lineprofile = 'SDVP', linemixing = False, 
                                   fit_intensity = Fit_Intensity, threshold_intensity = IntensityThreshold, sim_window = wave_range,
                                   nu_constrain = True, sw_constrain = True, gamma0_constrain = True, delta0_constrain = True, 
                                    aw_constrain = True, as_constrain = True, 
@@ -167,9 +170,12 @@ The next step is to generate fit parameter and baseline line lists that include 
                                       vary_etalon_amp= False, vary_etalon_period= False, vary_etalon_phase= False, 
                                          vary_pressure = False, vary_temperature = False)  
 
+.. currentmodule:: MATS.fit_dataset
+
 These functions will generate .csv files corresponding to these selections, which are read in by the :py:class:`Fit_DataSet` class instantiation.  When simulating spectra, if you don't adjust the baseline and parameter line lists, then your simulated variables are equal to your initial guesses.  This can lead to a local minimum where the fit will not move from the initial guesses.  The last segment of the code shows an example where random uncertainties from the simulated values are applied and then the Parameter line list file is resaved.
 
 .. code:: ipython3
+
    Parameter_LineList = pd.read_csv('Parameter_LineList.csv', index_col = 0)
 
 
@@ -185,7 +191,7 @@ These functions will generate .csv files corresponding to these selections, whic
 Fit Dataset
 +++++++++++
 
-.. currentmodule:: Fit_DataSet
+.. currentmodule:: MATS.fit_dataset
 
 Instantiating the :py:class:`Fit_DataSet` class reads in the information from the baseline and parameter linelists generated in the previous step.  The :ref:`Fitting Experimental Spectra documentation` gives a more basic example of how to perform a fit.  The example below iterates on a fit, where in the first iteration no parameters are floated, in the second iteration the line centers and line intensities are floated, and in the final iteration the collisional broadening, pressure shift, and speed-dependent broadening are floated.  Sometimes it is not possible to float all parameters at the same time, specifically with poor initial guesses for line center.  In that case an iterative approach like this is advantageous.
 
