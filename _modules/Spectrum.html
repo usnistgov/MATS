@@ -86,7 +86,7 @@ $(document).ready(function(){
 <span class="sd">    natural_abundance : bool, optional</span>
 <span class="sd">        flag for if the molecular species in the spectrum are at natural abundance</span>
 <span class="sd">    abundance_ratio_MI : dict, optional</span>
-<span class="sd">        if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }</span>
+<span class="sd">        if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }.  The enhancement is the ratio of the new abundance to the natural abundance.</span>
 <span class="sd">    isotope_list : dict, optional</span>
 <span class="sd">        provides opportunity to specify the isotope look-up table.  Default is ISO, which is from HAPI.  If not using ISO, then must use this format and suggested you use function to add to ISO</span>
 <span class="sd">    diluent : str, optional</span>
@@ -541,7 +541,7 @@ $(document).ready(function(){
 <span class="sd">    natural_abundance : bool, optional</span>
 <span class="sd">        flag for if the spectrum contains data at natural abundance. The default is True.</span>
 <span class="sd">    abundance_ratio_MI : dict, optional</span>
-<span class="sd">        if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }. The default is {}.</span>
+<span class="sd">        if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }. The default is {}.  The enhancement is the ratio of the new abundance to the natural abundance.</span>
 <span class="sd">    isotope_list : dict, optional</span>
 <span class="sd">        provides opportunity to specify the isotope look-up table.  Default is ISO, which is from HAPI.  If not using ISO, then must use this format and suggested you use function to add to ISO</span>
 <span class="sd">    diluent : str, optional</span>
