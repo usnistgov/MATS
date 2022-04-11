@@ -1285,9 +1285,9 @@ class Fit_DataSet:
                 for i in range(1, len(spectrum.etalons)+1):
                     fit_etalon_parameters[i] = {'amp': 0, 'period':0, 'phase':0}
                 for key, par in result.params.items():
-                    if ('baseline' in par.name) and (str(spectrum.spectrum_number + '_' + str(segment)) in par.name):
+                    if ('baseline' in par.name) and ((str(spectrum.spectrum_number) + '_' + str(segment)) in par.name):
                         baseline_param_array[ord(par.name[9:par.name.find('_',9)])-97] = np.float(par.value)
-                    elif ('etalon' in par.name) and (str(spectrum.spectrum_number + '_' + str(segment)) in par.name[par.name.find('_', 7):]):
+                    elif ('etalon' in par.name) and ((str(spectrum.spectrum_number) + '_' + str(segment)) in par.name[par.name.find('_', 7):]):
                         etalon_num = int(par.name[par.name.find('_')+1: par.name.find('_', par.name.find('_')+1)])
                         if ('amp' in par.name) and (str(etalon_num) in par.name):
                             fit_etalon_parameters[etalon_num]['amp'] = par.value
