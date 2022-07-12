@@ -96,10 +96,10 @@ class Generate_FitParam_File:
         return self.base_linelist
     def get_CIA_linelist(self):
         return self.CIA_linelist
-    def generate_fit_param_linelist_from_linelist(self, vary_nu = {7:{1:True, 2:False, 3:False}, 1:{1:False}}, vary_sw = {7:{1:True, 2:False, 3:False}},
-                                   vary_gamma0 = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_gamma0 = {},
-                                   vary_delta0 = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_delta0 = {},
-                                   vary_aw = {7:{1: True, 2:False, 3: False}, 1:{1:False}}, vary_n_gamma2 = {},
+    def generate_fit_param_linelist_from_linelist(self, vary_nu = {}, vary_sw = {},
+                                   vary_gamma0 = {}, vary_n_gamma0 = {},
+                                   vary_delta0 = {}, vary_n_delta0 = {},
+                                   vary_aw = {}, vary_n_gamma2 = {},
                                    vary_as = {}, vary_n_delta2 = {},
                                    vary_nuVC = {}, vary_n_nuVC = {},
                                    vary_eta = {}, vary_linemixing = {}):
