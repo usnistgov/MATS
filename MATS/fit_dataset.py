@@ -69,7 +69,10 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
 
             eta_species = the correlation parameter for the VC and SD effects
 
-            y_species_nominaltemperature = linemixing term (as currently written this doesn't have a temperature dependence, so read in a different column for each nominal temperature)
+            y_species = linemixing term 
+            
+            n_y_species = temperature dependence of linemixing term                            
+                                         
     waves : array
         1-D array comprised of wavenumbers (cm-1) to use as x-axis for simulation.
     wing_cutoff : float, optional
@@ -261,7 +264,9 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
 
             eta_species = the correlation parameter for the VC and SD effects
 
-            y_species_nominaltemperature = linemixing term (as currently written this doesn't have a temperature dependence, so read in a different column for each nominal temperature)
+            y_species = linemixing term 
+            
+            n_y_species = temperature dependence of line mixing term
     waves : array
         1-D array comprised of wavenumbers (cm-1) to use as x-axis for simulation.
     wing_cutoff : float, optional
@@ -536,7 +541,7 @@ class Fit_DataSet:
                 SD_delta_limit = False, SD_delta_limit_factor  = 10, n_delta2_limit = False, n_delta2_limit_factor  = 10,
                 nuVC_limit = False, nuVC_limit_factor  = 10, n_nuVC_limit = False, n_nuVC_limit_factor = 10,
                 eta_limit = False, eta_limit_factor  = 10,
-                linemixing_limit = False, linemixing_limit_factor  = 10,
+                linemixing_limit = False, linemixing_limit_factor  = 10, n_linemixing_limit = False, n_linemixing_limit_factor = 10,
                 beta_formalism = False):
 
 
@@ -591,6 +596,8 @@ class Fit_DataSet:
         self.eta_limit_factor = eta_limit_factor
         self.linemixing_limit = linemixing_limit
         self.linemixing_limit_factor = linemixing_limit_factor
+        self.n_linemixing_limit = n_linemixing_limit
+        self.n_linemixing_limit_factor = n_linemixing_limit_factor
         self.beta_formalism = beta_formalism
 
 
@@ -687,6 +694,8 @@ class Fit_DataSet:
                 nuVC_constrain = False
             if (sum('eta' in param for param in linelist_params)) >  len(diluent_list):
                 eta_constrain = False
+            if (sum('y' in param for param in linelist_params)) >  len(diluent_list):
+                linemix_constrain = False
         else:
             if (sum('gamma0' in param for param in linelist_params)) >  2*len(diluent_list):
                 gamma0_constrain = False
@@ -700,12 +709,10 @@ class Fit_DataSet:
                 nuVC_constrain = False
             if (sum('eta' in param for param in linelist_params)) >  len(diluent_list):
                 eta_constrain = False
-        if (sum('y' in param for param in linelist_params)) >  len(diluent_list)*(self.dataset.get_number_nominal_temperatures()[0]):
-            linemix_constrain = False
-        linemix_terms_constrained = []
-        for diluent in diluent_list:
-            for temperature in (self.dataset.get_number_nominal_temperatures()[1]):
-                linemix_terms_constrained.append('y_'+diluent + '_' + str(temperature))
+            if (sum('y' in param for param in linelist_params)) >  2*len(diluent_list):
+                eta_constrain = False
+
+
         for spec_line in self.lineparam_list.index.values:
             if self.lineparam_list.loc[spec_line]['sw'] >= self.minimum_parameter_fit_intensity / self.lineparam_list.loc[spec_line]['sw_scale_factor']:# bigger than 1 because fit_intensity / fit_intensity
                 for line_param in linelist_params:
@@ -876,20 +883,28 @@ class Fit_DataSet:
                         else:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                     # linemixing
-                    elif ('y_' in line_param) and (linemix_constrain) and (line_param in linemix_terms_constrained):
+                    
+                    elif ('y_' in line_param) and ('n_' not in line_param) and (linemix_constrain) and (index_length==1):
                         if self.linemixing_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
-                                  min = (1 / self.linemixing_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
-                                  max = self.linemixing_limit_factor *self.lineparam_list.loc[int(spec_line)][line_param])
+                                  min = (1 / self.linemixing_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param] ,
+                                  max = self.linemixing_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
-                    elif ('y_' in line_param) and (not linemix_constrain) and (not line_param in linemix_terms_constrained):
+                    elif ('y_' in line_param) and ('n_' not in line_param) and (not linemix_constrain) and (index_length>1):
                         if self.linemixing_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
                                   min = (1 / self.linemixing_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
-                                  max = self.linemixing_limit_factor / 100*self.lineparam_list.loc[int(spec_line)][line_param])
+                                  max = self.linemixing_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                              params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
+                    elif ('n_y_' in line_param):
+                        if self.n_linemixing_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
+                                  min = (1 / self.n_linemixing_limit_factor) *self.lineparam_list.loc[int(spec_line)][line_param],
+                                  max = self.n_linemixing_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
+                        else:
+                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param],self.lineparam_list.loc[spec_line][line_param + '_vary'])
         return (params)
 
     def constrained_baseline(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
@@ -1028,19 +1043,14 @@ class Fit_DataSet:
                 columns.append('nuVC_' + species)
                 columns.append('n_nuVC_' + species)
                 columns.append('eta_' + species)
-                columns.append('y_' + species + '_' + str(nominal_temp))
+                columns.append('y_' + species)
+                columns.append('n_y_' + species)
             rename_dictionary = {}
             for column in self.lineparam_list:
                 if ('vary' not in column) and ('err' not in column):
-                    if ((column + '_' + str(spectrum_number)) in self.lineparam_list) and ('y_' not in column):
+                    if ((column + '_' + str(spectrum_number)) in self.lineparam_list):
                         columns = [(column + '_'  + str(spectrum_number))if x==column else x for x in columns]
                         rename_dictionary[(column + '_'  + str(spectrum_number))] = column
-                    elif ('y_' in column):
-                        if ((column + '_' + str(spectrum_number)) in self.lineparam_list):
-                            columns = [(column + '_'  +str(spectrum_number))if x==column else x for x in columns]
-                            rename_dictionary[(column) + '_' + str(spectrum_number)] = (column[:column.find(str(nominal_temp))-1])
-                        elif column.count('_') < 3:
-                            rename_dictionary[(column)] = (column[:column.find(str(nominal_temp))-1])
             linelist_for_sim = self.lineparam_list[columns].copy()
 
             # Replaces the relevant linelist locations with the
