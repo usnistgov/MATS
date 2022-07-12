@@ -388,7 +388,7 @@ class Generate_FitParam_File:
 
             # Linemixing
             order_linemixing.append('y_' + diluent)
-            param_linelist_df['y' + diluent + '_vary'] = len(param_linelist_df)*[False]
+            param_linelist_df['y_' + diluent + '_vary'] = len(param_linelist_df)*[False]
             param_linelist_df['y_' + diluent + '_err'] = len(param_linelist_df)*[0]
             if self.linemixing_constrain:
                 if vary_linemixing != {}:
@@ -405,7 +405,7 @@ class Generate_FitParam_File:
                         for molecule in vary_linemixing:
                             for isotope in vary_linemixing[molecule]:
                                 param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'y_' +diluent +'_'+str(spec) + '_vary'] = (vary_linemixing[molecule][isotope])
-            order_linemixing.append('n_gamma0_' +diluent )
+            order_linemixing.append('n_y_' +diluent )
             
             #Temperature Dependence
             if num_nominal_temps > 1:
