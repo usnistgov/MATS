@@ -526,9 +526,6 @@ def simulate_spectrum(parameter_linelist,
             Diluent = {diluent: {'composition':1, 'm':0}}
             print ('THIS IS GOING TO BREAK WITH A DIVISION ERROR IF YOU USE THE BETA VERSION')
 
-    #Generates a linemixing column for each Diluent
-    for dil in Diluent:
-        parameter_linelist['y_' + dil] = parameter_linelist['y_' + dil + '_' + str(nominal_temperature)]
     #Set-Up Parameters
     baseline_terms = np.flip(baseline_terms)
     temperature_K = temperature + 273.15
