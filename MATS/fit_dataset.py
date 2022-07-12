@@ -530,12 +530,12 @@ class Fit_DataSet:
                 x_shift_limit = False, x_shift_limit_magnitude = 0.1,
                 nu_limit = False, nu_limit_magnitude = 0.1,
                 sw_limit = False, sw_limit_factor = 10,
-                gamma0_limit = False, gamma0_limit_factor = 10, n_gamma0_limit= True, n_gamma0_limit_factor = 10,
-                delta0_limit = False, delta0_limit_factor = 10, n_delta0_limit = True, n_delta0_limit_factor = 10,
-                SD_gamma_limit = False, SD_gamma_limit_factor  = 10, n_gamma2_limit = True, n_gamma2_limit_factor  = 10,
-                SD_delta_limit = True, SD_delta_limit_factor  = 10, n_delta2_limit = True, n_delta2_limit_factor  = 10,
-                nuVC_limit = False, nuVC_limit_factor  = 10, n_nuVC_limit = True, n_nuVC_limit_factor = 10,
-                eta_limit = True, eta_limit_factor  = 10,
+                gamma0_limit = False, gamma0_limit_factor = 10, n_gamma0_limit= False, n_gamma0_limit_factor = 10,
+                delta0_limit = False, delta0_limit_factor = 10, n_delta0_limit = False, n_delta0_limit_factor = 10,
+                SD_gamma_limit = False, SD_gamma_limit_factor  = 10, n_gamma2_limit = False, n_gamma2_limit_factor  = 10,
+                SD_delta_limit = False, SD_delta_limit_factor  = 10, n_delta2_limit = False, n_delta2_limit_factor  = 10,
+                nuVC_limit = False, nuVC_limit_factor  = 10, n_nuVC_limit = False, n_nuVC_limit_factor = 10,
+                eta_limit = False, eta_limit_factor  = 10,
                 linemixing_limit = False, linemixing_limit_factor  = 10,
                 beta_formalism = False):
 
