@@ -102,7 +102,7 @@ class Generate_FitParam_File:
                                    vary_aw = {}, vary_n_gamma2 = {},
                                    vary_as = {}, vary_n_delta2 = {},
                                    vary_nuVC = {}, vary_n_nuVC = {},
-                                   vary_eta = {}, vary_linemixing = {}):
+                                   vary_eta = {}, vary_linemixing = {}, vary_n_linemixing = {}):
         """Generates the parameter line list used in fitting and updates the fitting booleans to desired settings.
 
 
@@ -137,7 +137,8 @@ class Generate_FitParam_File:
             Dictionary of dictionaries setting whether the molecule and isotope correlation parameter for the VC and SD effects should be floated.  Follows nu_vary example.  . The default is {}.
         vary_linemixing : bool, optional
             Dictionary of dictionaries setting whether the molecule and isotope first-order line-mixing should be floated.  Follows nu_vary example.  . The default is {}.
-
+        vary_n_linemixing : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope temperature dependence for the first-order line-mixing should be floated.  Follows nu_vary example.  . The default is {}.
         Returns
         -------
         param_linelist_df : dataframe
@@ -174,8 +175,9 @@ class Generate_FitParam_File:
             column_list.append('nuVC_' + diluent)
             column_list.append('n_nuVC_' + diluent)
             column_list.append('eta_' + diluent)
-            for nominal_temperature in list_nominal_temps:
-                column_list.append('y_' + diluent + '_' + str(nominal_temperature)) ## Fix this so it has the nominal temperatures
+            column_list.append('y_' + diluent)
+            column_list.append('n_y_' + diluent)
+
         param_linelist_df = param_linelist_df[column_list]
         param_linelist_df = param_linelist_df.reset_index(drop = True)
         #Re-defines the Line intensity as sw*sw_scale_factor
@@ -385,32 +387,26 @@ class Generate_FitParam_File:
                                     param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'eta_' +diluent +'_'+str(spec) + '_vary'] = (vary_eta[molecule][isotope])
 
             # Linemixing
-            for nominal_temp in list_nominal_temps:
-                order_linemixing.append('y_' + diluent + '_'+ str(nominal_temp))
-                param_linelist_df['y_' + diluent + '_'+ str(nominal_temp) + '_vary'] = len(param_linelist_df)*[False]
-                param_linelist_df['y_' + diluent + '_'+ str(nominal_temp)+ '_err'] = len(param_linelist_df)*[0]
-                if self.linemixing_constrain:
-                    if not self.linemixing:
-                        param_linelist_df.loc[:,'y_' + diluent + '_' + str(nominal_temp)] = 0
-                    else:
-                        if vary_linemixing != {}:
-                            for molecule in vary_linemixing:
-                                for isotope in vary_linemixing[molecule]:
-                                    param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'y_' +diluent + '_'+ str(nominal_temp)+ '_vary'] = (vary_linemixing[molecule][isotope])
-                else:
-                    for spec in self.dataset.get_list_spectrum_numbers():
-                        order_linemixing.append('y_' + diluent + '_'+ str(nominal_temp)+ '_'+ str(spec))
-                        param_linelist_df['y_' +diluent + '_'+ str(nominal_temp) + '_'+ str(spec) + '_vary'] = len(param_linelist_df)*[False]
-                        param_linelist_df['y_' +diluent + '_'+ str(nominal_temp) + '_'+ str(spec) + '_err'] = len(param_linelist_df)*[0]
-                        if not self.linemixing:
-                            param_linelist_df.loc[:,'y_' + diluent + '_'+str(nominal_temp) +'_' + str(spec)] = 0
-                        else:
-                            param_linelist_df['y_' +diluent + '_'+ str(nominal_temp)+'_' +str(spec)] = (param_linelist_df['y_' + diluent+ '_' +str(nominal_temp)].values)
-                            if vary_linemixing != {}:
-                                for molecule in vary_linemixing:
-                                    for isotope in vary_linemixing[molecule]:
-                                        param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'y_' +diluent+ '_'+ str(nominal_temp) +'_'+str(spec) + '_vary'] = (vary_linemixing[molecule][isotope])
-
+            order_linemixing.append('y_' + diluent)
+            param_linelist_df['y' + diluent + '_vary'] = len(param_linelist_df)*[False]
+            param_linelist_df['y_' + diluent + '_err'] = len(param_linelist_df)*[0]
+            if self.linemixing_constrain:
+                if vary_linemixing != {}:
+                    for molecule in vary_linemixing:
+                        for isotope in vary_linemixing[molecule]:
+                            param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'y_' +diluent + '_vary'] = (vary_linemixing[molecule][isotope])
+            else:
+                for spec in self.dataset.get_list_spectrum_numbers():
+                    order_linemixing.append('y_' +diluent + '_' +str(spec))
+                    param_linelist_df['y_' +diluent + '_' +str(spec)] = (param_linelist_df['y_' + diluent].values)
+                    param_linelist_df['y_' + diluent + '_'+str(spec) + '_vary'] = len(param_linelist_df)*[False]
+                    param_linelist_df['y_'+ diluent + '_'+ str(spec) + '_err'] = len(param_linelist_df)*[0]
+                    if vary_linemixing != {}:
+                        for molecule in vary_linemixing:
+                            for isotope in vary_linemixing[molecule]:
+                                param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'y_' +diluent +'_'+str(spec) + '_vary'] = (vary_linemixing[molecule][isotope])
+            order_linemixing.append('n_gamma0_' +diluent )
+            
             #Temperature Dependence
             if num_nominal_temps > 1:
                 param_linelist_df['n_gamma0_'+diluent+'_vary'] = len(param_linelist_df)*[False]
@@ -423,6 +419,8 @@ class Generate_FitParam_File:
                 param_linelist_df['n_delta2_'+diluent+'_err'] = len(param_linelist_df)*[0]
                 param_linelist_df['n_nuVC_'+diluent+'_vary'] = len(param_linelist_df)*[False]
                 param_linelist_df['n_nuVC_'+diluent+'_err'] = len(param_linelist_df)*[0]
+                param_linelist_df['n_y_'+diluent+'_vary'] = len(param_linelist_df)*[False]
+                param_linelist_df['n_y_'+diluent+'_err'] = len(param_linelist_df)*[0]
                 #n_Gamma0
                 if vary_n_gamma0 != {}:
                     for molecule in vary_n_gamma0:
@@ -451,6 +449,13 @@ class Generate_FitParam_File:
                         for molecule in vary_n_nuVC:
                             for isotope in vary_n_nuVC[molecule]:
                                 param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'n_nuVC_' +diluent + '_vary'] = (vary_n_nuVC[molecule][isotope])
+                #n_y
+                if not (self.linemixing) :
+                    if vary_n_linemixing != {}:
+                        for molecule in vary_n_linemixing:
+                            for isotope in vary_n_linemixing[molecule]:
+                                param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'n_y_' +diluent + '_vary'] = (vary_n_linemixing[molecule][isotope])
+        
         ordered_list = self.additional_columns.copy()
         ordered_list += ['molec_id', 'local_iso_id','elower']
 
@@ -512,10 +517,15 @@ class Generate_FitParam_File:
             ordered_list.append(item)
             ordered_list.append(item + '_err')
             ordered_list.append(item + '_vary')
-        for item in order_linemixing:
+        for item in order_linemixing:          
             ordered_list.append(item)
-            ordered_list.append(item + '_err')
-            ordered_list.append(item + '_vary')
+            if num_nominal_temps > 1:
+                ordered_list.append(item + '_err')
+                ordered_list.append(item + '_vary')
+            else:
+                if 'n_' != item[:2]:
+                    ordered_list.append(item + '_err')
+                    ordered_list.append(item + '_vary')
         param_linelist_df = param_linelist_df[ordered_list]
         param_linelist_df.to_csv(self.param_linelist_savename + '.csv') #
 
