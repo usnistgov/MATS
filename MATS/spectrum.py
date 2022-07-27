@@ -150,7 +150,7 @@ class Spectrum:
         else:
             self.tau_stats  = np.asarray(len(file_contents)*[0])
         if self.segment_column != None:
-            self.segments = file_contents[self.segment_column].values
+            self.segments = file_contents[self.segment_column].values.astype(int)
         else:
             self.segments = len(file_contents)*[1]
         self.model = len(self.alpha)*[0]
