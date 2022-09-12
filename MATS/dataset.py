@@ -461,6 +461,9 @@ class Dataset:
                 CIA_paramlist['EXCH_c'] = 6.559060698261758e-05
                 CIA_paramlist['SO_b'] = 0.00011263534228667677
                 CIA_paramlist['SO_c'] = 1.5906417750834962e-06
+                #Shift
+                CIA_paramlist['SO_shift'] = [0,0]
+                CIA_paramlist['EXCH_shift'] = [0,0]
             if band == 'singlet_delta':
                 #Intensities
                 CIA_paramlist['S_SO'] = [39.13, 70.74]
@@ -470,6 +473,9 @@ class Dataset:
                 CIA_paramlist['EXCH_c'] = 3.6307626466573398e-06
                 CIA_paramlist['SO_b'] = 0.00014594154382655564
                 CIA_paramlist['SO_c'] = 1.4670403122287775e-06
+                #Shift
+                CIA_paramlist['SO_shift'] = [0,0]
+                CIA_paramlist['EXCH_shift'] = [0,0]
             CIA_paramlist.to_csv(self.dataset_name + '_CIA_paramlist.csv', index = False)
             return CIA_paramlist
             
