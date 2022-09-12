@@ -3,8 +3,6 @@ import numpy as np
 import pandas as pd
 import scipy.interpolate as interpolate
 from pathlib import Path
-import matplotlib.pyplot as plt
-
 
 def o2_cia_karman_model(wavenumbers, T, P,Diluent,
                         SO_O2, SO_N2, EXCH_O2, 
