@@ -6,12 +6,26 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 
-def o2_cia_karman_model(wavenumbers, T, P,molefraction,
+def o2_cia_karman_model(wavenumbers, T, P,Diluent,
                         SO_O2, SO_N2, EXCH_O2, 
                         EXCH_b, EXCH_c, 
                         SO_b, SO_c, 
                         SO_shift = 0, EXCH_shift = 0,
                         band = 'singlet_delta'):
+    '''
+    #Default values based on Karman, T. et al., Icarus 2019, 328 , 160 175.
+    
+    #Singlet Delta
+    #EXCH_c, EXCH_b, EXCH_a = [3.6307626466573398e-06, 0.0028385240774561797, 1]
+    #SO_c, SO_b, SO_a =[1.4670403122287775e-06, 0.00014594154382655564, 1]
+    #SO_O2, SO_N2, EXCH_O2 = [39.13, 70.74 ,304.7448171031378] #Initial guess derived based HITRAN 2020 reported theoretical CIA
+    
+    #ABand
+    #EXCH_c, EXCH_b, EXCH_a =[6.559060698261758e-05, 0.011869752199984616, 1]
+    #SO_c, SO_b, SO_a =[1.5906417750834962e-06, 0.00011263534228667677, 1]
+    #SO_O2, SO_N2, EXCH_O2 = [6.20731994222978,7.961801018674746, 39.42079598436756]
+    '''
+    
     
     prefix_local = Path(__file__).parent / "CIA_Data"
     paths_default = list(prefix_local.glob('*.csv'))
@@ -42,29 +56,6 @@ def o2_cia_karman_model(wavenumbers, T, P,molefraction,
     amagats_O2 = Diluent['O2']['composition']*(P/760)*(273.15/(T))
     amagats_N2 = Diluent['N2']['composition']*(P/760)*(273.15/(T))
     
-    CIA_model = Diluent['O2']['composition']*model_O2_O2*amagats_O2**2 + molefraction['N2']['composition']*model_O2_N2*amagats_N2*amagats_O2   
+    CIA_model = Diluent['O2']['composition']*model_O2_O2*amagats_O2**2 + Diluent['N2']['composition']*model_O2_N2*amagats_N2*amagats_O2   
     return CIA_model
-  
-#Singlet Delta
-EXCH_c, EXCH_b, EXCH_a = [3.6307626466573398e-06, 0.0028385240774561797, 1]
-SO_c, SO_b, SO_a =[1.4670403122287775e-06, 0.00014594154382655564, 1]
-SO_O2, SO_N2, EXCH_O2 = [39.13, 70.74 ,304.7448171031378] #Initial guess derived based HITRAN 2020 reported theoretical CIA
 
-#ABand
-
-#EXCH_c, EXCH_b, EXCH_a =[6.559060698261758e-05, 0.011869752199984616, 1]
-#SO_c, SO_b, SO_a =[1.5906417750834962e-06, 0.00011263534228667677, 1]
-#SO_O2, SO_N2, EXCH_O2 = [6.20731994222978,7.961801018674746, 39.42079598436756]
-
-
-wavenumbers = np.arange(7500, 8500)
-Diluent = {'O2': {'composition':0.2095, 'm': 28.95734}, 'N2': {'composition':1-0.2095, 'm': 28.95734}}
-
-CIA = o2_cia_karman_model(wavenumbers, 296, 760,Diluent,
-                        SO_O2, SO_N2, EXCH_O2, 
-                        EXCH_b, EXCH_c, 
-                        SO_b, SO_c, 
-                        SO_shift = 0, EXCH_shift = 0,
-                        band = 'singlet_delta')
-
-plt.plot(wavenumbers, CIA)
