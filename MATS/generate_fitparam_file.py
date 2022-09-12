@@ -1,7 +1,9 @@
 #Import Packages
 # from .Utilities import *
 #import re
-
+from .o2_cia_karman import (
+    o2_cia_karman_model
+)
 
 class Generate_FitParam_File:
     """Class generates the parameter files used in fitting and sets up fit settings.
@@ -67,8 +69,8 @@ class Generate_FitParam_File:
             self.CIA_linelist = None
             self.CIA_linelist_savename = None
         else:
-            self.CIA_linelist = None
-            self.CIA_linelist_savename = None
+            self.CIA_linelist = CIA_linelist
+            self.CIA_linelist_savename = CIA_linelist_savename
 
         self.lineprofile = lineprofile
         self.linemixing = linemixing
@@ -625,3 +627,58 @@ class Generate_FitParam_File:
         #base_linelist_df = base_linelist_df.reindex(sorted(base_linelist_df.columns), axis=1)
         base_linelist_df.to_csv(self.base_linelist_savename + '.csv', index = True)
         return base_linelist_df
+    
+    def generate_fit_KarmanCIA_linelist(self, band='singlet_delta', vary_S_SO = False, vary_S_EXCH = False, 
+                                        vary_EXCH_temp = False, vary_SO_temp = False, 
+                                        vary_EXCH_shift = False, vary_SO_shift = False):
+        CIA_linelist_df = self.get_CIA_linelist().copy()
+        parameters =  (list(CIA_linelist_df))
+         #Initial Calculation of the Karman CIA based on initial guesses and application to spectra
+        if self.dataset.CIA_model == 'Karman':
+            CIA_pairs = CIA_linelist_df['CIA Pair'].unique()
+            for spectrum in self.dataset.spectra:
+             
+                CIA = o2_cia_karman_model(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
+                        CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['S_SO'].values[0], 
+                        CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_N2']['S_SO'].values[0], 
+                        CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['S_EXCH'].values[0], 
+                        CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['EXCH_b'].values[0], 
+                        CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['EXCH_c'].values[0], 
+                        CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['SO_b'].values[0], 
+                        CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['SO_c'].values[0], 
+                        SO_shift = CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['SO_shift'].values[0], 
+                        EXCH_shift = CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['EXCH_shift'].values[0],
+                        band = band)
+                spectrum.set_cia(CIA)
+            # Set parameter floats
+            for param in parameters:
+                if ('CIA Pair' != param):
+                    CIA_linelist_df[param + '_err'] = 0
+                    CIA_linelist_df[param + '_vary']= False
+                if 'S_SO' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_S_SO)]
+                if 'S_EXCH' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_S_EXCH)]
+                if ('EXCH_b' in param) | ('EXCH_c' in param):
+                    CIA_linelist_df[param + '_vary'] = len(CIA_linelist_df)*[(vary_EXCH_temp)]
+                if ('SO_b' in param) | ('SO_c' in param):
+                    CIA_linelist_df[param + '_vary'] = len(CIA_linelist_df)*[(vary_SO_temp)]
+                if 'SO_shift' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_SO_shift)]                 
+                if 'EXCH_shift' in param:
+                    CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_EXCH_shift)] 
+            CIA_linelist_df = CIA_linelist_df[['CIA Pair', 
+                                               'S_SO', 'S_SO_err', 'S_SO_vary', 
+                                               'S_EXCH', 'S_EXCH_err', 'S_EXCH_vary',
+                                               'EXCH_b', 'EXCH_b_err', 'EXCH_b_vary', 
+                                               'EXCH_c', 'EXCH_c_err', 'EXCH_c_vary', 
+                                               'SO_b', 'SO_b_err', 'SO_b_vary', 
+                                               'SO_c', 'SO_c_err', 'SO_c_vary', 
+                                               'SO_shift', 'SO_shift_err', 'SO_shift_vary', 
+                                               'EXCH_shift', 'EXCH_shift_err', 'EXCH_shift_vary']]
+            CIA_linelist_df.to_csv(self.CIA_linelist_savename + '.csv', index = False)
+            return CIA_linelist_df
+        else:
+            print ('generate_fit_KarmanCIA_linelist only applies to the CIA files generated for the Karman CIA model')
+            return None
+
