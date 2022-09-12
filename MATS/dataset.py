@@ -432,18 +432,47 @@ class Dataset:
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
         baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv', index = True)
         return baseline_paramlist
-    def generate_CIA_paramlist(self):
-        """Future development will generates a csv file called dataset_name + _CIA_paramlist, which will be used to generate another csv file that is used for fitting the broadband CIA that is common across all spectra, where the columns will be dependent on the CIA model used.
+    def generate_CIA_paramlist(self, band = None):
+        """
+        Generates a csv file called dataset_name + _CIA_paramlist, which will be used to generate another csv file that is used for fitting the broadband CIA that is common across all spectra, where the columns will be dependent on the CIA model used. 
 
+        Parameters
+        ----------
+        band : str, optional
+            specifies the band for the CIA model. For the O2 CIA model reported by Karman et al. The options are a_band and singlet_delta. The default is None.
 
         Returns
         -------
         CIA_paramlist : pandas dataframe
-            currently a place holder for future feature.
+            dataframe containing information decribing the CIA parameters based on the CIA model chosen.  This dataframe is also saved to a dataframe.  Either file can be edited before making the CIA parameter list used for fitting.  If editting the .csv file will need to regenerate dataframe from .csv.
 
         """
         if self.CIA_model == None:
             return None
+        elif self.CIA_model == 'Karman':
+            CIA_paramlist = pd.DataFrame()
+            CIA_paramlist['CIA Pair'] = ['O2_O2', 'O2_N2']
+            if band == 'a_band':
+                #Intensities
+                CIA_paramlist['S_SO'] = [6.20731994222978,7.961801018674746]
+                CIA_paramlist['S_EXCH'] = [39.42079598436756,0]
+                #Temp Dep
+                CIA_paramlist['EXCH_b'] = 0.011869752199984616
+                CIA_paramlist['EXCH_c'] = 6.559060698261758e-05
+                CIA_paramlist['SO_b'] = 0.00011263534228667677
+                CIA_paramlist['SO_c'] = 1.5906417750834962e-06
+            if band == 'singlet_delta':
+                #Intensities
+                CIA_paramlist['S_SO'] = [39.13, 70.74]
+                CIA_paramlist['S_EXCH'] = [304.7448171031378, 0]
+                #Temp Dep
+                CIA_paramlist['EXCH_b'] = 0.0028385240774561797
+                CIA_paramlist['EXCH_c'] = 3.6307626466573398e-06
+                CIA_paramlist['SO_b'] = 0.00014594154382655564
+                CIA_paramlist['SO_c'] = 1.4670403122287775e-06
+            CIA_paramlist.to_csv(self.dataset_name + '_CIA_paramlist.csv', index = False)
+            return CIA_paramlist
+            
         else:
             self.CIA_model = None
             return None
