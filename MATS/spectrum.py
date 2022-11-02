@@ -7,7 +7,7 @@ from matplotlib import gridspec
 from .utilities import etalon, convolveSpectrumSame
 
 from .fit_dataset import HTP_from_DF_select, HTP_wBeta_from_DF_select
-from .hapi import ISO
+from .hapi import ISO, TIPS2011, TIPS2017
 from .codata import CONSTANTS
 
 
@@ -67,7 +67,8 @@ class Spectrum:
         Resolution is a float or array of ILS resolutions in wavenumbers.  The SlitFunctions defined in HAPI have 1 resolution, but this opens the option for the user defined function to be comprised of several functions with varying resolutions.  Default is 0.1 cm-1.
     ILS_wing: float/array, optional
         AF_wing is the a float or array consisting of the range the ILS is calculted over in cm-1.  This is a single value fort he HAPI slit functions, but could be an array of multiple values for user-defined functions.  Default is 10 cm-1
-
+    TIPS : definition, optional
+        selects the HAPI provided TIPS version to use for the partition function
     """
 
 
@@ -77,7 +78,7 @@ class Spectrum:
                     pressure_column = 'Cavity Pressure /Torr', temperature_column = 'Cavity Temperature Side 2 /C', frequency_column = 'Total Frequency /MHz',
                     tau_column = 'Mean tau/us', tau_stats_column = None, segment_column = None,
                     etalons = {}, nominal_temperature = 296, x_shift = 0, baseline_order = 1, weight = 1,
-                    ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10):
+                    ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = TIPS2017):
         self.filename = filename
         self.molefraction = molefraction
         self.natural_abundance = natural_abundance
@@ -120,6 +121,7 @@ class Spectrum:
         self.ILS_function = ILS_function
         self.ILS_resolution = ILS_resolution
         self.ILS_wing = ILS_wing
+        self.TIPS = TIPS
 
 
         self.diluent_sum_check() # Makes sure that the diluent contributions sum to 1
@@ -435,7 +437,7 @@ def simulate_spectrum(parameter_linelist,
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
                         isotope_list = ISO, natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {},
                         nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False,
-                        ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10):
+                        ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = TIPS2017):
     """Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.
 
 
@@ -506,7 +508,8 @@ def simulate_spectrum(parameter_linelist,
         Resolution is a float or array of ILS resolutions in wavenumbers.  The SlitFunctions defined in HAPI have 1 resolution, but this opens the option for the user defined function to be comprised of several functions with varying resolutions.  Default is 0.1 cm-1.
     ILS_wing: float, optional
         AF_wing is the a float consisting of the range the ILS is calculted over in cm-1. Default is 10 cm-1
-
+    TIPS : definition, optional
+        selects the HAPI provided TIPS version to use for the partition function
     Returns
     -------
     spectrum_file : .csv
@@ -566,10 +569,10 @@ def simulate_spectrum(parameter_linelist,
     temperature_w_error = temperature_K + temperature_err['bias']
     temperature_w_error = len(wavenumbers)*[temperature_w_error]
     if temperature_err['function'] == 'linear':
-        if 'params' in pressure_err:
+        if 'params' in temperature_err:
             temperature_w_error += temperature_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + temperature_err['params']['b']
     elif pressure_err['function'] == 'sine':
-        if 'params' in pressure_err:
+        if 'params' in temperature_err:
             temperature_w_error += etalon((wavenumbers-np.min(wavenumbers)), temperature_err['params']['amp'], temperature_err['params']['period'], temperature_err['params']['phase'])
 
     #Define Segments
@@ -590,12 +593,12 @@ def simulate_spectrum(parameter_linelist,
             waves, alpha = HTP_wBeta_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
                                 p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, isotope_list = isotope_list,
                                 natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,
-                                Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold)
+                                Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold, TIPS = TIPS)
         else:
             waves, alpha = HTP_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
                     p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, isotope_list = isotope_list,
                     natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,
-                    Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold)
+                    Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold, TIPS = TIPS)
         alpha_array[np.min(segment_array): np.max(segment_array)+1] = alpha * 1e6
 
         pressure_array[np.min(segment_array): np.max(segment_array)+1] = len(alpha)*[segment_pressure]
@@ -640,4 +643,4 @@ def simulate_spectrum(parameter_linelist,
                 pressure_column = 'Pressure (Torr)', temperature_column = 'Temperature (C)', frequency_column = 'Wavenumber + Noise (cm-1)',
                 tau_column = 'Alpha + Noise (ppm/cm)', tau_stats_column = 'Noise (%)', segment_column = 'Segment Number',
                 etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1, weight = 1,
-                ILS_function = ILS_function, ILS_resolution = ILS_resolution ,ILS_wing=ILS_wing)
+                ILS_function = ILS_function, ILS_resolution = ILS_resolution ,ILS_wing=ILS_wing, TIPS = TIPS)
