@@ -7,7 +7,7 @@ from matplotlib import gridspec
 from .utilities import etalon, convolveSpectrumSame
 
 from .fit_dataset import HTP_from_DF_select, HTP_wBeta_from_DF_select
-from .hapi import ISO, TIPS2011, TIPS2017
+from .hapi import ISO, PYTIPS2011, PYTIPS2017
 from .codata import CONSTANTS
 
 
@@ -78,7 +78,7 @@ class Spectrum:
                     pressure_column = 'Cavity Pressure /Torr', temperature_column = 'Cavity Temperature Side 2 /C', frequency_column = 'Total Frequency /MHz',
                     tau_column = 'Mean tau/us', tau_stats_column = None, segment_column = None,
                     etalons = {}, nominal_temperature = 296, x_shift = 0, baseline_order = 1, weight = 1,
-                    ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = TIPS2017):
+                    ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2017):
         self.filename = filename
         self.molefraction = molefraction
         self.natural_abundance = natural_abundance
@@ -437,7 +437,7 @@ def simulate_spectrum(parameter_linelist,
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
                         isotope_list = ISO, natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {},
                         nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False,
-                        ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = TIPS2017):
+                        ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2017):
     """Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.
 
 
