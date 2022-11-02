@@ -5,7 +5,7 @@ import re
 
 import numpy as np
 import pandas as pd
-from .hapi import ISO, PYTIPS2017, pcqsdhc
+from .hapi import ISO, PYTIPS2017, PYTIPS2011,pcqsdhc
 from .utilities import molecularMass, etalon, convolveSpectrumSame
 from .codata import CONSTANTS
 
@@ -14,7 +14,8 @@ from lmfit import Minimizer,  Parameters
 
 def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff',
                 p = 1, T = 296, molefraction = {}, isotope_list = ISO,
-                natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30):
+                natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30, 
+                TIPS = PYTIPS2017):
     """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters.
 
     Outline
@@ -99,6 +100,8 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
         If Diluent = {}, then this value will be used to set the only diluent to be equal to this diluent. The default is 'air'.
     IntensityThreshold : float, optional
         minimum line intensity that will be simulated. The default is 1e-30.
+    TIPS : definition, optional
+        selects the HAPI provided TIPS version to use for the partition function
 
     Returns
     -------
@@ -140,11 +143,11 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
     for molec in linelist['molec_id'].unique():
         for iso in linelist ['local_iso_id'].unique():
             try:
-                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = PYTIPS2017(molec,iso,T)
+                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = TIPS(molec,iso,T)
             except:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = 1
             try:
-                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
+                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = TIPS(molec,iso,Tref)
             except:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = 1
             linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso, isotope_list = isotope_list) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion
@@ -209,7 +212,8 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
 
 def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff',
                 p = 1, T = 296, molefraction = {}, isotope_list = ISO,
-                natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30):
+                natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30, 
+                TIPS = PYTIPS2017):
     """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters with capability of incorporating the beta correction to the Dicke Narrowing proposed in Analytical-function correction to the Hartmann–Tran profile for more reliable representation of the Dicke-narrowed molecular spectra.
 
     Outline
@@ -293,7 +297,8 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
         If Diluent = {}, then this value will be used to set the only diluent to be equal to this diluent. The default is 'air'.
     IntensityThreshold : float, optional
         minimum line intensity that will be simulated. The default is 1e-30.
-
+    TIPS : definition, optional
+        selects the HAPI provided TIPS version to use for the partition function
     Returns
     -------
     wavenumbers : array
@@ -338,11 +343,11 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
     for molec in linelist['molec_id'].unique():
         for iso in linelist ['local_iso_id'].unique():
             try:
-                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = PYTIPS2017(molec,iso,T)
+                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = TIPS(molec,iso,T)
             except:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = 1
             try:
-                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = PYTIPS2017(molec,iso,Tref)
+                linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = TIPS(molec,iso,Tref)
             except:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = 1
 
@@ -1086,11 +1091,13 @@ class Fit_DataSet:
                 if self.beta_formalism == True:
                     fit_nu, fit_coef = HTP_wBeta_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
                             p = p, T = T, molefraction = fit_molefraction, isotope_list = self.dataset.isotope_list,
-                            natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
+                            natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent, 
+                            TIPS = spectrum.TIPS)
                 else:
                     fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
                             p = p, T = T, molefraction = fit_molefraction, isotope_list = self.dataset.isotope_list,
-                            natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent)
+                            natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent, 
+                            TIPS = spectrum.TIPS)
                 fit_coef = fit_coef * 1e6
                 ## CIA Calculation
                 CIA = spectrum.cia[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]
