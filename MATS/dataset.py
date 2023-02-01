@@ -25,7 +25,7 @@ class Dataset:
     baseline_order : int
         sets the baseline order for all spectra in the dataset.  This will automatically be set to the maximum baseline order across all spectrum included in the Dataset.
     CIA_model : str
-        Future development will allow CIA model specification.  Default is None and
+        Allows for use of CIA Model.  Default is None.  Other option is Karman, which applies for O2-O2 and O2-N2 CIA in the Oxygen A and Singlet Delta Bands.
     """
 
 
