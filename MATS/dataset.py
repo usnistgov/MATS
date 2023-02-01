@@ -452,6 +452,7 @@ class Dataset:
         elif self.CIA_model == 'Karman':
             CIA_paramlist = pd.DataFrame()
             CIA_paramlist['CIA Pair'] = ['O2_O2', 'O2_N2']
+            #Default values based on Karman, T. et al., Icarus 2019, 328 , 160 175.
             if band == 'a_band':
                 #Intensities
                 CIA_paramlist['S_SO'] = [6.20731994222978,7.961801018674746]
