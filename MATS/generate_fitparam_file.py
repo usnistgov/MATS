@@ -635,7 +635,7 @@ class Generate_FitParam_File:
         parameters =  (list(CIA_linelist_df))
          #Initial Calculation of the Karman CIA based on initial guesses and application to spectra
         if self.dataset.CIA_model == 'Karman':
-            CIA_pairs = CIA_linelist_df['CIA Pair'].unique()
+            #CIA_pairs = CIA_linelist_df['CIA Pair'].unique()
             for spectrum in self.dataset.spectra:
              
                 CIA = o2_cia_karman_model(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
