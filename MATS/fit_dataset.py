@@ -550,8 +550,11 @@ class Fit_DataSet:
         self.baseline_list = pd.read_csv(self.base_linelist_file + '.csv')#, index_col = 0
         self.param_linelist_file = param_linelist_file
         self.lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
-        self.CIA_linelist_file = None
-        self.CIAparam_list = None
+        self.CIA_linelist_file = CIA_linelist_file
+        if self.CIA_linelist_file == None:
+            self.CIAparam_list = None
+        else:
+            self.CIAparam_list = pd.read_csv(self.CIA_linelist_file + '.csv')
         self.minimum_parameter_fit_intensity = minimum_parameter_fit_intensity
         self.weight_spectra = weight_spectra
         self.baseline_limit = baseline_limit
