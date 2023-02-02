@@ -656,7 +656,7 @@ class Fit_DataSet:
                               max = self.x_shift_limit_magnitude + self.baseline_list.loc[index][base_param])
                 else:
                     params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'])
-
+                
         #Lineshape parameters
         linelist_params = []
         for line_param in list(self.lineparam_list):
@@ -908,6 +908,25 @@ class Fit_DataSet:
                                   max = self.n_linemixing_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param],self.lineparam_list.loc[spec_line][line_param + '_vary'])
+        
+        #CIA Parameters (O2 Karman Model)
+        if self.dataset.CIA_model == "Karman":
+            cia_parameters = []
+            for cia_param in list(self.CIAparam_list):
+                if ('_vary' not in cia_param) and ('_err' not in cia_param) and ('CIA Pair' not in cia_param):
+                    cia_parameters.append(cia_param)
+            for cia_pair in self.CIAparam_list['CIA Pair']:
+                index = self.CIAparam_list[self.CIAparam_list['CIA Pair']==cia_pair].index.values[0]   
+                for cia_param in cia_parameters:
+                    if 'SO' in cia_param:
+                        params.add(cia_param + '_'+ cia_pair, self.CIAparam_list.loc[index][cia_param], 
+                                   self.CIAparam_list.loc[index][cia_param + '_vary'])
+                    elif 'EXCH' in cia_param:
+                        if cia_pair == 'O2_O2':
+                            params.add(cia_param + '_'+ cia_pair, self.CIAparam_list.loc[index][cia_param], 
+                                   self.CIAparam_list.loc[index][cia_param + '_vary'])
+                        elif cia_pair =='O2_N2':
+                            params.add(cia_param + '_'+ cia_pair, 0, False)
         return (params)
 
     def constrained_baseline(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
@@ -990,7 +1009,36 @@ class Fit_DataSet:
                     if segment_num != spectrum_segment_min[spectrum_num]:
                         params[param].set(expr = param[:indices[2]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
         return params
+    
+    def constrained_CIA(self, params, S_temperature_dependence_constrained = True, shift_constrained = True):
+        '''All user to set the temperature dependence of the SO mechanism scalar and/or the shift of the SO to be equal for O2-O2 and O2_N2
 
+        Parameters
+        ----------
+        params : lmfit parameter object
+            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
+        S_temperature_dependence_constrained : boolean, optional
+            Constrains the temperature dependence of the SO mechanism scalar to be the same for O2-N2 and O2-O2. The default is True.
+        shift_constrained : boolean, optional
+            Constrains the SO shift to be the same for O2-N2 and O2-O2. The default is True.
+
+        Returns
+        -------
+        params : lmfit parameter object
+            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
+
+        '''
+        if self.dataset.CIA_model == 'Karman':
+        
+            for param in params:
+                if (('SO_b' in param) or ('SO_c' in param)) and S_temperature_dependence_constrained:
+                    if 'O2_O2' not in param:
+                        params[param].set(expr = param[:5] + 'O2_O2')
+                if ('SO_shift' in param) and shift_constrained:
+                    if 'O2_O2' not in param:
+                        params[param].set(expr = param[:9] + 'O2_O2')
+        return params
+    
     def simulation_model(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff'):
         """This is the model used for fitting that includes baseline, resonant absorption, and CIA models.
 

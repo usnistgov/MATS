@@ -458,8 +458,8 @@ class Dataset:
                 CIA_paramlist['S_SO'] = [6.20731994222978,7.961801018674746]
                 CIA_paramlist['S_EXCH'] = [39.42079598436756,0]
                 #Temp Dep
-                CIA_paramlist['EXCH_b'] = 0.011869752199984616
-                CIA_paramlist['EXCH_c'] = 6.559060698261758e-05
+                CIA_paramlist['EXCH_b'] = [0.011869752199984616,0]
+                CIA_paramlist['EXCH_c'] = [6.559060698261758e-05,0]
                 CIA_paramlist['SO_b'] = 0.00011263534228667677
                 CIA_paramlist['SO_c'] = 1.5906417750834962e-06
                 #Shift
@@ -470,8 +470,8 @@ class Dataset:
                 CIA_paramlist['S_SO'] = [39.13, 70.74]
                 CIA_paramlist['S_EXCH'] = [304.7448171031378, 0]
                 #Temp Dep
-                CIA_paramlist['EXCH_b'] = 0.0028385240774561797
-                CIA_paramlist['EXCH_c'] = 3.6307626466573398e-06
+                CIA_paramlist['EXCH_b'] = [0.0028385240774561797,0]
+                CIA_paramlist['EXCH_c'] = [3.6307626466573398e-06,0]
                 CIA_paramlist['SO_b'] = 0.00014594154382655564
                 CIA_paramlist['SO_c'] = 1.4670403122287775e-06
                 #Shift
