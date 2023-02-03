@@ -628,13 +628,13 @@ class Generate_FitParam_File:
         base_linelist_df.to_csv(self.base_linelist_savename + '.csv', index = True)
         return base_linelist_df
     
-    def generate_fit_KarmanCIA_linelist(self, band='singlet_delta', vary_S_SO = False, vary_S_EXCH = False, 
+    def generate_fit_KarmanCIA_linelist(self, vary_S_SO = False, vary_S_EXCH = False, 
                                         vary_EXCH_temp = False, vary_SO_temp = False, 
                                         vary_EXCH_shift = False, vary_SO_shift = False):
         CIA_linelist_df = self.get_CIA_linelist().copy()
         parameters =  (list(CIA_linelist_df))
          #Initial Calculation of the Karman CIA based on initial guesses and application to spectra
-        if self.dataset.CIA_model == 'Karman':
+        if self.dataset.CIA_model['model'] == 'Karman':
             #CIA_pairs = CIA_linelist_df['CIA Pair'].unique()
             for spectrum in self.dataset.spectra:
              
@@ -646,9 +646,12 @@ class Generate_FitParam_File:
                         CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['EXCH_c'].values[0], 
                         CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['SO_b'].values[0], 
                         CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['SO_c'].values[0], 
-                        SO_shift = CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['SO_shift'].values[0], 
+                        CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_N2']['SO_b'].values[0], 
+                        CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_N2']['SO_c'].values[0], 
+                        SO_shift_O2_O2 = CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['SO_shift'].values[0], 
+                        SO_shift_O2_N2 = CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_N2']['SO_shift'].values[0], 
                         EXCH_shift = CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['EXCH_shift'].values[0],
-                        band = band)
+                        band = self.dataset.CIA_model['band'])
                 spectrum.set_cia(CIA)
             # Set parameter floats
             for param in parameters:
