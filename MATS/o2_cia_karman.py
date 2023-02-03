@@ -7,8 +7,10 @@ from pathlib import Path
 def o2_cia_karman_model(wavenumbers, T, P,Diluent,
                         SO_O2, SO_N2, EXCH_O2, 
                         EXCH_b, EXCH_c, 
-                        SO_b, SO_c, 
-                        SO_shift = 0, EXCH_shift = 0,
+                        SO_b_O2_O2, SO_c_O2_O2,
+                        SO_b_O2_N2, SO_c_O2_N2,
+                        SO_shift_O2_O2 = 0, SO_shift_O2_N2 = 0,
+                        EXCH_shift = 0,
                         band = 'singlet_delta'):
     '''
     #Default values based on Karman, T. et al., Icarus 2019, 328 , 160 175.
@@ -44,12 +46,14 @@ def o2_cia_karman_model(wavenumbers, T, P,Diluent,
 
     
     f = interpolate.interp1d(model_wavenumber, SO, fill_value = 'extrapolate', bounds_error = False, kind = 'slinear')
-    SO_ = f(wavenumbers- SO_shift)
-    g = interpolate.interp1d(model_wavenumber, EXCH, fill_value = 'extrapolate', bounds_error = False, kind = 'slinear')
-    EXCH_ = g(wavenumbers - EXCH_shift)
+    SO_O2_O2 = f(wavenumbers- SO_shift_O2_O2)
+    g = interpolate.interp1d(model_wavenumber, SO, fill_value = 'extrapolate', bounds_error = False, kind = 'slinear')
+    SO_O2_N2 = g(wavenumbers- SO_shift_O2_N2)
+    h = interpolate.interp1d(model_wavenumber, EXCH, fill_value = 'extrapolate', bounds_error = False, kind = 'slinear')
+    EXCH_ = h(wavenumbers - EXCH_shift)
     
-    model_O2_O2 = EXCH_O2*(1 + EXCH_b*(T-296) + EXCH_c*(T-296)**2)*EXCH_ + SO_O2*(1 + SO_b*(T-296) + SO_c*(T-296)**2)*SO_
-    model_O2_N2 = SO_N2*(1 + SO_b*(T-296) + SO_c*(T-296)**2)*SO_
+    model_O2_O2 = EXCH_O2*(1 + EXCH_b*(T-296) + EXCH_c*(T-296)**2)*EXCH_ + SO_O2*(1 + SO_b_O2_O2*(T-296) + SO_c_O2_O2*(T-296)**2)*SO_O2_O2
+    model_O2_N2 = SO_N2*(1 + SO_b_O2_N2*(T-296) + SO_c_O2_N2*(T-296)**2)*SO_O2_N2
     
     amagats_O2 = Diluent['O2']['composition']*(P/1)*(273.15/(T))
     amagats_N2 = Diluent['N2']['composition']*(P/1)*(273.15/(T))

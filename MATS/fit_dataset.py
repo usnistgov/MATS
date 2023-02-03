@@ -8,6 +8,7 @@ import pandas as pd
 from .hapi import ISO, PYTIPS2017, PYTIPS2011, pcqsdhc
 from .utilities import molecularMass, etalon, convolveSpectrumSame
 from .codata import CONSTANTS
+from .o2_cia_karman import o2_cia_karman_model
 
 from lmfit import Minimizer,  Parameters
 
@@ -915,7 +916,7 @@ class Fit_DataSet:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param],self.lineparam_list.loc[spec_line][line_param + '_vary'])
         
         #CIA Parameters (O2 Karman Model)
-        if self.dataset.CIA_model == "Karman":
+        if self.dataset.CIA_model['model'] == "Karman":
             cia_parameters = []
             for cia_param in list(self.CIAparam_list):
                 if ('_vary' not in cia_param) and ('_err' not in cia_param) and ('CIA Pair' not in cia_param):
@@ -1033,7 +1034,7 @@ class Fit_DataSet:
             the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
 
         '''
-        if self.dataset.CIA_model == 'Karman':
+        if self.dataset.CIA_model['model'] == 'Karman':
         
             for param in params:
                 if (('SO_b' in param) or ('SO_c' in param)) and S_temperature_dependence_constrained:
@@ -1070,12 +1071,18 @@ class Fit_DataSet:
         total_residuals = []
         baseline_params = []
         linelist_params = []
-
+        Karman_CIA_params = ['S_SO_O2_O2', 'S_SO_O2_N2', 'S_EXCH_O2_O2', 'EXCH_b_O2_O2', 'EXCH_c_O2_O2', 
+                             'SO_b_O2_O2', 'SO_c_O2_O2', 'SO_b_O2_N2', 'SO_c_O2_N2', 
+                             'SO_shift_O2_O2', 'SO_shift_O2_N2','EXCH_shift_O2_O2', 
+                             'EXCH_shift_O2_N2', 'S_EXCH_O2_N2', 'EXCH_b_O2_N2', 'EXCH_c_O2_N2'] #this row has unused parameters
 
         # Set-up Baseline Parameters
         for param in (list(params.valuesdict().keys())):
             if ('molefraction' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param) or ('Pressure' in param) or ('Temperature' in param) or ('_res_' in param):
                 baseline_params.append(param)
+            elif (self.dataset.CIA_model['model']== 'Karman') and (param in Karman_CIA_params):
+                #print (param)
+                1+1
             else:
                 linelist_params.append(param)
 
@@ -1085,7 +1092,7 @@ class Fit_DataSet:
             wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
             Diluent = spectrum.Diluent
             spectrum_number = spectrum.spectrum_number
-            nominal_temp = spectrum.nominal_temperature
+            #nominal_temp = spectrum.nominal_temperature
             columns = ['molec_id', 'local_iso_id', 'elower', 'nu', 'sw', 'sw_scale_factor']
             for species in Diluent:
                 columns.append('gamma0_' + species)
@@ -1122,6 +1129,25 @@ class Fit_DataSet:
             #Renames columns to generic (no scan number)
             linelist_for_sim=linelist_for_sim.rename(columns = rename_dictionary)
             linelist_for_sim['sw'] = linelist_for_sim['sw']*linelist_for_sim['sw_scale_factor']
+            
+            #Calculate CIA for Spectrum
+            if self.dataset.CIA_model['model'] == "Karman":
+                CIA = o2_cia_karman_model(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
+                        np.float(params['S_SO_O2_O2']),
+                        np.float(params['S_SO_O2_N2']),
+                        np.float(params['S_EXCH_O2_O2']),
+                        np.float(params['EXCH_b_O2_O2']),
+                        np.float(params['EXCH_c_O2_O2']),
+                        np.float(params['SO_b_O2_O2']),
+                        np.float(params['SO_c_O2_O2']),
+                        np.float(params['SO_b_O2_N2']),
+                        np.float(params['SO_c_O2_N2']),
+                        np.float(params['SO_shift_O2_O2']),
+                        np.float(params['SO_shift_O2_N2']),
+                        np.float(params['EXCH_shift_O2_N2']),
+                        band = self.dataset.CIA_model['band'])
+                spectrum.set_cia(CIA)  
+            
             for segment in list(set(spectrum.segments)):
                 wavenumbers = wavenumber_segments[segment]
                 wavenumbers_relative = wavenumbers - np.min(spectrum.wavenumber)
@@ -1150,6 +1176,7 @@ class Fit_DataSet:
                             natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent, 
                             TIPS = spectrum.TIPS)
                 fit_coef = fit_coef * 1e6
+                
                 ## CIA Calculation
                 CIA = spectrum.cia[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]
 
@@ -1275,7 +1302,8 @@ class Fit_DataSet:
             spectrum.set_model(spectrum_residual + spectrum.alpha)
             if indv_resid_plot:
                 spectrum.plot_model_residuals()
-    def update_params(self, result, base_linelist_update_file = None , param_linelist_update_file = None):
+    def update_params(self, result, base_linelist_update_file = None , param_linelist_update_file = None, 
+                      CIA_linelist_update_file = None):
         """Updates the baseline and line parameter files based on fit results with the option to write over the file (default) or save as a new file and updates baseline values in the spectrum objects.
 
 
@@ -1287,6 +1315,8 @@ class Fit_DataSet:
             Name of file to save the updated baseline parameters. Default is to override the input. The default is None.
         param_linelist_update_file : str, optional
             Name of file to save the updated line parameters. Default is to override the input. The default is None.
+        cia_linelist_update_file : str, optional
+            Name of file to save the updated CIA parameters.  Default is to override the input.   
 
         """
 
@@ -1294,8 +1324,11 @@ class Fit_DataSet:
             base_linelist_update_file = self.base_linelist_file
         if param_linelist_update_file == None:
             param_linelist_update_file = self.param_linelist_file
+        if CIA_linelist_update_file == None:
+            CIA_linelist_update_file = self.CIA_linelist_file
 
         for key, par in result.params.items():
+            #Baseline
             if ('Pressure' in par.name) or ('Temperature' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
                 parameter = (par.name[:indices[0]])
@@ -1329,7 +1362,21 @@ class Fit_DataSet:
                 self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
                 if par.vary:
                     self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
-
+            #CIA
+            #Karman CIA
+            elif (self.dataset.CIA_model['model']=='Karman') and ('O2_O2' in par.name):
+                indices = [m.start() for m in re.finditer('_', par.name)]
+                parameter = par.name[:indices[1]]
+                self.CIAparam_list.loc[(self.CIAparam_list['CIA Pair'] == 'O2_O2'), parameter] = par.value
+                if par.vary:
+                    self.CIAparam_list.loc[(self.CIAparam_list['CIA Pair'] == 'O2_O2'), parameter + '_err'] = par.stderr
+            elif (self.dataset.CIA_model['model']=='Karman') and ('O2_N2' in par.name):
+                indices = [m.start() for m in re.finditer('_', par.name)]
+                parameter = par.name[:indices[1]]
+                self.CIAparam_list.loc[(self.CIAparam_list['CIA Pair'] == 'O2_N2'), parameter] = par.value
+                if par.vary:
+                    self.CIAparam_list.loc[(self.CIAparam_list['CIA Pair'] == 'O2_N2'), parameter + '_err'] = par.stderr 
+            #Line shape Parameters
             else:
                 parameter = par.name[:par.name.find('_line')]
                 line = int(par.name[par.name.find('_line')+6:])
@@ -1338,6 +1385,7 @@ class Fit_DataSet:
                     self.lineparam_list.loc[line, parameter + '_err'] = par.stderr
         self.baseline_list.to_csv(base_linelist_update_file + '.csv', index = False)
         self.lineparam_list.to_csv(param_linelist_update_file + '.csv')
+        self.CIAparam_list.to_csv(CIA_linelist_update_file + '.csv', index = False)
 
 
 
@@ -1370,6 +1418,26 @@ class Fit_DataSet:
                 for i in range(1, len(spectrum.etalons)+1):
                     baseline[bound_min: bound_max +1] += etalon(wave_rel, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase'])
             spectrum.set_background(baseline)
+        #Calculate CIA
+        if self.dataset.CIA_model['model']!= None:
+            if self.dataset.CIA_model['model']=='Karman':
+                for spectrum in self.dataset.spectra:
+                    CIA = o2_cia_karman_model(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
+                        np.float(result.params['S_SO_O2_O2'].value),
+                        np.float(result.params['S_SO_O2_N2'].value),
+                        np.float(result.params['S_EXCH_O2_O2'].value),
+                        np.float(result.params['EXCH_b_O2_O2'].value),
+                        np.float(result.params['EXCH_c_O2_O2'].value),
+                        np.float(result.params['SO_b_O2_O2'].value),
+                        np.float(result.params['SO_c_O2_O2'].value),
+                        np.float(result.params['SO_b_O2_N2'].value),
+                        np.float(result.params['SO_c_O2_N2'].value),
+                        np.float(result.params['SO_shift_O2_O2'].value),
+                        np.float(result.params['SO_shift_O2_N2'].value),
+                        np.float(result.params['EXCH_shift_O2_N2'].value),
+                        band = self.dataset.CIA_model['band'])
+                    spectrum.set_cia(CIA)
+                    
     def generate_beta_output_file(self, beta_summary_filename = None ):
         """ Generates a file that summarizes the beta values used in the fitting in the case that beta was used to correct the Dicke narrowing term (beta_formalism = True).
 

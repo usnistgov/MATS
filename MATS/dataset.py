@@ -24,13 +24,13 @@ class Dataset:
         Reads in the  parameter linelist used in fitting.  This enables for consistency checks between the input spectra and the parameter line list.
     baseline_order : int
         sets the baseline order for all spectra in the dataset.  This will automatically be set to the maximum baseline order across all spectrum included in the Dataset.
-    CIA_model : str
-        Allows for use of CIA Model.  Default is None.  Other option is Karman, which applies for O2-O2 and O2-N2 CIA in the Oxygen A and Singlet Delta Bands.
+    CIA_model : dictionary
+        Specifies the model and band of CIA Model to use.  Default is {'model': None, 'band':None}.  Other option is {'model':'Karman', 'band':'a_band' or 'singlet_delta'}, which applies for O2-O2 and O2-N2 CIA in the Oxygen A and Singlet Delta Bands.
     """
 
 
 
-    def __init__(self, spectra, dataset_name, param_linelist, CIA_model = None):
+    def __init__(self, spectra, dataset_name, param_linelist, CIA_model = {'model': None, 'band':None}):
         self.spectra = spectra
         self.dataset_name = dataset_name
         self.param_linelist = param_linelist
@@ -432,7 +432,7 @@ class Dataset:
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
         baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv', index = True)
         return baseline_paramlist
-    def generate_CIA_paramlist(self, band = None):
+    def generate_CIA_paramlist(self):
         """
         Generates a csv file called dataset_name + _CIA_paramlist, which will be used to generate another csv file that is used for fitting the broadband CIA that is common across all spectra, where the columns will be dependent on the CIA model used. 
 
@@ -447,13 +447,13 @@ class Dataset:
             dataframe containing information decribing the CIA parameters based on the CIA model chosen.  This dataframe is also saved to a dataframe.  Either file can be edited before making the CIA parameter list used for fitting.  If editting the .csv file will need to regenerate dataframe from .csv.
 
         """
-        if self.CIA_model == None:
+        if self.CIA_model['model'] == None:
             return None
-        elif self.CIA_model == 'Karman':
+        elif self.CIA_model['model'] == 'Karman':
             CIA_paramlist = pd.DataFrame()
             CIA_paramlist['CIA Pair'] = ['O2_O2', 'O2_N2']
             #Default values based on Karman, T. et al., Icarus 2019, 328 , 160 175.
-            if band == 'a_band':
+            if self.CIA_model['band'] == 'a_band':
                 #Intensities
                 CIA_paramlist['S_SO'] = [6.20731994222978,7.961801018674746]
                 CIA_paramlist['S_EXCH'] = [39.42079598436756,0]
@@ -465,7 +465,7 @@ class Dataset:
                 #Shift
                 CIA_paramlist['SO_shift'] = [0,0]
                 CIA_paramlist['EXCH_shift'] = [0,0]
-            if band == 'singlet_delta':
+            if self.CIA_model['band'] == 'singlet_delta':
                 #Intensities
                 CIA_paramlist['S_SO'] = [39.13, 70.74]
                 CIA_paramlist['S_EXCH'] = [304.7448171031378, 0]
@@ -481,7 +481,7 @@ class Dataset:
             return CIA_paramlist
             
         else:
-            self.CIA_model = None
+            self.CIA_model['model'] = None
             return None
 
     def generate_summary_file(self, save_file = False):
