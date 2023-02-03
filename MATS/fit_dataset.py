@@ -1356,8 +1356,8 @@ class Fit_DataSet:
                     self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
             elif ('_res_' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name[par.name.find('_res_') + 5:])]
-                spec_num = par.name[par.name.find('_res_') + 5:][indices[0]+1:indices[1]]
-                seg_num = par.name[par.name.find('_res_') + 5:][indices[1]+1:]
+                spectrum = par.name[par.name.find('_res_') + 5:][indices[0]+1:indices[1]]
+                segment = par.name[par.name.find('_res_') + 5:][indices[1]+1:]
                 parameter = par.name[:par.name.find('_res_')] + '_res_' + par.name[par.name.find('_res_') + 5:][:indices[0]]
                 self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
                 if par.vary:
