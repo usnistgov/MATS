@@ -55,9 +55,11 @@ def o2_cia_karman_model(wavenumbers, T, P,Diluent,
     model_O2_O2 = EXCH_O2*(1 + EXCH_b*(T-296) + EXCH_c*(T-296)**2)*EXCH_ + SO_O2*(1 + SO_b_O2_O2*(T-296) + SO_c_O2_O2*(T-296)**2)*SO_O2_O2
     model_O2_N2 = SO_N2*(1 + SO_b_O2_N2*(T-296) + SO_c_O2_N2*(T-296)**2)*SO_O2_N2
     
-    amagats_O2 = Diluent['O2']['composition']*(P/1)*(273.15/(T))
-    amagats_N2 = Diluent['N2']['composition']*(P/1)*(273.15/(T))
+    amagats_O2 = (P/1)*(273.15/(T))*Diluent['O2']['composition']
+    amagats_N2 = (P/1)*(273.15/(T))*Diluent['N2']['composition']
     
-    CIA_model = Diluent['O2']['composition']*model_O2_O2*amagats_O2**2 + Diluent['N2']['composition']*model_O2_N2*amagats_N2*amagats_O2   
+    CIA_model = (model_O2_O2*amagats_O2*amagats_O2) + (model_O2_N2*amagats_N2*amagats_O2) 
+    #CIA_model = (Diluent['O2']['composition']*model_O2_O2) + (Diluent['N2']['composition']*model_O2_N2) # in amagats
+    
     return CIA_model
 
