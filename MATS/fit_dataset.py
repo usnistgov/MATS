@@ -1378,7 +1378,8 @@ class Fit_DataSet:
                     self.lineparam_list.loc[line, parameter + '_err'] = par.stderr
         self.baseline_list.to_csv(base_linelist_update_file + '.csv', index = False)
         self.lineparam_list.to_csv(param_linelist_update_file + '.csv')
-        self.CIAparam_list.to_csv(CIA_linelist_update_file + '.csv', index = False)
+        if self.dataset.CIA_model['model'] == "Karman":
+            self.CIAparam_list.to_csv(CIA_linelist_update_file + '.csv', index = False)
 
 
 
