@@ -5,6 +5,7 @@ import re
 
 import numpy as np
 import pandas as pd
+from scipy.interpolate import RegularGridInterpolator
 from .hapi import ISO, PYTIPS2017, PYTIPS2011, pcqsdhc
 from .utilities import molecularMass, etalon, convolveSpectrumSame
 from .codata import CONSTANTS
@@ -16,7 +17,7 @@ from lmfit import Minimizer,  Parameters
 def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff',
                 p = 1, T = 296, molefraction = {}, isotope_list = ISO,
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30, 
-                TIPS = PYTIPS2017):
+                TIPS = PYTIPS2017, compressability_factor = 1):
     """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters.
 
     Outline
@@ -123,7 +124,10 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
     #define reference temperature/pressure and calculate molecular density
     Tref = 296. # K
     pref = 1. # atm
+    
     mol_dens = (p/ CONSTANTS['cpa_atm'])/(CONSTANTS['k']*T)
+    mol_dens = mol_dens * compressability_factor
+
 
     #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
     #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
@@ -214,7 +218,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
 def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff',
                 p = 1, T = 296, molefraction = {}, isotope_list = ISO,
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30, 
-                TIPS = PYTIPS2017):
+                TIPS = PYTIPS2017, compressability_factor = 1):
     """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters with capability of incorporating the beta correction to the Dicke Narrowing proposed in Analytical-function correction to the Hartmann–Tran profile for more reliable representation of the Dicke-narrowed molecular spectra.
 
     Outline
@@ -320,6 +324,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
     Tref = 296. # K
     pref = 1. # atm
     mol_dens = (p/CONSTANTS['cpa_atm'])/(CONSTANTS['k']*T)
+    mol_dens = mol_dens * compressability_factor
 
     #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
     if not Diluent:
@@ -1147,6 +1152,18 @@ class Fit_DataSet:
                         np.float(params['EXCH_shift_O2_N2']),
                         band = self.dataset.CIA_model['band'])
                 spectrum.set_cia(CIA)  
+            if spectrum.compressability_file != None:
+                comp_factor = pd.read_csv(spectrum.compressability_file + '.csv')
+                pressures = np.asarray(comp_factor['Pressure (MPa)'].values*1e6/101325)
+                pressures = pressures.astype(float)
+                temperatures = list(comp_factor)
+                temperatures.remove('Pressure (MPa)')
+                temperatures = np.asarray(temperatures)
+                temperatures = temperatures.astype(float)
+                comp_factor.drop('Pressure (MPa)', inplace=True, axis=1) 
+                comp_factor_array = comp_factor.to_numpy()
+                interp_comp_factor = RegularGridInterpolator(points = [pressures, temperatures], values = comp_factor_array)
+                                
             
             for segment in list(set(spectrum.segments)):
                 wavenumbers = wavenumber_segments[segment]
@@ -1163,18 +1180,22 @@ class Fit_DataSet:
                 #Get Environmental Parameters
                 p = np.float(params['Pressure_' + str(spectrum_number) + '_' + str(segment)])
                 T = np.float(params['Temperature_' + str(spectrum_number) + '_' + str(segment)])
+                if spectrum.compressability_file != None:
+                    compressability_factor = interp_comp_factor([p, T])[0]
+                else:
+                    compressability_factor = 1    
+                
                 #Simulate Spectra
-
                 if self.beta_formalism == True:
                     fit_nu, fit_coef = HTP_wBeta_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
                             p = p, T = T, molefraction = fit_molefraction, isotope_list = self.dataset.isotope_list,
                             natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent, 
-                            TIPS = spectrum.TIPS)
+                            TIPS = spectrum.TIPS, compressability_factor = compressability_factor)
                 else:
                     fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
                             p = p, T = T, molefraction = fit_molefraction, isotope_list = self.dataset.isotope_list,
                             natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent, 
-                            TIPS = spectrum.TIPS)
+                            TIPS = spectrum.TIPS, compressability_factor = compressability_factor)
                 fit_coef = fit_coef * 1e6
                 
                 ## CIA Calculation
