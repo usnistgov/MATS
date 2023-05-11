@@ -548,7 +548,7 @@ class Generate_FitParam_File:
 
         return param_linelist_df
 
-    def generate_fit_baseline_linelist(self, vary_baseline = True, vary_pressure = False, vary_temperature = False,vary_molefraction = {7:True, 1:False}, vary_xshift = False,
+    def generate_fit_baseline_linelist(self, vary_baseline = False, vary_pressure = False, vary_temperature = False,vary_molefraction = {}, vary_xshift = False,
                                       vary_etalon_amp= False, vary_etalon_period= False, vary_etalon_phase= False,
                                       vary_ILS_res = False):
         """Generates the baseline line list used in fitting and updates the fitting booleans to desired settings.
