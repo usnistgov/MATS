@@ -126,7 +126,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
     pref = 1. # atm
     
     mol_dens = (p/ CONSTANTS['cpa_atm'])/(CONSTANTS['k']*T)
-    mol_dens = mol_dens * compressability_factor
+    mol_dens = mol_dens / compressability_factor
 
 
     #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
@@ -324,7 +324,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
     Tref = 296. # K
     pref = 1. # atm
     mol_dens = (p/CONSTANTS['cpa_atm'])/(CONSTANTS['k']*T)
-    mol_dens = mol_dens * compressability_factor
+    mol_dens = mol_dens / compressability_factor
 
     #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
     if not Diluent:
