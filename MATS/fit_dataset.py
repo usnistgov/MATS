@@ -6,7 +6,7 @@ import re
 import numpy as np
 import pandas as pd
 from scipy.interpolate import RegularGridInterpolator
-from .hapi import ISO, PYTIPS2017, PYTIPS2011, pcqsdhc
+from .hapi import ISO, PYTIPS2017, PYTIPS2011, PYTIPS2021, pcqsdhc
 from .utilities import molecularMass, etalon, convolveSpectrumSame
 from .codata import CONSTANTS
 from .o2_cia_karman import o2_cia_karman_model
@@ -17,7 +17,7 @@ from lmfit import Minimizer,  Parameters
 def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff',
                 p = 1, T = 296, molefraction = {}, isotope_list = ISO,
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30, 
-                TIPS = PYTIPS2017, compressability_factor = 1):
+                TIPS = PYTIPS2021, compressability_factor = 1):
     """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters.
 
     Outline
@@ -218,7 +218,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
 def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff',
                 p = 1, T = 296, molefraction = {}, isotope_list = ISO,
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30, 
-                TIPS = PYTIPS2017, compressability_factor = 1):
+                TIPS = PYTIPS2021, compressability_factor = 1):
     """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters with capability of incorporating the beta correction to the Dicke Narrowing proposed in Analytical-function correction to the Hartmann–Tran profile for more reliable representation of the Dicke-narrowed molecular spectra.
 
     Outline
