@@ -13,7 +13,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0,"C:\\Users\\ema3\\Documents\\MATS\\MATS")
+sys.path.insert(0,"C:\\Users\\ema3\\MATS\\MATS")
 
 
 
@@ -28,8 +28,8 @@ html_show_copyright = False
 
 # The full version, including alpha/beta/rc tags
 
-version = '2.1'
-release = '2.1'
+version = '3'
+release = '3'
 
 
 # -- General configuration ---------------------------------------------------

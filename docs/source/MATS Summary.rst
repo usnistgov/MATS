@@ -165,7 +165,7 @@ The first order Rosenkranz line mixing (:math:`Y`) can be calculated from the im
 
 .. math::
 
-	Y (P,T) = \sum_{k=i} abun_{k} (Y}^{k} * \frac{P}{P_{ref}} * (\frac{T_{ref}}{T})^{n_{\nu{VC}^{k}}})
+	Y(P,T) = \sum_{k = i} abun_{k} (Y^{k} * \frac{P}{P_{ref}} * (\frac{T_{ref}}{T})^{n_{Y^{k}}}
 	
 The line mixing is implemented as:
 
@@ -173,7 +173,7 @@ The line mixing is implemented as:
 	
 	\alpha = I * (Re{HTP(\Gamma_{D}, \Gamma_{0}, \Delta_{0}, \Gamma_{2}, \Delta_{2}, \nu_{VC}, \eta, \nu)} + Y*Im{HTP(\Gamma_{D}, \Gamma_{0}, \Delta_{0}, \Gamma_{2}, \Delta_{2}, \nu_{VC}, \eta, \nu)})
 	
-In MATS nomenclature, the line mixing parameter is referred to as y_diluent and the temperature exponent is n_Y_diluent.  This differs from the naming convention in HAPI, where the parameter name contains information about the corresponding line shape.  MATS does not contain this information in the parameter name.
+In MATS nomenclature, the line mixing parameter is referred to as y_diluent and the temperature exponent is n_y_diluent.  This differs from the naming convention in HAPI, where the parameter name contains information about the corresponding line shape.  MATS does not contain this information in the parameter name.
 
 Line-by-line Models
 -------------------

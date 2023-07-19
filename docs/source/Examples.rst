@@ -17,7 +17,7 @@ The MATS package includes examples highlighting major features.
    Including instrument line shapes in simulation and fits
    Fitting and Simulating isotopes and molecules not in HITRAN
    Correcting the Ideal Gas Law with Compressability Factor
-   HITRAN Line-by-Line Static Molectules
+   HITRAN Line-by-Line Static Molecules
    Oxygen CIA using theoretical model
    Generating Parameter Line lists
 
