@@ -62,7 +62,7 @@ Hartmann-Tran (HTP): :math:`\Gamma_{D}, \Gamma_{0}, \Delta_{0}, \nu_{VC}, \Gamma
 
 Line Intensity
 --------------
-The line intensity for each line at the experimental temperature is calculated using the EnvironmentDependency_Intensity function in HAPI.  This function takes as arguments the line intensity at 296 K (:math:`S(T_{ref})`), the experimental temperature (:math:`T`), the reference temperature 296 K (:math:`T_{ref}`), the partition function at the experimental temperature (:math:`Q(T)`), the partition function at the reference temperature (:math:`Q(T_{ref})`), the lower state energy (:math:`E"`), and the line center ((:math:`\nu`)), and constant (:math:`c2 = hc/k`).  The partition functions are calculated using `TIPS-2017 <http://dx.doi.org/10.1016/j.jqsrt.2017.03.045>`_. Constants are defined by CODATA values
+The line intensity for each line at the experimental temperature is calculated using the EnvironmentDependency_Intensity function in HAPI.  This function takes as arguments the line intensity at 296 K (:math:`S(T_{ref})`), the experimental temperature (:math:`T`), the reference temperature 296 K (:math:`T_{ref}`), the partition function at the experimental temperature (:math:`Q(T)`), the partition function at the reference temperature (:math:`Q(T_{ref})`), the lower state energy (:math:`E"`), and the line center ((:math:`\nu`)), and constant (:math:`c2 = hc/k`).  The partition functions are calculated using TIPS with the option for the user to select between the three versions available in HAPI TIPS2011, TIPS2017, and TIPS2021. Constants are defined by CODATA values
 
 .. math::
 
@@ -161,11 +161,11 @@ Line Mixing
 
 .. currentmodule:: MATS.spectrum
 
-The first order line mixing (:math:`Y`) can be calculated from the imaginary portion of any of the HTP derivative line profiles.  Currently, there is no temperature dependence imposed on the line mixing, so there a different value is used for each nominal temperature, where the nominal temperature is specified in the :py:class:`Spectrum` definition.  However, contributions from each diluent (:math:`k`) can be scaled by the diluent composition fraction (:math:`abun`) and  summed to model the ensemble line mixing.  
+The first order Rosenkranz line mixing (:math:`Y`) can be calculated from the imaginary portion of any of the HTP derivative line profiles.  The temperature dependence is modeled as a power law, where :math:`n` represents the temperature dependence of the Rosenkranz line-mixing term.  The contributions from each diluent (:math:`k`) can be scaled by the diluent composition fraction (:math:`abun`) and  summed to model the ensemble line mixing.  
 
 .. math::
 
-	Y (P) = \sum abun_{k} Y \frac{P}{P_{ref}}
+	Y (P,T) = \sum_{k=i} abun_{k} (Y}^{k} * \frac{P}{P_{ref}} * (\frac{T_{ref}}{T})^{n_{\nu{VC}^{k}}})
 	
 The line mixing is implemented as:
 
@@ -173,7 +173,7 @@ The line mixing is implemented as:
 	
 	\alpha = I * (Re{HTP(\Gamma_{D}, \Gamma_{0}, \Delta_{0}, \Gamma_{2}, \Delta_{2}, \nu_{VC}, \eta, \nu)} + Y*Im{HTP(\Gamma_{D}, \Gamma_{0}, \Delta_{0}, \Gamma_{2}, \Delta_{2}, \nu_{VC}, \eta, \nu)})
 	
-In MATS nomenclature, the line mixing parameter is referred to as y_diluent_nominaltemperature.  
+In MATS nomenclature, the line mixing parameter is referred to as y_diluent and the temperature exponent is n_Y_diluent.  This differs from the naming convention in HAPI, where the parameter name contains information about the corresponding line shape.  MATS does not contain this information in the parameter name.
 
 Line-by-line Models
 -------------------
