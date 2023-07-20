@@ -1,18 +1,20 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Getting Started &#8212; MATS 2.1 documentation</title>
+    <title>Getting Started &#8212; MATS 3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -63,7 +65,7 @@ $(document).ready(function(){
         <li class="right" >
           <a href="index.html" title="MATS: Multi-spectrum Analysis Tool for Spectroscopy"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Getting Started</a></li> 
       </ul>
     </div>  
@@ -74,20 +76,20 @@ $(document).ready(function(){
           <div class="body" role="main">
             
   <section id="getting-started">
-<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h1>
 <section id="set-up">
-<h2>Set-Up<a class="headerlink" href="#set-up" title="Permalink to this headline">¶</a></h2>
+<h2>Set-Up<a class="headerlink" href="#set-up" title="Permalink to this heading">¶</a></h2>
 <p>The MATS package was developed and tested using the <a class="reference external" href="https://www.anaconda.com/">Anaconda</a> python environment. Example scripts have typically been written and run using  <a class="reference external" href="https://jupyter.org/">jupyter notebooks</a> (run in jupyter lab), as this allows for code to be run in segments and for iteration on certain code segments.  Any python package distribution should work with the code as long as the dependent packages are installed.</p>
 </section>
 <section id="main-packages">
-<h2>Main Packages<a class="headerlink" href="#main-packages" title="Permalink to this headline">¶</a></h2>
+<h2>Main Packages<a class="headerlink" href="#main-packages" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="https://github.com/usnistgov/MATS">MATS</a></p></li>
-<li><p><a class="reference external" href="https://hitran.org/hapi/">HITRAN Application Programming Interface (HAPI)</a>   The v1.1.1.0 was tested and is available in the MATS repository.</p></li>
+<li><p><a class="reference external" href="https://hitran.org/hapi/">HITRAN Application Programming Interface (HAPI)</a>   The v1.2.2.1 was tested and is available in the MATS repository.</p></li>
 </ul>
 </section>
 <section id="dependent-packages">
-<h2>Dependent Packages<a class="headerlink" href="#dependent-packages" title="Permalink to this headline">¶</a></h2>
+<h2>Dependent Packages<a class="headerlink" href="#dependent-packages" title="Permalink to this heading">¶</a></h2>
 <p>MATS is not written as a basic package, meaning that there are several dependent packages that need to be installed.</p>
 <p>If a desired package is not installed then the following command will install it.  Many python package distributions have integrated package managers and required packages can also be installed through that mechanism.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">package_name</span>
@@ -110,7 +112,7 @@ $(document).ready(function(){
 </ul>
 </section>
 <section id="install">
-<h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
+<h2>Install<a class="headerlink" href="#install" title="Permalink to this heading">¶</a></h2>
 <p>Taken from the INSTALL.md file</p>
 <p>Basic <cite>MATS</cite> installation instructions.  Note that development is alpha.  In the future, full pypi/conda installs will be made available.</p>
 <p><strong>Create a conda environment with MATS dependencies</strong></p>
@@ -155,22 +157,26 @@ Note, this is experimental.  Do the following</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="index.html"
-                        title="previous chapter">MATS: Multi-spectrum Analysis Tool for Spectroscopy</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="MATS%20Version%20Summary.html"
-                        title="next chapter">MATS Version Summary</a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">MATS: Multi-spectrum Analysis Tool for Spectroscopy</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="MATS%20Version%20Summary.html"
+                          title="next chapter">MATS Version Summary</a></p>
+  </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -190,12 +196,12 @@ Note, this is experimental.  Do the following</p>
         <li class="right" >
           <a href="index.html" title="MATS: Multi-spectrum Analysis Tool for Spectroscopy"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Getting Started</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

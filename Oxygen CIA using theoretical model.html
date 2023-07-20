@@ -1,0 +1,238 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Oxygen CIA using theoretical model &#8212; MATS 3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MATS module" href="MATS.html" />
+    <link rel="prev" title="HITRAN Line-by-Line Static Molecules" href="HITRAN%20Line-by-Line%20Static%20Molecules.html" />
+<link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
+  <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+
+
+<script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
+<script>
+$(document).ready(function(){
+  // Mark external (non-nist.gov) A tags with class "external"
+  //If the adress start with https and ends with nist.gov
+  var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)');
+  //Regex to find address that start with https
+  var re_absolute_address = new RegExp('^((https?:)?\/\/)');
+  $("a").each(function(){
+    var url=$(this).attr('href');
+    if(re_nist.test(url) || !re_absolute_address.test(url)){
+      $(this).addClass('local');
+    }else{
+      //This a href appears to be external, so tag it
+      $(this).addClass('external');
+    }
+  });
+  // Add leaveNotice to external A elements
+  $('a.external').leaveNotice();
+});
+</script>
+<link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="MATS.html" title="MATS module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="HITRAN%20Line-by-Line%20Static%20Molecules.html" title="HITRAN Line-by-Line Static Molecules"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="Examples.html" accesskey="U">Examples</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Oxygen CIA using theoretical model</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="oxygen-cia-using-theoretical-model">
+<h1>Oxygen CIA using theoretical model<a class="headerlink" href="#oxygen-cia-using-theoretical-model" title="Permalink to this heading">¶</a></h1>
+<p>Provided in MATS are several examples highlighting MATS capabilities, which can be found in the MATS <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples">examples folder</a>.</p>
+<p>Karman et al published a theoretical O_2 - O_2 and O_2 - N_2 collision-induced absorption model based on quantum calculations <a class="reference external" href="https://doi.org/10.1038/s41557-018-0015-x">https://doi.org/10.1038/s41557-018-0015-x</a>. This model is composed of spin-orbit and exchange mechanisms. In the manuscript Parameterized Model to Approximate Theoretical Collision-Induced Absorption Band Shapes for O2-O2 and O2-N2, Adkins et al present a parameterized representation of the theoretical model reported by Karman et al.</p>
+<p>The details of the model can be found in <a class="reference external" href="https://doi.org/10.1016/j.jqsrt.2023.108732">https://doi.org/10.1016/j.jqsrt.2023.108732</a>.</p>
+<p>We have included this parameterized model in MATS to allow for use in multi-spectrum fitting analyses in order to fit monomer and CIA components to the absorption.  <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples/O2CIA_Karman_etal_model">The example below shows a use example for this model.</a></p>
+<blockquote>
+<div><p>Most of this example follows from the theoretical spectra generation and fit example. However, this example makes use of the new parameterized CIA model based on the theory published by Karman et al <a class="reference external" href="https://doi.org/10.1016/j.jqsrt.2023.108732">https://doi.org/10.1016/j.jqsrt.2023.108732</a>.</p>
+</div></blockquote>
+<p>In the first step we read in the linelist. The one used in the example is that reported in the JQSRT 270 (2021) 107684. However this linelist is for demonstration purposes only, users should refer to that paper for the actual line list.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">MATS.linelistdata</span> <span class="kn">import</span> <span class="n">linelistdata</span>
+<span class="n">PARAM_LINELIST</span> <span class="o">=</span> <span class="n">linelistdata</span><span class="p">[</span><span class="s1">&#39;Singlet_Delta_Linelist_JQSRT_270_2021_107684&#39;</span><span class="p">]</span>
+<span class="n">PARAM_LINELIST</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;nu&#39;</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, we have written a definition that simulates the monomer absorption for a spectrum, simulates a theoretical CIA based on the Karman et al model using the o2_cia_karman_model definition, and then adds the theoretical cia to the simulated monomer absorption in the spectrum alpha data.</p>
+<p>The o2_cia_karman_model function requires wavenumber axis, temperature, pressure, and sample composition (O2 and N2 only), in addition to values for the Spin_orbit magnitude for both O2-O2 and O2-N2, exchange magnitude of O2-O2, temperature dependences for spin orbit (O2-O2 and O2-N2, can be constrained later to be equal) and exchange intensities. Additionally, the band being studied a_band or singlet_delta needs to be specified.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">wave_range</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="c1">#range outside of experimental x-range to simulate</span>
+<span class="n">IntensityThreshold</span> <span class="o">=</span> <span class="mf">1e-30</span> <span class="c1">#intensities must be above this value to be simulated</span>
+<span class="n">Fit_Intensity</span> <span class="o">=</span> <span class="mf">1e-20</span> <span class="c1">#intensities must be above this value for the line to be fit</span>
+<span class="n">order_baseline_fit</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+<span class="n">wave_min</span> <span class="o">=</span> <span class="mi">7500</span> <span class="c1">#cm-1</span>
+<span class="n">wave_max</span> <span class="o">=</span> <span class="mi">8350</span> <span class="c1">#cm-1</span>
+<span class="n">wave_space</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="c1">#cm-1</span>
+<span class="n">wavenumbers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">wave_min</span><span class="p">,</span> <span class="n">wave_max</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">sim_spectra_with_CIA</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample_molefraction</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="n">Diluent</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;O2&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span><span class="n">sample_molefraction</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="mf">31.998</span><span class="p">},</span> <span class="s1">&#39;N2&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span><span class="mi">1</span><span class="o">-</span><span class="n">sample_molefraction</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="mf">28.0134</span><span class="p">}}</span>
+        <span class="n">spec</span> <span class="o">=</span>  <span class="n">MATS</span><span class="o">.</span><span class="n">simulate_spectrum</span><span class="p">(</span><span class="n">PARAM_LINELIST</span><span class="p">,</span> <span class="n">wavenumbers</span> <span class="o">=</span> <span class="n">wavenumbers</span><span class="p">,</span>
+                                                 <span class="n">temperature</span> <span class="o">=</span> <span class="n">temperature</span><span class="p">,</span>  <span class="n">pressure</span> <span class="o">=</span> <span class="n">pressure</span><span class="p">,</span>
+                                                 <span class="n">molefraction</span> <span class="o">=</span> <span class="n">sample_molefraction</span><span class="p">,</span> <span class="n">Diluent</span> <span class="o">=</span> <span class="n">Diluent</span><span class="p">,</span>
+                                                 <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span><span class="p">,</span> <span class="n">wing_wavenumbers</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">wing_method</span> <span class="o">=</span> <span class="s1">&#39;wing_wavenumbers&#39;</span><span class="p">,)</span>
+        <span class="c1"># Adjusted from Initial guess derived based HITRAN 2020 reported theoretical CIA</span>
+        <span class="n">EXCH_c</span><span class="p">,</span> <span class="n">EXCH_b</span><span class="p">,</span> <span class="n">EXCH_a</span> <span class="o">=</span> <span class="p">[</span><span class="mf">3.63e-06</span><span class="p">,</span> <span class="mf">0.003</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">SO_c</span><span class="p">,</span> <span class="n">SO_b</span><span class="p">,</span> <span class="n">SO_a</span> <span class="o">=</span><span class="p">[</span><span class="mf">1.5e-06</span><span class="p">,</span> <span class="mf">0.0002</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">SO_O2</span><span class="p">,</span> <span class="n">SO_N2</span><span class="p">,</span> <span class="n">EXCH_O2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">40</span><span class="p">,</span> <span class="mi">75</span> <span class="p">,</span><span class="mi">315</span><span class="p">]</span>
+
+        <span class="n">CIA</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">o2_cia_karman_model</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">,</span> <span class="n">temperature</span> <span class="o">+</span> <span class="mf">273.15</span><span class="p">,</span> <span class="n">pressure</span><span class="o">/</span><span class="mi">760</span><span class="p">,</span> <span class="n">Diluent</span><span class="p">,</span>
+                                                        <span class="n">SO_O2</span><span class="p">,</span> <span class="n">SO_N2</span><span class="p">,</span> <span class="n">EXCH_O2</span><span class="p">,</span>
+                                                        <span class="n">EXCH_b</span><span class="p">,</span> <span class="n">EXCH_c</span><span class="p">,</span> <span class="c1">#O2-O2</span>
+                                                        <span class="n">SO_b</span><span class="p">,</span> <span class="n">SO_c</span><span class="p">,</span> <span class="c1">#O2-N2</span>
+                                                        <span class="n">SO_b</span><span class="p">,</span> <span class="n">SO_c</span><span class="p">,</span>
+                                                        <span class="n">SO_shift_O2_O2</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SO_shift_O2_N2</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">EXCH_shift</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                                                        <span class="n">band</span> <span class="o">=</span> <span class="s1">&#39;singlet_delta&#39;</span><span class="p">)</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">alpha</span> <span class="o">+=</span> <span class="n">CIA</span>
+        <span class="k">return</span> <span class="n">spec</span>
+
+<span class="n">spec_1</span> <span class="o">=</span> <span class="n">sim_spectra_with_CIA</span><span class="p">(</span><span class="mi">760</span><span class="p">,</span> <span class="mf">22.85</span><span class="p">,</span> <span class="p">{</span><span class="mi">7</span> <span class="p">:</span><span class="mf">0.2095</span><span class="p">},</span> <span class="s1">&#39;Air_296&#39;</span><span class="p">)</span>
+<span class="n">spec_2</span> <span class="o">=</span> <span class="n">sim_spectra_with_CIA</span><span class="p">(</span><span class="mi">760</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="mi">7</span> <span class="p">:</span><span class="mf">0.2095</span><span class="p">},</span> <span class="s1">&#39;Air_273&#39;</span><span class="p">)</span>
+<span class="n">spec_3</span> <span class="o">=</span> <span class="n">sim_spectra_with_CIA</span><span class="p">(</span><span class="mi">760</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="p">{</span><span class="mi">7</span> <span class="p">:</span><span class="mf">0.2095</span><span class="p">},</span> <span class="s1">&#39;Air_323&#39;</span><span class="p">)</span>
+<span class="n">spec_4</span> <span class="o">=</span> <span class="n">sim_spectra_with_CIA</span><span class="p">(</span><span class="mi">760</span><span class="p">,</span> <span class="mf">22.85</span><span class="p">,</span> <span class="p">{</span><span class="mi">7</span> <span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="s1">&#39;O2_296&#39;</span><span class="p">)</span>
+<span class="n">spec_5</span> <span class="o">=</span> <span class="n">sim_spectra_with_CIA</span><span class="p">(</span><span class="mi">760</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="mi">7</span> <span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="s1">&#39;O2_273&#39;</span><span class="p">)</span>
+<span class="n">spec_6</span> <span class="o">=</span> <span class="n">sim_spectra_with_CIA</span><span class="p">(</span><span class="mi">760</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="p">{</span><span class="mi">7</span> <span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="s1">&#39;O2_323&#39;</span><span class="p">)</span>
+
+
+<span class="n">spec_1</span><span class="o">.</span><span class="n">plot_wave_alpha</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/O2_CIA_simualted.png" src="_images/O2_CIA_simualted.png" />
+<section id="set-up-for-fitting">
+<h2>Set-up for Fitting<a class="headerlink" href="#set-up-for-fitting" title="Permalink to this heading">¶</a></h2>
+<p>he CIA model is specified in the instantiation of the Dataset class. The CIA_model is specified through a dictionary specifying both the model and band. Currently, the Karman model is the only model available and the available bands are a_band and singlet_delta.</p>
+<p>Like the generate_baseline_paramlist() definition, the generate_CIA_paramlist() generates a dataframe and file that summarizes the parameters based on the MATS preset values from the literature. <a class="reference external" href="https://doi.org/10.1038/s41557-018-0015-x">https://doi.org/10.1038/s41557-018-0015-x</a>, <a class="reference external" href="https://doi.org/10.1016/j.icarus.2019.02.034">https://doi.org/10.1016/j.icarus.2019.02.034</a></p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#Add all spectrum to a Dataset object</span>
+<span class="n">SPECTRA</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">Dataset</span><span class="p">([</span><span class="n">spec_1</span><span class="p">,</span> <span class="n">spec_2</span><span class="p">,</span> <span class="n">spec_3</span><span class="p">,</span> <span class="n">spec_4</span><span class="p">,</span> <span class="n">spec_5</span><span class="p">,</span> <span class="n">spec_6</span><span class="p">],</span>
+                                           <span class="s1">&#39;Experimental Singlet Delta with CIA&#39;</span><span class="p">,</span> <span class="n">PARAM_LINELIST</span><span class="p">,</span> <span class="n">CIA_model</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;model&#39;</span><span class="p">:</span><span class="s1">&#39;Karman&#39;</span><span class="p">,</span> <span class="s1">&#39;band&#39;</span><span class="p">:</span> <span class="s1">&#39;singlet_delta&#39;</span><span class="p">})</span>
+
+<span class="c1">#Generate Baseline Parameter list based on number of etalons in spectra definitions and baseline order</span>
+<span class="n">BASE_LINELIST</span> <span class="o">=</span> <span class="n">SPECTRA</span><span class="o">.</span><span class="n">generate_baseline_paramlist</span><span class="p">()</span>
+<span class="n">CIA_LINELIST</span> <span class="o">=</span> <span class="n">SPECTRA</span><span class="o">.</span><span class="n">generate_CIA_paramlist</span><span class="p">()</span>
+<span class="n">CIA_LINELIST</span>
+</pre></div>
+</div>
+<p>In the Generate_FitParam_File class, the CIA_linelist is set to the CIA_LINELIST generated by the generate_CIA_paramlist. The genererate_fit_KarmanCIA_linelist() will then add the uncertainty and boolean vary columns, setting the vary column to vary the parameters indicated in the definition call</p>
+</section>
+<section id="fit-the-spectra">
+<h2>Fit the SPECTRA<a class="headerlink" href="#fit-the-spectra" title="Permalink to this heading">¶</a></h2>
+<p>Finally, in the Fit_Dataset instance, the CIA_linelist_file needs to be specified to indicate what parameters are being adjusted, provide initial values, and to allow uncertainties to be updated.</p>
+<p>The CIA parameters can be constrained using the constrained_CIA parameters() definition. The default option is that the the spin orbit intensity temperature dependence is the same for O2-O2 and O2-N2. Additionally, the shift of the spin-orbit mechanism is normally constrained to be the same for O2-O2 and O2-N2. However, either of these constraints can be removed by setting S_temperature_dependence_constrained = False or shift_constrained = False.</p>
+<p>The rest of the fitting runs in the same manner as for monomer-absorption only MATS fits.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit_data</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">Fit_DataSet</span><span class="p">(</span><span class="n">SPECTRA</span><span class="p">,</span><span class="s1">&#39;Baseline_LineList&#39;</span><span class="p">,</span> <span class="s1">&#39;Parameter_LineList&#39;</span><span class="p">,</span> <span class="n">CIA_linelist_file</span> <span class="o">=</span> <span class="s1">&#39;CIA_LineList&#39;</span><span class="p">,</span>
+                                                        <span class="n">minimum_parameter_fit_intensity</span> <span class="o">=</span> <span class="n">Fit_Intensity</span><span class="p">)</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">fit_data</span><span class="o">.</span><span class="n">generate_params</span><span class="p">()</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">fit_data</span><span class="o">.</span><span class="n">constrained_CIA</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;S_SO&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+                <span class="n">params</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="nb">min</span> <span class="o">=</span> <span class="mf">0.00</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;S_EXCH&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+                <span class="n">params</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="nb">min</span> <span class="o">=</span> <span class="mf">0.00</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">fit_data</span><span class="o">.</span><span class="n">fit_data</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">wing_wavenumbers</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>  <span class="n">wing_method</span> <span class="o">=</span> <span class="s1">&#39;wing_wavenumbers&#39;</span><span class="p">)</span>
+<span class="n">fit_data</span><span class="o">.</span><span class="n">residual_analysis</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indv_resid_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">fit_data</span><span class="o">.</span><span class="n">update_params</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="n">SPECTRA</span><span class="o">.</span><span class="n">generate_summary_file</span><span class="p">(</span><span class="n">save_file</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">SPECTRA</span><span class="o">.</span><span class="n">plot_model_residuals</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="example_files/O2_CIA_fit.png" src="example_files/O2_CIA_fit.png" />
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="HITRAN%20Line-by-Line%20Static%20Molecules.html"
+                          title="previous chapter">HITRAN Line-by-Line Static Molecules</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="MATS.html"
+                          title="next chapter">MATS module</a></p>
+  </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="MATS.html" title="MATS module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="HITRAN%20Line-by-Line%20Static%20Molecules.html" title="HITRAN Line-by-Line Static Molecules"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="Examples.html" >Examples</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Oxygen CIA using theoretical model</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    </div>
+  </body>
+</html>

@@ -1,21 +1,23 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Applying Analytical Correction to hardness of collisions for HTP &#8212; MATS 2.1 documentation</title>
+    <title>Applying Analytical Correction to hardness of collisions for HTP &#8212; MATS 3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Incorporating CIA into fits" href="Incorporating%20CIA%20into%20fits.html" />
@@ -65,7 +67,7 @@ $(document).ready(function(){
         <li class="right" >
           <a href="Analysis%20of%20ASCENDS%20Line%20Spectra.html" title="Analysis of ASCENDS Line Spectra"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="Examples.html" accesskey="U">Examples</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Applying Analytical Correction to hardness of collisions for HTP</a></li> 
       </ul>
@@ -77,13 +79,13 @@ $(document).ready(function(){
           <div class="body" role="main">
             
   <section id="applying-analytical-correction-to-hardness-of-collisions-for-htp">
-<h1>Applying Analytical Correction to hardness of collisions for HTP<a class="headerlink" href="#applying-analytical-correction-to-hardness-of-collisions-for-htp" title="Permalink to this headline">¶</a></h1>
+<h1>Applying Analytical Correction to hardness of collisions for HTP<a class="headerlink" href="#applying-analytical-correction-to-hardness-of-collisions-for-htp" title="Permalink to this heading">¶</a></h1>
 <p>Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples">examples folder</a>.</p>
 <p>Dicke narrowing accounts for effective narrowing of the doppler width because of velocity changing collisions.  The magnitude of this effect is dependent on the hardness of the collisions.  Different line shapes make different assumptions on the hardness of the collision with the Nelkhin-Ghatak making the assumption that collisions are hard, meaning that the molecular velocity before a collision is forgotten after the collision, and  the Galatry profile assuming collisions are soft, meaning that many collisions are necessary to change the velocity. In reality, the hardness of the collision is related to the perturbers and absorbers being studied and acts on a continuum.  In a <a class="reference external" href="https://doi.org/10.1016/j.jqsrt.2019.106784">paper by  Konefał et al.</a> (citation below), authors map the hard Dicke Narrowing term onto the billiard ball collision model, based on a parameter beta, which is related to the pressure (parameterized as the Dicke narrowing at a pressure relative to the doppler width) and the ratio of the masses between the perturber and absorber.  As Beta can be calculated, this correction provides a more robust modeling of the Dicke Narrowing without the addition of additional floated parameters.</p>
 <p><a class="reference external" href="https://doi.org/10.1016/j.jqsrt.2019.106784">M. Konefał, M. Słowiński, M. Zaborowski, R. Ciuryło, D. Lisak, P. Wcisło, Analytical-function correction to the Hartmann–Tran profile for more reliable representation of the Dicke-narrowed molecular spectra, Journal of Quantitative Spectroscopy and Radiative Transfer, Volume 242, 2020,106784,ISSN 0022-4073.</a></p>
 <p><a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples/Beta_Parameterization">The Beta correction has been included in the MATS software and the following example provides an example of how to use it.</a></p>
 <section id="simulate-spectrum-objects">
-<h2>Simulate Spectrum Objects<a class="headerlink" href="#simulate-spectrum-objects" title="Permalink to this headline">¶</a></h2>
+<h2>Simulate Spectrum Objects<a class="headerlink" href="#simulate-spectrum-objects" title="Permalink to this heading">¶</a></h2>
 <p>Module import follows from the <a class="reference internal" href="Fitting%20Experimental%20Spectra.html#fitting-experimental-spectra"><span class="std std-ref">Fitting Experimental Spectra</span></a> and <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> examples with additional details on how to simulate spectra found in <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> and the source documentation.</p>
 <p>After the generic parameters are introduced the line list for simulations is read in using the <a class="reference internal" href="MATS.html#MATS.linelistdata.LoadLineListData" title="MATS.linelistdata.LoadLineListData"><code class="xref py py-func docutils literal notranslate"><span class="pre">LoadLineListData()</span></code></a> function.  In this example we are making some adjustments to the line list before simulating.  In the MATS fitting, simulations are only conducted to some user-defined range outside of the spectral frequency range (wave_range = 1.5 <span class="math notranslate nohighlight">\(cm^{-1}\)</span> in the current example).  This same constraint is not imposed when simulating spectra.  This can lead to some far-wing issues between simulation and fitting if care is not taken to match the wave_range to the lines in the parameter linelist and the simulation wing_cutoff magnitude, which should also match the fit wing_cutoff magnitude. For this example, we are truncating the simulation line list to [wave_min - wave_range, wave_max + wave_range].  Additionally, values for the Dicke Narrowing air and self parameters are set and the line mixing terms are set to 0.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">MATS.linelistdata</span> <span class="kn">import</span> <span class="n">linelistdata</span>
@@ -190,7 +192,7 @@ $(document).ready(function(){
 </div>
 </section>
 <section id="generate-dataset-and-fit-parameter-files">
-<h2>Generate Dataset and Fit Parameter Files<a class="headerlink" href="#generate-dataset-and-fit-parameter-files" title="Permalink to this headline">¶</a></h2>
+<h2>Generate Dataset and Fit Parameter Files<a class="headerlink" href="#generate-dataset-and-fit-parameter-files" title="Permalink to this heading">¶</a></h2>
 <p>Following the procedure outlined in <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> and <a class="reference internal" href="Fitting%20Experimental%20Spectra.html#fitting-experimental-spectra"><span class="std std-ref">Fitting Experimental Spectra</span></a>.  This example is using the SDNGP without line mixing, is constraining all parameters to multi-spectrum fits, and is floating the line center, line intensity, collisional broadening, pressure shift, speed-dependent broadening, and Dicke narrowing terms.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SPECTRA</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">Dataset</span><span class="p">([</span><span class="n">spec_1</span><span class="p">,</span> <span class="n">spec_2</span><span class="p">,</span> <span class="n">spec_3</span><span class="p">,</span> <span class="n">spec_4</span><span class="p">,</span> <span class="n">spec_5</span><span class="p">,</span> <span class="n">spec_6</span><span class="p">,</span> <span class="n">spec_7</span><span class="p">,</span> <span class="n">spec_8</span><span class="p">,</span> <span class="n">spec_9</span><span class="p">,</span> <span class="n">spec_10</span><span class="p">,</span> <span class="n">spec_11</span><span class="p">,</span> <span class="n">spec_12</span><span class="p">,</span> <span class="n">spec_13</span><span class="p">,</span> <span class="n">spec_14</span><span class="p">,</span> <span class="n">spec_15</span><span class="p">],</span> <span class="s1">&#39;CO2 Study&#39;</span><span class="p">,</span><span class="n">PARAM_LINELIST</span> <span class="p">)</span>
 
@@ -217,7 +219,7 @@ $(document).ready(function(){
 </div>
 </section>
 <section id="fit-data">
-<h2>Fit Data<a class="headerlink" href="#fit-data" title="Permalink to this headline">¶</a></h2>
+<h2>Fit Data<a class="headerlink" href="#fit-data" title="Permalink to this heading">¶</a></h2>
 <p>In this first iteration, we are fitting the data without including the beta_formalism to correct for the hardness of the collisions by setting the beta_formalism to False in the <a class="reference internal" href="MATS.html#MATS.fit_dataset.Fit_DataSet" title="MATS.fit_dataset.Fit_DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">Fit_DataSet</span></code></a>  instance, which is the default.  The results show systematic residuals at the line core based on the large range of pressures.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit_data</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">Fit_DataSet</span><span class="p">(</span><span class="n">SPECTRA</span><span class="p">,</span><span class="s1">&#39;Baseline_LineList&#39;</span><span class="p">,</span> <span class="s1">&#39;Parameter_LineList&#39;</span><span class="p">,</span> <span class="n">minimum_parameter_fit_intensity</span> <span class="o">=</span> <span class="mf">1e-24</span><span class="p">,</span>
                    <span class="n">beta_formalism</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
@@ -279,22 +281,26 @@ $(document).ready(function(){
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="Analysis%20of%20ASCENDS%20Line%20Spectra.html"
-                        title="previous chapter">Analysis of ASCENDS Line Spectra</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Incorporating%20CIA%20into%20fits.html"
-                        title="next chapter">Incorporating CIA into fits</a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="Analysis%20of%20ASCENDS%20Line%20Spectra.html"
+                          title="previous chapter">Analysis of ASCENDS Line Spectra</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="Incorporating%20CIA%20into%20fits.html"
+                          title="next chapter">Incorporating CIA into fits</a></p>
+  </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -314,13 +320,13 @@ $(document).ready(function(){
         <li class="right" >
           <a href="Analysis%20of%20ASCENDS%20Line%20Spectra.html" title="Analysis of ASCENDS Line Spectra"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="Examples.html" >Examples</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Applying Analytical Correction to hardness of collisions for HTP</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

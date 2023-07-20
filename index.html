@@ -1,18 +1,20 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>MATS: Multi-spectrum Analysis Tool for Spectroscopy &#8212; MATS 2.1 documentation</title>
+    <title>MATS: Multi-spectrum Analysis Tool for Spectroscopy &#8212; MATS 3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -59,7 +61,7 @@ $(document).ready(function(){
         <li class="right" >
           <a href="Getting%20Started.html" title="Getting Started"
              accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">MATS 3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">MATS: Multi-spectrum Analysis Tool for Spectroscopy</a></li> 
       </ul>
     </div>  
@@ -70,14 +72,14 @@ $(document).ready(function(){
           <div class="body" role="main">
             
   <section id="mats-multi-spectrum-analysis-tool-for-spectroscopy">
-<h1>MATS: Multi-spectrum Analysis Tool for Spectroscopy<a class="headerlink" href="#mats-multi-spectrum-analysis-tool-for-spectroscopy" title="Permalink to this headline">¶</a></h1>
+<h1>MATS: Multi-spectrum Analysis Tool for Spectroscopy<a class="headerlink" href="#mats-multi-spectrum-analysis-tool-for-spectroscopy" title="Permalink to this heading">¶</a></h1>
 <p><a class="reference external" href="mailto:erin&#46;adkins&#37;&#52;&#48;nist&#46;gov">Erin M<span>&#46;</span> Adkins</a></p>
 <p><em>National Institute of Standards and Technology</em></p>
-<p><em>Last Revision</em> Dec 03, 2021</p>
+<p><em>Last Revision</em> Jul 19, 2023</p>
 <p><a class="reference external" href="https://github.com/usnistgov/MATS">This software is available on GitHub</a> and can be cited with the following DOI <a class="reference external" href="https://doi.org/10.18434/M32200">https://doi.org/10.18434/M32200</a></p>
 <p><strong>The purpose of the MATS project is to develop a NIST-based multi-spectrum fitting and analysis tool for spectroscopic data that allows the flexibility to test and adapt to experimental and data-driven needs.  This software allows for the use of several commonly used spectroscopic line profiles (Voigt, Nelkin-Ghatak, speed-dependent Voigt, speed-dependent Nelkin-Ghatak, and Hartmann-Tran) and allows for pressure, temperature, and sample composition constraints to be imposed during fits.  In addition to fitting experimental spectra, MATS can generate simulated spectra, which allows for its use as an error analysis tool.</strong></p>
 <section id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this heading">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="Getting%20Started.html">Getting Started</a><ul>
@@ -88,6 +90,7 @@ $(document).ready(function(){
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="MATS%20Version%20Summary.html">MATS Version Summary</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MATS%20Version%20Summary.html#mats-version-3-0">MATS Version 3.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MATS%20Version%20Summary.html#mats-version-2-1">MATS Version 2.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MATS%20Version%20Summary.html#mats-version-2">MATS Version 2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MATS%20Version%20Summary.html#mats-version-1">MATS Version 1</a></li>
@@ -112,16 +115,34 @@ $(document).ready(function(){
 <li class="toctree-l2"><a class="reference internal" href="Examples.html#publications-that-used-mats">Publications that used MATS</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="MATS.html">MATS module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MATS.html">MATS module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset"><code class="docutils literal notranslate"><span class="pre">Dataset</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.fit_dataset.Fit_DataSet"><code class="docutils literal notranslate"><span class="pre">Fit_DataSet</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.fit_dataset.HTP_from_DF_select"><code class="docutils literal notranslate"><span class="pre">HTP_from_DF_select()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.fit_dataset.HTP_wBeta_from_DF_select"><code class="docutils literal notranslate"><span class="pre">HTP_wBeta_from_DF_select()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.generate_fitparam_file.Generate_FitParam_File"><code class="docutils literal notranslate"><span class="pre">Generate_FitParam_File</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.linelistdata.LoadLineListData"><code class="docutils literal notranslate"><span class="pre">LoadLineListData</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum"><code class="docutils literal notranslate"><span class="pre">Spectrum</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.spectrum.simulate_spectrum"><code class="docutils literal notranslate"><span class="pre">simulate_spectrum()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.add_to_HITRANstyle_isotope_list"><code class="docutils literal notranslate"><span class="pre">add_to_HITRANstyle_isotope_list()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.arange_"><code class="docutils literal notranslate"><span class="pre">arange_()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.convolveSpectrumSame"><code class="docutils literal notranslate"><span class="pre">convolveSpectrumSame()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.etalon"><code class="docutils literal notranslate"><span class="pre">etalon()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.hasNumbers"><code class="docutils literal notranslate"><span class="pre">hasNumbers()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.isotope_list_molecules_isotopes"><code class="docutils literal notranslate"><span class="pre">isotope_list_molecules_isotopes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.max_iter"><code class="docutils literal notranslate"><span class="pre">max_iter()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.molecularMass"><code class="docutils literal notranslate"><span class="pre">molecularMass()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
 <section id="legal">
-<h2>Legal<a class="headerlink" href="#legal" title="Permalink to this headline">¶</a></h2>
+<h2>Legal<a class="headerlink" href="#legal" title="Permalink to this heading">¶</a></h2>
 <p>This software is subject to the <a class="reference external" href="https://www.nist.gov/director/licensing">NIST Software License</a> (revised as of August 2018).</p>
 </section>
 <section id="contact">
-<h2>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">¶</a></h2>
+<h2>Contact<a class="headerlink" href="#contact" title="Permalink to this heading">¶</a></h2>
 <p>Erin Adkins</p>
 <ul class="simple">
 <li><p><a class="reference external" href="mailto:erin&#46;adkins&#37;&#52;&#48;nist&#46;gov">Email</a></p></li>
@@ -130,14 +151,14 @@ $(document).ready(function(){
 </ul>
 </section>
 <section id="links">
-<h2>Links<a class="headerlink" href="#links" title="Permalink to this headline">¶</a></h2>
+<h2>Links<a class="headerlink" href="#links" title="Permalink to this heading">¶</a></h2>
 <p><a class="reference external" href="https://github.com/usnistgov">NIST GitHub Organization</a></p>
 <p><a class="reference external" href="https://www.nist.gov/mml/csd/optical-measurements-group">NIST Optical Measurements Group</a></p>
 <p><a class="reference external" href="http://nist.gov">NIST Home Page</a></p>
 </section>
 </section>
 <section id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h1>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
@@ -151,19 +172,21 @@ $(document).ready(function(){
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Getting%20Started.html"
-                        title="next chapter">Getting Started</a></p>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="Getting%20Started.html"
+                          title="next chapter">Getting Started</a></p>
+  </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -180,12 +203,12 @@ $(document).ready(function(){
         <li class="right" >
           <a href="Getting%20Started.html" title="Getting Started"
              >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">MATS 3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">MATS: Multi-spectrum Analysis Tool for Spectroscopy</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

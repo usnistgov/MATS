@@ -1,0 +1,208 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Correcting the Ideal Gas Law with Compressability Factors &#8212; MATS 3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="HITRAN Line-by-Line Static Molecules" href="HITRAN%20Line-by-Line%20Static%20Molecules.html" />
+    <link rel="prev" title="Fitting and Simulating isotopes and molecules not in HITRAN" href="Fitting%20and%20Simulating%20isotopes%20and%20molecules%20not%20in%20HITRAN.html" />
+<link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
+  <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+
+
+<script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
+<script>
+$(document).ready(function(){
+  // Mark external (non-nist.gov) A tags with class "external"
+  //If the adress start with https and ends with nist.gov
+  var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)');
+  //Regex to find address that start with https
+  var re_absolute_address = new RegExp('^((https?:)?\/\/)');
+  $("a").each(function(){
+    var url=$(this).attr('href');
+    if(re_nist.test(url) || !re_absolute_address.test(url)){
+      $(this).addClass('local');
+    }else{
+      //This a href appears to be external, so tag it
+      $(this).addClass('external');
+    }
+  });
+  // Add leaveNotice to external A elements
+  $('a.external').leaveNotice();
+});
+</script>
+<link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="HITRAN%20Line-by-Line%20Static%20Molecules.html" title="HITRAN Line-by-Line Static Molecules"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Fitting%20and%20Simulating%20isotopes%20and%20molecules%20not%20in%20HITRAN.html" title="Fitting and Simulating isotopes and molecules not in HITRAN"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="Examples.html" accesskey="U">Examples</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Correcting the Ideal Gas Law with Compressability Factors</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="correcting-the-ideal-gas-law-with-compressability-factors">
+<h1>Correcting the Ideal Gas Law with Compressability Factors<a class="headerlink" href="#correcting-the-ideal-gas-law-with-compressability-factors" title="Permalink to this heading">¶</a></h1>
+<p>Provided in the MATS are several examples highlighting MATS capabilities, which can be found in the MATS <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples">examples folder</a>.</p>
+<p>MATS has added the ability to use the compressability factor to correct the ideal gas law.  This uses the NIST RefProp &lt;<a class="reference external" href="https://www.nist.gov/srd/refprop">https://www.nist.gov/srd/refprop</a>&gt;`_ offline to generate an input file that is the compressability factor for the desired sample composition on a grid of pressures (MPa) and temperatures (K).  This correction is used if a compressability_file is provided in the Spectrum object generation.  The rest of the script works as normal for experimental or synthetic spectra.</p>
+<p>The compressability factor acts on the molecular density, such that</p>
+<div class="math notranslate nohighlight">
+\[n_{a} = \chi n_{i}(T, p)/Z(T, p), where n_{a} is the actual number density, n_{i} is the ideal-gas number density, and Z is the compressability factor of the mixture.\]</div>
+<p><a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples/Compressability_Factor">The example below is a used example that follows the script available at</a></p>
+<section id="simulate-spectra-with-compressability-factor">
+<h2>Simulate Spectra with Compressability Factor<a class="headerlink" href="#simulate-spectra-with-compressability-factor" title="Permalink to this heading">¶</a></h2>
+<p>Module import follows from the <a class="reference internal" href="Fitting%20Experimental%20Spectra.html#fitting-experimental-spectra"><span class="std std-ref">Fitting Experimental Spectra</span></a> and <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> examples with additional details on how to simulate spectra found in <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> and the source documentation.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">MATS.linelistdata</span> <span class="kn">import</span> <span class="n">linelistdata</span>
+<span class="n">PARAM_LINELIST</span> <span class="o">=</span> <span class="n">linelistdata</span><span class="p">[</span><span class="s1">&#39;O2_ABand_Drouin_2017_linelist&#39;</span><span class="p">]</span>
+
+<span class="n">wave_range</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="c1">#range outside of experimental x-range to simulate</span>
+<span class="n">IntensityThreshold</span> <span class="o">=</span> <span class="mf">1e-30</span> <span class="c1">#intensities must be above this value to be simulated</span>
+<span class="n">Fit_Intensity</span> <span class="o">=</span> <span class="mf">1e-24</span> <span class="c1">#intensities must be above this value for the line to be fit</span>
+<span class="n">order_baseline_fit</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">sample_molefraction</span> <span class="o">=</span> <span class="p">{</span><span class="mi">7</span> <span class="p">:</span><span class="mf">0.0025142</span><span class="p">}</span>
+<span class="n">wave_min</span> <span class="o">=</span> <span class="mi">12950</span> <span class="c1">#cm-1</span>
+<span class="n">wave_max</span> <span class="o">=</span> <span class="mi">13200</span> <span class="c1">#cm-1</span>
+<span class="n">wave_space</span> <span class="o">=</span> <span class="mf">0.005</span> <span class="c1">#cm-1</span>
+<span class="n">wavenumbers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">wave_min</span><span class="p">,</span> <span class="mi">13158</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Spectrum</span></code> object definitions follows as normal with the addition of the compressability_file being set to a file that contains the compressability factor as a function of temperature and pressure.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">spec_1</span> <span class="o">=</span>  <span class="n">MATS</span><span class="o">.</span><span class="n">simulate_spectrum</span><span class="p">(</span><span class="n">PARAM_LINELIST</span><span class="p">,</span> <span class="n">wave_min</span><span class="o">=</span><span class="n">wave_min</span><span class="p">,</span> <span class="n">wave_max</span><span class="o">=</span> <span class="n">wave_max</span><span class="p">,</span> <span class="n">wave_space</span><span class="o">=</span><span class="n">wave_space</span><span class="p">,</span>
+                                         <span class="n">temperature</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">pressure</span> <span class="o">=</span> <span class="mi">975</span><span class="p">,</span> <span class="n">SNR</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                         <span class="n">wing_cutoff</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>  <span class="n">wing_method</span> <span class="o">=</span> <span class="s1">&#39;wing_cutoff&#39;</span><span class="p">,</span> <span class="n">molefraction</span> <span class="o">=</span> <span class="n">sample_molefraction</span><span class="p">,</span>
+                                         <span class="n">compressability_file</span> <span class="o">=</span> <span class="s1">&#39;0.25%O2inN2_297K&#39;</span><span class="p">)</span>
+
+
+<span class="n">spec_1</span><span class="o">.</span><span class="n">plot_wave_alpha</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The rest of the code follows as is described in the <a class="reference internal" href="Fitting%20Experimental%20Spectra.html#fitting-experimental-spectra"><span class="std std-ref">Fitting Experimental Spectra</span></a> and <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> examples.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SPECTRA</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">Dataset</span><span class="p">([</span><span class="n">spec_1</span><span class="p">],</span> <span class="s1">&#39;Compressability Factor Test&#39;</span><span class="p">,</span> <span class="n">PARAM_LINELIST</span><span class="p">)</span>
+<span class="n">BASE_LINELIST</span> <span class="o">=</span> <span class="n">SPECTRA</span><span class="o">.</span><span class="n">generate_baseline_paramlist</span><span class="p">()</span>
+<span class="n">FITPARAMS</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">Generate_FitParam_File</span><span class="p">(</span><span class="n">SPECTRA</span><span class="p">,</span> <span class="n">PARAM_LINELIST</span><span class="p">,</span> <span class="n">BASE_LINELIST</span><span class="p">,</span> <span class="n">lineprofile</span> <span class="o">=</span> <span class="s1">&#39;SDVP&#39;</span><span class="p">,</span> <span class="n">linemixing</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                                                           <span class="n">fit_intensity</span> <span class="o">=</span> <span class="n">Fit_Intensity</span><span class="p">,</span> <span class="n">threshold_intensity</span> <span class="o">=</span> <span class="n">IntensityThreshold</span><span class="p">,</span> <span class="n">sim_window</span> <span class="o">=</span> <span class="n">wave_range</span><span class="p">,</span>
+                                                           <span class="n">nu_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">sw_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">gamma0_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">delta0_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                                                                <span class="n">aw_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">as_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                                                                <span class="n">nuVC_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">eta_constrain</span> <span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">linemixing_constrain</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">FITPARAMS</span><span class="o">.</span><span class="n">generate_fit_param_linelist_from_linelist</span><span class="p">()</span>
+<span class="n">FITPARAMS</span><span class="o">.</span><span class="n">generate_fit_baseline_linelist</span><span class="p">()</span>
+
+<span class="n">fit_data</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">Fit_DataSet</span><span class="p">(</span><span class="n">SPECTRA</span><span class="p">,</span><span class="s1">&#39;Baseline_LineList&#39;</span><span class="p">,</span> <span class="s1">&#39;Parameter_LineList&#39;</span><span class="p">,</span> <span class="n">minimum_parameter_fit_intensity</span> <span class="o">=</span> <span class="n">Fit_Intensity</span><span class="p">)</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">fit_data</span><span class="o">.</span><span class="n">generate_params</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">fit_data</span><span class="o">.</span><span class="n">fit_data</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">wing_cutoff</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">wing_method</span> <span class="o">=</span> <span class="s1">&#39;wing_cutoff&#39;</span><span class="p">)</span>
+<span class="n">fit_data</span><span class="o">.</span><span class="n">residual_analysis</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indv_resid_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">fit_data</span><span class="o">.</span><span class="n">update_params</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="n">SPECTRA</span><span class="o">.</span><span class="n">generate_summary_file</span><span class="p">(</span><span class="n">save_file</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">SPECTRA</span><span class="o">.</span><span class="n">plot_model_residuals</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In the infinite SNR case, the residuals when spectrum are simulated and evaluated using the compressability factor the residuals are the numerical errors.</p>
+<img alt="_images/Compressability_True.png" src="_images/Compressability_True.png" />
+<p>if the the compressability factor for a spectrum simulated using the compressability factor is then evaluated with the molecular density calculated using the ideal gas law, then a molecular density error will be observed in the residuals.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">spec_1</span><span class="o">.</span><span class="n">compressability_file</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">fit_data</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">Fit_DataSet</span><span class="p">(</span><span class="n">SPECTRA</span><span class="p">,</span><span class="s1">&#39;Baseline_LineList&#39;</span><span class="p">,</span> <span class="s1">&#39;Parameter_LineList&#39;</span><span class="p">,</span> <span class="n">minimum_parameter_fit_intensity</span> <span class="o">=</span> <span class="n">Fit_Intensity</span><span class="p">)</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">fit_data</span><span class="o">.</span><span class="n">generate_params</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">fit_data</span><span class="o">.</span><span class="n">fit_data</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">wing_cutoff</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">wing_method</span> <span class="o">=</span> <span class="s1">&#39;wing_cutoff&#39;</span><span class="p">)</span>
+<span class="n">fit_data</span><span class="o">.</span><span class="n">residual_analysis</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indv_resid_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">fit_data</span><span class="o">.</span><span class="n">update_params</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="n">SPECTRA</span><span class="o">.</span><span class="n">generate_summary_file</span><span class="p">(</span><span class="n">save_file</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">SPECTRA</span><span class="o">.</span><span class="n">plot_model_residuals</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/Compressability_False.png" src="_images/Compressability_False.png" />
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="Fitting%20and%20Simulating%20isotopes%20and%20molecules%20not%20in%20HITRAN.html"
+                          title="previous chapter">Fitting and Simulating isotopes and molecules not in HITRAN</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="HITRAN%20Line-by-Line%20Static%20Molecules.html"
+                          title="next chapter">HITRAN Line-by-Line Static Molecules</a></p>
+  </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="HITRAN%20Line-by-Line%20Static%20Molecules.html" title="HITRAN Line-by-Line Static Molecules"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Fitting%20and%20Simulating%20isotopes%20and%20molecules%20not%20in%20HITRAN.html" title="Fitting and Simulating isotopes and molecules not in HITRAN"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="Examples.html" >Examples</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Correcting the Ideal Gas Law with Compressability Factors</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    </div>
+  </body>
+</html>

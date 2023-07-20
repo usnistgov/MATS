@@ -1,18 +1,20 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>MATS Version Summary &#8212; MATS 2.1 documentation</title>
+    <title>MATS Version Summary &#8212; MATS 3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -63,7 +65,7 @@ $(document).ready(function(){
         <li class="right" >
           <a href="Getting%20Started.html" title="Getting Started"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">MATS Version Summary</a></li> 
       </ul>
     </div>  
@@ -74,9 +76,22 @@ $(document).ready(function(){
           <div class="body" role="main">
             
   <section id="mats-version-summary">
-<h1>MATS Version Summary<a class="headerlink" href="#mats-version-summary" title="Permalink to this headline">¶</a></h1>
+<h1>MATS Version Summary<a class="headerlink" href="#mats-version-summary" title="Permalink to this heading">¶</a></h1>
+<section id="mats-version-3-0">
+<h2>MATS Version 3.0<a class="headerlink" href="#mats-version-3-0" title="Permalink to this heading">¶</a></h2>
+<p>published on 7/17/2023</p>
+<p><strong>New Features</strong></p>
+<ul class="simple">
+<li><p>Power law temperature dependence for line-mixing</p></li>
+<li><p>Oxygen Theoretical CIA Model based on work of Karman et al</p></li>
+<li><p>Added ability to select TIPS version</p></li>
+<li><p>Updated to HAPI v1.2.2.0</p></li>
+<li><p>Added Example for treating static HITRAN LBL molecules</p></li>
+<li><p>Added ability to correct ideal gas law w/ compressability factor as calculated with NIST RefProp</p></li>
+</ul>
+</section>
 <section id="mats-version-2-1">
-<h2>MATS Version 2.1<a class="headerlink" href="#mats-version-2-1" title="Permalink to this headline">¶</a></h2>
+<h2>MATS Version 2.1<a class="headerlink" href="#mats-version-2-1" title="Permalink to this heading">¶</a></h2>
 <p>published on 12/03/2021</p>
 <p><strong>Focus of version update is cleanup to make package git installable</strong></p>
 <ul class="simple">
@@ -90,7 +105,7 @@ $(document).ready(function(){
 </ul>
 </section>
 <section id="mats-version-2">
-<h2>MATS Version 2<a class="headerlink" href="#mats-version-2" title="Permalink to this headline">¶</a></h2>
+<h2>MATS Version 2<a class="headerlink" href="#mats-version-2" title="Permalink to this heading">¶</a></h2>
 <p>published on 6/10/2021</p>
 <p><strong>New Features</strong></p>
 <ul class="simple">
@@ -114,7 +129,7 @@ $(document).ready(function(){
 </ul>
 </section>
 <section id="mats-version-1">
-<h2>MATS Version 1<a class="headerlink" href="#mats-version-1" title="Permalink to this headline">¶</a></h2>
+<h2>MATS Version 1<a class="headerlink" href="#mats-version-1" title="Permalink to this heading">¶</a></h2>
 <p>published on 12/27/19</p>
 </section>
 </section>
@@ -126,22 +141,26 @@ $(document).ready(function(){
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="Getting%20Started.html"
-                        title="previous chapter">Getting Started</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="MATS%20Summary.html"
-                        title="next chapter">MATS Summary</a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="Getting%20Started.html"
+                          title="previous chapter">Getting Started</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="MATS%20Summary.html"
+                          title="next chapter">MATS Summary</a></p>
+  </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -161,12 +180,12 @@ $(document).ready(function(){
         <li class="right" >
           <a href="Getting%20Started.html" title="Getting Started"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">MATS Version Summary</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

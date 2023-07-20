@@ -1,18 +1,20 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Including instrument line shapes in simulation and fits &#8212; MATS 2.1 documentation</title>
+    <title>Including instrument line shapes in simulation and fits &#8212; MATS 3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -63,7 +65,7 @@ $(document).ready(function(){
         <li class="right" >
           <a href="Incorporating%20CIA%20into%20fits.html" title="Incorporating CIA into fits"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="Examples.html" accesskey="U">Examples</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Including instrument line shapes in simulation and fits</a></li> 
       </ul>
@@ -75,12 +77,12 @@ $(document).ready(function(){
           <div class="body" role="main">
             
   <section id="including-instrument-line-shapes-in-simulation-and-fits">
-<h1>Including instrument line shapes in simulation and fits<a class="headerlink" href="#including-instrument-line-shapes-in-simulation-and-fits" title="Permalink to this headline">¶</a></h1>
+<h1>Including instrument line shapes in simulation and fits<a class="headerlink" href="#including-instrument-line-shapes-in-simulation-and-fits" title="Permalink to this heading">¶</a></h1>
 <p>Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples">examples folder</a>.</p>
 <p>MATS has added the capability to simulate and fit spectra using an instrument lineshape.  MATS automatically loads the slit functions defined in HAPI, but could use any slit function with the form slit_function(x, resolution) or slit_function(x, [resolutions]).  MATS uses a slight variation of the HAPI convolveSpectrumSame, where the <a href="#id1"><span class="problematic" id="id2">arange_</span></a> function was redefined to address an integer/float bug in the underlying np.linspace call.  This implementation currently assumes an equal wavenumber spacing based on the application of the slit function calculation.</p>
 <p><a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples/Instrument_Lineshape">The example below simulates the same spectrum and applies the different HAPI instrument line shapes.</a>   The simulated molefraction is perturbted and then floated during a fit.</p>
 <section id="simulate-spectra-with-ils">
-<h2>Simulate Spectra with ILS<a class="headerlink" href="#simulate-spectra-with-ils" title="Permalink to this headline">¶</a></h2>
+<h2>Simulate Spectra with ILS<a class="headerlink" href="#simulate-spectra-with-ils" title="Permalink to this heading">¶</a></h2>
 <p>Module import follows from the <a class="reference internal" href="Fitting%20Experimental%20Spectra.html#fitting-experimental-spectra"><span class="std std-ref">Fitting Experimental Spectra</span></a> and <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> examples with additional details on how to simulate spectra found in <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> and the source documentation.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">MATS.linelistdata</span> <span class="kn">import</span> <span class="n">linelistdata</span>
 <span class="kn">import</span> <span class="nn">MATS.hapi</span> <span class="k">as</span> <span class="nn">hapi</span>
@@ -165,7 +167,7 @@ $(document).ready(function(){
 <img alt="_images/michelson.png" src="_images/michelson.png" />
 </section>
 <section id="generate-dataset-and-fit-parameters">
-<h2>Generate Dataset and Fit Parameters<a class="headerlink" href="#generate-dataset-and-fit-parameters" title="Permalink to this headline">¶</a></h2>
+<h2>Generate Dataset and Fit Parameters<a class="headerlink" href="#generate-dataset-and-fit-parameters" title="Permalink to this heading">¶</a></h2>
 <p>The dataset and fit parameters are generated with instances of the <a class="reference internal" href="MATS.html#MATS.dataset.Dataset" title="MATS.dataset.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a> and</p>
 <p><a class="reference internal" href="MATS.html#MATS.generate_fitparam_file.Generate_FitParam_File" title="MATS.generate_fitparam_file.Generate_FitParam_File"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generate_FitParam_File</span></code></a> classes. Additionally, the initial CO2 molefraction is perturbed within 2% of the simulated mole fraction.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SPECTRA</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">Dataset</span><span class="p">([</span> <span class="n">spec_rectangular</span><span class="p">,</span> <span class="n">spec_triangular</span><span class="p">,</span> <span class="n">spec_gaussian</span><span class="p">,</span> <span class="n">spec_dispersion</span><span class="p">,</span> <span class="n">spec_cosinus</span><span class="p">,</span>
@@ -205,7 +207,7 @@ $(document).ready(function(){
 </div>
 </section>
 <section id="fit-data">
-<h2>Fit Data<a class="headerlink" href="#fit-data" title="Permalink to this headline">¶</a></h2>
+<h2>Fit Data<a class="headerlink" href="#fit-data" title="Permalink to this heading">¶</a></h2>
 <p>In this example only the sample concentration is allowed to float, which is a spectrum dependent parameter.  At this SNR all of the results yield fit mole fractions very similar to the simulated value.  The plot below shows the relative Bias in the fit mole fraction with error bars equal to the relative fit uncertainty for each ILS.  Note that this is only one iteration and not generalizable.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit_data</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">Fit_DataSet</span><span class="p">(</span><span class="n">SPECTRA</span><span class="p">,</span><span class="s1">&#39;Baseline_LineList&#39;</span><span class="p">,</span> <span class="s1">&#39;Parameter_LineList&#39;</span><span class="p">,</span> <span class="n">minimum_parameter_fit_intensity</span> <span class="o">=</span> <span class="n">Fit_Intensity</span><span class="p">)</span>
 <span class="n">params</span> <span class="o">=</span> <span class="n">fit_data</span><span class="o">.</span><span class="n">generate_params</span><span class="p">()</span>
@@ -231,22 +233,26 @@ $(document).ready(function(){
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="Incorporating%20CIA%20into%20fits.html"
-                        title="previous chapter">Incorporating CIA into fits</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Fitting%20and%20Simulating%20isotopes%20and%20molecules%20not%20in%20HITRAN.html"
-                        title="next chapter">Fitting and Simulating isotopes and molecules not in HITRAN</a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="Incorporating%20CIA%20into%20fits.html"
+                          title="previous chapter">Incorporating CIA into fits</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="Fitting%20and%20Simulating%20isotopes%20and%20molecules%20not%20in%20HITRAN.html"
+                          title="next chapter">Fitting and Simulating isotopes and molecules not in HITRAN</a></p>
+  </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -266,13 +272,13 @@ $(document).ready(function(){
         <li class="right" >
           <a href="Incorporating%20CIA%20into%20fits.html" title="Incorporating CIA into fits"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="Examples.html" >Examples</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Including instrument line shapes in simulation and fits</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

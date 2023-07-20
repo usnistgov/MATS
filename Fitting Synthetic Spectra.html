@@ -1,18 +1,20 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Fitting Synthetic Spectra &#8212; MATS 2.1 documentation</title>
+    <title>Fitting Synthetic Spectra &#8212; MATS 3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -63,7 +65,7 @@ $(document).ready(function(){
         <li class="right" >
           <a href="Fitting%20Experimental%20Spectra.html" title="Fitting Experimental Spectra"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="Examples.html" accesskey="U">Examples</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Fitting Synthetic Spectra</a></li> 
       </ul>
@@ -75,11 +77,11 @@ $(document).ready(function(){
           <div class="body" role="main">
             
   <section id="fitting-synthetic-spectra">
-<h1>Fitting Synthetic Spectra<a class="headerlink" href="#fitting-synthetic-spectra" title="Permalink to this headline">¶</a></h1>
+<h1>Fitting Synthetic Spectra<a class="headerlink" href="#fitting-synthetic-spectra" title="Permalink to this heading">¶</a></h1>
 <p>Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples">examples folder</a>.</p>
 <p>This example <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples/Synthetic_Spectra">simulates and fits Oxygen A-Band spectra</a></p>
 <section id="import-modules-and-set-up">
-<h2>Import Modules and Set-Up<a class="headerlink" href="#import-modules-and-set-up" title="Permalink to this headline">¶</a></h2>
+<h2>Import Modules and Set-Up<a class="headerlink" href="#import-modules-and-set-up" title="Permalink to this heading">¶</a></h2>
 <p>This example starts with importing modules and setting up file locations</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -102,7 +104,7 @@ $(document).ready(function(){
 </div>
 </section>
 <section id="simulate-spectra">
-<h2>Simulate Spectra<a class="headerlink" href="#simulate-spectra" title="Permalink to this headline">¶</a></h2>
+<h2>Simulate Spectra<a class="headerlink" href="#simulate-spectra" title="Permalink to this heading">¶</a></h2>
 <p>If you are simulating spectra, opposed to reading them in from a file as discussed above, then you can use the <a class="reference internal" href="MATS.html#MATS.spectrum.simulate_spectrum" title="MATS.spectrum.simulate_spectrum"><code class="xref py py-func docutils literal notranslate"><span class="pre">simulate_spectrum()</span></code></a> function.</p>
 <p>When simulating spectra, the first step is to read in the reference line list.  This file can be generated following the <a class="reference internal" href="Generating%20Parameter%20Line%20lists.html#generating-parameter-line-lists"><span class="std std-ref">Generating Parameter Line lists</span></a> and read in using pd.read_csv function. The following code reads in the reference line list using the py:func:<cite>LoadLineListData</cite> function to read in the line list provided for the Oxygen A-Band.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">MATS.linelistdata</span> <span class="kn">import</span> <span class="n">linelistdata</span>
@@ -162,7 +164,7 @@ $(document).ready(function(){
 </div>
 </section>
 <section id="generate-a-dataset">
-<h2>Generate a Dataset<a class="headerlink" href="#generate-a-dataset" title="Permalink to this headline">¶</a></h2>
+<h2>Generate a Dataset<a class="headerlink" href="#generate-a-dataset" title="Permalink to this heading">¶</a></h2>
 <p>The procedure for analysis for both simulating and loading spectrum are the same as described in <a class="reference internal" href="Fitting%20Experimental%20Spectra.html#fitting-experimental-spectra"><span class="std std-ref">Fitting Experimental Spectra</span></a>. The next step is to combine all desired <a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum" title="MATS.spectrum.Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spectrum</span></code></a> objects</p>
 <p>into a <a class="reference internal" href="MATS.html#MATS.dataset.Dataset" title="MATS.dataset.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a> object, where we give the dataset a name and specify the parameter line list to use for analysis/</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SPECTRA</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">Dataset</span><span class="p">([</span><span class="n">spec_1</span><span class="p">,</span> <span class="n">spec_2</span><span class="p">,</span> <span class="n">spec_3</span><span class="p">,</span> <span class="n">spec_4</span><span class="p">],</span> <span class="s1">&#39;Line Intensity&#39;</span><span class="p">,</span> <span class="n">PARAM_LINELIST</span><span class="p">)</span>
@@ -174,7 +176,7 @@ $(document).ready(function(){
 </div>
 </section>
 <section id="generate-fit-parameter-files">
-<h2>Generate Fit Parameter Files<a class="headerlink" href="#generate-fit-parameter-files" title="Permalink to this headline">¶</a></h2>
+<h2>Generate Fit Parameter Files<a class="headerlink" href="#generate-fit-parameter-files" title="Permalink to this heading">¶</a></h2>
 <p>The next section of code uses the <a class="reference internal" href="MATS.html#MATS.generate_fitparam_file.Generate_FitParam_File" title="MATS.generate_fitparam_file.Generate_FitParam_File"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generate_FitParam_File</span></code></a> class to define what line shape to use for the initial fits, whether to use line mixing, the minimum line intensity to fit a line, mimimum intensity to included in the simulation, and for each line parameter whether that parameter is going to be constrained across all spectra or whether there will be a parameter for each spectrum (multi-spectrum vs single-spectrum fits) on a parameter by parameter basis.  In the example below, the SDVP line profile without line mixing will be used to fit lines with line intensities greater than 1e-24 with no parameters floated.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">FITPARAMS</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">Generate_FitParam_File</span><span class="p">(</span><span class="n">SPECTRA</span><span class="p">,</span> <span class="n">PARAM_LINELIST</span><span class="p">,</span> <span class="n">BASE_LINELIST</span><span class="p">,</span> <span class="n">lineprofile</span> <span class="o">=</span> <span class="s1">&#39;SDVP&#39;</span><span class="p">,</span> <span class="n">linemixing</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                                <span class="n">fit_intensity</span> <span class="o">=</span> <span class="n">Fit_Intensity</span><span class="p">,</span> <span class="n">threshold_intensity</span> <span class="o">=</span> <span class="n">IntensityThreshold</span><span class="p">,</span> <span class="n">sim_window</span> <span class="o">=</span> <span class="n">wave_range</span><span class="p">,</span>
@@ -213,7 +215,7 @@ $(document).ready(function(){
 </div>
 </section>
 <section id="fit-dataset">
-<h2>Fit Dataset<a class="headerlink" href="#fit-dataset" title="Permalink to this headline">¶</a></h2>
+<h2>Fit Dataset<a class="headerlink" href="#fit-dataset" title="Permalink to this heading">¶</a></h2>
 <p>Instantiating the <a class="reference internal" href="MATS.html#MATS.fit_dataset.Fit_DataSet" title="MATS.fit_dataset.Fit_DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">Fit_DataSet</span></code></a> class reads in the information from the baseline and parameter linelists generated in the previous step.  The <span class="xref std std-ref">Fitting Experimental Spectra documentation</span> gives a more basic example of how to perform a fit.  The example below iterates on a fit, where in the first iteration no parameters are floated, in the second iteration the line centers and line intensities are floated, and in the final iteration the collisional broadening, pressure shift, and speed-dependent broadening are floated.  Sometimes it is not possible to float all parameters at the same time, specifically with poor initial guesses for line center.  In that case an iterative approach like this is advantageous.</p>
 <p>The iteration could also be applied to the lmfit parameter object by setting the the vary term, opposed to through the Parameter_LineList.  In that approach the final Parameter_LineList would have the standard uncertainities and fit values saved, but wouldn’t necessarily have the parameter_vary column appropriately set.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">iteration</span> <span class="o">=</span> <span class="mi">0</span>
@@ -259,22 +261,26 @@ $(document).ready(function(){
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="Fitting%20Experimental%20Spectra.html"
-                        title="previous chapter">Fitting Experimental Spectra</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Analysis%20of%20ASCENDS%20Line%20Spectra.html"
-                        title="next chapter">Analysis of ASCENDS Line Spectra</a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="Fitting%20Experimental%20Spectra.html"
+                          title="previous chapter">Fitting Experimental Spectra</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="Analysis%20of%20ASCENDS%20Line%20Spectra.html"
+                          title="next chapter">Analysis of ASCENDS Line Spectra</a></p>
+  </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -294,13 +300,13 @@ $(document).ready(function(){
         <li class="right" >
           <a href="Fitting%20Experimental%20Spectra.html" title="Fitting Experimental Spectra"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="Examples.html" >Examples</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Fitting Synthetic Spectra</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

@@ -1,18 +1,20 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>MATS &#8212; MATS 2.1 documentation</title>
+    <title>MATS &#8212; MATS 3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -55,7 +57,7 @@ $(document).ready(function(){
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">MATS</a></li> 
       </ul>
     </div>  
@@ -66,10 +68,132 @@ $(document).ready(function(){
           <div class="body" role="main">
             
   <section id="mats">
-<h1>MATS<a class="headerlink" href="#mats" title="Permalink to this headline">¶</a></h1>
+<h1>MATS<a class="headerlink" href="#mats" title="Permalink to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="MATS.html">MATS module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MATS.html">MATS module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset"><code class="docutils literal notranslate"><span class="pre">Dataset</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.average_QF"><code class="docutils literal notranslate"><span class="pre">Dataset.average_QF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.check_iso_list"><code class="docutils literal notranslate"><span class="pre">Dataset.check_iso_list()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.correct_component_list"><code class="docutils literal notranslate"><span class="pre">Dataset.correct_component_list()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.correct_etalon_list"><code class="docutils literal notranslate"><span class="pre">Dataset.correct_etalon_list()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.generate_CIA_paramlist"><code class="docutils literal notranslate"><span class="pre">Dataset.generate_CIA_paramlist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.generate_baseline_paramlist"><code class="docutils literal notranslate"><span class="pre">Dataset.generate_baseline_paramlist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.generate_summary_file"><code class="docutils literal notranslate"><span class="pre">Dataset.generate_summary_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_ILS_function_dict"><code class="docutils literal notranslate"><span class="pre">Dataset.get_ILS_function_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_baseline_order"><code class="docutils literal notranslate"><span class="pre">Dataset.get_baseline_order()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_broadener_list"><code class="docutils literal notranslate"><span class="pre">Dataset.get_broadener_list()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_dataset_name"><code class="docutils literal notranslate"><span class="pre">Dataset.get_dataset_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_etalons"><code class="docutils literal notranslate"><span class="pre">Dataset.get_etalons()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_list_spectrum_numbers"><code class="docutils literal notranslate"><span class="pre">Dataset.get_list_spectrum_numbers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_molecules"><code class="docutils literal notranslate"><span class="pre">Dataset.get_molecules()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_number_nominal_temperatures"><code class="docutils literal notranslate"><span class="pre">Dataset.get_number_nominal_temperatures()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_number_spectra"><code class="docutils literal notranslate"><span class="pre">Dataset.get_number_spectra()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_spectra"><code class="docutils literal notranslate"><span class="pre">Dataset.get_spectra()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_spectra_extremes"><code class="docutils literal notranslate"><span class="pre">Dataset.get_spectra_extremes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_spectrum_extremes"><code class="docutils literal notranslate"><span class="pre">Dataset.get_spectrum_extremes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_spectrum_filename"><code class="docutils literal notranslate"><span class="pre">Dataset.get_spectrum_filename()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_spectrum_pressure"><code class="docutils literal notranslate"><span class="pre">Dataset.get_spectrum_pressure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.get_spectrum_temperature"><code class="docutils literal notranslate"><span class="pre">Dataset.get_spectrum_temperature()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.max_baseline_order"><code class="docutils literal notranslate"><span class="pre">Dataset.max_baseline_order()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.plot_model_residuals"><code class="docutils literal notranslate"><span class="pre">Dataset.plot_model_residuals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.renumber_spectra"><code class="docutils literal notranslate"><span class="pre">Dataset.renumber_spectra()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.set_baseline_order"><code class="docutils literal notranslate"><span class="pre">Dataset.set_baseline_order()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.set_dataset_name"><code class="docutils literal notranslate"><span class="pre">Dataset.set_dataset_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.dataset.Dataset.set_spectra"><code class="docutils literal notranslate"><span class="pre">Dataset.set_spectra()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.fit_dataset.Fit_DataSet"><code class="docutils literal notranslate"><span class="pre">Fit_DataSet</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.fit_dataset.Fit_DataSet.constrained_CIA"><code class="docutils literal notranslate"><span class="pre">Fit_DataSet.constrained_CIA()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.fit_dataset.Fit_DataSet.constrained_baseline"><code class="docutils literal notranslate"><span class="pre">Fit_DataSet.constrained_baseline()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.fit_dataset.Fit_DataSet.fit_data"><code class="docutils literal notranslate"><span class="pre">Fit_DataSet.fit_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.fit_dataset.Fit_DataSet.generate_beta_output_file"><code class="docutils literal notranslate"><span class="pre">Fit_DataSet.generate_beta_output_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.fit_dataset.Fit_DataSet.generate_params"><code class="docutils literal notranslate"><span class="pre">Fit_DataSet.generate_params()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.fit_dataset.Fit_DataSet.residual_analysis"><code class="docutils literal notranslate"><span class="pre">Fit_DataSet.residual_analysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.fit_dataset.Fit_DataSet.simulation_model"><code class="docutils literal notranslate"><span class="pre">Fit_DataSet.simulation_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.fit_dataset.Fit_DataSet.update_params"><code class="docutils literal notranslate"><span class="pre">Fit_DataSet.update_params()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.fit_dataset.HTP_from_DF_select"><code class="docutils literal notranslate"><span class="pre">HTP_from_DF_select()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.fit_dataset.HTP_wBeta_from_DF_select"><code class="docutils literal notranslate"><span class="pre">HTP_wBeta_from_DF_select()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.generate_fitparam_file.Generate_FitParam_File"><code class="docutils literal notranslate"><span class="pre">Generate_FitParam_File</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.generate_fitparam_file.Generate_FitParam_File.generate_fit_KarmanCIA_linelist"><code class="docutils literal notranslate"><span class="pre">Generate_FitParam_File.generate_fit_KarmanCIA_linelist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.generate_fitparam_file.Generate_FitParam_File.generate_fit_baseline_linelist"><code class="docutils literal notranslate"><span class="pre">Generate_FitParam_File.generate_fit_baseline_linelist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.generate_fitparam_file.Generate_FitParam_File.generate_fit_param_linelist_from_linelist"><code class="docutils literal notranslate"><span class="pre">Generate_FitParam_File.generate_fit_param_linelist_from_linelist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.generate_fitparam_file.Generate_FitParam_File.get_CIA_linelist"><code class="docutils literal notranslate"><span class="pre">Generate_FitParam_File.get_CIA_linelist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.generate_fitparam_file.Generate_FitParam_File.get_base_linelist"><code class="docutils literal notranslate"><span class="pre">Generate_FitParam_File.get_base_linelist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.generate_fitparam_file.Generate_FitParam_File.get_dataset"><code class="docutils literal notranslate"><span class="pre">Generate_FitParam_File.get_dataset()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.generate_fitparam_file.Generate_FitParam_File.get_param_linelist"><code class="docutils literal notranslate"><span class="pre">Generate_FitParam_File.get_param_linelist()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.linelistdata.LoadLineListData"><code class="docutils literal notranslate"><span class="pre">LoadLineListData</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.linelistdata.LoadLineListData.names"><code class="docutils literal notranslate"><span class="pre">LoadLineListData.names</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#id0"><code class="docutils literal notranslate"><span class="pre">LoadLineListData.names</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.linelistdata.LoadLineListData.paths"><code class="docutils literal notranslate"><span class="pre">LoadLineListData.paths</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum"><code class="docutils literal notranslate"><span class="pre">Spectrum</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.calculate_QF"><code class="docutils literal notranslate"><span class="pre">Spectrum.calculate_QF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.diluent_sum_check"><code class="docutils literal notranslate"><span class="pre">Spectrum.diluent_sum_check()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.fft_spectrum"><code class="docutils literal notranslate"><span class="pre">Spectrum.fft_spectrum()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_Diluent"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_Diluent()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_abundance_ratio_MI"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_abundance_ratio_MI()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_alpha"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_alpha()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_background"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_background()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_cia"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_cia()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_diluent"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_diluent()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_etalons"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_etalons()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_filename"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_filename()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_frequency"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_frequency()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_model"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_molefraction"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_molefraction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_natural_abundance"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_natural_abundance()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_nominal_temperature"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_nominal_temperature()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_pressure"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_pressure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_pressure_torr"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_pressure_torr()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_residuals"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_residuals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_spectrum_number"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_spectrum_number()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_tau"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_tau()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_tau_stats"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_tau_stats()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_temperature"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_temperature()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_temperature_C"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_temperature_C()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.get_wavenumber"><code class="docutils literal notranslate"><span class="pre">Spectrum.get_wavenumber()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.plot_freq_tau"><code class="docutils literal notranslate"><span class="pre">Spectrum.plot_freq_tau()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.plot_model_residuals"><code class="docutils literal notranslate"><span class="pre">Spectrum.plot_model_residuals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.plot_wave_alpha"><code class="docutils literal notranslate"><span class="pre">Spectrum.plot_wave_alpha()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.save_spectrum_info"><code class="docutils literal notranslate"><span class="pre">Spectrum.save_spectrum_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.segment_wave_alpha"><code class="docutils literal notranslate"><span class="pre">Spectrum.segment_wave_alpha()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_Diluent"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_Diluent()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_abundance_ration_MI"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_abundance_ration_MI()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_background"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_background()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_cia"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_cia()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_diluent"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_diluent()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_etalons"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_etalons()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_frequency_column"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_frequency_column()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_model"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_molefraction"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_molefraction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_natural_abundance"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_natural_abundance()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_nominal_temperature"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_nominal_temperature()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_pressure_column"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_pressure_column()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_residuals"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_residuals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_spectrum_number"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_spectrum_number()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_tau_column"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_tau_column()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_tau_stats_column"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_tau_stats_column()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_temperature_column"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_temperature_column()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum.set_weight"><code class="docutils literal notranslate"><span class="pre">Spectrum.set_weight()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.spectrum.simulate_spectrum"><code class="docutils literal notranslate"><span class="pre">simulate_spectrum()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.add_to_HITRANstyle_isotope_list"><code class="docutils literal notranslate"><span class="pre">add_to_HITRANstyle_isotope_list()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.arange_"><code class="docutils literal notranslate"><span class="pre">arange_()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.convolveSpectrumSame"><code class="docutils literal notranslate"><span class="pre">convolveSpectrumSame()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.etalon"><code class="docutils literal notranslate"><span class="pre">etalon()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.hasNumbers"><code class="docutils literal notranslate"><span class="pre">hasNumbers()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.isotope_list_molecules_isotopes"><code class="docutils literal notranslate"><span class="pre">isotope_list_molecules_isotopes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.max_iter"><code class="docutils literal notranslate"><span class="pre">max_iter()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="MATS.html#MATS.utilities.molecularMass"><code class="docutils literal notranslate"><span class="pre">molecularMass()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
@@ -85,12 +209,12 @@ $(document).ready(function(){
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -104,12 +228,12 @@ $(document).ready(function(){
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">MATS</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

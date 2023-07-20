@@ -1,18 +1,20 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Analysis of ASCENDS Line Spectra &#8212; MATS 2.1 documentation</title>
+    <title>Analysis of ASCENDS Line Spectra &#8212; MATS 3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -63,7 +65,7 @@ $(document).ready(function(){
         <li class="right" >
           <a href="Fitting%20Synthetic%20Spectra.html" title="Fitting Synthetic Spectra"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="Examples.html" accesskey="U">Examples</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Analysis of ASCENDS Line Spectra</a></li> 
       </ul>
@@ -75,13 +77,13 @@ $(document).ready(function(){
           <div class="body" role="main">
             
   <section id="analysis-of-ascends-line-spectra">
-<h1>Analysis of ASCENDS Line Spectra<a class="headerlink" href="#analysis-of-ascends-line-spectra" title="Permalink to this headline">¶</a></h1>
+<h1>Analysis of ASCENDS Line Spectra<a class="headerlink" href="#analysis-of-ascends-line-spectra" title="Permalink to this heading">¶</a></h1>
 <p>Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples">examples folder</a>.</p>
 <p>The 30012&lt;–00001 CO2 band is frequently used for remote sensing applications, where the R16e line in this band centered at 6359.967 cm-1 is the target line for the ASCENDS - Active Sensing of CO2 Emissions over Nights, Days, and Seasons mission.  This makes this line an important target for spectroscopic reference data and thus a convenient target for single line spectroscopic studies or examples.</p>
 <p>Data originally reported in <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0022407315001338">Long, D., et al., Frequency-agile, rapid scanning cavity ring-down spectroscopy (FARS-CRDS) measurements of the (30012)←(00001) near-infrared carbon dioxide band. Journal of Quantitative Spectroscopy and Radiative Transfer, 2015. 161: p. 35-40</a>.  This example is explicitly referenced in the Adkins and Hodges, Assessment of the precision, bias and numerical correlation of fitted parameters obtained by multi-spectrum fits of the Hartmann-Tran line profile to simulated spectra, JQSRT (under review).</p>
 <p><a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples/ASCENDS_Fitting">This example</a>. shows the fitting of real experimental data.  This data has a non-zero baseline and several etalons that need to be considered in order to effectively fit the spectra.  In addition to fitting the experimental spectra, this example also uses simulations to explore the anticipated impact of improving the SNR of the data and increasing the pressure range of the dataset.</p>
 <section id="define-spectra">
-<h2>Define Spectra<a class="headerlink" href="#define-spectra" title="Permalink to this headline">¶</a></h2>
+<h2>Define Spectra<a class="headerlink" href="#define-spectra" title="Permalink to this heading">¶</a></h2>
 <p>Module import follows from the <a class="reference internal" href="Fitting%20Experimental%20Spectra.html#fitting-experimental-spectra"><span class="std std-ref">Fitting Experimental Spectra</span></a> and <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> examples.  The experimental spectra and the linelists are read-in in the same manner as described in the <a class="reference internal" href="Fitting%20Experimental%20Spectra.html#fitting-experimental-spectra"><span class="std std-ref">Fitting Experimental Spectra</span></a> example.</p>
 <p>In this example three etalons are included in the simulation and linear baseine is considered for each spectrum in the dataset.  These fits also make use of the segment column, which allows the spectrum-specific parameters (baseline, etalons) to be treated on smaller segments of the spectrum, opposed to across the whole spectrum. The segment column is set using the segment_column parameter in the <a class="reference internal" href="MATS.html#MATS.spectrum.Spectrum" title="MATS.spectrum.Spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spectrum</span></code></a> definition and is simply the name of a column in the spectrum .csv that contains integers that are common for continuous segments of the spectrum.   This is especially useful for treatment of faster etalons, which may not maintain a consistent phase over entire spectrum.  Additional constraints can be imposed to help with fit convergence and physical modeling.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">MATS.linelistdata</span> <span class="kn">import</span> <span class="n">linelistdata</span>
@@ -171,7 +173,7 @@ $(document).ready(function(){
 </div>
 </section>
 <section id="construct-dataset-and-generate-fit-parameters">
-<h2>Construct Dataset and Generate Fit Parameters<a class="headerlink" href="#construct-dataset-and-generate-fit-parameters" title="Permalink to this headline">¶</a></h2>
+<h2>Construct Dataset and Generate Fit Parameters<a class="headerlink" href="#construct-dataset-and-generate-fit-parameters" title="Permalink to this heading">¶</a></h2>
 <p>The <a class="reference internal" href="MATS.html#MATS.dataset.Dataset" title="MATS.dataset.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a> object is defined as is outlined in the <a class="reference internal" href="Fitting%20Experimental%20Spectra.html#fitting-experimental-spectra"><span class="std std-ref">Fitting Experimental Spectra</span></a> and <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> examples.</p>
 <p>The baseline and parameter fit parameter files are generated using the <a class="reference internal" href="MATS.html#MATS.generate_fitparam_file.Generate_FitParam_File" title="MATS.generate_fitparam_file.Generate_FitParam_File"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generate_FitParam_File</span></code></a> class.  In this example, the line intensity is allowed to float for each spectrum, but all other line shape parameters are constrained to their pressure dependence.  <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0022407315001338">Long et al.</a> fixed the beyond Voigt SDNGP line shape parameters to those reported by <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0022407315001284">Lin, H., et al., Cavity ring-down spectrometer for high-fidelity molecular absorption measurements. Journal of Quantitative Spectroscopy and Radiative Transfer, 2015. 161: p. 11-20</a> , while allowing the VP parameters and line mixing to float.  In this example, we are allowing all SDNGP parameters to float using the <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0022407315001284">Lin et al. values</a> as the initial guess, but only considering spectra in the isolated transition pressure regime, where line mixing can be ignored.</p>
 <p>The slope and intercept for the baseline of each spectra are floated, along with the amplitude, period, and phase of each etalon.  Because this example uses the segment function, you can see that each spectrum has 4 segments in the print out of the baseline linelist, so the number of rows in the baseline fit parameter list is four times larger than the number of spectra.  Additional constraints will be added to the etalon parameters in the next section.</p>
@@ -203,7 +205,7 @@ $(document).ready(function(){
 <img alt="_images/ASCENDS_baselineparameters.png" src="_images/ASCENDS_baselineparameters.png" />
 </section>
 <section id="fit-spectra">
-<h2>Fit Spectra<a class="headerlink" href="#fit-spectra" title="Permalink to this headline">¶</a></h2>
+<h2>Fit Spectra<a class="headerlink" href="#fit-spectra" title="Permalink to this heading">¶</a></h2>
 <p>The fitting of the dataset is looped to iterate on the fit results.  The result and residual plots are shown after each iteration (with the first and last iteration shown below).  In the first few iterations not all of the etalons are well modeled leading to systematic residuals, iterating on the best fit results helps better model the etalons minimizing the residuals.</p>
 <p>Using the segments in a spectrum, allows us to model the spectrum specific parameters by segment opposed to across the whole spectrum.  However, this flexibility can lead to divergent solutions if additional constraints aren’t included.  This example will constrain these parameters using the <a class="reference internal" href="MATS.html#MATS.fit_dataset.Fit_DataSet.constrained_baseline" title="MATS.fit_dataset.Fit_DataSet.constrained_baseline"><code class="xref py py-func docutils literal notranslate"><span class="pre">Fit_DataSet.constrained_baseline()</span></code></a> function and by setting constraints directly in the lmfit parameter dictionary.  The <a class="reference internal" href="MATS.html#MATS.fit_dataset.Fit_DataSet.constrained_baseline" title="MATS.fit_dataset.Fit_DataSet.constrained_baseline"><code class="xref py py-func docutils literal notranslate"><span class="pre">Fit_DataSet.constrained_baseline()</span></code></a> function indicates the baseline parameters that should be constrained to be equal across the entire spectrum (parameters that won’t take advantage of the segment structure).  For this example the baseline and etalon periods are constrained to be equal equal across the entire spectrum.</p>
 <p>This example also sets a few additional constraints on the etalons.  First, the period of each etalon is set to be equal across all spectra in the dataset.  Second, the phase of the first etalon is constrained to be equal across each spectrum.</p>
@@ -269,7 +271,7 @@ $(document).ready(function(){
 <img alt="_images/ASCENDS_Iteration_5.png" src="_images/ASCENDS_Iteration_5.png" />
 </section>
 <section id="compare-to-literature">
-<h2>Compare to Literature<a class="headerlink" href="#compare-to-literature" title="Permalink to this headline">¶</a></h2>
+<h2>Compare to Literature<a class="headerlink" href="#compare-to-literature" title="Permalink to this heading">¶</a></h2>
 <p>The <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0022407315001284">Lin et al.</a> work reported spectra with QFs between 11000 and 29000 for pressures between 1.33kPa and 26.7kPa.  The current example work was conducted over a slightly higher pressure range of  7.5 to 36 kPa and had QFs of about 1500.</p>
 <p>The  <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0022407315001284">Lin et al.</a> work reports uncertainty on the collisional broadening of 0.1%, the pressure shift of 0.35%, the speed-dependent broadening of 0.2%, the speed-dependent shift of 20%, and the Dicke narrowing of 1%.  The code below compares the results from the <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0022407315001284">Lin et al.</a> and current fit example including a plot highlighting the reported relative uncertainty in line shape parameters reported by the fits.  The current example shows much higher fit uncertainties for speed-dependent width and Dicke narrowing, which indicates that at this QF and pressure range the spectra used in this analysis have a difficult time distinguishing between these narrowing mechanisms.  This motivates a Monte Carlo analysis that explores how improving the SNR and pressure range would decrease the uncertainty in the reported line shape parameters.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Compare_Results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
@@ -316,7 +318,7 @@ $(document).ready(function(){
 <img alt="_images/ASCENDS_FitUncertaintyComparison.png" src="_images/ASCENDS_FitUncertaintyComparison.png" />
 </section>
 <section id="monte-carlo-analysis">
-<h2>Monte Carlo Analysis<a class="headerlink" href="#monte-carlo-analysis" title="Permalink to this headline">¶</a></h2>
+<h2>Monte Carlo Analysis<a class="headerlink" href="#monte-carlo-analysis" title="Permalink to this heading">¶</a></h2>
 <p>The Monte Carlo uncertainty analysis involves running numerous iterations fitting synthetic spectra at experimental conditions.  To simplify the analysis the simulation line list only includes the R16e line and will use the results of the experimental fits as the simulation values.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generate linelist only using the R16e line and using the results from the experimental fits</span>
 <span class="n">SIMULATION_LINELIST</span> <span class="o">=</span> <span class="n">PARAM_LINELIST</span><span class="p">[(</span><span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;local_lower_quanta&#39;</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;R16e&#39;</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;global_upper_quanta&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">30012</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -379,7 +381,7 @@ $(document).ready(function(){
 </div>
 <p>The <a href="#id3"><span class="problematic" id="id4">mc_</span></a> function defined below simply takes the simulation conditions and number of iterations as inputs.  Spectra are simulated at the conditions outlined in the simulation condition dataframe for just the R16e line using the linelist determined from the fits to the experimental spectra.  Again, the inital guesses for the fitting are perturbed randomly at the magnitude of the reported fit error of the fits to the experimental data.  The fits are conducted in the same manner as those to the experimental data without the use of the segment function.  Results from each iteration are saved to a MC_result .csv file.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">mc_</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="n">simulation_conditions</span><span class="p">,</span> <span class="n">MC_result_file</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Runs the MC simulation for given number of iterations using the pressures and SNR defined in simulation condition dataframe for the R16e line and saves results to file</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">MC_Results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
@@ -514,7 +516,7 @@ $(document).ready(function(){
 </div>
 <p>The parameter_eval function summarizes the MC results comparing the fit average and standard deviation across the iterations to the reported fit uncertainty on each iteration.  This also calculates the fractional error compared to the simulation value.  Plots of summary and dataframe are generated for visualization.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">parameter_eval</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">report_df</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Summarizes MC results for a given parameter</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;gamma0_air&#39;</span><span class="p">,</span> <span class="s1">&#39;delta0_air&#39;</span><span class="p">,</span> <span class="s1">&#39;SD_gamma_air&#39;</span><span class="p">,</span> <span class="s1">&#39;SD_delta_air&#39;</span><span class="p">,</span> <span class="s1">&#39;nuVC_air&#39;</span><span class="p">]</span>
@@ -609,22 +611,26 @@ $(document).ready(function(){
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="Fitting%20Synthetic%20Spectra.html"
-                        title="previous chapter">Fitting Synthetic Spectra</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Applying%20Analytical%20Correction%20to%20hardness%20of%20collisions%20for%20HTP.html"
-                        title="next chapter">Applying Analytical Correction to hardness of collisions for HTP</a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="Fitting%20Synthetic%20Spectra.html"
+                          title="previous chapter">Fitting Synthetic Spectra</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="Applying%20Analytical%20Correction%20to%20hardness%20of%20collisions%20for%20HTP.html"
+                          title="next chapter">Applying Analytical Correction to hardness of collisions for HTP</a></p>
+  </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -644,13 +650,13 @@ $(document).ready(function(){
         <li class="right" >
           <a href="Fitting%20Synthetic%20Spectra.html" title="Fitting Synthetic Spectra"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="Examples.html" >Examples</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Analysis of ASCENDS Line Spectra</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

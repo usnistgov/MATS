@@ -1,0 +1,263 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>HITRAN Line-by-Line Static Molecules &#8212; MATS 3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Oxygen CIA using theoretical model" href="Oxygen%20CIA%20using%20theoretical%20model.html" />
+    <link rel="prev" title="Correcting the Ideal Gas Law with Compressability Factors" href="Correcting%20the%20Ideal%20Gas%20Law%20with%20Compressability%20Factor.html" />
+<link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
+  <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+
+
+<script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
+<script>
+$(document).ready(function(){
+  // Mark external (non-nist.gov) A tags with class "external"
+  //If the adress start with https and ends with nist.gov
+  var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)');
+  //Regex to find address that start with https
+  var re_absolute_address = new RegExp('^((https?:)?\/\/)');
+  $("a").each(function(){
+    var url=$(this).attr('href');
+    if(re_nist.test(url) || !re_absolute_address.test(url)){
+      $(this).addClass('local');
+    }else{
+      //This a href appears to be external, so tag it
+      $(this).addClass('external');
+    }
+  });
+  // Add leaveNotice to external A elements
+  $('a.external').leaveNotice();
+});
+</script>
+<link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Oxygen%20CIA%20using%20theoretical%20model.html" title="Oxygen CIA using theoretical model"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Correcting%20the%20Ideal%20Gas%20Law%20with%20Compressability%20Factor.html" title="Correcting the Ideal Gas Law with Compressability Factors"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="Examples.html" accesskey="U">Examples</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">HITRAN Line-by-Line Static Molecules</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="hitran-line-by-line-static-molecules">
+<h1>HITRAN Line-by-Line Static Molecules<a class="headerlink" href="#hitran-line-by-line-static-molecules" title="Permalink to this heading">¶</a></h1>
+<p>Provided in the MATS are several examples highlighting MATS capabilities, which can be found in the MATS <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples">examples folder</a>.</p>
+<p>MATS has added the capability to simulate and/or fit spectra of molecules that only available in HITRAN as static molecules (not in the typical HITRANOnline) format.</p>
+<p><a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples/HITRAN_static_LBL_molecules">The example below ptovides an example of how to simulate spectra using static HITRAN LBL data and is based on the code provided in the HITRAN static LBL molecule example.</a></p>
+<section id="generating-a-mats-linelist-from-a-par-file">
+<h2>Generating a MATS linelist from a .par file<a class="headerlink" href="#generating-a-mats-linelist-from-a-par-file" title="Permalink to this heading">¶</a></h2>
+<p>The .par formatting is provided in Table 1 of the HITRAN 2004 paper.  The code below uses that .par formatting to parse the spectra into the MATS format.</p>
+<p>L.S. Rothman, D. Jacquemart, A. Barbe, D. Chris Benner, M. Birk, L.R. Brown, M.R. Carleer, C. Chackerian, K. Chance, L.H. Coudert, V. Dana, V.M. Devi, J.-M. Flaud, R.R. Gamache, A. Goldman, J.-M. Hartmann, K.W. Jucks, A.G. Maki, J.-Y. Mandin, S.T. Massie, J. Orphal, A. Perrin, C.P. Rinsland, M.A.H. Smith, J. Tennyson, R.N. Tolchenov, R.A. Toth, J. Vander Auwera, P. Varanasi, G. Wagner, The HITRAN 2004 molecular spectroscopic database, Journal of Quantitative Spectroscopy and Radiative Transfer, Volume 96, Issue 2, 2005, Pages 139-204, <a class="reference external" href="https://doi.org/10.1016/j.jqsrt.2004.10.008">https://doi.org/10.1016/j.jqsrt.2004.10.008</a></p>
+<p>Users will need to download the .par file provided by HITRAN for desired molecule.</p>
+<p>This example uses CF4 and a portion of the HITRAN provided .par file. The entire HITRAN .par file can be used (and has been tested locally), but is above the github file storage recommendation.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">molecule</span> <span class="o">=</span> <span class="s1">&#39;CF4&#39;</span>
+
+<span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;42_hit20_500_800.par&#39;</span>
+
+<span class="n">PARAM_LINELIST</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;molec_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">]</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;local_iso_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">]</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;nu&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">15</span><span class="p">])</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">]</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;sw&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">])</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">]</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;elower&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">45</span><span class="p">:</span><span class="mi">55</span><span class="p">])</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">]</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;gamma0_air&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">35</span><span class="p">:</span><span class="mi">40</span><span class="p">])</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">]</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_gamma0_air&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">55</span><span class="p">:</span><span class="mi">59</span><span class="p">])</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">]</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;delta0_air&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">59</span><span class="p">:</span><span class="mi">67</span><span class="p">])</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">]</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;gamma0_self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">40</span><span class="p">:</span><span class="mi">45</span><span class="p">])</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">]</span>
+
+
+
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;delta0_self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;delta0_air&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_gamma0_self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_gamma0_air&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_delta0_air&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_delta0_self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;SD_gamma_air&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;SD_gamma_self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_gamma2_air&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_gamma0_air&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_gamma2_self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_gamma0_self&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;SD_delta_air&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;SD_delta_self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_delta2_air&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_delta2_self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;nuVC_air&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;nuVC_self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_nuVC_air&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_nuVC_self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;eta_air&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;eta_self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;y_air&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;y_self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_y_air&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1">#used in MATS versions 3 (current development version) and higher</span>
+<span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;n_y_self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="c1">#used in MATS versions 3 (current development version) and higher</span>
+
+<span class="n">PARAM_LINELIST</span> <span class="o">=</span> <span class="n">PARAM_LINELIST</span><span class="p">[[</span><span class="s1">&#39;molec_id&#39;</span><span class="p">,</span> <span class="s1">&#39;local_iso_id&#39;</span><span class="p">,</span> <span class="s1">&#39;nu&#39;</span><span class="p">,</span> <span class="s1">&#39;elower&#39;</span><span class="p">,</span> <span class="s1">&#39;sw&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;gamma0_air&#39;</span><span class="p">,</span> <span class="s1">&#39;n_gamma0_air&#39;</span><span class="p">,</span> <span class="s1">&#39;delta0_air&#39;</span><span class="p">,</span> <span class="s1">&#39;n_delta0_air&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;SD_gamma_air&#39;</span><span class="p">,</span> <span class="s1">&#39;n_gamma2_air&#39;</span><span class="p">,</span> <span class="s1">&#39;SD_delta_air&#39;</span><span class="p">,</span> <span class="s1">&#39;n_delta2_air&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;nuVC_air&#39;</span><span class="p">,</span> <span class="s1">&#39;n_nuVC_air&#39;</span><span class="p">,</span> <span class="s1">&#39;eta_air&#39;</span><span class="p">,</span> <span class="s1">&#39;y_air&#39;</span><span class="p">,</span> <span class="s1">&#39;n_y_air&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;gamma0_self&#39;</span><span class="p">,</span> <span class="s1">&#39;n_gamma0_self&#39;</span><span class="p">,</span> <span class="s1">&#39;delta0_self&#39;</span><span class="p">,</span> <span class="s1">&#39;n_delta0_self&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;SD_gamma_self&#39;</span><span class="p">,</span> <span class="s1">&#39;n_gamma2_self&#39;</span><span class="p">,</span> <span class="s1">&#39;SD_delta_self&#39;</span><span class="p">,</span> <span class="s1">&#39;n_delta2_self&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;nuVC_self&#39;</span><span class="p">,</span> <span class="s1">&#39;n_nuVC_self&#39;</span><span class="p">,</span> <span class="s1">&#39;eta_self&#39;</span><span class="p">,</span> <span class="s1">&#39;y_self&#39;</span><span class="p">,</span> <span class="s1">&#39;n_y_self&#39;</span><span class="p">,]]</span>
+<span class="n">PARAM_LINELIST</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;nu&#39;</span><span class="p">],</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="c1">#PARAM_LINELIST.to_csv(molecule + &#39;_ParameterLinelist.csv&#39;, index = False) #Can save to .csv file, but it is a large file, so you might want to truncate before saving</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">stem</span><span class="p">(</span><span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;nu&#39;</span><span class="p">],</span> <span class="n">PARAM_LINELIST</span><span class="p">[</span><span class="s1">&#39;sw&#39;</span><span class="p">],</span> <span class="n">use_line_collection</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">markerfmt</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Wavenumber (cm$^{-1}$)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Line Intensity </span><span class="se">\n</span><span class="s1"> (cm$^{-1}$ / (molecule $\cdot$ cm$^{-2}$))&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="_images/HITRAN_static_LBL.png" src="_images/HITRAN_static_LBL.png" />
+</section>
+<section id="tips-availability">
+<h2>TIPS Availability<a class="headerlink" href="#tips-availability" title="Permalink to this heading">¶</a></h2>
+<p>While these molecules are available in HITRAN, the molecules available in the TIPS-2011 and TIPS-2017 partition function libraries differ. For example in hapi TIPS-2011 has information for CF4, where TIPS-2017 is an array of zeros. This leads to nan values for the at simulation temperature line intensities. We added the MATS capability to switch from the default TIPS-2017 to TIPS-2011, so that this molecule could be appropriately simulated. Below is a summary of molecules, where this might be an issue. For molecules with no TIPS available the TIPS call with through an error and the 296 line intensity will be used.</p>
+<p>TIPS 2011 Only</p>
+<p>SO3, M = 46, I =1
+CF4, M = 42, I = 1
+No TIPS data</p>
+<p>HNO3, M = 12, I = 2
+HF, M = 14, I = 2
+HCl, M = 15, I = 3, 4
+HBr, M = 16, I = 3, 4
+HI, M = 17, I = 2
+N2, M = 22, I = 2
+COF2, M = 29, I = 2
+O, M = 34, I = 1
+CH3OH, M = 38, I=1</p>
+</section>
+<section id="simulating-in-mats">
+<h2>Simulating in MATS<a class="headerlink" href="#simulating-in-mats" title="Permalink to this heading">¶</a></h2>
+<p>Once the MATS linelist file has been generated spectra can be simulated or fit in MATS as normal.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#PARAM_LINELIST = pd.read_csv(&#39;CF4_ParameterLinelist.csv&#39;) # Option to read in so you don&#39;t have to generate the file every time</span>
+
+
+<span class="n">wave_range</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="c1">#range outside of experimental x-range to simulate</span>
+<span class="n">IntensityThreshold</span> <span class="o">=</span> <span class="mf">1e-30</span> <span class="c1">#intensities must be above this value to be simulated</span>
+<span class="n">Fit_Intensity</span> <span class="o">=</span> <span class="mf">1e-24</span> <span class="c1">#intensities must be above this value for the line to be fit</span>
+<span class="n">order_baseline_fit</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">baseline_terms</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#polynomial baseline coefficients where the index is equal to the coefficient order</span>
+
+<span class="n">sample_molefraction</span> <span class="o">=</span> <span class="p">{</span><span class="mi">42</span> <span class="p">:</span><span class="mi">1</span><span class="p">}</span> <span class="c1">#The number here is the molec_id number can be found https://hitran.org/docs/iso-meta/</span>
+<span class="n">wave_min</span> <span class="o">=</span> <span class="mi">500</span> <span class="c1">#cm-1</span>
+<span class="n">wave_max</span> <span class="o">=</span> <span class="mi">800</span> <span class="c1">#cm-1</span>
+<span class="n">wave_space</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1">#cm-1</span>
+<span class="n">SNR</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">#if None, then infinite SNR</span>
+<span class="n">temperature</span> <span class="o">=</span> <span class="mf">22.85</span> <span class="c1"># celsius</span>
+<span class="n">pressure</span> <span class="o">=</span> <span class="mi">760</span> <span class="c1">#torr</span>
+<span class="n">spectrum_filename</span> <span class="o">=</span> <span class="s1">&#39;Simulate_CF4&#39;</span>
+
+<span class="n">spec_1</span> <span class="o">=</span>  <span class="n">MATS</span><span class="o">.</span><span class="n">simulate_spectrum</span><span class="p">(</span><span class="n">PARAM_LINELIST</span><span class="p">,</span> <span class="n">wave_min</span> <span class="o">=</span> <span class="n">wave_min</span><span class="p">,</span> <span class="n">wave_max</span> <span class="o">=</span> <span class="n">wave_max</span><span class="p">,</span> <span class="n">wave_space</span> <span class="o">=</span> <span class="n">wave_space</span><span class="p">,</span>
+                                                <span class="n">SNR</span> <span class="o">=</span> <span class="n">SNR</span><span class="p">,</span> <span class="n">baseline_terms</span> <span class="o">=</span> <span class="n">baseline_terms</span><span class="p">,</span> <span class="n">temperature</span> <span class="o">=</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">pressure</span> <span class="o">=</span> <span class="n">pressure</span><span class="p">,</span>
+                                                <span class="n">wing_cutoff</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>  <span class="n">wing_method</span> <span class="o">=</span> <span class="s1">&#39;wing_cutoff&#39;</span><span class="p">,</span>
+                                                <span class="n">filename</span> <span class="o">=</span> <span class="n">spectrum_filename</span><span class="p">,</span> <span class="n">molefraction</span> <span class="o">=</span> <span class="n">sample_molefraction</span><span class="p">,</span><span class="n">TIPS</span> <span class="o">=</span> <span class="n">PYTIPS2011</span><span class="p">)</span>
+
+<span class="n">spec_1</span><span class="o">.</span><span class="n">plot_wave_alpha</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/HITRAN_static_LBL_2.png" src="_images/HITRAN_static_LBL_2.png" />
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="Correcting%20the%20Ideal%20Gas%20Law%20with%20Compressability%20Factor.html"
+                          title="previous chapter">Correcting the Ideal Gas Law with Compressability Factors</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="Oxygen%20CIA%20using%20theoretical%20model.html"
+                          title="next chapter">Oxygen CIA using theoretical model</a></p>
+  </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Oxygen%20CIA%20using%20theoretical%20model.html" title="Oxygen CIA using theoretical model"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Correcting%20the%20Ideal%20Gas%20Law%20with%20Compressability%20Factor.html" title="Correcting the Ideal Gas Law with Compressability Factors"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="Examples.html" >Examples</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">HITRAN Line-by-Line Static Molecules</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    </div>
+  </body>
+</html>

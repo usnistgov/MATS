@@ -1,21 +1,23 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Generating Parameter Line lists &#8212; MATS 2.1 documentation</title>
+    <title>Generating Parameter Line lists &#8212; MATS 3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Examples" href="Examples.html" />
@@ -65,7 +67,7 @@ $(document).ready(function(){
         <li class="right" >
           <a href="MATS%20Summary.html" title="MATS Summary"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Generating Parameter Line lists</a></li> 
       </ul>
     </div>  
@@ -76,9 +78,9 @@ $(document).ready(function(){
           <div class="body" role="main">
             
   <section id="generating-parameter-line-lists">
-<h1>Generating Parameter Line lists<a class="headerlink" href="#generating-parameter-line-lists" title="Permalink to this headline">¶</a></h1>
+<h1>Generating Parameter Line lists<a class="headerlink" href="#generating-parameter-line-lists" title="Permalink to this heading">¶</a></h1>
 <section id="parameter-line-list-overview">
-<h2>Parameter Line list Overview<a class="headerlink" href="#parameter-line-list-overview" title="Permalink to this headline">¶</a></h2>
+<h2>Parameter Line list Overview<a class="headerlink" href="#parameter-line-list-overview" title="Permalink to this heading">¶</a></h2>
 <dl class="simple">
 <dt>The MATS program uses a spectroscopic line list that varies from the traditional HITRAN and HAPI formats to accomodate the full HTP parameterization including temperature dependencies for all parameters (other than the correlation parameter and first order line-mixing).  The spectroscopic line list format has rows that correspond to each molecular transition and columns that correspond to the various HTP parameters.  The necessary column headers are below, where there needs to be a column for each parameter for each diluent (ie. air, self) in the dataset. Additionally, there needs to be a line-mixing term for each nominal temperature in the dataset, where the nominal temperature is the included as the suffix of the column header.</dt><dd><ul class="simple">
 <li><p>molec_id: HITRAN molecule id number</p></li>
@@ -103,10 +105,10 @@ $(document).ready(function(){
 </dl>
 </section>
 <section id="generating-parameter-line-list-from-hitran">
-<h2>Generating Parameter Line list from HITRAN<a class="headerlink" href="#generating-parameter-line-list-from-hitran" title="Permalink to this headline">¶</a></h2>
+<h2>Generating Parameter Line list from HITRAN<a class="headerlink" href="#generating-parameter-line-list-from-hitran" title="Permalink to this heading">¶</a></h2>
 <p>The parameter line list .csv file can be generated manually, but <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples/HITRAN_to_Dataframe">this notebook</a> generates a parameter list using the <a class="reference external" href="https://hitran.org/hapi/">HITRAN Application Programming Interface (HAPI)</a>.  The overview below walks through this notebook.</p>
 <section id="imports">
-<h3>Imports<a class="headerlink" href="#imports" title="Permalink to this headline">¶</a></h3>
+<h3>Imports<a class="headerlink" href="#imports" title="Permalink to this heading">¶</a></h3>
 <p>Import the numpy, pandas, os, and sys packages.  Set pandas dataframe to show all of the rows.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -124,7 +126,7 @@ $(document).ready(function(){
 </div>
 </section>
 <section id="molecule-and-isotope-information">
-<h3>Molecule and Isotope Information<a class="headerlink" href="#molecule-and-isotope-information" title="Permalink to this headline">¶</a></h3>
+<h3>Molecule and Isotope Information<a class="headerlink" href="#molecule-and-isotope-information" title="Permalink to this heading">¶</a></h3>
 <p>HAPI provides a dictionary called ISO_ID, where the global isotope id acts as the key, with a sub-dictionary containing the molecule id, local isotope id, isotope name, relative abundance, mass, and molecule name.  The following command will generate the dictionary as the output.  This provides the necessary global isotope id information for interfacing with HAPI to access HITRAN infomation.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">print_iso_id</span><span class="p">()</span>
 </pre></div>
@@ -260,11 +262,11 @@ $(document).ready(function(){
 </div>
 </section>
 <section id="generate-hitran-and-initial-guess-line-lists-from-hapi-call">
-<h3>Generate HITRAN and Initial Guess Line lists from HAPI Call<a class="headerlink" href="#generate-hitran-and-initial-guess-line-lists-from-hapi-call" title="Permalink to this headline">¶</a></h3>
+<h3>Generate HITRAN and Initial Guess Line lists from HAPI Call<a class="headerlink" href="#generate-hitran-and-initial-guess-line-lists-from-hapi-call" title="Permalink to this heading">¶</a></h3>
 <p>The next section of the example contains a function and function call where the output is a MATS compatible line list.  The HITRANlinelist_to_csv takes a list of global isotope numbers and minimum and maximum wavenumbers as variables with a tablename, filename, temperature, and option to calculate the speed-dependent broadening as optional parameters.  The spectroscopic data for the isotopes in the global isotope list over the specified wavenumber range will be retrieved from HITRANOnline.  HITRAN breaks-up the HTP line parameters into temperature regimes, so the temperature specied selects for the most relevant parameters.  The tablename parameter sets the ame of the table generated by the HAPI call, where the filename parameter sets the base for the resulting .csv files.  The HITRANlinelist_to_csv function generates two outputs, the first is a HITRAN line list with all data available in HITRAN for the isotopes and spectral range (based on the parsed parameters in the HITRAN_parameter_list).  The second file generates the highest order line shape list using the HITRAN values and formats for MATS.  This line list also will fill in temperature dependences and missing broadener information and if calculate_aw is True calculate the speed dependence based on theory.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">HITRANlinelist_to_csv</span><span class="p">(</span><span class="n">isotopes</span><span class="p">,</span> <span class="n">minimum_wavenumber</span><span class="p">,</span> <span class="n">maximum_wavenumber</span><span class="p">,</span> <span class="n">tablename</span> <span class="o">=</span> <span class="s1">&#39;tmp&#39;</span><span class="p">,</span> <span class="n">temperature</span> <span class="o">=</span> <span class="mi">296</span><span class="p">,</span> <span class="n">calculate_aw</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 
-                 <span class="sd">&quot;&quot;&quot;Generates two .csv files generated information available from HTIRAN.  The first line list matches the information available from HITRAN (_HITRAN.csv) and the second supplements the HITRAN information with theoretical values and translates into MATS input format (_initguess.csv)</span>
+<span class="w">                 </span><span class="sd">&quot;&quot;&quot;Generates two .csv files generated information available from HTIRAN.  The first line list matches the information available from HITRAN (_HITRAN.csv) and the second supplements the HITRAN information with theoretical values and translates into MATS input format (_initguess.csv)</span>
 
 <span class="sd"> Outline</span>
 
@@ -309,7 +311,7 @@ $(document).ready(function(){
 </div>
 </section>
 <section id="use-example-for-hitranlinelist-to-csv">
-<h3>Use Example for HITRANlinelist_to_csv<a class="headerlink" href="#use-example-for-hitranlinelist-to-csv" title="Permalink to this headline">¶</a></h3>
+<h3>Use Example for HITRANlinelist_to_csv<a class="headerlink" href="#use-example-for-hitranlinelist-to-csv" title="Permalink to this heading">¶</a></h3>
 <p>To select the relevant information from HITRAN you will need to provide:</p>
 <ul class="simple">
 <li><p>table name (str)</p></li>
@@ -338,22 +340,26 @@ $(document).ready(function(){
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="MATS%20Summary.html"
-                        title="previous chapter">MATS Summary</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="Examples.html"
-                        title="next chapter">Examples</a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="MATS%20Summary.html"
+                          title="previous chapter">MATS Summary</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="Examples.html"
+                          title="next chapter">Examples</a></p>
+  </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -373,12 +379,12 @@ $(document).ready(function(){
         <li class="right" >
           <a href="MATS%20Summary.html" title="MATS Summary"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MATS 2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MATS 3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Generating Parameter Line lists</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>
