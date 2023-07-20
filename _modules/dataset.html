@@ -1,0 +1,642 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MATS.dataset &#8212; MATS 3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
+  <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+
+
+<script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
+<script>
+$(document).ready(function(){
+  // Mark external (non-nist.gov) A tags with class "external"
+  //If the adress start with https and ends with nist.gov
+  var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)');
+  //Regex to find address that start with https
+  var re_absolute_address = new RegExp('^((https?:)?\/\/)');
+  $("a").each(function(){
+    var url=$(this).attr('href');
+    if(re_nist.test(url) || !re_absolute_address.test(url)){
+      $(this).addClass('local');
+    }else{
+      //This a href appears to be external, so tag it
+      $(this).addClass('external');
+    }
+  });
+  // Add leaveNotice to external A elements
+  $('a.external').leaveNotice();
+});
+</script>
+<link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">MATS 3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MATS.dataset</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for MATS.dataset</h1><div class="highlight"><pre>
+<span></span><span class="c1">#Import Packages</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">gridspec</span>
+
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">isotope_list_molecules_isotopes</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.hapi</span> <span class="kn">import</span> <span class="n">ISO</span>
+
+
+<div class="viewcode-block" id="Dataset"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset">[docs]</a><span class="k">class</span> <span class="nc">Dataset</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Combines spectrum objects into a Dataset object to enable multi-spectrum fitting.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spectra : list</span>
+<span class="sd">        list of spectrum objects to be included in the Dataset. Example [spectrum_1, spectrum_2, . . .]</span>
+<span class="sd">    dataset_name : str</span>
+<span class="sd">        Used to provide a name for the Dataset to use when saving files</span>
+<span class="sd">    param_linelist : pandas dataframe</span>
+<span class="sd">        Reads in the  parameter linelist used in fitting.  This enables for consistency checks between the input spectra and the parameter line list.</span>
+<span class="sd">    baseline_order : int</span>
+<span class="sd">        sets the baseline order for all spectra in the dataset.  This will automatically be set to the maximum baseline order across all spectrum included in the Dataset.</span>
+<span class="sd">    CIA_model : dictionary</span>
+<span class="sd">        Specifies the model and band of CIA Model to use.  Default is {&#39;model&#39;: None, &#39;band&#39;:None}.  Other option is {&#39;model&#39;:&#39;Karman&#39;, &#39;band&#39;:&#39;a_band&#39; or &#39;singlet_delta&#39;}, which applies for O2-O2 and O2-N2 CIA in the Oxygen A and Singlet Delta Bands.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spectra</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">,</span> <span class="n">param_linelist</span><span class="p">,</span> <span class="n">CIA_model</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;band&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">}):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span> <span class="o">=</span> <span class="n">spectra</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_name</span> <span class="o">=</span> <span class="n">dataset_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">param_linelist</span> <span class="o">=</span> <span class="n">param_linelist</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CIA_model</span> <span class="o">=</span> <span class="n">CIA_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">renumber_spectra</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">molecule_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correct_component_list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isotope_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_iso_list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">correct_etalon_list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_baseline_order</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">broadener_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_broadener_list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ILS_function_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ILS_function_dict</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Dataset.renumber_spectra"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.renumber_spectra">[docs]</a>    <span class="k">def</span> <span class="nf">renumber_spectra</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;renumbers the spectra to be sequential starting at 1 (called in the initialization of the class).</span>
+<span class="sd">         &quot;&quot;&quot;</span>
+
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="n">spectrum</span><span class="o">.</span><span class="n">set_spectrum_number</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+            <span class="n">count</span><span class="o">+=</span><span class="mi">1</span></div>
+
+<div class="viewcode-block" id="Dataset.max_baseline_order"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.max_baseline_order">[docs]</a>    <span class="k">def</span> <span class="nf">max_baseline_order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; sets the baseline order to be equal to the maximum in any of the included spectra.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">baseline_order_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="n">baseline_order_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">baseline_order</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_order</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">baseline_order_list</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Dataset.correct_component_list"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.correct_component_list">[docs]</a>    <span class="k">def</span> <span class="nf">correct_component_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Corrects so that all spectra and the parameter line list share the same molecules, but the mole fraction is fixed to zero where molecules are not present (called in the initialization of the class).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dataset_molecule_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="n">dataset_molecule_list</span> <span class="o">+=</span> <span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">molefraction</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">molecules_in_paramlist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_linelist</span><span class="p">[</span><span class="s1">&#39;molec_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">molecules_in_paramlist</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">molecules_in_paramlist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataset_molecule_list</span><span class="p">:</span>
+                <span class="n">dataset_molecule_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">molecules_in_paramlist</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="n">spectrum_molefraction_dictionary</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">get_molefraction</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">molecule</span> <span class="ow">in</span> <span class="n">dataset_molecule_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">molecule</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">spectrum_molefraction_dictionary</span><span class="p">:</span>
+                    <span class="n">spectrum_molefraction_dictionary</span><span class="p">[</span><span class="n">molecule</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">spectrum</span><span class="o">.</span><span class="n">set_molefraction</span><span class="p">(</span><span class="n">spectrum_molefraction_dictionary</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">dataset_molecule_list</span></div>
+
+<div class="viewcode-block" id="Dataset.check_iso_list"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.check_iso_list">[docs]</a>    <span class="k">def</span> <span class="nf">check_iso_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39; Checks to make sure that all molecules are in the isotope_list and also checks to make sure all spectra use the same isotope list</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># Dictionary of Molecules and Isoptes in linelist:</span>
+        <span class="n">molecules_isotopes_in_paramlist</span><span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_linelist</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;molec_id&#39;</span><span class="p">,</span><span class="s1">&#39;local_iso_id&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="s1">&#39;count&#39;</span><span class="p">})</span>
+        <span class="n">molecules_isotopes_in_paramlist</span> <span class="o">=</span> <span class="n">molecules_isotopes_in_paramlist</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">molecules_isotopes_in_paramlist_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">molecules_isotopes_in_paramlist</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="n">molecule</span> <span class="o">=</span> <span class="n">molecules_isotopes_in_paramlist</span><span class="p">[</span><span class="n">molecules_isotopes_in_paramlist</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">i</span><span class="p">][</span><span class="s1">&#39;molec_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">isotope</span> <span class="o">=</span> <span class="n">molecules_isotopes_in_paramlist</span><span class="p">[</span><span class="n">molecules_isotopes_in_paramlist</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">i</span><span class="p">][</span><span class="s1">&#39;local_iso_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">molecule</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">molecules_isotopes_in_paramlist_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">molecules_isotopes_in_paramlist_dict</span><span class="p">[</span><span class="n">molecule</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">isotope</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">isotope_list</span> <span class="o">=</span> <span class="n">molecules_isotopes_in_paramlist_dict</span><span class="p">[</span><span class="n">molecule</span><span class="p">]</span>
+                <span class="n">isotope_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">isotope</span><span class="p">)</span>
+                <span class="n">molecules_isotopes_in_paramlist_dict</span><span class="p">[</span><span class="n">molecule</span><span class="p">]</span> <span class="o">=</span> <span class="n">isotope_list</span>
+
+
+        <span class="c1"># check if isotope list is different from ISO</span>
+        <span class="n">missing_molecules</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">other_isotope_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">isotope_list</span> <span class="o">!=</span> <span class="n">ISO</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">isotope_list</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other_isotope_list</span><span class="p">:</span>
+                    <span class="n">other_isotope_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">isotope_list</span><span class="p">)</span>
+                    <span class="n">isolist_molecules_isotopes</span> <span class="o">=</span> <span class="n">isotope_list_molecules_isotopes</span><span class="p">(</span><span class="n">isotope_list</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">isotope_list</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">molecule</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">molecule_list</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">molecule</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">isolist_molecules_isotopes</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">molecule</span> <span class="ow">in</span> <span class="n">molecules_isotopes_in_paramlist_dict</span><span class="p">:</span>
+                                <span class="n">missing_molecules</span><span class="p">[</span><span class="n">molecule</span><span class="p">]</span> <span class="o">=</span> <span class="n">molecules_isotopes_in_paramlist_dict</span><span class="p">[</span><span class="n">molecule</span><span class="p">]</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">missing_molecules</span><span class="p">[</span><span class="n">molecule</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;all isotopes missing&#39;</span><span class="p">]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="n">isotope</span> <span class="ow">in</span> <span class="n">molecules_isotopes_in_paramlist_dict</span><span class="p">[</span><span class="n">molecule</span><span class="p">]:</span>
+                                <span class="k">if</span> <span class="n">isotope</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">isolist_molecules_isotopes</span><span class="p">[</span><span class="n">molecule</span><span class="p">]:</span>
+                                    <span class="k">if</span> <span class="n">molecule</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">missing_molecules</span><span class="p">:</span>
+                                        <span class="n">missing_molecules</span><span class="p">[</span><span class="n">molecule</span><span class="p">]</span> <span class="o">=</span> <span class="n">isotope</span>
+                                    <span class="k">else</span><span class="p">:</span>
+                                        <span class="n">isotope_list</span> <span class="o">=</span> <span class="n">missing_molecules</span><span class="p">[</span><span class="n">molecule</span><span class="p">]</span>
+                                        <span class="n">isotope_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">isotope</span><span class="p">)</span>
+                                        <span class="n">missing_molecules</span><span class="p">[</span><span class="n">molecule</span><span class="p">]</span> <span class="o">=</span> <span class="n">isotope_list</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_molecules</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">other_isotope_list</span><span class="p">)</span><span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">isotope_list</span> <span class="o">!=</span> <span class="n">other_isotope_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="n">spectrum</span><span class="o">.</span><span class="n">isotope_list</span> <span class="o">=</span> <span class="n">other_isotope_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;Best practice is to use the same isotope list for all spectra.  All molecules were found in the non-HITRAN isotope list, so this has been set as the isotope list for all molecules.&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">other_isotope_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">other_isotope_list</span><span class="p">)</span><span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">missing_molecules</span><span class="p">)</span> <span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;WARNING:  Use the same isotope list for all spectra to ensure continuity in the dataset&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">ISO</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_molecules</span><span class="p">)</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="n">missing_molecules</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;WARNING:  Use the same isotope list for all spectra to ensure continuity in the dataset and make sure all Molecules and isotopes are in that isotope list.&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">ISO</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ISO</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="Dataset.get_broadener_list"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_broadener_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_broadener_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Provides a list of all broadeners in the dataset.</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dataset_broadener_list : list</span>
+<span class="sd">            list of all broadeners in the dataset.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dataset_broadener_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="n">dataset_broadener_list</span> <span class="o">+=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">Diluent</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">dataset_broadener_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">dataset_broadener_list</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">dataset_broadener_list</span></div>
+<div class="viewcode-block" id="Dataset.get_ILS_function_dict"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_ILS_function_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_ILS_function_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Provides a dictionary of all ILS functions used in the dataset and the number of resolution parameters</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dataset_ILS_list : list</span>
+<span class="sd">            list of strings matching the name of the ILS functions used in the dataset</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dataset_ILS_function_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">ILS_function</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">ILS_function</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataset_ILS_function_dict</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">ILS_resolution</span><span class="p">)</span> <span class="o">==</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">ILS_resolution</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">):</span>
+                        <span class="n">dataset_ILS_function_dict</span><span class="p">[</span><span class="n">spectrum</span><span class="o">.</span><span class="n">ILS_function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">dataset_ILS_function_dict</span><span class="p">[</span><span class="n">spectrum</span><span class="o">.</span><span class="n">ILS_function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">ILS_resolution</span><span class="p">)</span>
+
+
+        <span class="k">return</span> <span class="n">dataset_ILS_function_dict</span></div>
+
+
+<div class="viewcode-block" id="Dataset.correct_etalon_list"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.correct_etalon_list">[docs]</a>    <span class="k">def</span> <span class="nf">correct_etalon_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Corrects so that all spectrum share the same number of etalons, but the amplitude and period are fixed to zero where appropriate(called in the initialization of the class).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dataset_etalon_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="n">dataset_etalon_list</span> <span class="o">+=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">etalons</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">dataset_etalon_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">dataset_etalon_list</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="n">spectrum_etalon_dictionary</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">get_etalons</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">etalon_number</span> <span class="ow">in</span> <span class="n">dataset_etalon_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">etalon_number</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">spectrum_etalon_dictionary</span><span class="p">:</span>
+                    <span class="n">spectrum_etalon_dictionary</span><span class="p">[</span><span class="n">etalon_number</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">spectrum</span><span class="o">.</span><span class="n">set_etalons</span><span class="p">(</span><span class="n">spectrum_etalon_dictionary</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Dataset.get_etalons"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_etalons">[docs]</a>    <span class="k">def</span> <span class="nf">get_etalons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Get list of number of etalons for spectra.</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dataset_etalon_list : list</span>
+<span class="sd">            etalon keys across spectra</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dataset_etalon_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="n">dataset_etalon_list</span> <span class="o">+=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">etalons</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">dataset_etalon_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">dataset_etalon_list</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">dataset_etalon_list</span></div>
+
+<div class="viewcode-block" id="Dataset.get_molecules"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_molecules">[docs]</a>    <span class="k">def</span> <span class="nf">get_molecules</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Get list of molecules in spectra.</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dataset_molecule_list : list</span>
+<span class="sd">            list of molecules in spectra</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dataset_molecule_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="n">dataset_molecule_list</span> <span class="o">+=</span> <span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">molefraction</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">dataset_molecule_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">dataset_molecule_list</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">dataset_molecule_list</span></div>
+
+<div class="viewcode-block" id="Dataset.get_spectra"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_spectra">[docs]</a>    <span class="k">def</span> <span class="nf">get_spectra</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Dataset.get_dataset_name"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_dataset_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_dataset_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_name</span></div>
+<div class="viewcode-block" id="Dataset.get_baseline_order"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_baseline_order">[docs]</a>    <span class="k">def</span> <span class="nf">get_baseline_order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_order</span></div>
+<div class="viewcode-block" id="Dataset.set_dataset_name"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.set_dataset_name">[docs]</a>    <span class="k">def</span> <span class="nf">set_dataset_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_dataset_name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_name</span> <span class="o">=</span> <span class="n">new_dataset_name</span></div>
+<div class="viewcode-block" id="Dataset.set_baseline_order"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.set_baseline_order">[docs]</a>    <span class="k">def</span> <span class="nf">set_baseline_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_baseline_order</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_order</span> <span class="o">=</span> <span class="n">new_baseline_order</span></div>
+<div class="viewcode-block" id="Dataset.set_spectra"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.set_spectra">[docs]</a>    <span class="k">def</span> <span class="nf">set_spectra</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_spectra</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span> <span class="o">=</span> <span class="n">new_spectra</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">renumber_spectra</span><span class="p">()</span></div>
+<div class="viewcode-block" id="Dataset.get_number_spectra"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_number_spectra">[docs]</a>    <span class="k">def</span> <span class="nf">get_number_spectra</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Dataset.get_spectrum_filename"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_spectrum_filename">[docs]</a>    <span class="k">def</span> <span class="nf">get_spectrum_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spectrum_num</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Gets spectrum filename for spectrum in Dataset.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        spectrum_num : int</span>
+<span class="sd">            Integer assigned to a given spectrum.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        filename : str</span>
+<span class="sd">            if spectrum_num in Dataset then the filename for that the spectrum_number is returned</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">spectrum_number</span> <span class="o">==</span> <span class="n">spectrum_num</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">get_filename</span><span class="p">())</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Dataset.get_spectrum_pressure"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_spectrum_pressure">[docs]</a>    <span class="k">def</span> <span class="nf">get_spectrum_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spectrum_num</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets spectrum pressure for spectrum in Dataset.</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        spectrum_num : int</span>
+<span class="sd">            Integer assigned to a given spectrum.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pressure : float</span>
+<span class="sd">            if spectrum_num in Dataset then the pressure (torr) for that the spectrum_number is returned.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">spectrum_number</span> <span class="o">==</span> <span class="n">spectrum_num</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">get_pressure_torr</span><span class="p">())</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Dataset.get_spectrum_temperature"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_spectrum_temperature">[docs]</a>    <span class="k">def</span> <span class="nf">get_spectrum_temperature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spectrum_num</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets spectrum temperature for spectrum in Dataset.</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        spectrum_num : int</span>
+<span class="sd">            Integer assigned to a given spectrum.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        temperature : float</span>
+<span class="sd">            if spectrum_num in Dataset then the temperature (K) for that the spectrum_number is returned.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">spectrum_number</span> <span class="o">==</span> <span class="n">spectrum_num</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">get_temperature</span><span class="p">())</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Dataset.get_spectra_extremes"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_spectra_extremes">[docs]</a>    <span class="k">def</span> <span class="nf">get_spectra_extremes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">get_spectrum_number</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">wave_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)</span>
+                <span class="n">wave_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">wave_min</span><span class="p">:</span>
+                    <span class="n">wave_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">wave_max</span><span class="p">:</span>
+                    <span class="n">wave_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wave_min</span><span class="p">,</span> <span class="n">wave_max</span></div>
+
+<div class="viewcode-block" id="Dataset.get_spectrum_extremes"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_spectrum_extremes">[docs]</a>    <span class="k">def</span> <span class="nf">get_spectrum_extremes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the minimum and maximum wavenumber for the entire Dataset.</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        wave_min : float</span>
+<span class="sd">            The minimum wavenumber in all spectra in the Dataset.</span>
+<span class="sd">        wave_max : float</span>
+<span class="sd">            The maximum wavenumber in all spectra in the Dataset.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">extreme_dictionary</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="n">extreme_dictionary</span><span class="p">[</span><span class="n">spectrum</span><span class="o">.</span><span class="n">get_spectrum_number</span><span class="p">()]</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">extreme_dictionary</span></div>
+
+<div class="viewcode-block" id="Dataset.get_number_nominal_temperatures"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_number_nominal_temperatures">[docs]</a>    <span class="k">def</span> <span class="nf">get_number_nominal_temperatures</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Get the number of nominal temperatures in the .</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        num_nominal_temperatures : int</span>
+<span class="sd">            number of nominal temperatures in the Dataset</span>
+<span class="sd">        nominal_temperatures : list</span>
+<span class="sd">            list of all nominal temperatures listed in the input spectra</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">nominal_temperatures</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">nominal_temperature</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nominal_temperatures</span><span class="p">:</span>
+                <span class="n">nominal_temperatures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">nominal_temperature</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">nominal_temperatures</span><span class="p">),</span> <span class="n">nominal_temperatures</span></div>
+
+<div class="viewcode-block" id="Dataset.average_QF"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.average_QF">[docs]</a>    <span class="k">def</span> <span class="nf">average_QF</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the Average QF from all spectra.</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        average_QF : float</span>
+<span class="sd">            average QF of all spectra in dataset</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">sum_</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="n">sum_</span> <span class="o">+=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">calculate_QF</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">sum_</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_number_spectra</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Dataset.get_list_spectrum_numbers"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.get_list_spectrum_numbers">[docs]</a>    <span class="k">def</span> <span class="nf">get_list_spectrum_numbers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Generates a list of all spectrum_numbers.</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        spec_num_list : list</span>
+<span class="sd">            list of all spectrum numbers used in the dataset.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">spec_num_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="n">spec_num_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">spectrum_number</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">spec_num_list</span></div>
+
+<div class="viewcode-block" id="Dataset.generate_baseline_paramlist"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.generate_baseline_paramlist">[docs]</a>    <span class="k">def</span> <span class="nf">generate_baseline_paramlist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates a csv file called dataset_name + _baseline_paramlist, which will be used to generate another csv file that is used for fitting spectrum dependent parameters with columns for</span>
+<span class="sd">        spectrum number, segment number, x_shift, concentration for each molecule in the dataset, baseline terms (a = 0th order term, b = 1st order, etc), and etalon terms (set an amplitude, period, and phase for the number of etalons listed for each spectrum in the Dataset).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        baseline_paramlist : dataframe</span>
+<span class="sd">            dataframe containing information describing baseline parameters.  Also saves to .csv.  Either file can be edited before making the baseline parameter list used for fitting.  If editting the .csv file will need to regenerate dataframe from .csv.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">baseline_paramlist</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">segments</span><span class="p">)):</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">line</span><span class="p">[</span><span class="s1">&#39;Spectrum Number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">spectrum_number</span>
+                <span class="n">line</span><span class="p">[</span><span class="s1">&#39;Segment Number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">segment</span>
+                <span class="n">line</span><span class="p">[</span><span class="s1">&#39;Baseline Order&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">baseline_order</span>
+                <span class="n">line</span><span class="p">[</span><span class="s1">&#39;Pressure&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">get_pressure</span><span class="p">()</span>
+                <span class="n">line</span><span class="p">[</span><span class="s1">&#39;Temperature&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">get_temperature</span><span class="p">()</span>
+                <span class="n">line</span><span class="p">[</span><span class="s1">&#39;x_shift&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">x_shift</span>
+                <span class="k">for</span> <span class="n">molecule</span> <span class="ow">in</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">molefraction</span><span class="p">:</span>
+                    <span class="n">line</span><span class="p">[</span><span class="s1">&#39;molefraction_&#39;</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">isotope_list</span><span class="p">[(</span><span class="n">molecule</span><span class="p">,</span> <span class="mi">1</span><span class="p">)][</span><span class="mi">4</span><span class="p">])]</span> <span class="o">=</span> <span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">molefraction</span><span class="p">[</span><span class="n">molecule</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_order</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">chr</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">97</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;a&#39;</span><span class="p">:</span>
+                        <span class="n">line</span><span class="p">[</span><span class="s1">&#39;baseline_&#39;</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">97</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">line</span><span class="p">[</span><span class="s1">&#39;baseline_&#39;</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">97</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">etalon_name</span> <span class="ow">in</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">etalons</span><span class="p">:</span>
+                    <span class="n">line</span><span class="p">[</span><span class="s1">&#39;etalon_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">etalon_name</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_amp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">etalons</span><span class="p">[</span><span class="n">etalon_name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">line</span><span class="p">[</span><span class="s1">&#39;etalon_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">etalon_name</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_period&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">etalons</span><span class="p">[</span><span class="n">etalon_name</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">line</span><span class="p">[</span><span class="s1">&#39;etalon_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">etalon_name</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_phase&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ILS_function_dict</span> <span class="o">!=</span> <span class="p">{}:</span>
+                    <span class="k">for</span> <span class="n">ILS_function</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ILS_function_dict</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">res_param</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ILS_function_dict</span><span class="p">[</span><span class="n">ILS_function</span><span class="p">]):</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">ILS_function</span> <span class="o">==</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">ILS_function</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">!=</span> <span class="n">ILS_function</span><span class="p">):</span>
+                                <span class="n">line</span><span class="p">[</span><span class="n">ILS_function</span> <span class="o">+</span> <span class="s1">&#39;_res_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">res_param</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="k">elif</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">ILS_resolution</span><span class="p">)</span> <span class="o">==</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">ILS_resolution</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">):</span>
+                                <span class="n">line</span><span class="p">[</span><span class="n">ILS_function</span> <span class="o">+</span> <span class="s1">&#39;_res_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">res_param</span><span class="p">)]</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">ILS_resolution</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">line</span><span class="p">[</span><span class="n">ILS_function</span> <span class="o">+</span> <span class="s1">&#39;_res_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">res_param</span><span class="p">)]</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">ILS_resolution</span><span class="p">[</span><span class="n">res_param</span><span class="p">]</span>
+                <span class="n">baseline_paramlist</span>  <span class="o">=</span> <span class="n">baseline_paramlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">baseline_paramlist</span> <span class="o">=</span> <span class="n">baseline_paramlist</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;Spectrum Number&#39;</span><span class="p">)</span>
+        <span class="n">baseline_paramlist</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_name</span> <span class="o">+</span> <span class="s1">&#39;_baseline_paramlist.csv&#39;</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">baseline_paramlist</span></div>
+<div class="viewcode-block" id="Dataset.generate_CIA_paramlist"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.generate_CIA_paramlist">[docs]</a>    <span class="k">def</span> <span class="nf">generate_CIA_paramlist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a csv file called dataset_name + _CIA_paramlist, which will be used to generate another csv file that is used for fitting the broadband CIA that is common across all spectra, where the columns will be dependent on the CIA model used. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        band : str, optional</span>
+<span class="sd">            specifies the band for the CIA model. For the O2 CIA model reported by Karman et al. The options are a_band and singlet_delta. The default is None.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        CIA_paramlist : pandas dataframe</span>
+<span class="sd">            dataframe containing information decribing the CIA parameters based on the CIA model chosen.  This dataframe is also saved to a dataframe.  Either file can be edited before making the CIA parameter list used for fitting.  If editting the .csv file will need to regenerate dataframe from .csv.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">CIA_model</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">CIA_model</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Karman&#39;</span><span class="p">:</span>
+            <span class="n">CIA_paramlist</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+            <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;CIA Pair&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;O2_O2&#39;</span><span class="p">,</span> <span class="s1">&#39;O2_N2&#39;</span><span class="p">]</span>
+            <span class="c1">#Default values based on Karman, T. et al., Icarus 2019, 328 , 160 175.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">CIA_model</span><span class="p">[</span><span class="s1">&#39;band&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;a_band&#39;</span><span class="p">:</span>
+                <span class="c1">#Intensities</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;S_SO&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">6.20731994222978</span><span class="p">,</span><span class="mf">7.961801018674746</span><span class="p">]</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;S_EXCH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">39.42079598436756</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+                <span class="c1">#Temp Dep</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;EXCH_b&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.011869752199984616</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;EXCH_c&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">6.559060698261758e-05</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;SO_b&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.00011263534228667677</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;SO_c&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.5906417750834962e-06</span>
+                <span class="c1">#Shift</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;SO_shift&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;EXCH_shift&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">CIA_model</span><span class="p">[</span><span class="s1">&#39;band&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;singlet_delta&#39;</span><span class="p">:</span>
+                <span class="c1">#Intensities</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;S_SO&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">39.13</span><span class="p">,</span> <span class="mf">70.74</span><span class="p">]</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;S_EXCH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">304.7448171031378</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="c1">#Temp Dep</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;EXCH_b&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0028385240774561797</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;EXCH_c&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">3.6307626466573398e-06</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;SO_b&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.00014594154382655564</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;SO_c&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.4670403122287775e-06</span>
+                <span class="c1">#Shift</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;SO_shift&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">CIA_paramlist</span><span class="p">[</span><span class="s1">&#39;EXCH_shift&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">CIA_paramlist</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_name</span> <span class="o">+</span> <span class="s1">&#39;_CIA_paramlist.csv&#39;</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">CIA_paramlist</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">CIA_model</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Dataset.generate_summary_file"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.generate_summary_file">[docs]</a>    <span class="k">def</span> <span class="nf">generate_summary_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_file</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Generates a summary file combining spectral information from all spectra in the Dataset.</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        save_file : bool, optional</span>
+<span class="sd">            If True, then a .csv is generated in addition to the dataframe. The default is False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        summary_file : dataframe</span>
+<span class="sd">            Summary dataframe comprised of spectral information inculding model and residuals for all spectra in Dataset.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">summary_file</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="n">spectrum_data</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">save_spectrum_info</span><span class="p">(</span><span class="n">save_file</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">summary_file</span> <span class="o">=</span> <span class="n">summary_file</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spectrum_data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">save_file</span><span class="p">:</span>
+            <span class="n">summary_file</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_name</span> <span class="o">+</span> <span class="s1">&#39;.csv&#39;</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">summary_file</span></div>
+
+<div class="viewcode-block" id="Dataset.plot_model_residuals"><a class="viewcode-back" href="../../MATS.html#MATS.dataset.Dataset.plot_model_residuals">[docs]</a>    <span class="k">def</span> <span class="nf">plot_model_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Generates a plot showing both the model and experimental data as a function of wavenumber in the main plot with a subplot showing the residuals as function of wavenumber.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+        <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">height_ratios</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">ax0</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">alpha (</span><span class="se">\\</span><span class="s1">frac</span><span class="si">{ppm}{cm}</span><span class="s1">)$&#39;</span><span class="p">)</span>
+        <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Wavenumbers ($cm^{-1}$)&#39;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Residuals $(</span><span class="se">\\</span><span class="s1">frac</span><span class="si">{ppm}{cm}</span><span class="s1">)$&#39;</span><span class="p">)</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">]</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">ticklabel_format</span><span class="p">(</span><span class="n">useOffset</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">ticklabel_format</span><span class="p">(</span><span class="n">useOffset</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">spectrum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectra</span><span class="p">:</span>
+            <span class="n">plot_color</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[((</span><span class="n">spectrum</span><span class="o">.</span><span class="n">spectrum_number</span> <span class="o">%</span> <span class="mi">7</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+            <span class="n">ax0</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span><span class="n">spectrum</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">plot_color</span><span class="o">+</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+            <span class="n">ax0</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="n">plot_color</span><span class="o">+</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+            <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span><span class="n">spectrum</span><span class="o">.</span><span class="n">residuals</span><span class="p">,</span> <span class="n">plot_color</span><span class="o">+</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">MATS 3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MATS.dataset</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,284 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MATS.utilities &#8212; MATS 3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
+  <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+
+
+<script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
+<script>
+$(document).ready(function(){
+  // Mark external (non-nist.gov) A tags with class "external"
+  //If the adress start with https and ends with nist.gov
+  var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)');
+  //Regex to find address that start with https
+  var re_absolute_address = new RegExp('^((https?:)?\/\/)');
+  $("a").each(function(){
+    var url=$(this).attr('href');
+    if(re_nist.test(url) || !re_absolute_address.test(url)){
+      $(this).addClass('local');
+    }else{
+      //This a href appears to be external, so tag it
+      $(this).addClass('external');
+    }
+  });
+  // Add leaveNotice to external A elements
+  $('a.external').leaveNotice();
+});
+</script>
+<link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">MATS 3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MATS.utilities</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for MATS.utilities</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.hapi</span> <span class="kn">import</span> <span class="n">ISO</span><span class="p">,</span> <span class="n">ISO_INDEX</span><span class="p">,</span> <span class="n">SLIT_RECTANGULAR</span>
+
+
+
+<div class="viewcode-block" id="max_iter"><a class="viewcode-back" href="../../MATS.html#MATS.utilities.max_iter">[docs]</a><span class="k">def</span> <span class="nf">max_iter</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="nb">iter</span><span class="p">,</span> <span class="n">resid</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">iter</span> <span class="o">&gt;</span> <span class="mi">2500</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="etalon"><a class="viewcode-back" href="../../MATS.html#MATS.utilities.etalon">[docs]</a><span class="k">def</span> <span class="nf">etalon</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">phase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Etalon definition</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array</span>
+<span class="sd">        array of floats used to define the x-axis</span>
+<span class="sd">    amp : float</span>
+<span class="sd">        amplitude of the etalon.</span>
+<span class="sd">    period : float</span>
+<span class="sd">        period of the etalon.</span>
+<span class="sd">    phase : float</span>
+<span class="sd">        phase of the etalon.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    etalon : array</span>
+<span class="sd">        etalon as a function of input x-axis, amplitude, period, and phase.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">amp</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">period</span><span class="p">)</span><span class="o">*</span><span class="n">x</span><span class="o">+</span> <span class="n">phase</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="hasNumbers"><a class="viewcode-back" href="../../MATS.html#MATS.utilities.hasNumbers">[docs]</a><span class="k">def</span> <span class="nf">hasNumbers</span><span class="p">(</span><span class="n">inputString</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Determines whether there are numbers in a string</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    inputString : str</span>
+<span class="sd">        string for analysis</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        Returns True if the there are numbers in a string</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">inputString</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">char</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="molecularMass"><a class="viewcode-back" href="../../MATS.html#MATS.utilities.molecularMass">[docs]</a><span class="k">def</span> <span class="nf">molecularMass</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">I</span><span class="p">,</span> <span class="n">isotope_list</span> <span class="o">=</span> <span class="n">ISO</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; molecular mass look-up based on the HAPI definition adapted to allow used to specify ISO list</span>
+<span class="sd">    INPUT PARAMETERS:</span>
+<span class="sd">        M: HITRAN molecule number</span>
+<span class="sd">        I: HITRAN isotopologue number</span>
+<span class="sd">    OUTPUT PARAMETERS:</span>
+<span class="sd">        MolMass: molecular mass</span>
+<span class="sd">    ---</span>
+<span class="sd">    DESCRIPTION:</span>
+<span class="sd">        Return molecular mass of HITRAN isotolopogue.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">isotope_list</span><span class="p">[(</span><span class="n">M</span><span class="p">,</span><span class="n">I</span><span class="p">)][</span><span class="n">ISO_INDEX</span><span class="p">[</span><span class="s1">&#39;mass&#39;</span><span class="p">]]</span></div>
+
+<div class="viewcode-block" id="isotope_list_molecules_isotopes"><a class="viewcode-back" href="../../MATS.html#MATS.utilities.isotope_list_molecules_isotopes">[docs]</a><span class="k">def</span> <span class="nf">isotope_list_molecules_isotopes</span><span class="p">(</span><span class="n">isotope_list</span> <span class="o">=</span> <span class="n">ISO</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39; The HITRAN style isotope list in the format (M,I), this function creates a dictionary from this with M as the keys and lists of I as values.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    isotope_list : dictionary, optional</span>
+<span class="sd">        HITRAN style isotope list. The default is ISO.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    molecule_isotope_dictionary : dictionary</span>
+<span class="sd">        Dictionary with the molecules in an isotope list with the available I values.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">M_I_in_isotope_list</span> <span class="o">=</span> <span class="p">(</span><span class="n">isotope_list</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">molecule_isotope_dictionary</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">MI</span> <span class="ow">in</span> <span class="n">M_I_in_isotope_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">MI</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">molecule_isotope_dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">molecule_isotope_dictionary</span><span class="p">[</span><span class="n">MI</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">MI</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">isotope_list</span> <span class="o">=</span> <span class="n">molecule_isotope_dictionary</span><span class="p">[</span><span class="n">MI</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">isotope_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MI</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">molecule_isotope_dictionary</span><span class="p">[</span><span class="n">MI</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">isotope_list</span>
+    <span class="k">return</span> <span class="n">molecule_isotope_dictionary</span></div>
+
+<div class="viewcode-block" id="add_to_HITRANstyle_isotope_list"><a class="viewcode-back" href="../../MATS.html#MATS.utilities.add_to_HITRANstyle_isotope_list">[docs]</a><span class="k">def</span> <span class="nf">add_to_HITRANstyle_isotope_list</span><span class="p">(</span><span class="n">input_isotope_list</span> <span class="o">=</span> <span class="n">ISO</span><span class="p">,</span> <span class="n">molec_id</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">local_iso_id</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">global_isotope_id</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">iso_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                                    <span class="n">abundance</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">mass</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">mol_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;  Allows for used to add to an existing isotope line list in the HITRAN format</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_isotope_list : dictionary, optional</span>
+<span class="sd">        Isotope list dictionary in HAPI format. The default is ISO.</span>
+<span class="sd">    molec_id : int, optional</span>
+<span class="sd">        molec_id for new isotope entry. The default is 100.</span>
+<span class="sd">    local_iso_id : int, optional</span>
+<span class="sd">        local isotope id number for new isotope entry. The default is 1.</span>
+<span class="sd">    global_isotope_id : int, optional</span>
+<span class="sd">        global isotope id for new istope entry. The default is 200.</span>
+<span class="sd">    iso_name : str, optional</span>
+<span class="sd">        isotoope name for new isotope entry. The default is &#39;&#39;.</span>
+<span class="sd">    abundance : float, optional</span>
+<span class="sd">        relative abundance of new isotope entry. The default is 1.</span>
+<span class="sd">    mass : float, optional</span>
+<span class="sd">        Mass of isotope in g. The default is 1.</span>
+<span class="sd">    mol_name : str, optional</span>
+<span class="sd">        name of the molecule for new istope entry. The default is &#39;&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    output_isotope_list : dictionary</span>
+<span class="sd">        Isotope list with additionall entry</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># check that there is not another entry</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">molec_id</span><span class="p">,</span> <span class="n">local_iso_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">input_isotope_list</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;Already entry with that molec_id and local_iso_id.  This result will write over that entry.&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">molec_id</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">in</span>  <span class="n">input_isotope_list</span><span class="p">:</span>
+        <span class="n">mol_name_</span> <span class="o">=</span> <span class="n">input_isotope_list</span><span class="p">[(</span><span class="n">molec_id</span><span class="p">,</span> <span class="mi">1</span><span class="p">)][</span><span class="n">ISO_INDEX</span><span class="p">[</span><span class="s1">&#39;mol_name&#39;</span><span class="p">]]</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;This is being added as a new isotope of &#39;</span> <span class="o">+</span> <span class="n">mol_name_</span> <span class="o">+</span> <span class="s1">&#39;.  Proceed if that was the intention.&#39;</span><span class="p">)</span>
+    <span class="n">global_iso_id_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">input_isotope_list</span><span class="p">:</span>
+        <span class="n">global_iso_id_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">input_isotope_list</span><span class="p">[</span><span class="n">entry</span><span class="p">][</span><span class="n">ISO_INDEX</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]])</span>
+    <span class="k">if</span> <span class="n">global_isotope_id</span> <span class="ow">in</span> <span class="n">global_iso_id_list</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;There is another entry with this global isotope id.  Consider changing the value for consistency&#39;</span><span class="p">)</span>
+    <span class="n">output_isotope_list</span> <span class="o">=</span> <span class="n">input_isotope_list</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">output_isotope_list</span><span class="p">[(</span><span class="n">molec_id</span><span class="p">,</span> <span class="n">local_iso_id</span><span class="p">)]</span> <span class="o">=</span> <span class="p">[</span><span class="n">global_isotope_id</span><span class="p">,</span> <span class="n">iso_name</span><span class="p">,</span> <span class="n">abundance</span><span class="p">,</span> <span class="n">mass</span><span class="p">,</span> <span class="n">mol_name</span><span class="p">]</span>
+
+
+
+    <span class="k">return</span> <span class="n">output_isotope_list</span></div>
+<div class="viewcode-block" id="arange_"><a class="viewcode-back" href="../../MATS.html#MATS.utilities.arange_">[docs]</a><span class="k">def</span> <span class="nf">arange_</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span><span class="n">upper</span><span class="p">,</span><span class="n">step</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    originally from HAPI 1.1.0.9.6, but corrects npnt to be int</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">npnt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">upper</span><span class="o">-</span><span class="n">lower</span><span class="p">)</span><span class="o">/</span><span class="n">step</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span>
+    <span class="n">upper_new</span> <span class="o">=</span> <span class="n">lower</span> <span class="o">+</span> <span class="n">step</span><span class="o">*</span><span class="p">(</span><span class="n">npnt</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">((</span><span class="n">upper</span><span class="o">-</span><span class="n">upper_new</span><span class="p">)</span><span class="o">-</span><span class="n">step</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+        <span class="n">upper_new</span> <span class="o">+=</span> <span class="n">step</span>
+        <span class="n">npnt</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span><span class="n">upper_new</span><span class="p">,</span><span class="nb">int</span><span class="p">(</span><span class="n">npnt</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="convolveSpectrumSame"><a class="viewcode-back" href="../../MATS.html#MATS.utilities.convolveSpectrumSame">[docs]</a><span class="k">def</span> <span class="nf">convolveSpectrumSame</span><span class="p">(</span><span class="n">Omega</span><span class="p">,</span><span class="n">CrossSection</span><span class="p">,</span><span class="n">Resolution</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span><span class="n">AF_wing</span><span class="o">=</span><span class="mf">10.</span><span class="p">,</span>
+                         <span class="n">SlitFunction</span><span class="o">=</span><span class="n">SLIT_RECTANGULAR</span><span class="p">,</span><span class="n">Wavenumber</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convolves cross section with a slit function with given parameters.</span>
+<span class="sd">    Originally from HAPI 1.1.0.9.6 with correction to arange_ to prevent float/int error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># compatibility with older versions</span>
+    <span class="k">if</span> <span class="n">Wavenumber</span><span class="p">:</span> <span class="n">Omega</span><span class="o">=</span><span class="n">Wavenumber</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="n">Omega</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">Omega</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">step</span><span class="o">&gt;=</span><span class="n">Resolution</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;step must be less than resolution&#39;</span><span class="p">)</span>
+    <span class="c1">#x = arange(-AF_wing,AF_wing+step,step)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">arange_</span><span class="p">(</span><span class="o">-</span><span class="n">AF_wing</span><span class="p">,</span><span class="n">AF_wing</span><span class="o">+</span><span class="n">step</span><span class="p">,</span><span class="n">step</span><span class="p">)</span> <span class="c1"># fix</span>
+    <span class="n">slit</span> <span class="o">=</span> <span class="n">SlitFunction</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">Resolution</span><span class="p">)</span>
+    <span class="n">slit</span> <span class="o">/=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">slit</span><span class="p">)</span><span class="o">*</span><span class="n">step</span> <span class="c1"># simple normalization</span>
+    <span class="n">left_bnd</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">right_bnd</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Omega</span><span class="p">)</span>
+    <span class="n">CrossSectionLowRes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">CrossSection</span><span class="p">,</span><span class="n">slit</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span><span class="o">*</span><span class="n">step</span>
+    <span class="k">return</span> <span class="n">Omega</span><span class="p">[</span><span class="n">left_bnd</span><span class="p">:</span><span class="n">right_bnd</span><span class="p">],</span><span class="n">CrossSectionLowRes</span><span class="p">[</span><span class="n">left_bnd</span><span class="p">:</span><span class="n">right_bnd</span><span class="p">],</span><span class="n">left_bnd</span><span class="p">,</span><span class="n">right_bnd</span><span class="p">,</span><span class="n">slit</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">MATS 3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MATS.utilities</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    </div>
+  </body>
+</html>

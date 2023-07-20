@@ -1,0 +1,784 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MATS.spectrum &#8212; MATS 3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
+  <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+
+
+<script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
+<script>
+$(document).ready(function(){
+  // Mark external (non-nist.gov) A tags with class "external"
+  //If the adress start with https and ends with nist.gov
+  var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)');
+  //Regex to find address that start with https
+  var re_absolute_address = new RegExp('^((https?:)?\/\/)');
+  $("a").each(function(){
+    var url=$(this).attr('href');
+    if(re_nist.test(url) || !re_absolute_address.test(url)){
+      $(this).addClass('local');
+    }else{
+      //This a href appears to be external, so tag it
+      $(this).addClass('external');
+    }
+  });
+  // Add leaveNotice to external A elements
+  $('a.external').leaveNotice();
+});
+</script>
+<link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">MATS 3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MATS.spectrum</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for MATS.spectrum</h1><div class="highlight"><pre>
+<span></span><span class="c1">#Import Packages</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">gridspec</span>
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">RegularGridInterpolator</span>
+
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">etalon</span><span class="p">,</span> <span class="n">convolveSpectrumSame</span>
+
+<span class="kn">from</span> <span class="nn">.fit_dataset</span> <span class="kn">import</span> <span class="n">HTP_from_DF_select</span><span class="p">,</span> <span class="n">HTP_wBeta_from_DF_select</span>
+<span class="kn">from</span> <span class="nn">.hapi</span> <span class="kn">import</span> <span class="n">ISO</span><span class="p">,</span> <span class="n">PYTIPS2011</span><span class="p">,</span> <span class="n">PYTIPS2017</span><span class="p">,</span> <span class="n">PYTIPS2021</span>
+<span class="kn">from</span> <span class="nn">.codata</span> <span class="kn">import</span> <span class="n">CONSTANTS</span>
+
+
+
+
+<div class="viewcode-block" id="Spectrum"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum">[docs]</a><span class="k">class</span> <span class="nc">Spectrum</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Spectrum class provides all information describing experimental or simulated spectrum.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : str</span>
+<span class="sd">        file containing spectrum with .csv extension. File extension is not included in the name</span>
+<span class="sd">    molefraction : dict</span>
+<span class="sd">        mole fraction of each molecule in spectra in the format {molec_id: mole fraction (out of 1), molec_id: molefraction, . . . }</span>
+<span class="sd">    natural_abundance : bool, optional</span>
+<span class="sd">        flag for if the molecular species in the spectrum are at natural abundance</span>
+<span class="sd">    abundance_ratio_MI : dict, optional</span>
+<span class="sd">        if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }.  The enhancement is the ratio of the new abundance to the natural abundance.</span>
+<span class="sd">    isotope_list : dict, optional</span>
+<span class="sd">        provides opportunity to specify the isotope look-up table.  Default is ISO, which is from HAPI.  If not using ISO, then must use this format and suggested you use function to add to ISO</span>
+<span class="sd">    diluent : str, optional</span>
+<span class="sd">        sets the diluent for the sample.  Default = &#39;air&#39;</span>
+<span class="sd">    Diluent : dict, optional</span>
+<span class="sd">        sets the diluent for the sample if there are a combination of several diluents. Format {&#39;he&#39;: 0.5, &#39;air&#39;: 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.</span>
+<span class="sd">    spectrum_number : int, optional</span>
+<span class="sd">        sets a number for the spectrum that will correspond to fit parameters. This is set in the Dataset class, so should not need to be defined manually</span>
+<span class="sd">    input_freq : bool, optional</span>
+<span class="sd">        True indicates that the frequency_column is in MHz. False indicates that the frequency column is in wavenumbers.</span>
+<span class="sd">    input_tau : bool, optional</span>
+<span class="sd">        True indicates that the tau_column is in us. False indicates that the tau column is in 1/c*tau (ppm/cm).</span>
+<span class="sd">    pressure_column : str, optional</span>
+<span class="sd">        Name of the pressure column in input file. Column should be in torr. Default is Cavity Pressure /Torr.</span>
+<span class="sd">    temperature_column : str, optional</span>
+<span class="sd">        Name of the temperature column in input file. Column should be in celsius. Default is Cavity Temperature Side 2 /C.</span>
+<span class="sd">    frequency_column  : str, optional</span>
+<span class="sd">        Name of the frequency column in input file. Column should be in MHz or Wavenumbers (with appropriate flag for input_freq). NOTE: This is not a detuning axis. Default is Total Frequency /MHz.</span>
+<span class="sd">    tau_column : str, optional</span>
+<span class="sd">        Name of the tau column in input file. Column should be in us or in 1/ctau (ppm/cm) (with appropriate flag for input_tau). Default is Mean tau/us.</span>
+<span class="sd">    tau_stats_column  : str, optional</span>
+<span class="sd">        Name of column containing the pt by pt error as a percent of the y-axis. Default is &#39;tau rel. std. dev./%</span>
+<span class="sd">    segment_column  : str, optional</span>
+<span class="sd">        Name of column with segment numbers in input file. This column allows spectrum background parameters to be treated in segments across the spectrum. If None then the entire spectrum will share the same segment.</span>
+<span class="sd">    etalons : dict, optional</span>
+<span class="sd">        Allows you to define etalons by an amplitude and period (1/ frequency in cm-1). Default is no etalons. Input is dictionary with keys being a number and the value being an array with the first index being the amplitude and the second being the period.</span>
+<span class="sd">    nominal_temperature : int, optional</span>
+<span class="sd">        nominal temperature indicates the approximate temperature of the spectrum. When combining spectra into a dataset this acts as a flag to whether temperature dependence terms should be parameters that can be fit or whether they should act as constants.  Default = 296</span>
+<span class="sd">    x_shift : float, optional</span>
+<span class="sd">        value in wavenumbers of the x shift for the spectrum axis. This is a fittable parameter. Be careful in using this parameter as floating multiple parameters with similar effects cause fits to not converge (ie. unconstrained line centers + x_shift or fits with line center, shifts, and x_shifts terms without enough lines per spectrum to isolate the different effects). Floating this term works best if you have a good initial guess. Default = 0</span>
+<span class="sd">    baseline_order : int, optional</span>
+<span class="sd">        sets the baseline order for this spectrum. Allows you to change the baseline order across the broader dataset.()</span>
+<span class="sd">    weight : float, optional,</span>
+<span class="sd">        set the weighting to used for the spectrum if using weighted fits.  This can be used to weight a whole spectrum in addition to the pt by pt weighting using the stats column.</span>
+<span class="sd">    ILS_function: string, optional</span>
+<span class="sd">        Default is None and means that no instrument line shape is used in the fitting.</span>
+<span class="sd">        Function can be: SLIT_MICHELSON, SLIT_DIFFRACTION, SLIT_COSINUS, SLIT_DISPERSION, SLIT_GAUSSIAN, SLIT_TRIANGULAR, SLIT_RECTANGULAR corresponding to the ILS functions defined in HAPI or a user defined function.</span>
+<span class="sd">    ILS_resolution: float/array, optional</span>
+<span class="sd">        Resolution is a float or array of ILS resolutions in wavenumbers.  The SlitFunctions defined in HAPI have 1 resolution, but this opens the option for the user defined function to be comprised of several functions with varying resolutions.  Default is 0.1 cm-1.</span>
+<span class="sd">    ILS_wing: float/array, optional</span>
+<span class="sd">        AF_wing is the a float or array consisting of the range the ILS is calculted over in cm-1.  This is a single value fort he HAPI slit functions, but could be an array of multiple values for user-defined functions.  Default is 10 cm-1</span>
+<span class="sd">    TIPS : definition, optional</span>
+<span class="sd">        selects the HAPI provided TIPS version to use for the partition function</span>
+<span class="sd">    compressability_file : str, optional</span>
+<span class="sd">        compressability_file is the name of a file that contains the compressability information, generated by the NIST Refprop program with the rows containing compressability (used to correct the ideal gas law) as a function pressure (MPa) and the columns as a function of temperature (K).  Pressure and temperature are header/index in the given axis.  </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">molefraction</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">natural_abundance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">isotope_list</span> <span class="o">=</span> <span class="n">ISO</span><span class="p">,</span> <span class="n">diluent</span> <span class="o">=</span> <span class="s1">&#39;air&#39;</span><span class="p">,</span> <span class="n">Diluent</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">abundance_ratio_MI</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">spectrum_number</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">input_freq</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">input_tau</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="n">pressure_column</span> <span class="o">=</span> <span class="s1">&#39;Cavity Pressure /Torr&#39;</span><span class="p">,</span> <span class="n">temperature_column</span> <span class="o">=</span> <span class="s1">&#39;Cavity Temperature Side 2 /C&#39;</span><span class="p">,</span> <span class="n">frequency_column</span> <span class="o">=</span> <span class="s1">&#39;Total Frequency /MHz&#39;</span><span class="p">,</span>
+                    <span class="n">tau_column</span> <span class="o">=</span> <span class="s1">&#39;Mean tau/us&#39;</span><span class="p">,</span> <span class="n">tau_stats_column</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">segment_column</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">etalons</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">nominal_temperature</span> <span class="o">=</span> <span class="mi">296</span><span class="p">,</span> <span class="n">x_shift</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">baseline_order</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">weight</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">ILS_function</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ILS_resolution</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">ILS_wing</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">TIPS</span> <span class="o">=</span> <span class="n">PYTIPS2021</span><span class="p">,</span> 
+                    <span class="n">compressability_file</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">molefraction</span> <span class="o">=</span> <span class="n">molefraction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">natural_abundance</span> <span class="o">=</span> <span class="n">natural_abundance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">abundance_ratio_MI</span> <span class="o">=</span> <span class="n">abundance_ratio_MI</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isotope_list</span> <span class="o">=</span> <span class="n">isotope_list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diluent</span> <span class="o">=</span> <span class="n">diluent</span>
+        <span class="k">if</span> <span class="n">Diluent</span> <span class="o">==</span> <span class="p">{}:</span> <span class="c1">#if Diluent was not set as the dictionary of various broadeners, then define dictionary with all of the broadening contribution coming from the diluent broadener</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">diluent</span> <span class="o">==</span> <span class="s1">&#39;air&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Diluent</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">diluent</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="mf">28.95734</span><span class="p">}}</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">diluent</span> <span class="o">==</span> <span class="s1">&#39;self&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Diluent</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">diluent</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}}</span>
+                <span class="c1">#mass will be set during HTP_wBeta_from_DF_select if necessary</span>
+                <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;If using the self broadening term, then consider explicitly labeling the broadener (ie in an oxygen spectra use &#39;O2&#39; instead of self).  This may avoid confusion in multiple species fits. &quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;If using the HTP_wBeta_from_DF_select then you need to go back and use the Diluent{diluent:{&quot;composition&quot;: 1, &quot;m&quot;: mass}} format&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Diluent</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">diluent</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}}</span>
+
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Diluent</span> <span class="o">=</span> <span class="n">Diluent</span>
+            <span class="k">if</span> <span class="s1">&#39;self&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Diluent</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;You are using the &#39;self&#39; term, consider explicitly labeling the broadener (ie in an oxygen spectra use &#39;O2&#39; instead of &#39;self&#39;).  This may avoid confusion in multiple species fits. For single species fits it should not matter.&quot;</span><span class="p">)</span>
+                <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Double check that you did not include the equivalent of the self term explicitly (ie in an oxygen spectra having both &#39;O2&#39; and &#39;self&#39;).&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spectrum_number</span> <span class="o">=</span> <span class="n">spectrum_number</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pressure_column</span> <span class="o">=</span> <span class="n">pressure_column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temperature_column</span> <span class="o">=</span> <span class="n">temperature_column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frequency_column</span> <span class="o">=</span> <span class="n">frequency_column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau_column</span> <span class="o">=</span> <span class="n">tau_column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau_stats_column</span> <span class="o">=</span> <span class="n">tau_stats_column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">segment_column</span> <span class="o">=</span> <span class="n">segment_column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_freq</span> <span class="o">=</span> <span class="n">input_freq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_tau</span> <span class="o">=</span> <span class="n">input_tau</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">etalons</span> <span class="o">=</span> <span class="n">etalons</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nominal_temperature</span> <span class="o">=</span> <span class="n">nominal_temperature</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_shift</span> <span class="o">=</span> <span class="n">x_shift</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_order</span> <span class="o">=</span> <span class="n">baseline_order</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;Change the weight to a non-zero value or remove the spectrum from the dataset.  If the weight is 0, then the residuals returned for that spectrum will be 0. &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ILS_function</span> <span class="o">=</span> <span class="n">ILS_function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ILS_resolution</span> <span class="o">=</span> <span class="n">ILS_resolution</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ILS_wing</span> <span class="o">=</span> <span class="n">ILS_wing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TIPS</span> <span class="o">=</span> <span class="n">TIPS</span>
+
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">diluent_sum_check</span><span class="p">()</span> <span class="c1"># Makes sure that the diluent contributions sum to 1</span>
+
+        <span class="c1">#Defined from contents of file</span>
+        <span class="n">file_contents</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;.csv&#39;</span><span class="p">,</span><span class="n">float_precision</span> <span class="o">=</span> <span class="s1">&#39;high&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pressure</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pressure_column</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">/</span> <span class="mi">760</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">temperature_column</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="mf">273.15</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_freq</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">frequency_column</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">6</span> <span class="o">/</span> <span class="n">CONSTANTS</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">frequency_column</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span><span class="o">*</span> <span class="n">CONSTANTS</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_tau</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_column</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau</span><span class="o">*</span> <span class="n">CONSTANTS</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">1e12</span><span class="p">)</span><span class="o">**-</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_column</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">*</span><span class="n">CONSTANTS</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">1e12</span><span class="p">)</span><span class="o">**-</span><span class="mi">1</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_stats_column</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">stats</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_stats_column</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">stats</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span>
+            <span class="n">median_tau_stats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">stats</span> <span class="p">[</span><span class="n">stats</span>  <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
+            <span class="n">stats</span><span class="p">[</span><span class="n">stats</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">median_tau_stats</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tau_stats</span> <span class="o">=</span> <span class="n">stats</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tau_stats</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">file_contents</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">segment_column</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">segments</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">segment_column</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">segments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_contents</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cia</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compressability_file</span> <span class="o">=</span> <span class="n">compressability_file</span>
+
+
+<div class="viewcode-block" id="Spectrum.diluent_sum_check"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.diluent_sum_check">[docs]</a>    <span class="k">def</span> <span class="nf">diluent_sum_check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks that if multiple broadeners are used that the contributions sum to one.</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Warning if the diluents don&#39;t sum to one</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">diluent_sum</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">dil</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Diluent</span><span class="p">:</span>
+            <span class="n">diluent_sum</span><span class="o">+=</span><span class="bp">self</span><span class="o">.</span><span class="n">Diluent</span><span class="p">[</span><span class="n">dil</span><span class="p">][</span><span class="s1">&#39;composition&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">diluent_sum</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;YOUR DILUENTS DO NOT SUM TO ONE!  They sum to &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">diluent_sum</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Spectrum.segment_wave_alpha"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.segment_wave_alpha">[docs]</a>    <span class="k">def</span> <span class="nf">segment_wave_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Defines the wavenumber, alpha, and indices of spectrum that correspond to a given spectrum segment.</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        wavenumber_segments : dict</span>
+<span class="sd">            dictionary where the key corresponds to a segment number and the values correspond to the wavenumbers for that segment</span>
+<span class="sd">        alpha_segments : dict</span>
+<span class="sd">            dictionary where the key corresponds to a segment number and the values correspond to the alpha values for that segment.</span>
+<span class="sd">        indices_segments : dict</span>
+<span class="sd">            dictionary where the key corresponds to a segment number and the values correspond to the array indices for that segment.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">wavenumber_segments</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">alpha_segments</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">indices_segments</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">)):</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">segment</span><span class="p">]</span>
+            <span class="n">indices_segments</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">=</span> <span class="n">indices</span>
+            <span class="n">wavenumber_segments</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+            <span class="n">alpha_segments</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">wavenumber_segments</span><span class="p">,</span> <span class="n">alpha_segments</span><span class="p">,</span> <span class="n">indices_segments</span></div>
+
+    <span class="c1">## GETTERS</span>
+<div class="viewcode-block" id="Spectrum.get_filename"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_filename">[docs]</a>    <span class="k">def</span> <span class="nf">get_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span></div>
+<div class="viewcode-block" id="Spectrum.get_molefraction"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_molefraction">[docs]</a>    <span class="k">def</span> <span class="nf">get_molefraction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">molefraction</span></div>
+<div class="viewcode-block" id="Spectrum.get_natural_abundance"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_natural_abundance">[docs]</a>    <span class="k">def</span> <span class="nf">get_natural_abundance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">natural_abundance</span></div>
+<div class="viewcode-block" id="Spectrum.get_abundance_ratio_MI"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_abundance_ratio_MI">[docs]</a>    <span class="k">def</span> <span class="nf">get_abundance_ratio_MI</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">abundance_ratio_MI</span></div>
+<div class="viewcode-block" id="Spectrum.get_diluent"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_diluent">[docs]</a>    <span class="k">def</span> <span class="nf">get_diluent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">diluent</span></div>
+<div class="viewcode-block" id="Spectrum.get_Diluent"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_Diluent">[docs]</a>    <span class="k">def</span> <span class="nf">get_Diluent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Diluent</span></div>
+<div class="viewcode-block" id="Spectrum.get_spectrum_number"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_spectrum_number">[docs]</a>    <span class="k">def</span> <span class="nf">get_spectrum_number</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectrum_number</span></div>
+<div class="viewcode-block" id="Spectrum.get_pressure"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_pressure">[docs]</a>    <span class="k">def</span> <span class="nf">get_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pressure</span></div>
+<div class="viewcode-block" id="Spectrum.get_temperature"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_temperature">[docs]</a>    <span class="k">def</span> <span class="nf">get_temperature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span></div>
+<div class="viewcode-block" id="Spectrum.get_pressure_torr"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_pressure_torr">[docs]</a>    <span class="k">def</span> <span class="nf">get_pressure_torr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pressure</span> <span class="o">*</span><span class="mi">760</span></div>
+<div class="viewcode-block" id="Spectrum.get_temperature_C"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_temperature_C">[docs]</a>    <span class="k">def</span> <span class="nf">get_temperature_C</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">-</span> <span class="mf">273.15</span></div>
+<div class="viewcode-block" id="Spectrum.get_frequency"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_frequency">[docs]</a>    <span class="k">def</span> <span class="nf">get_frequency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span></div>
+<div class="viewcode-block" id="Spectrum.get_tau"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_tau">[docs]</a>    <span class="k">def</span> <span class="nf">get_tau</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau</span></div>
+<div class="viewcode-block" id="Spectrum.get_tau_stats"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_tau_stats">[docs]</a>    <span class="k">def</span> <span class="nf">get_tau_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_stats</span></div>
+<div class="viewcode-block" id="Spectrum.get_wavenumber"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_wavenumber">[docs]</a>    <span class="k">def</span> <span class="nf">get_wavenumber</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span></div>
+<div class="viewcode-block" id="Spectrum.get_alpha"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_alpha">[docs]</a>    <span class="k">def</span> <span class="nf">get_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span></div>
+<div class="viewcode-block" id="Spectrum.get_etalons"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_etalons">[docs]</a>    <span class="k">def</span> <span class="nf">get_etalons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">etalons</span></div>
+<div class="viewcode-block" id="Spectrum.get_model"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_model">[docs]</a>    <span class="k">def</span> <span class="nf">get_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span></div>
+<div class="viewcode-block" id="Spectrum.get_residuals"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_residuals">[docs]</a>    <span class="k">def</span> <span class="nf">get_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span></div>
+<div class="viewcode-block" id="Spectrum.get_background"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_background">[docs]</a>    <span class="k">def</span> <span class="nf">get_background</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">background</span></div>
+<div class="viewcode-block" id="Spectrum.get_cia"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_cia">[docs]</a>    <span class="k">def</span> <span class="nf">get_cia</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cia</span></div>
+<div class="viewcode-block" id="Spectrum.get_nominal_temperature"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.get_nominal_temperature">[docs]</a>    <span class="k">def</span> <span class="nf">get_nominal_temperature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nominal_temperature</span></div>
+
+    <span class="c1">##SETTERS</span>
+<div class="viewcode-block" id="Spectrum.set_weight"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_weight">[docs]</a>    <span class="k">def</span> <span class="nf">set_weight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_weight</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">new_weight</span>
+        <span class="k">if</span> <span class="n">new_weight</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;Change the weight to a non-zero value or remove the spectrum from the dataset.  If the weight is 0, then the residuals returned for that spectrum will be 0. &#39;</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Spectrum.set_molefraction"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_molefraction">[docs]</a>    <span class="k">def</span> <span class="nf">set_molefraction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_molefraction</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">molefraction</span> <span class="o">=</span> <span class="n">new_molefraction</span></div>
+<div class="viewcode-block" id="Spectrum.set_natural_abundance"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_natural_abundance">[docs]</a>    <span class="k">def</span> <span class="nf">set_natural_abundance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_natural_abundance</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">natural_abundance</span> <span class="o">=</span> <span class="n">new_natural_abundance</span></div>
+<div class="viewcode-block" id="Spectrum.set_abundance_ration_MI"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_abundance_ration_MI">[docs]</a>    <span class="k">def</span> <span class="nf">set_abundance_ration_MI</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_abundance_ratio_MI</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">abundance_ratio_MI</span> <span class="o">=</span> <span class="n">new_abundance_ratio_MI</span></div>
+<div class="viewcode-block" id="Spectrum.set_diluent"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_diluent">[docs]</a>    <span class="k">def</span> <span class="nf">set_diluent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_diluent</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diluent</span> <span class="o">=</span> <span class="n">new_diluent</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">diluent</span> <span class="o">==</span> <span class="s1">&#39;air&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Diluent</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">diluent</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="mf">28.95734</span><span class="p">}}</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">diluent</span> <span class="o">==</span> <span class="s1">&#39;self&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Diluent</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">diluent</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}}</span>
+                <span class="c1">#mass will be set during HTP_wBeta_from_DF_select if necessary</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;If using the HTP_wBeta_from_DF_select then you need to go back and use the Diluent{diluent:{&quot;composition&quot;: 1, &quot;m&quot;: mass}} format&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Diluent</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">diluent</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}}</span></div>
+<div class="viewcode-block" id="Spectrum.set_Diluent"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_Diluent">[docs]</a>    <span class="k">def</span> <span class="nf">set_Diluent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_Diluent</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Diluent</span> <span class="o">=</span> <span class="n">new_Diluent</span></div>
+<div class="viewcode-block" id="Spectrum.set_spectrum_number"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_spectrum_number">[docs]</a>    <span class="k">def</span> <span class="nf">set_spectrum_number</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_spectrum_number</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spectrum_number</span> <span class="o">=</span> <span class="n">new_spectrum_number</span></div>
+<div class="viewcode-block" id="Spectrum.set_pressure_column"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_pressure_column">[docs]</a>    <span class="k">def</span> <span class="nf">set_pressure_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_pressure_column</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pressure_column</span> <span class="o">=</span> <span class="n">new_pressure_column</span>
+        <span class="n">file_contents</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;.csv&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pressure</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pressure_column</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">/</span> <span class="mi">760</span></div>
+<div class="viewcode-block" id="Spectrum.set_temperature_column"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_temperature_column">[docs]</a>    <span class="k">def</span> <span class="nf">set_temperature_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_temperature_column</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temperature_colum</span> <span class="o">=</span> <span class="n">new_temperature_column</span>
+        <span class="n">file_contents</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;.csv&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">temperature_column</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="mf">273.15</span></div>
+<div class="viewcode-block" id="Spectrum.set_frequency_column"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_frequency_column">[docs]</a>    <span class="k">def</span> <span class="nf">set_frequency_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_frequency_column</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frequency_column</span> <span class="o">=</span> <span class="n">new_frequency_column</span>
+        <span class="n">file_contents</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;.csv&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">frequency_column</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">6</span> <span class="o">/</span> <span class="n">CONSTANTS</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span></div>
+<div class="viewcode-block" id="Spectrum.set_tau_column"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_tau_column">[docs]</a>    <span class="k">def</span> <span class="nf">set_tau_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_tau_column</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau_column</span> <span class="o">=</span> <span class="n">new_tau_column</span>
+        <span class="n">file_contents</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;.csv&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_column</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau</span><span class="o">*</span> <span class="n">CONSTANTS</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span><span class="o">*</span><span class="mf">1e-12</span><span class="p">)</span><span class="o">**-</span><span class="mi">1</span></div>
+<div class="viewcode-block" id="Spectrum.set_tau_stats_column"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_tau_stats_column">[docs]</a>    <span class="k">def</span> <span class="nf">set_tau_stats_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_tau_stats_column</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau_stats_column</span> <span class="o">=</span> <span class="n">new_tau_stats_column</span>
+        <span class="n">file_contents</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;.csv&#39;</span><span class="p">)</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_stats_column</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">stats</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span>
+        <span class="n">median_tau_stats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">stats</span> <span class="p">[</span><span class="n">stats</span>  <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">stats</span><span class="p">[</span><span class="n">stats</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">median_tau_stats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau_stats</span> <span class="o">=</span> <span class="n">stats</span></div>
+
+<div class="viewcode-block" id="Spectrum.set_etalons"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_etalons">[docs]</a>    <span class="k">def</span> <span class="nf">set_etalons</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_etalons</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">etalons</span> <span class="o">=</span> <span class="n">new_etalons</span></div>
+<div class="viewcode-block" id="Spectrum.set_model"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_model">[docs]</a>    <span class="k">def</span> <span class="nf">set_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_model</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">new_model</span></div>
+<div class="viewcode-block" id="Spectrum.set_residuals"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_residuals">[docs]</a>    <span class="k">def</span> <span class="nf">set_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_residuals</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span> <span class="o">=</span> <span class="n">new_residuals</span></div>
+<div class="viewcode-block" id="Spectrum.set_background"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_background">[docs]</a>    <span class="k">def</span> <span class="nf">set_background</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_background</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="n">new_background</span></div>
+<div class="viewcode-block" id="Spectrum.set_cia"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_cia">[docs]</a>    <span class="k">def</span> <span class="nf">set_cia</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_cia</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cia</span> <span class="o">=</span> <span class="n">new_cia</span></div>
+<div class="viewcode-block" id="Spectrum.set_nominal_temperature"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.set_nominal_temperature">[docs]</a>    <span class="k">def</span> <span class="nf">set_nominal_temperature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_nominal_temperature</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nominal_temperature</span> <span class="o">=</span> <span class="n">new_nominal_temperature</span></div>
+
+    <span class="c1">##Other Functions</span>
+<div class="viewcode-block" id="Spectrum.plot_freq_tau"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.plot_freq_tau">[docs]</a>    <span class="k">def</span> <span class="nf">plot_freq_tau</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates a plot of tau (us) as a function of frequency (MHz).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Frequency (MHz)&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">tau (\mu s)$&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Spectrum.plot_wave_alpha"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.plot_wave_alpha">[docs]</a>    <span class="k">def</span> <span class="nf">plot_wave_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates a plot of alpha (ppm/cm) as a function of wavenumber (cm-1).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Wavenumber ($cm^{-1}$)&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">alpha (</span><span class="se">\\</span><span class="s1">frac</span><span class="si">{ppm}{cm}</span><span class="s1">)$&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Spectrum.calculate_QF"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.calculate_QF">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_QF</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the quality of fit factor (QF) for a spectrum - QF = (maximum alpha - minimum alpha) / std(residuals).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            QF.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Spectrum.plot_model_residuals"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.plot_model_residuals">[docs]</a>    <span class="k">def</span> <span class="nf">plot_model_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates a plot of the alpha and model (ppm/cm) as a function of wavenumber (cm-1) and on lower plot shows the residuals (ppm/cm) as a function of wavenumber (cm-1).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+        <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">height_ratios</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">QF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_QF</span><span class="p">()</span>
+        <span class="n">ax0</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;r-&#39;</span> <span class="p">)</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="s1">&#39;k.&#39;</span><span class="p">)</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">alpha (</span><span class="se">\\</span><span class="s1">frac</span><span class="si">{ppm}{cm}</span><span class="s1">)$&#39;</span><span class="p">)</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">ticklabel_format</span><span class="p">(</span><span class="n">useOffset</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span><span class="s1">&#39;QF: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">QF</span><span class="p">),</span> <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">transform</span> <span class="o">=</span> <span class="n">ax0</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spectrum_number</span><span class="p">)</span> <span class="o">+</span><span class="s1">&#39;: &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">ticklabel_format</span><span class="p">(</span><span class="n">useOffset</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">residuals</span><span class="p">,</span> <span class="s2">&quot;r-&quot;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Wavenumbers ($cm^{-1}$)&#39;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Residuals $(</span><span class="se">\\</span><span class="s1">frac</span><span class="si">{ppm}{cm}</span><span class="s1">)$&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Spectrum.save_spectrum_info"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.save_spectrum_info">[docs]</a>    <span class="k">def</span> <span class="nf">save_spectrum_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_file</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves spectrum information to a pandas dataframe with option to also save as as a csv file.</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        save_file : bool, optional</span>
+<span class="sd">           If False, then only a dataframe is created. If True, then a csv file will be generated with the name filename + &#39;_saved.csv&#39;. The default is False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        new_file : dataframe</span>
+<span class="sd">            returns a pandas dataframe with columns related to the spectrum information</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">file_contents</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;.csv&#39;</span><span class="p">)</span>
+        <span class="n">new_file</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="n">new_file</span><span class="p">[</span><span class="s1">&#39;Spectrum Number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">spectrum_number</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="n">new_file</span><span class="p">[</span><span class="s1">&#39;Spectrum Name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="n">new_file</span><span class="p">[</span><span class="s1">&#39;Frequency (MHz)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span>
+        <span class="n">new_file</span><span class="p">[</span><span class="s1">&#39;Wavenumber (cm-1)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span>
+        <span class="n">new_file</span><span class="p">[</span><span class="s1">&#39;Pressure (Torr)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pressure_column</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">new_file</span><span class="p">[</span><span class="s1">&#39;Temperature (C)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_contents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">temperature_column</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">new_file</span><span class="p">[</span><span class="s1">&#39;Tau (us)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau</span>
+        <span class="n">new_file</span><span class="p">[</span><span class="s1">&#39;Tau Error (%)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_stats</span>
+        <span class="n">new_file</span><span class="p">[</span><span class="s1">&#39;Alpha (ppm/cm)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span>
+        <span class="n">new_file</span><span class="p">[</span><span class="s1">&#39;Model (ppm/cm)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+        <span class="n">new_file</span><span class="p">[</span><span class="s1">&#39;Residuals (ppm/cm)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span>
+        <span class="n">new_file</span><span class="p">[</span><span class="s1">&#39;QF&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">calculate_QF</span><span class="p">()]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">new_file</span><span class="p">)</span>
+        <span class="n">new_file</span><span class="p">[</span><span class="s1">&#39;Background&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">background</span>
+        <span class="n">new_file</span><span class="p">[</span><span class="s1">&#39;CIA (ppm/cm)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cia</span>
+        <span class="k">if</span> <span class="n">save_file</span><span class="p">:</span>
+            <span class="n">new_file</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;_saved.csv&#39;</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">new_file</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Spectrum.fft_spectrum"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.Spectrum.fft_spectrum">[docs]</a>    <span class="k">def</span> <span class="nf">fft_spectrum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Takes the FFT of the residuals of the spectrum, generates a plot of frequency (cm-1) versus amplitude (ppm/cm), and prints a dataframe with the 20 highest amplitude frequencies with the FFT frequency (period), amplitude, FFT phase, and frequency (cm-1).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+
+        <span class="n">wave</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span>
+        <span class="n">wave_step</span> <span class="o">=</span> <span class="n">wave</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">wave</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">rfft</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">fft_freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">rfftfreq</span><span class="p">(</span><span class="n">wave</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">wave_step</span><span class="p">)</span>
+        <span class="n">fft_amplitude</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">real</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">A</span><span class="o">.</span><span class="n">imag</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>
+        <span class="n">fft_phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+        <span class="n">FFT</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="n">FFT</span><span class="p">[</span><span class="s1">&#39;Period (cm)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fft_freq</span>
+        <span class="n">FFT</span><span class="p">[</span><span class="s1">&#39;Amplitude&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fft_amplitude</span>
+        <span class="n">FFT</span><span class="p">[</span><span class="s1">&#39;Phase&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fft_phase</span>
+        <span class="n">FFT</span><span class="p">[</span><span class="s1">&#39;Freq (cm-1)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">fft_freq</span>
+        <span class="n">fft_</span> <span class="o">=</span> <span class="n">FFT</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span> <span class="o">=</span> <span class="s1">&#39;any&#39;</span><span class="p">)</span>
+        <span class="n">fft_</span> <span class="o">=</span> <span class="p">(</span><span class="n">fft_</span><span class="p">[</span><span class="n">fft_</span><span class="p">[</span><span class="s1">&#39;Amplitude&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">1e-5</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s1">&#39;Amplitude&#39;</span><span class="p">],</span> <span class="n">ascending</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="n">fft_</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">20</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">fft_freq</span><span class="p">,</span> <span class="n">fft_amplitude</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Amplitude&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Experimental Frequency ($cm^{-1}$)&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Amplitude (ppm/cm&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div></div>
+
+<div class="viewcode-block" id="simulate_spectrum"><a class="viewcode-back" href="../../MATS.html#MATS.spectrum.simulate_spectrum">[docs]</a><span class="k">def</span> <span class="nf">simulate_spectrum</span><span class="p">(</span><span class="n">parameter_linelist</span><span class="p">,</span>
+                        <span class="n">wave_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wave_max</span><span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wave_space</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wavenumbers</span> <span class="o">=</span> <span class="p">[],</span>  <span class="n">wave_error</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                        <span class="n">SNR</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">baseline_terms</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">temperature</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">temperature_err</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bias&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="p">{}},</span> <span class="n">pressure</span> <span class="o">=</span> <span class="mi">760</span><span class="p">,</span>
+                        <span class="n">pressure_err</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;per_bias&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+                        <span class="n">wing_cutoff</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">wing_wavenumbers</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">wing_method</span> <span class="o">=</span> <span class="s1">&#39;wing_cutoff&#39;</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="n">molefraction</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">molefraction_err</span> <span class="o">=</span> <span class="p">{},</span>
+                        <span class="n">isotope_list</span> <span class="o">=</span> <span class="n">ISO</span><span class="p">,</span> <span class="n">natural_abundance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">abundance_ratio_MI</span> <span class="o">=</span> <span class="p">{},</span><span class="n">diluent</span> <span class="o">=</span> <span class="s1">&#39;air&#39;</span><span class="p">,</span> <span class="n">Diluent</span> <span class="o">=</span> <span class="p">{},</span>
+                        <span class="n">nominal_temperature</span> <span class="o">=</span> <span class="mi">296</span><span class="p">,</span> <span class="n">etalons</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">x_shift</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">IntensityThreshold</span> <span class="o">=</span> <span class="mf">1e-30</span><span class="p">,</span> <span class="n">num_segments</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">beta_formalism</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                        <span class="n">ILS_function</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ILS_resolution</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">ILS_wing</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">TIPS</span> <span class="o">=</span> <span class="n">PYTIPS2021</span><span class="p">,</span> 
+                        <span class="n">compressability_file</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parameter_linelist : dataframe</span>
+<span class="sd">        linelist following the convention of the linelists used for the HTP_from_DF_select.  Note that there will need to be a linemixing column for each nominal temperature, which you will have to do manually (ie y_air_296, y_self_296).</span>
+<span class="sd">    wavenumbers : array of floats, optional</span>
+<span class="sd">        array of wavenumbers for the simulation (cm-1).  If provided, then this axis will be used.  If wavenumbers = None, then the wave_min, wave_max, and wave_space will be used to calculate wavenumber grid.</span>
+<span class="sd">    wave_min : float, optional</span>
+<span class="sd">         minimum wavenumber for the simulation (cm-1)</span>
+<span class="sd">    wave_max : float, optional</span>
+<span class="sd">        maximum wavenumber for the simulation (cm-1).</span>
+<span class="sd">    wave_space : float, optional</span>
+<span class="sd">        wavenumber spacing for the simulation (cm-1).</span>
+<span class="sd">    wave_error : float, optional</span>
+<span class="sd">        absolute error on the wavenumber axis (cm-1) to include in simulations. The default is 0.</span>
+<span class="sd">    SNR : float, optional</span>
+<span class="sd">        Signal to noise ratio to impose on the simulated spectrum. The default is None.  If SNR is none there is no noise on the simulation.</span>
+<span class="sd">    baseline_terms : list, optional</span>
+<span class="sd">        polynomial baseline coefficients where the index is equal to the coefficient order, ie. [0, 1, 2] would correspond to baseline = 0 + 1*(wavenumber - minimum wavenumber) + 2*(wavenumber - minimum wavenumber)^2. The default is [0].</span>
+<span class="sd">    temperature : float, optional</span>
+<span class="sd">         temperature for simulation in celsius. The default is 25.</span>
+<span class="sd">    temperature_err : dict, optional</span>
+<span class="sd">        possible keys include &#39;bias&#39;, &#39;function&#39;, and &#39;params&#39;. The bias indicates the absolute bias in Celsius of the temperature reading, which will be added to the input temperature. Function can be &#39;linear&#39; with params &#39;m&#39; and &#39;b&#39; or &#39;sine&#39; with parameters &#39;amp&#39;, &#39;phase&#39;, and &#39;phase&#39;. These define a function that is added to both the bias and set temperature as a function of the wavenumber. Note: if &#39;function&#39; key is not equal to None, then there also needs to be a params key to define the function.. The default is {&#39;bias&#39;: 0, &#39;function&#39;: None, &#39;params&#39;: {}}.</span>
+<span class="sd">    pressure : float, optional</span>
+<span class="sd">        pressure for simulation in torr. The default is 760.</span>
+<span class="sd">    pressure_err : dict, optional</span>
+<span class="sd">        possible keys include bias, function, and params. The bias indicates the percent bias in of the pressure reading, which will be added to the input pressure. Function can be &#39;linear&#39; with params &#39;m&#39; and &#39;b&#39; or &#39;sine&#39; with parameters &#39;amp&#39;, &#39;phase&#39;, and &#39;phase&#39;. These define a function that is added to both the bias and set pressure as a function of the wavenumber. Note: if &#39;function&#39; key is not equal to None, then there also needs to be a params key to define the function.. The default is {&#39;per_bias&#39;: 0, &#39;function&#39;: None, &#39;params&#39;: {}}.</span>
+<span class="sd">    wing_cutoff : float, optional</span>
+<span class="sd">        number of voigt half-widths to simulate on either side of each line. The default is 25.</span>
+<span class="sd">    wing_wavenumbers : float, optional</span>
+<span class="sd">        number of wavenumbers to simulate on either side of each line. The default is 25.</span>
+<span class="sd">    wing_method : str, optional</span>
+<span class="sd">        Provides choice between the wing_cutoff and wing_wavenumbers line cut-off options. The default is &#39;wing_cutoff&#39;.</span>
+<span class="sd">    filename : str, optional</span>
+<span class="sd">        allows you to pick the output filename for the simulated spectra. The default is &#39;temp&#39;.</span>
+<span class="sd">    molefraction : dict, optional</span>
+<span class="sd">        mole fraction of each molecule to be simulated in the spectrum in the format {molec_id: mole fraction (out of 1), molec_id: molefraction, . . . }. The default is {}.</span>
+<span class="sd">    molefraction_err : dict, optional</span>
+<span class="sd">        percent error in the mole fraction of each molecule to be simulated in the spectrum in the format {molec_id: percent error in mole fraction, molec_id: percent error in mole fraction, . . . }. The default is {}.</span>
+<span class="sd">    natural_abundance : bool, optional</span>
+<span class="sd">        flag for if the spectrum contains data at natural abundance. The default is True.</span>
+<span class="sd">    abundance_ratio_MI : dict, optional</span>
+<span class="sd">        if not at natural abundance sets the enhancement factor for each molecule and isotope in the following format {molec_id:{iso_id: enhancement, iso_id: enhancement}, . . . }. The default is {}.  The enhancement is the ratio of the new abundance to the natural abundance.</span>
+<span class="sd">    isotope_list : dict, optional</span>
+<span class="sd">        provides opportunity to specify the isotope look-up table.  Default is ISO, which is from HAPI.  If not using ISO, then must use this format and suggested you use function to add to ISO</span>
+<span class="sd">    diluent : str, optional</span>
+<span class="sd">        sets the diluent for the sample if only using one broadener. The default is &#39;air&#39;.</span>
+<span class="sd">    Diluent : dict, optional</span>
+<span class="sd">        sets the diluent for the sample if there are a combination of several. Format {&#39;he&#39;: 0.5, &#39;air&#39;: 0.5). NOTE: the line parameter file must have parameters that correspond to the diluent (ie gamma0_he, and gamma0_air). Additionally, the contribution from all diluents must sum to 1.. The default is {}.</span>
+<span class="sd">    nominal_temperature : int, optional</span>
+<span class="sd">        nominal temperature indicates the approximate temperature of the spectrum. When combining spectra into a dataset this acts as a flag to whether temperature dependence terms should be parameters that can be fit or whether they should act as constants.. The default is 296.</span>
+<span class="sd">    etalons : dict, optional</span>
+<span class="sd">        Allows you to define etalons by an amplitude and period (1/ frequency in cm-1). Default is no etalons. Input is dictionary with keys being a number and the value being an array with the first index being the amplitude and the second being the period.. The default is {}.</span>
+<span class="sd">    x_shift : float, optional</span>
+<span class="sd">        value in wavenumbers of the x shift for the spectrum axis.. The default is 0.</span>
+<span class="sd">    IntensityThreshold : float, optional</span>
+<span class="sd">        minimum line intensity to use in the simulation. The default is 1e-30.</span>
+<span class="sd">    num_segments : int, optional</span>
+<span class="sd">        Number of segments in the file, which is implemented labeling the segment column into equal sequential se . The default is 10.</span>
+<span class="sd">    beta_formalism : boolean, optional</span>
+<span class="sd">        Indicates whether the beta correction for Dicke Narrowing should be used.  The default is False.</span>
+<span class="sd">    ILS_function: string, optional</span>
+<span class="sd">        Default is None and means that no instrument line shape is used in the fitting.</span>
+<span class="sd">        Function can be: SLIT_MICHELSON, SLIT_DIFFRACTION, SLIT_COSINUS, SLIT_DISPERSION, SLIT_GAUSSIAN, SLIT_TRIANGULAR, SLIT_RECTANGULAR corresponding to the ILS functions defined in HAPI or a user defined function.</span>
+<span class="sd">    ILS_resolution: float/array, optional</span>
+<span class="sd">        Resolution is a float or array of ILS resolutions in wavenumbers.  The SlitFunctions defined in HAPI have 1 resolution, but this opens the option for the user defined function to be comprised of several functions with varying resolutions.  Default is 0.1 cm-1.</span>
+<span class="sd">    ILS_wing: float, optional</span>
+<span class="sd">        AF_wing is the a float consisting of the range the ILS is calculted over in cm-1. Default is 10 cm-1</span>
+<span class="sd">    TIPS : definition, optional</span>
+<span class="sd">        selects the HAPI provided TIPS version to use for the partition function</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    spectrum_file : .csv</span>
+<span class="sd">        File that contains the simulated wavenumber axis, noisy wavenumber axis, absorbance data, noisy absorbance data, percent noise, pressure (torr), and temperature (C). The filename will correspond to the filename parameter, which has a default value of temp. The pressure and temperature columns will include whatever functional change there is to the pressure or temperature, but not the bias offset. This is coded to match how this error would manifest in experiments.</span>
+<span class="sd">    spectrum_object : object</span>
+<span class="sd">        Outputs a Spectrum class object. This makes it so the you can easily switch between reading in an experimental spectrum and simulated a synthetic spectrum by simply switching out whether the spectrum object is defined through the class definition or through the simulate_spectrum function.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#Checks to make a Diluent dictionary has been assigned</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Diluent</span><span class="p">:</span>
+         <span class="k">if</span> <span class="n">diluent</span> <span class="o">==</span> <span class="s1">&#39;air&#39;</span><span class="p">:</span>
+             <span class="n">Diluent</span> <span class="o">=</span> <span class="p">{</span><span class="n">diluent</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span><span class="mf">28.95734</span><span class="p">}}</span>
+         <span class="k">elif</span> <span class="n">diluent</span> <span class="o">==</span> <span class="s1">&#39;self&#39;</span><span class="p">:</span>
+            <span class="n">Diluent</span> <span class="o">=</span> <span class="p">{</span><span class="n">diluent</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">}}</span>
+         <span class="k">else</span><span class="p">:</span>
+            <span class="n">Diluent</span> <span class="o">=</span> <span class="p">{</span><span class="n">diluent</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">}}</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;THIS IS GOING TO BREAK WITH A DIVISION ERROR IF YOU USE THE BETA VERSION&#39;</span><span class="p">)</span>
+
+    <span class="c1">#Set-Up Parameters</span>
+    <span class="n">baseline_terms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">baseline_terms</span><span class="p">)</span>
+    <span class="n">temperature_K</span> <span class="o">=</span> <span class="n">temperature</span> <span class="o">+</span> <span class="mf">273.15</span>
+    <span class="n">pressure_atm</span> <span class="o">=</span> <span class="n">pressure</span> <span class="o">/</span> <span class="mi">760</span>
+    <span class="k">if</span> <span class="n">wavenumbers</span> <span class="o">==</span> <span class="p">[]:</span>
+        <span class="n">wavenumbers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">wave_min</span><span class="p">,</span> <span class="n">wave_max</span> <span class="o">+</span> <span class="n">wave_space</span><span class="p">,</span> <span class="n">wave_space</span><span class="p">)</span>
+
+    <span class="n">wavenumbers_err</span> <span class="o">=</span> <span class="n">wavenumbers</span> <span class="o">+</span> <span class="n">wave_error</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">))</span>
+    <span class="c1">#molefraction error</span>
+    <span class="c1">#check that all moleules included in the parameter list are included in spectrum molefraction</span>
+    <span class="n">dataset_molecule_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">molefraction</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">molecules_in_paramlist</span> <span class="o">=</span> <span class="n">parameter_linelist</span><span class="p">[</span><span class="s1">&#39;molec_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">molecules_in_paramlist</span><span class="p">)):</span>
+        <span class="n">dataset_molecule_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">molecules_in_paramlist</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">dataset_molecule_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">dataset_molecule_list</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">molecule</span> <span class="ow">in</span> <span class="n">dataset_molecule_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">molecule</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">molefraction</span><span class="p">:</span>
+            <span class="n">molefraction</span><span class="p">[</span><span class="n">molecule</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+    <span class="n">molefraction_w_error</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">species</span> <span class="ow">in</span> <span class="n">molefraction</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">molefraction_err</span> <span class="o">==</span> <span class="p">{}:</span>
+            <span class="n">molefraction_err</span><span class="p">[</span><span class="n">species</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">species</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">molefraction_err</span><span class="p">:</span>
+            <span class="n">molefraction_err</span><span class="p">[</span><span class="n">species</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">molefraction_w_error</span><span class="p">[</span><span class="n">species</span><span class="p">]</span> <span class="o">=</span> <span class="n">molefraction</span><span class="p">[</span><span class="n">species</span><span class="p">]</span> <span class="o">+</span> <span class="n">molefraction</span><span class="p">[</span><span class="n">species</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">molefraction_err</span><span class="p">[</span><span class="n">species</span><span class="p">]</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span>
+    <span class="c1">#pressure error</span>
+    <span class="n">pressure_w_error</span> <span class="o">=</span> <span class="n">pressure_atm</span> <span class="o">+</span> <span class="n">pressure_atm</span><span class="o">*</span><span class="p">(</span><span class="n">pressure_err</span><span class="p">[</span><span class="s1">&#39;per_bias&#39;</span><span class="p">]</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span><span class="c1">#adds the pressure bias based on the percent bias of the pressure measaurement.  Can loop this or set this to be constant for all spectra</span>
+    <span class="n">pressure_w_error</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="n">pressure_w_error</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">pressure_err</span><span class="p">[</span><span class="s1">&#39;function&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;params&#39;</span> <span class="ow">in</span> <span class="n">pressure_err</span><span class="p">:</span>
+            <span class="n">pressure_w_error</span> <span class="o">+=</span> <span class="n">pressure_err</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">wavenumbers</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">))</span> <span class="o">+</span> <span class="n">pressure_err</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;b&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">pressure_err</span><span class="p">[</span><span class="s1">&#39;function&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;sine&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;params&#39;</span> <span class="ow">in</span> <span class="n">pressure_err</span><span class="p">:</span>
+            <span class="n">pressure_w_error</span> <span class="o">+=</span> <span class="n">etalon</span><span class="p">((</span><span class="n">wavenumbers</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">)),</span> <span class="n">pressure_err</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;amp&#39;</span><span class="p">],</span> <span class="n">pressure_err</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;period&#39;</span><span class="p">],</span> <span class="n">pressure_err</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;phase&#39;</span><span class="p">])</span>
+    <span class="c1">#temperature error</span>
+    <span class="n">temperature_w_error</span> <span class="o">=</span> <span class="n">temperature_K</span> <span class="o">+</span> <span class="n">temperature_err</span><span class="p">[</span><span class="s1">&#39;bias&#39;</span><span class="p">]</span>
+    <span class="n">temperature_w_error</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="n">temperature_w_error</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">temperature_err</span><span class="p">[</span><span class="s1">&#39;function&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;params&#39;</span> <span class="ow">in</span> <span class="n">temperature_err</span><span class="p">:</span>
+            <span class="n">temperature_w_error</span> <span class="o">+=</span> <span class="n">temperature_err</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">wavenumbers</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">))</span> <span class="o">+</span> <span class="n">temperature_err</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;b&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">pressure_err</span><span class="p">[</span><span class="s1">&#39;function&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;sine&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;params&#39;</span> <span class="ow">in</span> <span class="n">temperature_err</span><span class="p">:</span>
+            <span class="n">temperature_w_error</span> <span class="o">+=</span> <span class="n">etalon</span><span class="p">((</span><span class="n">wavenumbers</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">)),</span> <span class="n">temperature_err</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;amp&#39;</span><span class="p">],</span> <span class="n">temperature_err</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;period&#39;</span><span class="p">],</span> <span class="n">temperature_err</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;phase&#39;</span><span class="p">])</span>
+
+    <span class="c1">#Define Segments</span>
+    <span class="n">seg_number</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">))</span>
+    <span class="n">seg_number</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">seg_number</span><span class="o">//</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">)</span><span class="o">/</span><span class="n">num_segments</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">alpha_array</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">pressure_array</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">temperature_array</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">compressability_file</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">comp_factor</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">compressability_file</span> <span class="o">+</span> <span class="s1">&#39;.csv&#39;</span><span class="p">)</span>
+        <span class="n">pressures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">comp_factor</span><span class="p">[</span><span class="s1">&#39;Pressure (MPa)&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">*</span><span class="mf">1e6</span><span class="o">/</span><span class="mi">101325</span><span class="p">)</span>
+        <span class="n">pressures</span> <span class="o">=</span> <span class="n">pressures</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">temperatures</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">comp_factor</span><span class="p">)</span>
+        <span class="n">temperatures</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;Pressure (MPa)&#39;</span><span class="p">)</span>
+        <span class="n">temperatures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">temperatures</span><span class="p">)</span>
+        <span class="n">temperatures</span> <span class="o">=</span> <span class="n">temperatures</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">comp_factor</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;Pressure (MPa)&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> 
+        <span class="n">comp_factor_array</span> <span class="o">=</span> <span class="n">comp_factor</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="n">interp_comp_factor</span> <span class="o">=</span> <span class="n">RegularGridInterpolator</span><span class="p">(</span><span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">pressures</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">],</span> <span class="n">values</span> <span class="o">=</span> <span class="n">comp_factor_array</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">seg</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_segments</span><span class="p">):</span>
+
+        <span class="n">segment_array</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">seg_number</span> <span class="o">==</span> <span class="n">seg</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">waves</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">,</span> <span class="n">segment_array</span><span class="p">)</span>
+        <span class="n">segment_pressure</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">pressure_w_error</span><span class="p">,</span> <span class="n">segment_array</span><span class="p">))</span>
+        <span class="n">segment_temperature</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">temperature_w_error</span><span class="p">,</span> <span class="n">segment_array</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">compressability_file</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">compressability_factor</span> <span class="o">=</span> <span class="n">interp_comp_factor</span><span class="p">([</span><span class="n">segment_pressure</span><span class="p">,</span> <span class="n">segment_temperature</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">compressability_factor</span> <span class="o">=</span> <span class="mi">1</span>   
+
+
+        <span class="k">if</span> <span class="n">beta_formalism</span><span class="p">:</span>
+            <span class="n">waves</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="n">HTP_wBeta_from_DF_select</span><span class="p">(</span><span class="n">parameter_linelist</span><span class="p">,</span><span class="n">waves</span> <span class="p">,</span> <span class="n">wing_cutoff</span><span class="p">,</span> <span class="n">wing_wavenumbers</span><span class="p">,</span> <span class="n">wing_method</span><span class="p">,</span>
+                                <span class="n">p</span> <span class="o">=</span> <span class="n">segment_pressure</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">segment_temperature</span><span class="p">,</span>  <span class="n">molefraction</span> <span class="o">=</span> <span class="n">molefraction_w_error</span><span class="p">,</span> <span class="n">isotope_list</span> <span class="o">=</span> <span class="n">isotope_list</span><span class="p">,</span>
+                                <span class="n">natural_abundance</span> <span class="o">=</span> <span class="n">natural_abundance</span><span class="p">,</span> <span class="n">abundance_ratio_MI</span> <span class="o">=</span> <span class="n">abundance_ratio_MI</span><span class="p">,</span>
+                                <span class="n">Diluent</span> <span class="o">=</span> <span class="n">Diluent</span><span class="p">,</span> <span class="n">diluent</span> <span class="o">=</span> <span class="n">diluent</span><span class="p">,</span> <span class="n">IntensityThreshold</span> <span class="o">=</span> <span class="n">IntensityThreshold</span><span class="p">,</span> <span class="n">TIPS</span> <span class="o">=</span> <span class="n">TIPS</span><span class="p">,</span> <span class="n">compressability_factor</span> <span class="o">=</span> <span class="n">compressability_factor</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">waves</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="n">HTP_from_DF_select</span><span class="p">(</span><span class="n">parameter_linelist</span><span class="p">,</span><span class="n">waves</span> <span class="p">,</span> <span class="n">wing_cutoff</span><span class="p">,</span> <span class="n">wing_wavenumbers</span><span class="p">,</span> <span class="n">wing_method</span><span class="p">,</span>
+                    <span class="n">p</span> <span class="o">=</span> <span class="n">segment_pressure</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">segment_temperature</span><span class="p">,</span>  <span class="n">molefraction</span> <span class="o">=</span> <span class="n">molefraction_w_error</span><span class="p">,</span> <span class="n">isotope_list</span> <span class="o">=</span> <span class="n">isotope_list</span><span class="p">,</span>
+                    <span class="n">natural_abundance</span> <span class="o">=</span> <span class="n">natural_abundance</span><span class="p">,</span> <span class="n">abundance_ratio_MI</span> <span class="o">=</span> <span class="n">abundance_ratio_MI</span><span class="p">,</span>
+                    <span class="n">Diluent</span> <span class="o">=</span> <span class="n">Diluent</span><span class="p">,</span> <span class="n">diluent</span> <span class="o">=</span> <span class="n">diluent</span><span class="p">,</span> <span class="n">IntensityThreshold</span> <span class="o">=</span> <span class="n">IntensityThreshold</span><span class="p">,</span> <span class="n">TIPS</span> <span class="o">=</span> <span class="n">TIPS</span><span class="p">,</span> <span class="n">compressability_factor</span> <span class="o">=</span> <span class="n">compressability_factor</span><span class="p">)</span>
+        <span class="n">alpha_array</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">segment_array</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">segment_array</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="mf">1e6</span>
+
+        <span class="n">pressure_array</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">segment_array</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">segment_array</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="n">segment_pressure</span><span class="p">]</span>
+        <span class="n">temperature_array</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">segment_array</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">segment_array</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="n">segment_temperature</span><span class="p">]</span>
+    <span class="n">pressure_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">pressure_array</span><span class="p">)</span> <span class="o">-</span> <span class="n">pressure_atm</span><span class="o">*</span><span class="p">(</span><span class="n">pressure_err</span><span class="p">[</span><span class="s1">&#39;per_bias&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="n">temperature_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">temperature_array</span><span class="p">)</span> <span class="o">-</span> <span class="n">temperature_err</span><span class="p">[</span><span class="s1">&#39;bias&#39;</span><span class="p">]</span>
+
+    <span class="c1">#Calculate Baseline</span>
+    <span class="n">baseline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">baseline_terms</span><span class="p">,</span> <span class="n">wavenumbers</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">)</span> <span class="p">)</span>
+    <span class="c1"># Calculate Etalons</span>
+    <span class="n">etalon_model</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">etalons</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">amp</span> <span class="o">=</span> <span class="n">etalons</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">period</span> <span class="o">=</span> <span class="n">etalons</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">wavenumbers</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">)</span>
+        <span class="n">etalon_model</span> <span class="o">+=</span> <span class="n">amp</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">period</span><span class="p">)</span><span class="o">*</span><span class="n">x</span><span class="o">+</span> <span class="n">phase</span><span class="p">)</span>
+    <span class="n">alpha_array</span> <span class="o">+=</span> <span class="p">(</span><span class="n">baseline</span> <span class="o">+</span> <span class="n">etalon_model</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ILS_function</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">wavenumbers</span><span class="p">,</span> <span class="n">alpha_array</span><span class="p">,</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2m</span><span class="p">,</span> <span class="n">slit</span> <span class="o">=</span> <span class="n">convolveSpectrumSame</span><span class="p">(</span><span class="n">wavenumbers</span><span class="p">,</span> <span class="n">alpha_array</span><span class="p">,</span> <span class="n">SlitFunction</span> <span class="o">=</span> <span class="n">ILS_function</span><span class="p">,</span> <span class="n">Resolution</span> <span class="o">=</span> <span class="n">ILS_resolution</span> <span class="p">,</span><span class="n">AF_wing</span><span class="o">=</span><span class="n">ILS_wing</span><span class="p">)</span>
+    <span class="c1">#Calculate Noisy Spectrum</span>
+    <span class="k">if</span> <span class="n">SNR</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">alpha_noise</span> <span class="o">=</span> <span class="n">alpha_array</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">alpha_noise</span> <span class="o">=</span> <span class="n">alpha_array</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">alpha_array</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">alpha_array</span><span class="p">))</span><span class="o">*</span><span class="mi">1</span><span class="o">/</span><span class="n">SNR</span>
+
+
+    <span class="c1">#Generate and save Simulated Spectrum File</span>
+    <span class="n">spectrum</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+    <span class="n">spectrum</span><span class="p">[</span><span class="s1">&#39;Segment Number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">seg_number</span>
+    <span class="n">spectrum</span><span class="p">[</span><span class="s1">&#39;Wavenumber (cm-1)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wavenumbers</span>
+    <span class="n">spectrum</span><span class="p">[</span><span class="s1">&#39;Wavenumber + Noise (cm-1)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wavenumbers_err</span>
+    <span class="n">spectrum</span><span class="p">[</span><span class="s1">&#39;Alpha (ppm/cm)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">alpha_array</span>
+    <span class="n">spectrum</span><span class="p">[</span><span class="s1">&#39;Alpha + Noise (ppm/cm)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">alpha_noise</span>
+    <span class="n">spectrum</span><span class="p">[</span><span class="s1">&#39;Noise (%)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span><span class="p">(</span><span class="n">alpha_noise</span> <span class="o">-</span> <span class="p">(</span><span class="n">alpha_array</span> <span class="o">+</span> <span class="n">baseline</span> <span class="o">+</span> <span class="n">etalon_model</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">alpha_noise</span><span class="p">)</span>
+    <span class="n">spectrum</span><span class="p">[</span><span class="s1">&#39;Pressure (Torr)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pressure_array</span><span class="o">*</span><span class="mi">760</span>
+    <span class="n">spectrum</span><span class="p">[</span><span class="s1">&#39;Temperature (C)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temperature_array</span> <span class="o">-</span> <span class="mf">273.15</span>
+    <span class="n">spectrum</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;.csv&#39;</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="c1"># Returns a spectrum class object for facile integration into the fitting workflow</span>
+    <span class="k">return</span> <span class="n">Spectrum</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">molefraction</span> <span class="o">=</span> <span class="n">molefraction</span><span class="p">,</span> <span class="n">natural_abundance</span> <span class="o">=</span> <span class="n">natural_abundance</span><span class="p">,</span> <span class="n">diluent</span> <span class="o">=</span> <span class="n">diluent</span><span class="p">,</span> <span class="n">Diluent</span> <span class="o">=</span> <span class="n">Diluent</span><span class="p">,</span> <span class="n">abundance_ratio_MI</span> <span class="o">=</span> <span class="n">abundance_ratio_MI</span><span class="p">,</span> <span class="n">isotope_list</span> <span class="o">=</span> <span class="n">isotope_list</span><span class="p">,</span>
+                    <span class="n">spectrum_number</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">input_freq</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">input_tau</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="n">pressure_column</span> <span class="o">=</span> <span class="s1">&#39;Pressure (Torr)&#39;</span><span class="p">,</span> <span class="n">temperature_column</span> <span class="o">=</span> <span class="s1">&#39;Temperature (C)&#39;</span><span class="p">,</span> <span class="n">frequency_column</span> <span class="o">=</span> <span class="s1">&#39;Wavenumber + Noise (cm-1)&#39;</span><span class="p">,</span>
+                <span class="n">tau_column</span> <span class="o">=</span> <span class="s1">&#39;Alpha + Noise (ppm/cm)&#39;</span><span class="p">,</span> <span class="n">tau_stats_column</span> <span class="o">=</span> <span class="s1">&#39;Noise (%)&#39;</span><span class="p">,</span> <span class="n">segment_column</span> <span class="o">=</span> <span class="s1">&#39;Segment Number&#39;</span><span class="p">,</span>
+                <span class="n">etalons</span> <span class="o">=</span> <span class="n">etalons</span><span class="p">,</span> <span class="n">nominal_temperature</span> <span class="o">=</span> <span class="n">nominal_temperature</span><span class="p">,</span> <span class="n">x_shift</span> <span class="o">=</span> <span class="n">x_shift</span><span class="p">,</span> <span class="n">baseline_order</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">baseline_terms</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">weight</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">ILS_function</span> <span class="o">=</span> <span class="n">ILS_function</span><span class="p">,</span> <span class="n">ILS_resolution</span> <span class="o">=</span> <span class="n">ILS_resolution</span> <span class="p">,</span><span class="n">ILS_wing</span><span class="o">=</span><span class="n">ILS_wing</span><span class="p">,</span> <span class="n">TIPS</span> <span class="o">=</span> <span class="n">TIPS</span><span class="p">,</span> <span class="n">compressability_file</span> <span class="o">=</span> <span class="n">compressability_file</span><span class="p">)</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">MATS 3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MATS.spectrum</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    </div>
+  </body>
+</html>
