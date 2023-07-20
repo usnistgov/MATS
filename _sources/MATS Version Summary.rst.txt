@@ -1,6 +1,19 @@
 MATS Version Summary
 ====================
 
+MATS Version 3.0
+++++++++++++++++
+published on 7/17/2023
+
+**New Features**
+
+- Power law temperature dependence for line-mixing
+- Oxygen Theoretical CIA Model based on work of Karman et al
+- Added ability to select TIPS version
+- Updated to HAPI v1.2.2.0
+- Added Example for treating static HITRAN LBL molecules
+- Added ability to correct ideal gas law w/ compressability factor as calculated with NIST RefProp
+
 MATS Version 2.1
 ++++++++++++++++
 published on 12/03/2021

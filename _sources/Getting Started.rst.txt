@@ -12,7 +12,7 @@ Main Packages
 
 * `MATS <https://github.com/usnistgov/MATS>`_
 
-* `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_   The v1.1.1.0 was tested and is available in the MATS repository.  
+* `HITRAN Application Programming Interface (HAPI) <https://hitran.org/hapi/>`_   The v1.2.2.1 was tested and is available in the MATS repository.  
 
 
 Dependent Packages
