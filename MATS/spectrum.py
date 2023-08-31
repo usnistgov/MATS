@@ -377,7 +377,7 @@ class Spectrum:
 
         """
 
-        return np.around((self.alpha.max() - self.alpha.min()) / self.residuals.std(),0)
+        return np.around(np.abs(self.alpha.max() - self.alpha.min()) / self.residuals.std(),0)
 
     def plot_model_residuals(self):
         """Generates a plot of the alpha and model (ppm/cm) as a function of wavenumber (cm-1) and on lower plot shows the residuals (ppm/cm) as a function of wavenumber (cm-1).
@@ -389,7 +389,13 @@ class Spectrum:
         ax0 = plt.subplot(gs[0])
         ax0.plot(self.wavenumber,self.model, 'r-' )
         ax0.plot(self.wavenumber, self.alpha, 'k.')
-        ax0.set_ylabel('$\\alpha (\\frac{ppm}{cm})$')
+        if self.low_OD_regime:
+            ax0.set_ylabel('$\\alpha (\\frac{ppm}{cm})$')
+        else:
+            if self.transmittance_space:
+                ax0.set_ylabel('Transmission')
+            else:
+                ax0.set_ylabel('Absorption')
         ax0.ticklabel_format(useOffset=False)
         ax0.text(0.25, 0.95,'QF: ' + str(QF), horizontalalignment='center', verticalalignment='center', transform = ax0.transAxes)
         ax0.set_title(str(self.spectrum_number) +': ' + self.filename)
@@ -397,7 +403,10 @@ class Spectrum:
         ax1.ticklabel_format(useOffset=False)
         ax1.plot(self.wavenumber,self.residuals, "r-")
         ax1.set_xlabel('Wavenumbers ($cm^{-1}$)')
-        ax1.set_ylabel('Residuals $(\\frac{ppm}{cm})$')
+        if self.low_OD_regime:
+            ax1.set_ylabel('Residuals $(\\frac{ppm}{cm})$')
+        else:
+            ax1.set_ylabel('Residuals')
         plt.show()
 
     def save_spectrum_info(self, save_file = False):
@@ -426,12 +435,25 @@ class Spectrum:
         new_file['Temperature (C)'] = file_contents[self.temperature_column].values
         new_file['Tau (us)'] = self.tau
         new_file['Tau Error (%)'] = self.tau_stats
-        new_file['Alpha (ppm/cm)'] = self.alpha
-        new_file['Model (ppm/cm)'] = self.model
-        new_file['Residuals (ppm/cm)'] = self.residuals
+        if self.low_OD_regime:
+            new_file['Alpha (ppm/cm)'] = self.alpha
+            new_file['Model (ppm/cm)'] = self.model
+            new_file['Residuals (ppm/cm)'] = self.residuals
+            new_file['Background'] = self.background
+            new_file['CIA (ppm/cm)'] = self.cia
+        else:
+            if self.transmittance:
+                new_file['Transmission'] = self.alpha
+            else:
+                new_file['Absorption'] = self.alpha
+            new_file['Model'] = self.model
+            new_file['Residuals'] = self.residuals
+            new_file['Background'] = self.background
+            new_file['CIA'] = self.cia
+                
+                
         new_file['QF'] = [self.calculate_QF()]*len(new_file)
-        new_file['Background'] = self.background
-        new_file['CIA (ppm/cm)'] = self.cia
+
         if save_file:
             new_file.to_csv(self.filename + '_saved.csv', index = False)
         return (new_file)
@@ -462,7 +484,10 @@ class Spectrum:
         plt.plot(1 / fft_freq, fft_amplitude, '-')
         plt.ylabel('Amplitude')
         plt.xlabel('Experimental Frequency ($cm^{-1}$)')
-        plt.ylabel('Amplitude (ppm/cm')
+        if self.low_OD_regime:
+            plt.ylabel('Amplitude (ppm/cm)')
+        else:
+            plt.ylabel('Amplitude')
         plt.show()
 
 def simulate_spectrum(parameter_linelist,
@@ -473,7 +498,8 @@ def simulate_spectrum(parameter_linelist,
                         isotope_list = ISO, natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {},
                         nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False,
                         ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2021, 
-                        compressability_file = None):
+                        compressability_file = None, 
+                        low_OD_regime = True, transmittance_space = False, path_length = None):
     """Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.
 
 
@@ -546,6 +572,12 @@ def simulate_spectrum(parameter_linelist,
         AF_wing is the a float consisting of the range the ILS is calculted over in cm-1. Default is 10 cm-1
     TIPS : definition, optional
         selects the HAPI provided TIPS version to use for the partition function
+    low_OD_regime : boolean, optional
+        If low_OD_regime is true, then assumes that absorbance = OD.  If low_OD_regime is False, than Absorbance = 1-exp(-OD), transmittance = exp(-OD)
+    transmittance_space : boolean, optional
+        If not in the low_OD_regime, this selects if working in tranmittance (True) or absorption units (False)
+    path_length : float, optional
+        If not in the low_OD_regime, this defines the pathlength of the measurement (cm)
     
     Returns
     -------
@@ -654,7 +686,14 @@ def simulate_spectrum(parameter_linelist,
                     p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, isotope_list = isotope_list,
                     natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,
                     Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold, TIPS = TIPS, compressability_factor = compressability_factor)
-        alpha_array[np.min(segment_array): np.max(segment_array)+1] = alpha * 1e6
+        if low_OD_regime:
+            alpha_array[np.min(segment_array): np.max(segment_array)+1] = alpha * 1e6
+        else:
+            if transmittance_space:
+                alpha_array[np.min(segment_array): np.max(segment_array)+1] = np.exp(-alpha*path_length)
+            else:
+                alpha_array[np.min(segment_array): np.max(segment_array)+1] = 1- np.exp(-alpha*path_length)
+                
 
         pressure_array[np.min(segment_array): np.max(segment_array)+1] = len(alpha)*[segment_pressure]
         temperature_array[np.min(segment_array): np.max(segment_array)+1] = len(alpha)*[segment_temperature]
@@ -686,8 +725,20 @@ def simulate_spectrum(parameter_linelist,
     spectrum['Segment Number'] = seg_number
     spectrum['Wavenumber (cm-1)'] = wavenumbers
     spectrum['Wavenumber + Noise (cm-1)'] = wavenumbers_err
-    spectrum['Alpha (ppm/cm)'] = alpha_array
-    spectrum['Alpha + Noise (ppm/cm)'] = alpha_noise
+    if low_OD_regime:
+        spectrum['Alpha (ppm/cm)'] = alpha_array
+        spectrum['Alpha + Noise (ppm/cm)'] = alpha_noise
+        alpha_column = 'Alpha + Noise (ppm/cm)'
+    else:
+        if transmittance_space:
+            spectrum['Transmittance'] = alpha_array
+            spectrum['Transmittance + Noise'] = alpha_noise
+            alpha_column = 'Transmittance + Noise'
+        else:
+            spectrum['Absorption'] = alpha_array
+            spectrum['Absorption + Noise'] = alpha_noise
+            alpha_column = 'Absorption + Noise'
+            
     spectrum['Noise (%)'] = 100 *(alpha_noise - (alpha_array + baseline + etalon_model)) / np.max(alpha_noise)
     spectrum['Pressure (Torr)'] = pressure_array*760
     spectrum['Temperature (C)'] = temperature_array - 273.15
@@ -696,6 +747,7 @@ def simulate_spectrum(parameter_linelist,
     return Spectrum(filename, molefraction = molefraction, natural_abundance = natural_abundance, diluent = diluent, Diluent = Diluent, abundance_ratio_MI = abundance_ratio_MI, isotope_list = isotope_list,
                     spectrum_number = 1, input_freq = False, input_tau = False,
                 pressure_column = 'Pressure (Torr)', temperature_column = 'Temperature (C)', frequency_column = 'Wavenumber + Noise (cm-1)',
-                tau_column = 'Alpha + Noise (ppm/cm)', tau_stats_column = 'Noise (%)', segment_column = 'Segment Number',
+                tau_column = alpha_column, tau_stats_column = 'Noise (%)', segment_column = 'Segment Number',
                 etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1, weight = 1,
-                ILS_function = ILS_function, ILS_resolution = ILS_resolution ,ILS_wing=ILS_wing, TIPS = TIPS, compressability_file = compressability_file)
+                ILS_function = ILS_function, ILS_resolution = ILS_resolution ,ILS_wing=ILS_wing, TIPS = TIPS, compressability_file = compressability_file, 
+                low_OD_regime = low_OD_regime, transmittance_space = transmittance_space, path_length = path_length)
