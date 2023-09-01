@@ -511,9 +511,30 @@ class Dataset:
     def plot_model_residuals(self):
         """ Generates a plot showing both the model and experimental data as a function of wavenumber in the main plot with a subplot showing the residuals as function of wavenumber.
         """
-
+        low_OD = 0
+        transmittance = 0
+        absorption = 0
+        for spectrum in self.spectra:
+            if spectrum.low_OD_regime:
+                low_OD += 1
+            else:
+                if spectrum.transmittance_space:
+                    transmittance +=1
+                else:
+                    absorption +=1
+        num_columns = 0
+        if low_OD !=0:
+            num_columns +=1
+        if transmittance != 0:
+            num_columns +=1
+        if absorption !=0:
+            num_columns +=1
+        
         fig = plt.figure(figsize = (16,10))
-        gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
+        gs = gridspec.GridSpec(2, num_columns, height_ratios=[3, 1])
+        
+
+        
         ax0 = plt.subplot(gs[0])
         ax0.set_ylabel('$\\alpha (\\frac{ppm}{cm})$')
         ax1 = plt.subplot(gs[1])
