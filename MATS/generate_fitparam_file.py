@@ -550,7 +550,7 @@ class Generate_FitParam_File:
 
     def generate_fit_baseline_linelist(self, vary_baseline = False, vary_pressure = False, vary_temperature = False,vary_molefraction = {}, vary_xshift = False,
                                       vary_etalon_amp= False, vary_etalon_period= False, vary_etalon_phase= False,
-                                      vary_ILS_res = False):
+                                      vary_ILS_res = False, vary_pathlength = False):
         """Generates the baseline line list used in fitting and updates the fitting booleans to desired settings.
 
 
@@ -574,6 +574,8 @@ class Generate_FitParam_File:
             If True, then sets etalon phase parameters for all spectra to float.. The default is False.
         vary_ILS_res : bool, optional
             If True, then sets ILS resolution parameters for all spectra to float.. The default is False.
+        vary_pathlength: bool, optional
+            If True, then sets the pathlength parameters for all spectra in the non-low OD regime to float.  The default is False
 
         Returns
         -------
@@ -620,6 +622,8 @@ class Generate_FitParam_File:
                 base_linelist_df.loc[base_linelist_df[param.replace("phase", "period")]!=0, param + '_vary'] = (vary_etalon_phase)
             if '_res_' in param:
                 base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_ILS_res)
+            if 'pathlength' in param:
+                base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_pathlength)
 
 
         #base_linelist_df.drop(['Baseline Order'], axis=1, inplace = True)
