@@ -42,6 +42,7 @@ class Dataset:
         self.max_baseline_order()
         self.broadener_list = self.get_broadener_list()
         self.ILS_function_dict = self.get_ILS_function_dict()
+        self.yaxis_types = self.get_yaxis_type_counts()
 
     def renumber_spectra(self):
         """renumbers the spectra to be sequential starting at 1 (called in the initialization of the class).
@@ -440,6 +441,12 @@ class Dataset:
                                 line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution
                             else:
                                 line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution[res_param]
+                if (self.yaxis_types['absorption'] != 0) or (self.yaxis_types['transmittance'] != 0):
+                    if spectrum.low_OD_regime:
+                        line['path_length'] = 0
+                    else:
+                        line['path_length'] = spectrum.path_length
+                    
                 baseline_paramlist  = baseline_paramlist.append(line, ignore_index=True)
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
         baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv', index = True)
@@ -524,10 +531,9 @@ class Dataset:
         """ Generates a plot showing both the model and experimental data as a function of wavenumber in the main plot with a subplot showing the residuals as function of wavenumber.
         """
 
-        yaxis_types = self.get_yaxis_type_counts()
         colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
         
-        if yaxis_types['low_OD'] != 0:
+        if self.yaxis_types['low_OD'] != 0:
             low_ODfig = plt.figure(figsize = (16,10))
             gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1], figure=low_ODfig)
             lowOD_ax0 = plt.subplot(gs[0])
@@ -539,7 +545,7 @@ class Dataset:
             lowOD_ax1.ticklabel_format(useOffset=False)
             lowOD_ax0.legend(bbox_to_anchor=(1, 1))
             
-        if yaxis_types['transmittance'] != 0:
+        if self.yaxis_types['transmittance'] != 0:
             trans_fig = plt.figure(figsize = (16,10))
             gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1], figure=trans_fig)
             trans_ax0 = plt.subplot(gs[0])
@@ -551,7 +557,7 @@ class Dataset:
             trans_ax1.ticklabel_format(useOffset=False)
             trans_ax0.legend(bbox_to_anchor=(1, 1))
             
-        if yaxis_types['absorption'] != 0:
+        if self.yaxis_types['absorption'] != 0:
             abs_fig = plt.figure(figsize = (16,10))
             gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1], figure=abs_fig)
             abs_ax0 = plt.subplot(gs[0])
