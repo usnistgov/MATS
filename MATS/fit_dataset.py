@@ -542,6 +542,7 @@ class Fit_DataSet:
                 pressure_limit = False, pressure_limit_factor = 10,
                 temperature_limit = False, temperature_limit_factor = 10,
                 molefraction_limit = False, molefraction_limit_factor = 10,
+                pathlength_limit = False, pathlength_limit_factor = 10, 
                 etalon_limit = False, etalon_limit_factor = 50, #phase is constrained to +/- 2pi,
                 x_shift_limit = False, x_shift_limit_magnitude = 0.1,
                 nu_limit = False, nu_limit_magnitude = 0.1,
@@ -578,6 +579,8 @@ class Fit_DataSet:
         self.etalon_limit_factor = etalon_limit_factor
         self.molefraction_limit = molefraction_limit
         self.molefraction_limit_factor = molefraction_limit_factor
+        self.pathlength_limit = pathlength_limit
+        self.pathlength_limit_factor = pathlength_limit_factor
         self.etalon_limit = etalon_limit
         self.etalon_limit_factor = etalon_limit_factor
         self.x_shift_limit = x_shift_limit
@@ -665,6 +668,10 @@ class Fit_DataSet:
                     params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
                               min = (self.baseline_list.loc[index][base_param] - self.x_shift_limit_magnitude),
                               max = self.x_shift_limit_magnitude + self.baseline_list.loc[index][base_param])
+                elif ('pathlength' in base_param) and self.pathlength_limit:
+                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
+                              min = (self.baseline_list.loc[index][base_param] / self.pathlength_limit_factor),
+                              max = self.x_shift_limit_factor * self.baseline_list.loc[index][base_param])
                 else:
                     params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'])
                 
@@ -942,7 +949,7 @@ class Fit_DataSet:
 
     def constrained_baseline(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
                                     etalon_amp_segment_constrained = True, etalon_period_segment_constrained = True, etalon_phase_segment_constrained = True,
-                                    pressure_segment_constrained = True, temperature_segment_constrained = True):
+                                    pressure_segment_constrained = True, temperature_segment_constrained = True, pathlength_segment_constrained = True):
         """Imposes baseline constraints when using multiple segments per spectrum, ie all baseline parameters can be the same across the entire spectrum except for the etalon phase, which is allowed to vary per segment.
 
 
@@ -966,6 +973,8 @@ class Fit_DataSet:
             True means the pressure is constrained across each spectrum. The default is True.
         temperature_segment_constrained : bool, optional
             True means the temperature is constrained across each spectrum. The default is True.
+        pathlength_segment_constrained : bool, optional
+            True means the pathlength is constrained across each spectrum.  The default is True.
 
         Returns
         -------
@@ -1006,6 +1015,13 @@ class Fit_DataSet:
                 segment_num = int(param[indices[2]+1:])
                 if segment_num != spectrum_segment_min[spectrum_num]:
                     params[param].set(expr = param[:indices[1]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
+            elif ('pathlength' in param) and  pathlength_segment_constrained:
+                indices = [m.start() for m in re.finditer('_', param)]
+                spectrum_num = int(param[indices[0]+1:indices[1]])
+                segment_num = int(param[indices[1]+1:])
+                if segment_num != spectrum_segment_min[spectrum_num]:
+                    params[param].set(expr = param[:indices[0]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
+                
             elif ('etalon' in param):
                 indices = [m.start() for m in re.finditer('_', param)]
                 spectrum_num = int(param[indices[2]+1:indices[3]])
@@ -1083,7 +1099,7 @@ class Fit_DataSet:
 
         # Set-up Baseline Parameters
         for param in (list(params.valuesdict().keys())):
-            if ('molefraction' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param) or ('Pressure' in param) or ('Temperature' in param) or ('_res_' in param):
+            if ('molefraction' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param) or ('Pressure' in param) or ('Temperature' in param) or ('_res_' in param) or ('pathelength' in param):
                 baseline_params.append(param)
             elif (self.dataset.CIA_model['model']== 'Karman') and (param in Karman_CIA_params):
                 #print (param)
@@ -1196,11 +1212,23 @@ class Fit_DataSet:
                             p = p, T = T, molefraction = fit_molefraction, isotope_list = self.dataset.isotope_list,
                             natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent, 
                             TIPS = spectrum.TIPS, compressability_factor = compressability_factor)
-                fit_coef = fit_coef * 1e6
-                
+                    
                 ## CIA Calculation
                 CIA = spectrum.cia[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]
+                
+                # What domain low_OD, transmittance, absorption
+                if spectrum.low_OD_regime:
+                    fit_coef = fit_coef * 1e6
+                else:
+                    CIA = CIA*1e-6                          
+                    if spectrum.transmittance_space:
+                        fit_coef = np.exp(-fit_coef*np.float(params['pathlength_' + str(spectrum_number) + str(segment)]))
+                        CIA = np.exp(-CIA*np.float(params['pathlength_' + str(spectrum_number) + str(segment)]))
+                    else:
+                        fit_coef = 1 - np.exp(-fit_coef*np.float(params['pathlength_' + str(spectrum_number) + str(segment)]))
+                        CIA = 1- np.exp(-CIA*np.float(params['pathlength_' + str(spectrum_number) + str(segment)]))
 
+            
                 ## Baseline Calculation
                 baseline_param_array = [0]*(self.dataset.baseline_order+1)
                 for param in baseline_params:
@@ -1228,6 +1256,7 @@ class Fit_DataSet:
                 etalons = len(wavenumbers)*[0]
                 for i in range(1, len(spectrum.etalons)+1):
                     etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase'])
+                
                 segment_alpha = baseline + etalons + fit_coef + CIA
                 #ILS_Function
                 if spectrum.ILS_function != None:
@@ -1350,7 +1379,7 @@ class Fit_DataSet:
 
         for key, par in result.params.items():
             #Baseline
-            if ('Pressure' in par.name) or ('Temperature' in par.name):
+            if ('Pressure' in par.name) or ('Temperature' in par.name) or ('pathlength' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
                 parameter = (par.name[:indices[0]])
                 spectrum = int(par.name[indices[0] + 1:indices[1]])
@@ -1458,6 +1487,19 @@ class Fit_DataSet:
                         np.float(result.params['SO_shift_O2_N2'].value),
                         np.float(result.params['EXCH_shift_O2_N2'].value),
                         band = self.dataset.CIA_model['band'])
+                    
+                    if not spectrum.low_OD_regime:
+                        CIA = CIA*1e-6 
+                        wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
+                        
+                        for segment in list(set(spectrum.segments)):
+                            if spectrum.transmittance_space:
+                                
+                                CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = np.exp(-CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]*np.float(result.params['pathlength_' + str(spectrum.spectrum_number) + str(segment)]))
+                            else:
+                                CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = 1- np.exp(-CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]*np.float(result.params['pathlength_' + str(spectrum.spectrum_number) + str(segment)]))
+
+                            
                     spectrum.set_cia(CIA)
                     
     def generate_beta_output_file(self, beta_summary_filename = None ):
