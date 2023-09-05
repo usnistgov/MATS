@@ -522,31 +522,58 @@ class Dataset:
                     transmittance +=1
                 else:
                     absorption +=1
-        num_columns = 0
-        if low_OD !=0:
-            num_columns +=1
-        if transmittance != 0:
-            num_columns +=1
-        if absorption !=0:
-            num_columns +=1
-        
-        fig = plt.figure(figsize = (16,10))
-        gs = gridspec.GridSpec(2, num_columns, height_ratios=[3, 1])
-        
-
-        
-        ax0 = plt.subplot(gs[0])
-        ax0.set_ylabel('$\\alpha (\\frac{ppm}{cm})$')
-        ax1 = plt.subplot(gs[1])
-        ax1.set_xlabel('Wavenumbers ($cm^{-1}$)')
-        ax1.set_ylabel('Residuals $(\\frac{ppm}{cm})$')
         colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
-        ax0.ticklabel_format(useOffset=False)
-        ax1.ticklabel_format(useOffset=False)
+        
+        if low_OD != 0:
+            low_ODfig = plt.figure(figsize = (16,10))
+            gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1], figure=low_ODfig)
+            lowOD_ax0 = plt.subplot(gs[0])
+            lowOD_ax1 = plt.subplot(gs[1])
+            lowOD_ax0.set_ylabel('$\\alpha (\\frac{ppm}{cm})$')
+            lowOD_ax0.set_xlabel('Wavenumbers ($cm^{-1}$)')
+            lowOD_ax1.set_ylabel('Residuals $(\\frac{ppm}{cm})$')
+            lowOD_ax0.ticklabel_format(useOffset=False)
+            lowOD_ax1.ticklabel_format(useOffset=False)
+            lowOD_ax0.legend(bbox_to_anchor=(1, 1))
+            
+        if transmittance != 0:
+            trans_fig = plt.figure(figsize = (16,10))
+            gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1], figure=trans_fig)
+            trans_ax0 = plt.subplot(gs[0])
+            trans_ax1 = plt.subplot(gs[1])
+            trans_ax0.set_ylabel('$\\alpha (\\frac{ppm}{cm})$')
+            trans_ax0.set_xlabel('Wavenumbers ($cm^{-1}$)')
+            trans_ax1.set_ylabel('Residuals $(\\frac{ppm}{cm})$')
+            trans_ax0.ticklabel_format(useOffset=False)
+            trans_ax1.ticklabel_format(useOffset=False)
+            trans_ax0.legend(bbox_to_anchor=(1, 1))
+            
+        if absorption != 0:
+            abs_fig = plt.figure(figsize = (16,10))
+            gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1], figure=abs_fig)
+            abs_ax0 = plt.subplot(gs[0])
+            abs_ax1 = plt.subplot(gs[1])
+            abs_ax0.set_ylabel('$\\alpha (\\frac{ppm}{cm})$')
+            abs_ax0.set_xlabel('Wavenumbers ($cm^{-1}$)')
+            abs_ax1.set_ylabel('Residuals $(\\frac{ppm}{cm})$')
+            abs_ax0.ticklabel_format(useOffset=False)
+            abs_ax1.ticklabel_format(useOffset=False)
+            abs_ax0.legend(bbox_to_anchor=(1, 1))
         for spectrum in self.spectra:
             plot_color = colors[((spectrum.spectrum_number % 7)-1)]
-            ax0.plot(spectrum.wavenumber,spectrum.model, plot_color+'-')
-            ax0.plot(spectrum.wavenumber, spectrum.alpha, plot_color+'.', label = spectrum.filename)
-            ax1.plot(spectrum.wavenumber,spectrum.residuals, plot_color+"-")
-        ax0.legend(bbox_to_anchor=(1, 1))
+            if spectrum.low_OD_regime:
+                 lowOD_ax0.plot(spectrum.wavenumber,spectrum.model, plot_color+'-')
+                 lowOD_ax0.plot(spectrum.wavenumber, spectrum.alpha, plot_color+'.', label = spectrum.filename)
+                 lowOD_ax1.plot(spectrum.wavenumber,spectrum.residuals, plot_color+"-")
+            else:
+                if spectrum.transmittance_space:
+                     trans_ax0.plot(spectrum.wavenumber,spectrum.model, plot_color+'-')
+                     trans_ax0.plot(spectrum.wavenumber, spectrum.alpha, plot_color+'.', label = spectrum.filename)
+                     trans_ax1.plot(spectrum.wavenumber,spectrum.residuals, plot_color+"-")
+                else:
+                    abs_ax0.plot(spectrum.wavenumber,spectrum.model, plot_color+'-')
+                    abs_ax0.plot(spectrum.wavenumber, spectrum.alpha, plot_color+'.', label = spectrum.filename)
+                    abs_ax1.plot(spectrum.wavenumber,spectrum.residuals, plot_color+"-")
+
+           
         plt.show()
