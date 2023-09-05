@@ -76,7 +76,7 @@ class Spectrum:
         If low_OD_regime is true, then assumes that absorbance = OD.  If low_OD_regime is False, than Absorbance = 1-exp(-OD), transmittance = exp(-OD)
     transmittance_space : boolean, optional
         If not in the low_OD_regime, this selects if working in tranmittance (True) or absorption units (False)
-    path_length : float, optional
+    pathlength : float, optional
         If not in the low_OD_regime, this defines the pathlength of the measurement (cm)
     
     """
@@ -89,7 +89,7 @@ class Spectrum:
                     tau_column = 'Mean tau/us', tau_stats_column = None, segment_column = None,
                     etalons = {}, nominal_temperature = 296, x_shift = 0, baseline_order = 1, weight = 1,
                     ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2021, 
-                    compressability_file = None, low_OD_regime = True, transmittance_space = False, path_length = None):
+                    compressability_file = None, low_OD_regime = True, transmittance_space = False, pathlength = 0):
         self.filename = filename
         self.molefraction = molefraction
         self.natural_abundance = natural_abundance
@@ -138,10 +138,10 @@ class Spectrum:
         self.low_OD_regime = low_OD_regime
         if self.low_OD_regime:
             self.transmittance_space = False
-            self.path_length = None
+            self.pathlength = 0
         else:
             self.transmittance_space = transmittance_space
-            self.path_length = path_length
+            self.pathlength = pathlength
 
 
 
@@ -499,7 +499,7 @@ def simulate_spectrum(parameter_linelist,
                         nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False,
                         ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2021, 
                         compressability_file = None, 
-                        low_OD_regime = True, transmittance_space = False, path_length = None):
+                        low_OD_regime = True, transmittance_space = False, pathlength = None):
     """Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.
 
 
@@ -576,7 +576,7 @@ def simulate_spectrum(parameter_linelist,
         If low_OD_regime is true, then assumes that absorbance = OD.  If low_OD_regime is False, than Absorbance = 1-exp(-OD), transmittance = exp(-OD)
     transmittance_space : boolean, optional
         If not in the low_OD_regime, this selects if working in tranmittance (True) or absorption units (False)
-    path_length : float, optional
+    pathlength : float, optional
         If not in the low_OD_regime, this defines the pathlength of the measurement (cm)
     
     Returns
@@ -690,9 +690,9 @@ def simulate_spectrum(parameter_linelist,
             alpha_array[np.min(segment_array): np.max(segment_array)+1] = alpha * 1e6
         else:
             if transmittance_space:
-                alpha_array[np.min(segment_array): np.max(segment_array)+1] = np.exp(-alpha*path_length)
+                alpha_array[np.min(segment_array): np.max(segment_array)+1] = np.exp(-alpha*pathlength)
             else:
-                alpha_array[np.min(segment_array): np.max(segment_array)+1] = 1- np.exp(-alpha*path_length)
+                alpha_array[np.min(segment_array): np.max(segment_array)+1] = 1- np.exp(-alpha*pathlength)
                 
 
         pressure_array[np.min(segment_array): np.max(segment_array)+1] = len(alpha)*[segment_pressure]
@@ -750,4 +750,4 @@ def simulate_spectrum(parameter_linelist,
                 tau_column = alpha_column, tau_stats_column = 'Noise (%)', segment_column = 'Segment Number',
                 etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1, weight = 1,
                 ILS_function = ILS_function, ILS_resolution = ILS_resolution ,ILS_wing=ILS_wing, TIPS = TIPS, compressability_file = compressability_file, 
-                low_OD_regime = low_OD_regime, transmittance_space = transmittance_space, path_length = path_length)
+                low_OD_regime = low_OD_regime, transmittance_space = transmittance_space, pathlength = pathlength)

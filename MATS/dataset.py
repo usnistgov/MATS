@@ -442,10 +442,7 @@ class Dataset:
                             else:
                                 line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution[res_param]
                 if (self.yaxis_types['absorption'] != 0) or (self.yaxis_types['transmittance'] != 0):
-                    if spectrum.low_OD_regime:
-                        line['path_length'] = 0
-                    else:
-                        line['path_length'] = spectrum.path_length
+                    line['pathlength'] = spectrum.pathlength
                     
                 baseline_paramlist  = baseline_paramlist.append(line, ignore_index=True)
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
