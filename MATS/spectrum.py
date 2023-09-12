@@ -359,12 +359,12 @@ class Spectrum:
             if self.transmittance_space:
                 plt.plot(self.wavenumber, self.alpha)
                 plt.xlabel('Wavenumber ($cm^{-1}$)')
-                plt.ylabel('$Transmittance$')
+                plt.ylabel('Transmittance')
                 plt.show()
             else:
                 plt.plot(self.wavenumber, self.alpha)
                 plt.xlabel('Wavenumber ($cm^{-1}$)')
-                plt.ylabel('$Absorption$')
+                plt.ylabel('Absorption')
                 plt.show()
 
     def calculate_QF(self):
@@ -442,7 +442,7 @@ class Spectrum:
             new_file['Background'] = self.background
             new_file['CIA (ppm/cm)'] = self.cia
         else:
-            if self.transmittance:
+            if self.transmittance_space:
                 new_file['Transmission'] = self.alpha
             else:
                 new_file['Absorption'] = self.alpha

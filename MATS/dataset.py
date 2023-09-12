@@ -530,6 +530,8 @@ class Dataset:
 
         colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
         
+
+        
         if self.yaxis_types['low_OD'] != 0:
             low_ODfig = plt.figure(figsize = (16,10))
             gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1], figure=low_ODfig)
@@ -547,9 +549,9 @@ class Dataset:
             gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1], figure=trans_fig)
             trans_ax0 = plt.subplot(gs[0])
             trans_ax1 = plt.subplot(gs[1])
-            trans_ax0.set_ylabel('$\\alpha (\\frac{ppm}{cm})$')
+            trans_ax0.set_ylabel('Transmittance')
             trans_ax0.set_xlabel('Wavenumbers ($cm^{-1}$)')
-            trans_ax1.set_ylabel('Residuals $(\\frac{ppm}{cm})$')
+            trans_ax1.set_ylabel('Residuals')
             trans_ax0.ticklabel_format(useOffset=False)
             trans_ax1.ticklabel_format(useOffset=False)
             trans_ax0.legend(bbox_to_anchor=(1, 1))
@@ -559,9 +561,9 @@ class Dataset:
             gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1], figure=abs_fig)
             abs_ax0 = plt.subplot(gs[0])
             abs_ax1 = plt.subplot(gs[1])
-            abs_ax0.set_ylabel('$\\alpha (\\frac{ppm}{cm})$')
+            abs_ax0.set_ylabel('Absorption')
             abs_ax0.set_xlabel('Wavenumbers ($cm^{-1}$)')
-            abs_ax1.set_ylabel('Residuals $(\\frac{ppm}{cm})$')
+            abs_ax1.set_ylabel('Residuals')
             abs_ax0.ticklabel_format(useOffset=False)
             abs_ax1.ticklabel_format(useOffset=False)
             abs_ax0.legend(bbox_to_anchor=(1, 1))
