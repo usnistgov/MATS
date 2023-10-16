@@ -578,7 +578,7 @@ def simulate_spectrum(parameter_linelist,
         If not in the low_OD_regime, this selects if working in tranmittance (True) or absorption units (False)
     pathlength : float, optional
         If not in the low_OD_regime, this defines the pathlength of the measurement (cm)
-    
+
     Returns
     -------
     spectrum_file : .csv
@@ -717,7 +717,7 @@ def simulate_spectrum(parameter_linelist,
     if SNR == None:
         alpha_noise = alpha_array
     else:
-        alpha_noise = alpha_array + np.max(alpha_array)*np.random.normal(loc = 0, scale =1, size = len(alpha_array))*1/SNR
+        alpha_noise = alpha_array + np.abs(np.max(alpha_array) - np.min(alpha_array) )*np.random.normal(loc = 0, scale =1, size = len(alpha_array))*1/SNR
 
 
     #Generate and save Simulated Spectrum File
