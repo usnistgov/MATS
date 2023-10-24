@@ -1,2 +1,2 @@
-Spectrum Number,Segment Number,Baseline Order,Pressure,Temperature,x_shift,molefraction_N2O,baseline_a,pathlength
-1.0,0.0,0.0,0.013157894736842105,296.00000000000273,0.0,1.0,0.0,0.06985000000000001
+Spectrum Number,Segment Number,Baseline Order,Pressure,Temperature,x_shift,molefraction_CO2,baseline_a,baseline_b,SLIT_MICHELSON_res_0,pathlength
+1.0,1.0,1.0,0.9764210526315379,295.3000000000097,0.0,0.090340664,0.0,0.0,0.012,3254.0
