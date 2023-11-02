@@ -1285,7 +1285,8 @@ class Fit_DataSet:
         """
 
         minner = Minimizer(self.simulation_model, params, xtol =xtol, max_nfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
-        result = minner.minimize(method = 'leastsq')#'
+        #result = minner.minimize(method = 'leastsq')#'
+        result = minner.minimize(method = 'least_squares')#'
         return result
 
 
