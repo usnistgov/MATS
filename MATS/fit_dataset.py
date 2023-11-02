@@ -1256,7 +1256,8 @@ class Fit_DataSet:
         total_residuals = np.asarray(total_residuals)
         total_simulated = np.asarray(total_simulated)
         return total_residuals
-    def fit_data(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', xtol = 1e-7, maxfev = 2000, ftol = 1e-7):
+    def fit_data(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', xtol = 1e-7, maxfev = 2000, ftol = 1e-7, 
+                 method = 'least_squares'):
         """Uses the lmfit minimizer to do the fitting through the simulation model function.
 
 
@@ -1276,6 +1277,8 @@ class Fit_DataSet:
             DESCRIPTION. The default is 2000.
         ftol : The maximum number of calls to the function., optional
             Absolute error in func(xopt) between iterations that is acceptable for convergence.. The default is 1e-7.
+        method : string, optional
+            Defines the minimization method from the options in LMFIT (not all will work).  Has been tested on the 'leastsq' which uses the Levenberg-Marquardt algorithm and 'least_squares' which uses the Trust Region Reflective method.
 
         Returns
         -------
@@ -1283,10 +1286,13 @@ class Fit_DataSet:
             contains all fit results as LMFit results object.
 
         """
-
-        minner = Minimizer(self.simulation_model, params, xtol =xtol, max_nfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
-        #result = minner.minimize(method = 'leastsq')#'
-        result = minner.minimize(method = 'least_squares')#'
+        if (method == 'least_squares') or (method == 'leastsq'):
+            minner = Minimizer(self.simulation_model, params, xtol =xtol, max_nfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
+        else: 
+            minner = Minimizer(self.simulation_model, params, max_nfev =  maxfev, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
+            #could add Ns = 20, and keep = 50
+            
+        result = minner.minimize(method = method)#'
         return result
 
 
