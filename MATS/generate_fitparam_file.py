@@ -190,7 +190,7 @@ class Generate_FitParam_File:
         ## Starting point is equal to the inital value
         order_nu = ['nu']
         param_linelist_df['nu_vary'] = len(param_linelist_df)*[False]
-        param_linelist_df['nu_err'] = len(param_linelist_df)*[0]
+        param_linelist_df['nu_err'] = len(param_linelist_df)*[0.0]
         if self.nu_constrain:
             if vary_nu != {}:
                 for molecule in vary_nu:
@@ -201,7 +201,7 @@ class Generate_FitParam_File:
                 param_linelist_df['nu_' + str(spec)] = param_linelist_df['nu'].values
                 order_nu.append('nu_' + str(spec))
                 param_linelist_df['nu_' + str(spec) + '_vary'] = len(param_linelist_df)*[False]
-                param_linelist_df['nu_' + str(spec) + '_err'] = len(param_linelist_df)*[0]
+                param_linelist_df['nu_' + str(spec) + '_err'] = len(param_linelist_df)*[0.0]
                 if vary_nu != {}:
                     for molecule in vary_nu:
                         for isotope in vary_nu[molecule]:
@@ -211,7 +211,7 @@ class Generate_FitParam_File:
         ## Starting point is equal to the initial value
         order_sw = ['sw', 'sw_scale_factor']
         param_linelist_df['sw_vary'] = len(param_linelist_df)*[False]
-        param_linelist_df['sw_err'] = len(param_linelist_df)*[0]
+        param_linelist_df['sw_err'] = len(param_linelist_df)*[0.0]
         if self.sw_constrain:
             if vary_sw != {}:
                  for molecule in vary_sw:
@@ -222,7 +222,7 @@ class Generate_FitParam_File:
                 param_linelist_df['sw_' + str(spec)] = param_linelist_df['sw'].values
                 order_sw.append('sw_' + str(spec))
                 param_linelist_df['sw_' + str(spec) + '_vary'] = len(param_linelist_df)*[False]
-                param_linelist_df['sw_' + str(spec) + '_err'] = len(param_linelist_df)*[0]
+                param_linelist_df['sw_' + str(spec) + '_err'] = len(param_linelist_df)*[0.0]
                 if vary_sw != {}:
                     for molecule in vary_sw:
                         for isotope in vary_sw[molecule]:
@@ -240,7 +240,7 @@ class Generate_FitParam_File:
             #Gamma0 option for constrain and not constrained
             order_gamma0.append('gamma0_' + diluent)
             param_linelist_df['gamma0_' + diluent + '_vary'] = len(param_linelist_df)*[False]
-            param_linelist_df['gamma0_' + diluent + '_err'] = len(param_linelist_df)*[0]
+            param_linelist_df['gamma0_' + diluent + '_err'] = len(param_linelist_df)*[0.0]
             if self.gamma0_constrain:
                 if vary_gamma0 != {}:
                     for molecule in vary_gamma0:
@@ -261,7 +261,7 @@ class Generate_FitParam_File:
             #Delta0 option for constrain and not constrained
             order_delta0.append('delta0_' + diluent)
             param_linelist_df['delta0_' + diluent + '_vary'] = len(param_linelist_df)*[False]
-            param_linelist_df['delta0_' + diluent + '_err'] = len(param_linelist_df)*[0]
+            param_linelist_df['delta0_' + diluent + '_err'] = len(param_linelist_df)*[0.0]
             if self.delta0_constrain:
                 if vary_delta0 != {}:
                     for molecule in vary_delta0:
@@ -272,7 +272,7 @@ class Generate_FitParam_File:
                     order_delta0.append('delta0_' +diluent + '_' +str(spec))
                     param_linelist_df['delta0_' +diluent + '_' +str(spec)] = (param_linelist_df['delta0_' + diluent].values)
                     param_linelist_df['delta0_' +  diluent + '_'+str(spec) + '_vary'] = len(param_linelist_df)*[0]
-                    param_linelist_df['delta0_' + diluent + '_'+ str(spec) + '_err'] = len(param_linelist_df)*[0]
+                    param_linelist_df['delta0_' + diluent + '_'+ str(spec) + '_err'] = len(param_linelist_df)*[0.0]
                     if vary_delta0 != {}:
                         for molecule in vary_delta0:
                             for isotope in vary_delta0[molecule]:
@@ -282,10 +282,10 @@ class Generate_FitParam_File:
             #SD Gamma option for constrain and not constrained
             order_SD_gamma.append('SD_gamma_' + diluent )
             param_linelist_df['SD_gamma_' + diluent + '_vary'] = len(param_linelist_df)*[False]
-            param_linelist_df['SD_gamma_' + diluent + '_err'] = len(param_linelist_df)*[0]
+            param_linelist_df['SD_gamma_' + diluent + '_err'] = len(param_linelist_df)*[0.0]
             if self.aw_constrain:
                 if (self.lineprofile == 'VP') or (self.lineprofile == 'NGP'):
-                    param_linelist_df.loc[:, 'SD_gamma_' + diluent] = 0
+                    param_linelist_df.loc[:, 'SD_gamma_' + diluent] = 0.0
                 else:
                     if vary_aw != {}:
                         for molecule in vary_aw:
@@ -295,9 +295,9 @@ class Generate_FitParam_File:
                 for spec in self.dataset.get_list_spectrum_numbers():
                     order_SD_gamma.append('SD_gamma_' +diluent + '_' +str(spec))
                     param_linelist_df['SD_gamma_' + diluent + '_'+ str(spec) + '_vary'] = len(param_linelist_df)*[False]
-                    param_linelist_df['SD_gamma_' + diluent + '_'+ str(spec) + '_err'] = len(param_linelist_df)*[0]
+                    param_linelist_df['SD_gamma_' + diluent + '_'+ str(spec) + '_err'] = len(param_linelist_df)*[0.0]
                     if (self.lineprofile == 'VP') or (self.lineprofile == 'NGP'):
-                        param_linelist_df.loc[:, 'SD_gamma_' +diluent + '_' +str(spec)] = 0
+                        param_linelist_df.loc[:, 'SD_gamma_' +diluent + '_' +str(spec)] = 0.0
                     else:
                         param_linelist_df['SD_gamma_' +diluent + '_' +str(spec)] = (param_linelist_df['SD_gamma_' + diluent].values)
                         if vary_aw != {}:
@@ -309,10 +309,10 @@ class Generate_FitParam_File:
             #SD Delta option for constrain and not constrained
             order_SD_delta.append('SD_delta_' + diluent)
             param_linelist_df['SD_delta_' + diluent + '_vary'] = len(param_linelist_df)*[False]
-            param_linelist_df['SD_delta_' + diluent + '_err'] = len(param_linelist_df)*[0]
+            param_linelist_df['SD_delta_' + diluent + '_err'] = len(param_linelist_df)*[0.0]
             if self.as_constrain:
                 if (self.lineprofile == 'VP') or (self.lineprofile == 'NGP'):
-                    param_linelist_df.loc[:, 'SD_delta_' + diluent] = 0
+                    param_linelist_df.loc[:, 'SD_delta_' + diluent] = 0.0
                 else:
                     if vary_as != {}:
                         for molecule in vary_as:
@@ -322,9 +322,9 @@ class Generate_FitParam_File:
                 for spec in self.dataset.get_list_spectrum_numbers():
                     order_SD_delta.append('SD_delta_' +diluent + '_' +str(spec))
                     param_linelist_df['SD_delta_' + diluent + '_'+ str(spec) + '_vary'] = len(param_linelist_df)*[False]
-                    param_linelist_df['SD_delta_' + diluent + '_'+ str(spec) + '_err'] = len(param_linelist_df)*[0]
+                    param_linelist_df['SD_delta_' + diluent + '_'+ str(spec) + '_err'] = len(param_linelist_df)*[0.0]
                     if (self.lineprofile == 'VP') or (self.lineprofile == 'NGP'):
-                        param_linelist_df.loc[:, 'SD_delta_' +diluent + '_' +str(spec)] = 0
+                        param_linelist_df.loc[:, 'SD_delta_' +diluent + '_' +str(spec)] = 0.0
                     else:
                         param_linelist_df['SD_delta_' +diluent + '_' +str(spec)] = (param_linelist_df['SD_delta_' + diluent].values)
 
@@ -337,10 +337,10 @@ class Generate_FitParam_File:
             #nuVC option for constrain and not constrained
             order_nuVC.append('nuVC_' + diluent)
             param_linelist_df['nuVC_' + diluent + '_vary'] = len(param_linelist_df)*[False]
-            param_linelist_df['nuVC_' + diluent + '_err'] = len(param_linelist_df)*[0]
+            param_linelist_df['nuVC_' + diluent + '_err'] = len(param_linelist_df)*[0.0]
             if self.nuVC_constrain:
                 if (self.lineprofile == 'VP') or (self.lineprofile == 'SDVP'):
-                    param_linelist_df.loc[:, 'nuVC_' + diluent ] = 0
+                    param_linelist_df.loc[:, 'nuVC_' + diluent ] = 0.0
                 else:
                     if vary_nuVC != {}:
                         for molecule in vary_nuVC:
@@ -352,7 +352,7 @@ class Generate_FitParam_File:
                     param_linelist_df['nuVC_' + diluent + '_'+str(spec) + '_vary'] = len(param_linelist_df)*[False]
                     param_linelist_df['nuVC_' + diluent + '_'+ str(spec) + '_err'] = len(param_linelist_df)*[0]
                     if (self.lineprofile == 'VP') or (self.lineprofile == 'SDVP'):
-                        param_linelist_df.loc[:, 'nuVC_' + diluent + '_'+str(spec)] = 0
+                        param_linelist_df.loc[:, 'nuVC_' + diluent + '_'+str(spec)] = 0.0
                     else:
                         param_linelist_df['nuVC_' +diluent + '_' +str(spec)] = (param_linelist_df['nuVC_' + diluent].values)
 
@@ -365,10 +365,10 @@ class Generate_FitParam_File:
             #eta option for constrain and not constrained
             order_eta.append('eta_' + diluent)
             param_linelist_df['eta_' + diluent + '_vary'] = len(param_linelist_df)*[False]
-            param_linelist_df['eta_' + diluent + '_err'] = len(param_linelist_df)*[0]
+            param_linelist_df['eta_' + diluent + '_err'] = len(param_linelist_df)*[0.0]
             if self.eta_constrain:
                 if (self.lineprofile == 'VP') or (self.lineprofile == 'SDVP') or (self.lineprofile == 'NGP') or (self.lineprofile == 'SDNGP'):
-                    param_linelist_df.loc[:, 'eta_' + diluent] = 0
+                    param_linelist_df.loc[:, 'eta_' + diluent] = 0.0
                 else:
                     if vary_eta != {}:
                         for molecule in vary_eta:
@@ -380,7 +380,7 @@ class Generate_FitParam_File:
                     param_linelist_df['eta_' + str(spec) + '_vary'] = len(param_linelist_df)*[False]
                     param_linelist_df['eta_' + str(spec) + '_err'] = len(param_linelist_df)*[0]
                     if (self.lineprofile == 'VP') or (self.lineprofile == 'SDVP') or (self.lineprofile == 'NGP') or (self.lineprofile == 'SDNGP'):
-                        param_linelist_df.loc[:, 'eta_' +diluent + '_' +str(spec)] = 0
+                        param_linelist_df.loc[:, 'eta_' +diluent + '_' +str(spec)] = 0.0
                     else:
                         param_linelist_df['eta_' +diluent + '_' +str(spec)] = (param_linelist_df['eta_' + diluent].values)
                         if vary_eta != {}:
@@ -391,7 +391,7 @@ class Generate_FitParam_File:
             # Linemixing
             order_linemixing.append('y_' + diluent)
             param_linelist_df['y_' + diluent + '_vary'] = len(param_linelist_df)*[False]
-            param_linelist_df['y_' + diluent + '_err'] = len(param_linelist_df)*[0]
+            param_linelist_df['y_' + diluent + '_err'] = len(param_linelist_df)*[0.0]
             if self.linemixing:
                 if self.linemixing_constrain:
                     if vary_linemixing != {}:
@@ -409,23 +409,23 @@ class Generate_FitParam_File:
                                 for isotope in vary_linemixing[molecule]:
                                     param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'y_' +diluent +'_'+str(spec) + '_vary'] = (vary_linemixing[molecule][isotope])
             else:
-                param_linelist_df['y_' + diluent] = 0
+                param_linelist_df['y_' + diluent] = 0.0
             order_linemixing.append('n_y_' +diluent )
             
             #Temperature Dependence
             if num_nominal_temps > 1:
                 param_linelist_df['n_gamma0_'+diluent+'_vary'] = len(param_linelist_df)*[False]
-                param_linelist_df['n_gamma0_'+diluent+'_err'] = len(param_linelist_df)*[0]
+                param_linelist_df['n_gamma0_'+diluent+'_err'] = len(param_linelist_df)*[0.0]
                 param_linelist_df['n_delta0_'+diluent+'_vary'] = len(param_linelist_df)*[False]
-                param_linelist_df['n_delta0_'+diluent+'_err'] = len(param_linelist_df)*[0]
+                param_linelist_df['n_delta0_'+diluent+'_err'] = len(param_linelist_df)*[0.0]
                 param_linelist_df['n_gamma2_'+diluent+'_vary'] = len(param_linelist_df)*[False]
-                param_linelist_df['n_gamma2_'+diluent+'_err'] = len(param_linelist_df)*[0]
+                param_linelist_df['n_gamma2_'+diluent+'_err'] = len(param_linelist_df)*[0.0]
                 param_linelist_df['n_delta2_'+diluent+'_vary'] = len(param_linelist_df)*[False]
-                param_linelist_df['n_delta2_'+diluent+'_err'] = len(param_linelist_df)*[0]
+                param_linelist_df['n_delta2_'+diluent+'_err'] = len(param_linelist_df)*[0.0]
                 param_linelist_df['n_nuVC_'+diluent+'_vary'] = len(param_linelist_df)*[False]
-                param_linelist_df['n_nuVC_'+diluent+'_err'] = len(param_linelist_df)*[0]
+                param_linelist_df['n_nuVC_'+diluent+'_err'] = len(param_linelist_df)*[0.0]
                 param_linelist_df['n_y_'+diluent+'_vary'] = len(param_linelist_df)*[False]
-                param_linelist_df['n_y_'+diluent+'_err'] = len(param_linelist_df)*[0]
+                param_linelist_df['n_y_'+diluent+'_err'] = len(param_linelist_df)*[0.0]
                 #n_Gamma0
                 if vary_n_gamma0 != {}:
                     for molecule in vary_n_gamma0:
@@ -591,7 +591,7 @@ class Generate_FitParam_File:
         #Generate Fit Baseline file
         for param in parameters:
             if ('Baseline Order' != param) and ('Segment Number' != param):
-                base_linelist_df[param + '_err'] = 0
+                base_linelist_df[param + '_err'] = 0.0
                 base_linelist_df[param + '_vary']= False
                 baseline_param_order += [param, param + '_err', param + '_vary']
 
@@ -656,7 +656,7 @@ class Generate_FitParam_File:
             # Set parameter floats
             for param in parameters:
                 if ('CIA Pair' != param):
-                    CIA_linelist_df[param + '_err'] = 0
+                    CIA_linelist_df[param + '_err'] = 0.0
                     CIA_linelist_df[param + '_vary']= False
                 if 'S_SO' in param:
                     CIA_linelist_df[param + '_vary']= len(CIA_linelist_df)*[(vary_S_SO)]

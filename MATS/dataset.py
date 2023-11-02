@@ -412,23 +412,24 @@ class Dataset:
                     line['molefraction_' + (self.isotope_list[(molecule, 1)][4])] = (spectrum.molefraction[molecule])
                 for i in range(0, self.baseline_order + 1):
                     if chr(i+97) == 'a':
-                        line['baseline_' + chr(i+97)] = 0
+                        line['baseline_' + chr(i+97)] = 0.0
                     else:
-                        line['baseline_' + chr(i+97)] = 0
+                        line['baseline_' + chr(i+97)] = 0.0
                 for etalon_name in spectrum.etalons:
                     line['etalon_' + str(etalon_name) + '_amp'] = spectrum.etalons[etalon_name][0]
                     line['etalon_' + str(etalon_name) + '_period'] = spectrum.etalons[etalon_name][1]
-                    line['etalon_' + str(etalon_name) + '_phase'] = 0
+                    line['etalon_' + str(etalon_name) + '_phase'] = 0.0
                 if self.ILS_function_dict != {}:
                     for ILS_function in self.ILS_function_dict:
                         for res_param in range(0, self.ILS_function_dict[ILS_function]):
                             if (spectrum.ILS_function == None) or (spectrum.ILS_function.__name__ != ILS_function):
-                                line[ILS_function + '_res_' + str(res_param)] = 0
+                                line[ILS_function + '_res_' + str(res_param)] = 0.0
                             elif (type(spectrum.ILS_resolution) == float) or (type(spectrum.ILS_resolution) == int):
                                 line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution
                             else:
                                 line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution[res_param]
-                baseline_paramlist  = baseline_paramlist.append(line, ignore_index=True)
+                baseline_paramlist = pd.concat([baseline_paramlist, pd.DataFrame(line, index = [0])], ignore_index = True, sort = False)
+
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
         baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv', index = True)
         return baseline_paramlist
@@ -463,8 +464,8 @@ class Dataset:
                 CIA_paramlist['SO_b'] = 0.00011263534228667677
                 CIA_paramlist['SO_c'] = 1.5906417750834962e-06
                 #Shift
-                CIA_paramlist['SO_shift'] = [0,0]
-                CIA_paramlist['EXCH_shift'] = [0,0]
+                CIA_paramlist['SO_shift'] = [0.0,0.0]
+                CIA_paramlist['EXCH_shift'] = [0.0,0.0]
             if self.CIA_model['band'] == 'singlet_delta':
                 #Intensities
                 CIA_paramlist['S_SO'] = [39.13, 70.74]
@@ -475,8 +476,8 @@ class Dataset:
                 CIA_paramlist['SO_b'] = 0.00014594154382655564
                 CIA_paramlist['SO_c'] = 1.4670403122287775e-06
                 #Shift
-                CIA_paramlist['SO_shift'] = [0,0]
-                CIA_paramlist['EXCH_shift'] = [0,0]
+                CIA_paramlist['SO_shift'] = [0.0,0.0]
+                CIA_paramlist['EXCH_shift'] = [0.0,0.0]
             CIA_paramlist.to_csv(self.dataset_name + '_CIA_paramlist.csv', index = False)
             return CIA_paramlist
             
@@ -503,7 +504,9 @@ class Dataset:
         summary_file = pd.DataFrame()
         for spectrum in self.spectra:
             spectrum_data = spectrum.save_spectrum_info(save_file = False)
-            summary_file = summary_file.append(spectrum_data)
+            #summary_file = summary_file.append(spectrum_data)
+            summary_file = pd.concat([summary_file, spectrum_data], ignore_index = True, sort = False)
+
         if save_file:
             summary_file.to_csv(self.dataset_name + '.csv', index = False)
         return summary_file

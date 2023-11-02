@@ -80,7 +80,7 @@ class Spectrum:
                     input_freq = True, input_tau = True,
                     pressure_column = 'Cavity Pressure /Torr', temperature_column = 'Cavity Temperature Side 2 /C', frequency_column = 'Total Frequency /MHz',
                     tau_column = 'Mean tau/us', tau_stats_column = None, segment_column = None,
-                    etalons = {}, nominal_temperature = 296, x_shift = 0, baseline_order = 1, weight = 1,
+                    etalons = {}, nominal_temperature = 296, x_shift = 0.0, baseline_order = 1, weight = 1,
                     ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2021, 
                     compressability_file = None):
         self.filename = filename
@@ -155,15 +155,15 @@ class Spectrum:
             stats[stats <= 0] = median_tau_stats
             self.tau_stats = stats
         else:
-            self.tau_stats  = np.asarray(len(file_contents)*[0])
+            self.tau_stats  = np.asarray(len(file_contents)*[0.0])
         if self.segment_column != None:
             self.segments = file_contents[self.segment_column].values.astype(int)
         else:
             self.segments = len(file_contents)*[1]
-        self.model = len(self.alpha)*[0]
+        self.model = len(self.alpha)*[0.0]
         self.residuals = self.alpha - self.model
-        self.background = len(self.alpha)*[0]
-        self.cia = len(self.alpha)*[0]
+        self.background = len(self.alpha)*[0.0]
+        self.cia = len(self.alpha)*[0.0]
         self.compressability_file = compressability_file
 
 
@@ -271,11 +271,11 @@ class Spectrum:
         if self.diluent == 'air':
             self.Diluent = {self.diluent: {'composition':1, 'm': 28.95734}}
         elif self.diluent == 'self':
-            self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
+            self.Diluent = {self.diluent: {'composition':1, 'm': 0.0}}
                 #mass will be set during HTP_wBeta_from_DF_select if necessary
         else:
             print ('If using the HTP_wBeta_from_DF_select then you need to go back and use the Diluent{diluent:{"composition": 1, "m": mass}} format')
-            self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
+            self.Diluent = {self.diluent: {'composition':1, 'm': 0.0}}
     def set_Diluent(self, new_Diluent):
         self.Diluent = new_Diluent
     def set_spectrum_number(self, new_spectrum_number):
@@ -438,12 +438,12 @@ class Spectrum:
         plt.show()
 
 def simulate_spectrum(parameter_linelist,
-                        wave_min=None, wave_max= None, wave_space=None, wavenumbers = [],  wave_error = 0,
-                        SNR = None, baseline_terms = [0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760,
+                        wave_min=None, wave_max= None, wave_space=None, wavenumbers = [],  wave_error = 0.0,
+                        SNR = None, baseline_terms = [0.0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760,
                         pressure_err = {'per_bias': 0, 'function': None, 'params': {}},
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
                         isotope_list = ISO, natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {},
-                        nominal_temperature = 296, etalons = {}, x_shift = 0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False,
+                        nominal_temperature = 296, etalons = {}, x_shift = 0.0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False,
                         ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2021, 
                         compressability_file = None):
     """Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.
@@ -533,9 +533,9 @@ def simulate_spectrum(parameter_linelist,
          if diluent == 'air':
              Diluent = {diluent: {'composition':1, 'm':28.95734}}
          elif diluent == 'self':
-            Diluent = {diluent: {'composition':1, 'm':0}}
+            Diluent = {diluent: {'composition':1, 'm':0.0}}
          else:
-            Diluent = {diluent: {'composition':1, 'm':0}}
+            Diluent = {diluent: {'composition':1, 'm':0.0}}
             print ('THIS IS GOING TO BREAK WITH A DIVISION ERROR IF YOU USE THE BETA VERSION')
 
     #Set-Up Parameters
@@ -561,9 +561,9 @@ def simulate_spectrum(parameter_linelist,
     molefraction_w_error = {}
     for species in molefraction:
         if molefraction_err == {}:
-            molefraction_err[species] = 0
+            molefraction_err[species] = 0.0
         elif species not in molefraction_err:
-            molefraction_err[species] = 0
+            molefraction_err[species] = 0.0
         molefraction_w_error[species] = molefraction[species] + molefraction[species]*(molefraction_err[species]/100)
     #pressure error
     pressure_w_error = pressure_atm + pressure_atm*(pressure_err['per_bias']/100)#adds the pressure bias based on the percent bias of the pressure measaurement.  Can loop this or set this to be constant for all spectra
@@ -588,9 +588,9 @@ def simulate_spectrum(parameter_linelist,
     seg_number = np.arange(len(wavenumbers))
     seg_number = np.abs(seg_number// (len(wavenumbers)/num_segments)).astype(int)
 
-    alpha_array = len(wavenumbers)*[0]
-    pressure_array = len(wavenumbers)*[0]
-    temperature_array = len(wavenumbers)*[0]
+    alpha_array = len(wavenumbers)*[0.0]
+    pressure_array = len(wavenumbers)*[0.0]
+    temperature_array = len(wavenumbers)*[0.0]
     
     if compressability_file != None:
         comp_factor = pd.read_csv(compressability_file + '.csv')
@@ -606,12 +606,12 @@ def simulate_spectrum(parameter_linelist,
     
     for seg in range(0, num_segments):
 
-        segment_array = (np.where(seg_number == seg)[0])
+        segment_array = (np.where(seg_number == seg)[0.0])
         waves = np.take(wavenumbers, segment_array)
         segment_pressure = np.mean(np.take(pressure_w_error, segment_array))
         segment_temperature = np.mean(np.take(temperature_w_error, segment_array))
         if compressability_file != None:
-            compressability_factor = interp_comp_factor([segment_pressure, segment_temperature])[0]
+            compressability_factor = interp_comp_factor([segment_pressure, segment_temperature])[0.0]
         else:
             compressability_factor = 1   
 
@@ -636,7 +636,7 @@ def simulate_spectrum(parameter_linelist,
     #Calculate Baseline
     baseline = np.polyval(baseline_terms, wavenumbers -np.min(wavenumbers) )
     # Calculate Etalons
-    etalon_model = len(wavenumbers)*[0]
+    etalon_model = len(wavenumbers)*[0.0]
     for r in range(1, len(etalons)+1):
         amp = etalons[r][0]
         period = etalons[r][1]
