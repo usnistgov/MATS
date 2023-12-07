@@ -1183,6 +1183,7 @@ class Fit_DataSet:
                 T = float(params['Temperature_' + str(spectrum_number) + '_' + str(segment)])
                 if spectrum.compressability_file != None:
                     compressability_factor = interp_comp_factor([p, T])[0]
+                    #print (p, T, compressability_factor)
                 else:
                     compressability_factor = 1    
                 
