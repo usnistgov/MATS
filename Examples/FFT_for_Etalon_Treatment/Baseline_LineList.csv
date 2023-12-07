@@ -1,0 +1,2 @@
+Spectrum Number,Segment Number,Pressure,Pressure_err,Pressure_vary,Temperature,Temperature_err,Temperature_vary,x_shift,x_shift_err,x_shift_vary,molefraction_O2,molefraction_O2_err,molefraction_O2_vary,baseline_a,baseline_a_err,baseline_a_vary,baseline_b,baseline_b_err,baseline_b_vary
+1,1,0.0657589982069997,0.0,False,298.61397156138287,0.0,False,0.0,0.0,False,0.01949,0.0,False,0.0,0.0,False,0.0,0.0,False
