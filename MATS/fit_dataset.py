@@ -1289,9 +1289,19 @@ class Fit_DataSet:
         """
         if (method == 'least_squares') or (method == 'leastsq'):
             minner = Minimizer(self.simulation_model, params, xtol =xtol, max_nfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
+            floated_parameters = False
+            for param in params:
+                if params[param].vary == True:
+                    floated_parameters = True
+            if floated_parameters == False:
+                if method == 'least_squares':
+                    method = 'leastsq'
         else: 
             minner = Minimizer(self.simulation_model, params, max_nfev =  maxfev, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
             #could add Ns = 20, and keep = 50
+        
+
+            
             
         result = minner.minimize(method = method)#'
         return result
