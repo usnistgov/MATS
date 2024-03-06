@@ -611,7 +611,7 @@ def simulate_spectrum(parameter_linelist,
         segment_pressure = np.mean(np.take(pressure_w_error, segment_array))
         segment_temperature = np.mean(np.take(temperature_w_error, segment_array))
         if compressability_file != None:
-            compressability_factor = interp_comp_factor([segment_pressure, segment_temperature])[0.0]
+            compressability_factor = interp_comp_factor([segment_pressure, segment_temperature])[0]
         else:
             compressability_factor = 1   
 
