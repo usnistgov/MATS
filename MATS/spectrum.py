@@ -606,7 +606,7 @@ def simulate_spectrum(parameter_linelist,
     
     for seg in range(0, num_segments):
 
-        segment_array = (np.where(seg_number == seg)[0.0])
+        segment_array = (np.where(seg_number == seg)[0])
         waves = np.take(wavenumbers, segment_array)
         segment_pressure = np.mean(np.take(pressure_w_error, segment_array))
         segment_temperature = np.mean(np.take(temperature_w_error, segment_array))
