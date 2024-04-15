@@ -441,11 +441,11 @@ def simulate_spectrum(parameter_linelist,
                         wave_min=None, wave_max= None, wave_space=None, wavenumbers = [],  wave_error = 0.0,
                         SNR = None, baseline_terms = [0.0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760,
                         pressure_err = {'per_bias': 0, 'function': None, 'params': {}},
-                        wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', filename = 'temp', molefraction = {}, molefraction_err = {},
+                        wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers', filename = 'temp', molefraction = {}, molefraction_err = {},
                         isotope_list = ISO, natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {},
                         nominal_temperature = 296, etalons = {}, x_shift = 0.0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False,
                         ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2021, 
-                        compressability_file = None):
+                        compressability_file = None, BIA_model = {'sw_depletion': False, 'farwing_continuum': None}):
     """Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.
 
 
@@ -625,7 +625,8 @@ def simulate_spectrum(parameter_linelist,
             waves, alpha = HTP_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
                     p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, isotope_list = isotope_list,
                     natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,
-                    Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold, TIPS = TIPS, compressability_factor = compressability_factor)
+                    Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold, TIPS = TIPS, compressability_factor = compressability_factor, 
+                    BIA_slope = BIA_model['sw_depletion'])
         alpha_array[np.min(segment_array): np.max(segment_array)+1] = alpha * 1e6
 
         pressure_array[np.min(segment_array): np.max(segment_array)+1] = len(alpha)*[segment_pressure]

@@ -56,15 +56,22 @@ class Generate_FitParam_File:
         True indicates that the first-order linemixing term will be a global variable across all spectra. False generates a new value for each spectrum in the datas
     """
 
-    def __init__ (self, dataset, param_linelist, base_linelist, CIA_linelist = None,
-                  lineprofile = 'VP', linemixing = False, threshold_intensity = 1e-30, fit_intensity = 1e-26, fit_window = 1.5, sim_window = 5,
+    def __init__ (self, dataset, param_linelist = None, base_linelist = None, CIA_linelist = None,
+                  lineprofile = 'VP', linemixing = False, 
+                  threshold_intensity = 1e-30, fit_intensity = 1e-26, fit_window = 1.5, sim_window = 5,
                   param_linelist_savename = 'Parameter_LineList', base_linelist_savename = 'Baseline_LineList', CIA_linelist_savename = 'CIA_LineList',
                  nu_constrain = True, sw_constrain = True, gamma0_constrain = True, delta0_constrain = True, aw_constrain = True, as_constrain = True,
                  nuVC_constrain = True, eta_constrain =True, linemixing_constrain = True,
                  additional_columns = []):
         self.dataset = dataset
-        self.param_linelist = param_linelist
-        self.base_linelist = base_linelist
+        if param_linelist == None:
+            self.param_linelist = self.dataset.param_linelist
+        else:
+            self.param_linelist = param_linelist
+        if base_linelist == None:
+            self.base_linelist = self.dataset.base_linelist
+        else:
+            self.base_linelist = base_linelist
         if self.dataset.CIA_model == None:
             self.CIA_linelist = None
             self.CIA_linelist_savename = None
@@ -104,7 +111,8 @@ class Generate_FitParam_File:
                                    vary_aw = {}, vary_n_gamma2 = {},
                                    vary_as = {}, vary_n_delta2 = {},
                                    vary_nuVC = {}, vary_n_nuVC = {},
-                                   vary_eta = {}, vary_linemixing = {}, vary_n_linemixing = {}):
+                                   vary_eta = {}, vary_linemixing = {}, vary_n_linemixing = {}, 
+                                   vary_BIA_slope = {}, vary_BIA_collision_duration = {}):
         """Generates the parameter line list used in fitting and updates the fitting booleans to desired settings.
 
 
@@ -141,6 +149,8 @@ class Generate_FitParam_File:
             Dictionary of dictionaries setting whether the molecule and isotope first-order line-mixing should be floated.  Follows nu_vary example.  . The default is {}.
         vary_n_linemixing : bool, optional
             Dictionary of dictionaries setting whether the molecule and isotope temperature dependence for the first-order line-mixing should be floated.  Follows nu_vary example.  . The default is {}.
+        vary_BIA_slope : bool, optional
+            Dictionary of dictionaries setting whether the molecule and isotope BIA_slope should be floated, Default is {}.
         Returns
         -------
         param_linelist_df : dataframe
@@ -156,12 +166,14 @@ class Generate_FitParam_File:
         extreme_dictionary = self.dataset.get_spectrum_extremes()
         param_linelist_df = param_linelist_df[param_linelist_df['nu'] < (dataset_max + self.sim_window)]
         param_linelist_df = param_linelist_df[param_linelist_df['nu'] > (dataset_min - self.sim_window)]
+        
         #delete parameters not partaining to species (where relevant)
         diluent_list = []
         for spectrum in self.dataset.spectra:
             for diluent in spectrum.Diluent:
                 if diluent not in diluent_list:
                     diluent_list.append(diluent)
+                    
         num_nominal_temps, list_nominal_temps = self.dataset.get_number_nominal_temperatures()
         column_list =  self.additional_columns.copy()
         column_list += ['molec_id', 'local_iso_id','elower', 'nu', 'sw']
@@ -179,9 +191,15 @@ class Generate_FitParam_File:
             column_list.append('eta_' + diluent)
             column_list.append('y_' + diluent)
             column_list.append('n_y_' + diluent)
+            if self.dataset.BIA_model['sw_depletion']:
+                column_list.append('BIA_slope_' + diluent)
+            if self.dataset.BIA_model['farwing_continuum'] == 'LBL':
+                column_list.append('BIA_collision_duration_' + diluent)
+                
 
         param_linelist_df = param_linelist_df[column_list]
         param_linelist_df = param_linelist_df.reset_index(drop = True)
+        
         #Re-defines the Line intensity as sw*sw_scale_factor
         param_linelist_df['sw'] = param_linelist_df['sw'] / self.fit_intensity
         param_linelist_df['sw_scale_factor'] = [self.fit_intensity]*len(param_linelist_df)
@@ -236,6 +254,9 @@ class Generate_FitParam_File:
         order_nuVC = []
         order_eta = []
         order_linemixing = []
+        order_BIA_slope = []
+        order_BIA_collision_duration = []
+        
         for diluent in diluent_list:
             #Gamma0 option for constrain and not constrained
             order_gamma0.append('gamma0_' + diluent)
@@ -412,6 +433,36 @@ class Generate_FitParam_File:
                 param_linelist_df['y_' + diluent] = 0.0
             order_linemixing.append('n_y_' +diluent )
             
+            #BIA Linecore
+            if self.sw_constrain:
+                order_BIA_slope.append('BIA_slope_' + diluent)
+                if self.dataset.BIA_model['sw_depletion']:
+                    param_linelist_df['BIA_slope_' + diluent + '_vary'] = len(param_linelist_df)*[False]
+                    param_linelist_df['BIA_slope_' + diluent + '_err'] = len(param_linelist_df)*[0.0]
+                    if vary_BIA_slope != {}:
+                        for molecule in vary_BIA_slope:
+                            for isotope in vary_BIA_slope[molecule]:
+                                param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'BIA_slope_' +diluent + '_vary'] = (vary_BIA_slope[molecule][isotope])
+                else:
+                    param_linelist_df['BIA_slope_' + diluent] = 0.0
+                            
+            #BIA LBL farwing
+            if self.sw_constrain: 
+                order_BIA_collision_duration.append('BIA_collision_duration_' + diluent)
+                if (self.dataset.BIA_model['sw_depletion']) and (self.dataset.BIA_model['farwing continuum'] == 'LBL'):
+                    param_linelist_df['BIA_collision_duration' + diluent + '_vary'] = len(param_linelist_df)*[False]
+                    param_linelist_df['BIA_slope_' + diluent + '_err'] = len(param_linelist_df)*[0.0]
+                    if vary_BIA_collision_duration != {}:
+                        for molecule in vary_BIA_collision_duration:
+                            for isotope in vary_BIA_collision_duration[molecule]:
+                                param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'BIA_collision_duration_' +diluent + '_vary'] = (vary_BIA_slope[molecule][isotope])
+                else:
+                    param_linelist_df['BIA_collision_duration_' + diluent] = 0.0
+                    if (not self.dataset.BIA_model['sw_depletion']) and (self.dataset.BIA_model['farwing continuum'] == 'LBL'):
+                        print ('sw_depletion must be true to use LBL farwing continuum feature')
+            
+            
+            
             #Temperature Dependence
             if num_nominal_temps > 1:
                 param_linelist_df['n_gamma0_'+diluent+'_vary'] = len(param_linelist_df)*[False]
@@ -531,6 +582,7 @@ class Generate_FitParam_File:
                 if 'n_' != item[:2]:
                     ordered_list.append(item + '_err')
                     ordered_list.append(item + '_vary')
+    
         param_linelist_df = param_linelist_df[ordered_list]
         param_linelist_df.to_csv(self.param_linelist_savename + '.csv') #
 

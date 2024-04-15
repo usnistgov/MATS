@@ -17,7 +17,7 @@ from lmfit import Minimizer,  Parameters
 def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff',
                 p = 1, T = 296, molefraction = {}, isotope_list = ISO,
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30, 
-                TIPS = PYTIPS2021, compressability_factor = 1):
+                TIPS = PYTIPS2021, compressability_factor = 1, BIA_slope = False):
     """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters.
 
     Outline
@@ -104,7 +104,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
         minimum line intensity that will be simulated. The default is 1e-30.
     TIPS : definition, optional
         selects the HAPI provided TIPS version to use for the partition function
-
+ 
     Returns
     -------
     wavenumbers : array
@@ -165,6 +165,9 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
     linelist['LineIntensity'] = linelist['sw']*linelist['SigmaTref']/linelist['SigmaT']*(np.exp(-CONSTANTS['c2']*linelist['elower']/T)*(1-np.exp(-CONSTANTS['c2']*linelist['nu']/T)))/(np.exp(-CONSTANTS['c2']*linelist['elower']/Tref)*(1-np.exp(-CONSTANTS['c2']*linelist['nu']/Tref)))
     if isotope_list != ISO:
         linelist.loc[(linelist['SigmaT'] == 1) & (linelist['SigmaTref'] == 1), 'LineIntensity'] = linelist[(linelist['SigmaT'] == 1) & (linelist['SigmaTref'] == 1)]['sw'].values
+    
+
+    
 
     #Calculate Doppler Broadening
     linelist['GammaD'] = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(linelist['m'].values))*linelist['nu'] / CONSTANTS['c']
@@ -176,6 +179,9 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
     linelist['NuVC'] = 0.0
     linelist['Eta'] = 0.0
     linelist['Y'] = 0.0
+    linelist['LineIntensity_BIA'] = 0.0
+    
+
     for species in Diluent:
         abun = Diluent[species]['composition']
         #Gamma0: pressure broadening coefficient HWHM
@@ -193,6 +199,11 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
         #Line mixing
         #linelist['Y'] += abun*(linelist['y_%s'%species] *(p/pref))
         linelist['Y'] += abun*(linelist['y_%s'%species]*(p/pref)*((Tref/T)**(linelist['n_y_%s'%species])))
+        # Line Intensity at pressure for broadener       
+        if BIA_slope:
+            linelist['LineIntensity_BIA'] += abun*(linelist['LineIntensity']*(1-0.01*(linelist['BIA_slope_%s'%species]/linelist['LineIntensity'])*(p/pref)))
+
+
 
     #Line profile simulation cut-off determination
     if wing_method == 'wing_cutoff':
@@ -201,7 +212,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
         linelist['line cut-off'] = wing_wavenumbers
 
     #Enforce  Line Intensity Simulation Threshold
-    linelist = linelist[linelist['LineIntensity']>= IntensityThreshold]
+    linelist = linelist[linelist['LineIntensity']>= IntensityThreshold] #acts on non-intensity depleted value
 
     #For each line calculate spectrum and add to the global spectrum
     for index, line in linelist.iterrows():
@@ -209,9 +220,15 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
         BoundIndexUpper = bisect(wavenumbers, line['nu'] + line['line cut-off'])
         lineshape_vals_real, lineshape_vals_imag = pcqsdhc(line['nu'],line['GammaD'],line['Gamma0'],line['Gamma2'],line['Shift0'],line['Shift2'],
                                                     line['NuVC'],line['Eta'],wavenumbers[BoundIndexLower:BoundIndexUpper])
-        Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
+        if BIA_slope:
+            Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
+                                                        molefraction[line['molec_id']] * line['abun_ratio'] * \
+                                                        line['LineIntensity_BIA'] * lineshape_vals_real + line['LineIntensity']*line['Y']*lineshape_vals_imag
+        else:
+            Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
                                                     molefraction[line['molec_id']] * line['abun_ratio'] * \
                                                     line['LineIntensity'] * (lineshape_vals_real + line['Y']*lineshape_vals_imag)
+            
 
     # Return two arrays corresponding to the wavenumber axis and the calculated cross-section
     return (wavenumbers, np.asarray(Xsect))
@@ -615,7 +632,6 @@ class Fit_DataSet:
         self.n_linemixing_limit_factor = n_linemixing_limit_factor
         self.beta_formalism = beta_formalism
 
-
     def generate_params(self):
         """Generates the lmfit parameter object that will be used in fitting.
 
@@ -920,6 +936,15 @@ class Fit_DataSet:
                                   max = self.n_linemixing_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                         else:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param],self.lineparam_list.loc[spec_line][line_param + '_vary'])
+                    
+                    #BIA
+                    elif ('BIA_slope_' in line_param) and (sw_constrain):
+                        params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
+                    #BIA farwing
+                    elif ('BIA_collision_duration_' in line_param) and (sw_constrain):
+                        params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
+                    
+                    
         
         #CIA Parameters (O2 Karman Model)
         if self.dataset.CIA_model['model'] == "Karman":
@@ -1114,6 +1139,11 @@ class Fit_DataSet:
                 columns.append('eta_' + species)
                 columns.append('y_' + species)
                 columns.append('n_y_' + species)
+                if self.dataset.BIA_model['sw_depletion']: 
+                    columns.append('BIA_slope_' + species)
+                    if self.dataset.BIA_model['farwing_continuum'] == 'LBL':
+                        columns.append('BIA_collision_duration_' + species)
+                        
             rename_dictionary = {}
             for column in self.lineparam_list:
                 if ('vary' not in column) and ('err' not in column):
@@ -1197,9 +1227,9 @@ class Fit_DataSet:
                     fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
                             p = p, T = T, molefraction = fit_molefraction, isotope_list = self.dataset.isotope_list,
                             natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent, 
-                            TIPS = spectrum.TIPS, compressability_factor = compressability_factor)
+                            TIPS = spectrum.TIPS, compressability_factor = compressability_factor, BIA_slope = self.dataset.BIA_model['sw_depletion'])
                 fit_coef = fit_coef * 1e6
-                
+                                
                 ## CIA Calculation
                 CIA = spectrum.cia[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]
 
@@ -1257,7 +1287,7 @@ class Fit_DataSet:
         total_residuals = np.asarray(total_residuals)
         total_simulated = np.asarray(total_simulated)
         return total_residuals
-    def fit_data(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff', xtol = 1e-7, maxfev = 2000, ftol = 1e-7, 
+    def fit_data(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers', xtol = 1e-7, maxfev = 2000, ftol = 1e-7, 
                  method = 'least_squares'):
         """Uses the lmfit minimizer to do the fitting through the simulation model function.
 
@@ -1271,7 +1301,7 @@ class Fit_DataSet:
         wing_wavenumbers : float, optional
             number of wavenumbers to simulate on either side of each line. The default is 50.
         wing_method : str, optional
-            Provides choice between the wing_cutoff and wing_wavenumbers line cut-off options. The default is 'wing_cutoff'.
+            Provides choice between the wing_cutoff and wing_wavenumbers line cut-off options. The default is 'wing_wavenumbers'.
         xtol : float, optional
              Absolute error in xopt between iterations that is acceptable for convergence. The default is 1e-7.
         maxfev : float, optional

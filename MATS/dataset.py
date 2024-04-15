@@ -26,15 +26,18 @@ class Dataset:
         sets the baseline order for all spectra in the dataset.  This will automatically be set to the maximum baseline order across all spectrum included in the Dataset.
     CIA_model : dictionary
         Specifies the model and band of CIA Model to use.  Default is {'model': None, 'band':None}.  Other option is {'model':'Karman', 'band':'a_band' or 'singlet_delta'}, which applies for O2-O2 and O2-N2 CIA in the Oxygen A and Singlet Delta Bands.
+    BIA_model : dictionary
+        Specifies whether to treat the line intensity and broadband treatment.  Default is {'sw_depletion': False, 'farwing_continuum': None}.  Options are 'sw_depletion' is True, which treats the line core intensity redistribution to the farwing.  'farwing continuum' options are None (not treated), broadband (static values from offline process), LBL means calculated from width values
     """
 
 
 
-    def __init__(self, spectra, dataset_name, param_linelist, CIA_model = {'model': None, 'band':None}):
+    def __init__(self, spectra, dataset_name, param_linelist, CIA_model = {'model': None, 'band':None}, BIA_model = {'sw_depletion': False, 'farwing_continuum': None}):
         self.spectra = spectra
         self.dataset_name = dataset_name
         self.param_linelist = param_linelist
         self.CIA_model = CIA_model
+        self.BIA_model = BIA_model
         self.renumber_spectra()
         self.molecule_list = self.correct_component_list()
         self.isotope_list = self.check_iso_list()
@@ -42,6 +45,8 @@ class Dataset:
         self.max_baseline_order()
         self.broadener_list = self.get_broadener_list()
         self.ILS_function_dict = self.get_ILS_function_dict()
+        self.baseline_paramlist =self.generate_baseline_paramlist()
+        self.check_param_list_BIA()
 
     def renumber_spectra(self):
         """renumbers the spectra to be sequential starting at 1 (called in the initialization of the class).
@@ -484,6 +489,22 @@ class Dataset:
         else:
             self.CIA_model['model'] = None
             return None
+    def check_param_list_BIA(self):
+        if self.BIA_model != {'sw_depletion': False, 'farwing_continuum': None}:
+            if self.BIA_model['sw_depletion']:
+                for species in self.broadener_list:
+                    if 'BIA_slope_%s'%species not in list(self.param_linelist):
+                        self.param_linelist['BIA_slope_%s'%species] = 0
+            if self.BIA_model['farwing_continuum'] == 'LBL':
+                for species in self.broadener_list:
+                    if 'BIA_collision_duration_%s'%species not in list(self.param_linelist):
+                        self.param_linelist['BIA_collision_duration_%s'%species] = 0
+
+                    
+         
+
+
+        
 
     def generate_summary_file(self, save_file = False):
         """ Generates a summary file combining spectral information from all spectra in the Dataset.
