@@ -201,7 +201,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
         linelist['Y'] += abun*(linelist['y_%s'%species]*(p/pref)*((Tref/T)**(linelist['n_y_%s'%species])))
         # Line Intensity at pressure for broadener       
         if BIA_slope:
-            linelist['LineIntensity_BIA'] += abun*(linelist['LineIntensity']*(1-0.01*(linelist['BIA_slope_%s'%species]/linelist['LineIntensity'])*(p/pref)))
+            linelist['LineIntensity_BIA'] += abun*(linelist['LineIntensity']*(1-0.01*linelist['BIA_slope_%s'%species]*(p/pref)))
 
 
 
