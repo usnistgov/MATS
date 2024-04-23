@@ -45,7 +45,7 @@ class Dataset:
         self.max_baseline_order()
         self.broadener_list = self.get_broadener_list()
         self.ILS_function_dict = self.get_ILS_function_dict()
-        self.baseline_paramlist =self.generate_baseline_paramlist()
+        self.base_linelist = self.generate_baseline_paramlist()
         self.check_param_list_BIA()
 
     def renumber_spectra(self):
