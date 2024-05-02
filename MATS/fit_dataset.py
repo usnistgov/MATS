@@ -6,7 +6,7 @@ import re
 import numpy as np
 import pandas as pd
 from scipy.interpolate import RegularGridInterpolator
-from .hapi import ISO, PYTIPS2017, PYTIPS2011, PYTIPS2021, pcqsdhc
+from .hapi import ISO, PYTIPS2017, PYTIPS2011, PYTIPS2021, pcqsdhc, PROFILE_LORENTZ
 from .utilities import molecularMass, etalon, convolveSpectrumSame
 from .codata import CONSTANTS
 from .o2_cia_karman import o2_cia_karman_model
@@ -17,7 +17,7 @@ from lmfit import Minimizer,  Parameters
 def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff',
                 p = 1, T = 296, molefraction = {}, isotope_list = ISO,
                 natural_abundance = True, abundance_ratio_MI = {},  Diluent = {}, diluent = 'air', IntensityThreshold = 1e-30, 
-                TIPS = PYTIPS2021, compressability_factor = 1, BIA_slope = False):
+                TIPS = PYTIPS2021, compressability_factor = 1, BIA_slope = False, BIA_FW_LBL = False, BIA_profile_calculation_width = 50):
     """Calculates the absorbance (ppm/cm) based on input line list, wavenumbers, and spectrum environmental parameters.
 
     Outline
@@ -180,6 +180,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
     linelist['Eta'] = 0.0
     linelist['Y'] = 0.0
     linelist['LineIntensity_BIA'] = 0.0
+    linelist['BIA_Collision_Duration'] = 0.0
     
 
     for species in Diluent:
@@ -202,6 +203,9 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
         # Line Intensity at pressure for broadener       
         if BIA_slope:
             linelist['LineIntensity_BIA'] += abun*(linelist['LineIntensity']*(1-0.01*linelist['BIA_slope_%s'%species]*(p/pref)))
+            if BIA_FW_LBL:
+                linelist['BIA_Collision_Duration'] += abun*(linelist['BIA_collision_duration_%s'%species])
+            
 
 
 
@@ -223,11 +227,19 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
         if BIA_slope:
             Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
                                                         molefraction[line['molec_id']] * line['abun_ratio'] * \
-                                                        line['LineIntensity_BIA'] * lineshape_vals_real + line['LineIntensity']*line['Y']*lineshape_vals_imag
+                                                        line['LineIntensity_BIA'] * lineshape_vals_real + line['LineIntensity']*line['Y']*lineshape_vals_imag                                
         else:
             Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
                                                     molefraction[line['molec_id']] * line['abun_ratio'] * \
                                                     line['LineIntensity'] * (lineshape_vals_real + line['Y']*lineshape_vals_imag)
+        if BIA_slope:
+            if BIA_FW_LBL:
+                BoundIndexLower_BIA =bisect(wavenumbers, line['nu'] - BIA_profile_calculation_width)
+                BoundIndexUpper_BIA  = bisect(wavenumbers, line['nu'] + BIA_profile_calculation_width)
+                Xsect[BoundIndexLower_BIA:BoundIndexUpper_BIA] += mol_dens  * \
+                                                            molefraction[line['molec_id']] * line['abun_ratio'] * \
+                                                            PROFILE_LORENTZ(line['nu'], 1/(2*np.pi*29979245800*1e-12*line['BIA_Collision_Duration']), 0, wavenumbers[BoundIndexLower_BIA:BoundIndexUpper_BIA], Sw = (line['LineIntensity'] - line['LineIntensity_BIA']))
+                                                            
             
 
     # Return two arrays corresponding to the wavenumber axis and the calculated cross-section
@@ -689,11 +701,28 @@ class Fit_DataSet:
         linelist_params = []
         for line_param in list(self.lineparam_list):
             if (self.dataset.get_number_nominal_temperatures()[0]) == 1:
-                if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower') and ('n_' not in line_param):
-                    linelist_params.append(line_param)
+                if self.dataset.BIA_model['sw_depletion']:
+                    if self.dataset.BIA_model['farwing_continuum'] == 'LBL':
+                        if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower') and ('n_' not in line_param):
+                            linelist_params.append(line_param)
+                    else:
+                        if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower') and ('n_' not in line_param) and ('BIA_collision_duration' not in line_param):
+                            linelist_params.append(line_param)
+                else:
+                    if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower') and ('n_' not in line_param) and ('BIA' not in line_param):
+                        linelist_params.append(line_param)
             else:
-                if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower'):
-                    linelist_params.append(line_param)
+                if self.dataset.BIA_model['sw_depletion']:
+                    if self.dataset.BIA_model['farwing_continuum'] == 'LBL':
+                        if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower'):
+                            linelist_params.append(line_param)
+                    else:
+                        if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower') and ('BIA_collision_duration' not in line_param):
+                            linelist_params.append(line_param)
+                else:
+                    if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower') and ('BIA' not in line_param):
+                        linelist_params.append(line_param)
+
         diluent_list = []
         for spectrum in self.dataset.spectra:
             for diluent in spectrum.Diluent:
@@ -1224,10 +1253,13 @@ class Fit_DataSet:
                             natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent, 
                             TIPS = spectrum.TIPS, compressability_factor = compressability_factor)
                 else:
+                    BIA_FW_LBL = False
+                    if self.dataset.BIA_model['farwing_continuum'] == 'LBL':
+                        BIA_FW_LBL = True
                     fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
                             p = p, T = T, molefraction = fit_molefraction, isotope_list = self.dataset.isotope_list,
                             natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent, 
-                            TIPS = spectrum.TIPS, compressability_factor = compressability_factor, BIA_slope = self.dataset.BIA_model['sw_depletion'])
+                            TIPS = spectrum.TIPS, compressability_factor = compressability_factor, BIA_slope = self.dataset.BIA_model['sw_depletion'], BIA_FW_LBL = BIA_FW_LBL)
                 fit_coef = fit_coef * 1e6
                                 
                 ## CIA Calculation

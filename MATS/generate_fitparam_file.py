@@ -458,6 +458,7 @@ class Generate_FitParam_File:
                                 param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'BIA_collision_duration_' +diluent + '_vary'] = (vary_BIA_slope[molecule][isotope])
                 else:
                     param_linelist_df['BIA_collision_duration_' + diluent] = 0.0
+                    
                     if (not self.dataset.BIA_model['sw_depletion']) and (self.dataset.BIA_model['farwing_continuum'] == 'LBL'):
                         print ('sw_depletion must be true to use LBL farwing continuum feature')
             
@@ -573,6 +574,7 @@ class Generate_FitParam_File:
             ordered_list.append(item)
             ordered_list.append(item + '_err')
             ordered_list.append(item + '_vary')
+        
         for item in order_linemixing:          
             ordered_list.append(item)
             if num_nominal_temps > 1:
@@ -582,7 +584,20 @@ class Generate_FitParam_File:
                 if 'n_' != item[:2]:
                     ordered_list.append(item + '_err')
                     ordered_list.append(item + '_vary')
-    
+        if self.sw_constrain:
+            for item in order_BIA_slope:
+                ordered_list.append(item)
+                if (self.dataset.BIA_model['sw_depletion']):
+                    ordered_list.append(item + '_err')
+                    ordered_list.append(item + '_vary')
+            for item in order_BIA_collision_duration:
+                ordered_list.append(item)
+                if (self.dataset.BIA_model['sw_depletion']) and (self.dataset.BIA_model['farwing_continuum'] == 'LBL'):
+                    ordered_list.append(item + '_err')
+                    ordered_list.append(item + '_vary')
+            
+            
+            
         param_linelist_df = param_linelist_df[ordered_list]
         param_linelist_df.to_csv(self.param_linelist_savename + '.csv') #
 
