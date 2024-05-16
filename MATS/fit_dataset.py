@@ -147,7 +147,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
     
     
     for molec in linelist['molec_id'].unique():
-        for iso in linelist ['local_iso_id'].unique():
+        for iso in linelist[linelist['molec_id']==molec]['local_iso_id'].unique():
             try:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaT'] = TIPS(molec,iso,T)
             except:
