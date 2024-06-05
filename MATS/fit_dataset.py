@@ -227,7 +227,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
         if BIA_slope:
             Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
                                                         molefraction[line['molec_id']] * line['abun_ratio'] * \
-                                                        line['LineIntensity_BIA'] * lineshape_vals_real + line['LineIntensity']*line['Y']*lineshape_vals_imag                                
+                                                        (line['LineIntensity_BIA'] * lineshape_vals_real + line['LineIntensity']*line['Y']*lineshape_vals_imag)                               
         else:
             Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
                                                     molefraction[line['molec_id']] * line['abun_ratio'] * \
