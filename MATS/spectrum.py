@@ -542,7 +542,7 @@ def simulate_spectrum(parameter_linelist,
     baseline_terms = np.flip(baseline_terms)
     temperature_K = temperature + 273.15
     pressure_atm = pressure / 760
-    if wavenumbers == []:
+    if len(wavenumbers) == 0:
         wavenumbers = np.arange(wave_min, wave_max + wave_space, wave_space)
 
     wavenumbers_err = wavenumbers + wave_error*np.random.normal(loc = 0, scale =1, size = len(wavenumbers))
