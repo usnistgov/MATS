@@ -236,9 +236,10 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
             if BIA_FW_LBL:
                 BoundIndexLower_BIA =bisect(wavenumbers, line['nu'] - BIA_profile_calculation_width)
                 BoundIndexUpper_BIA  = bisect(wavenumbers, line['nu'] + BIA_profile_calculation_width)
-                Xsect[BoundIndexLower_BIA:BoundIndexUpper_BIA] += mol_dens  * \
+                if line['BIA_Collision_Duration'] !=0:
+                    Xsect[BoundIndexLower_BIA:BoundIndexUpper_BIA] += mol_dens  * \
                                                             molefraction[line['molec_id']] * line['abun_ratio'] * \
-                                                            PROFILE_LORENTZ(line['nu'], 1/(2*np.pi*29979245800*1e-12*line['BIA_Collision_Duration']), 0, wavenumbers[BoundIndexLower_BIA:BoundIndexUpper_BIA], Sw = (line['LineIntensity'] - line['LineIntensity_BIA']))
+                                                            (line['LineIntensity'] - line['LineIntensity_BIA']) * PROFILE_LORENTZ(line['nu'], 1/(2*np.pi*29979245800*1e-12*line['BIA_Collision_Duration']), 0, wavenumbers[BoundIndexLower_BIA:BoundIndexUpper_BIA])
                                                             
             
 

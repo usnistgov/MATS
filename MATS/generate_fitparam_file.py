@@ -450,12 +450,12 @@ class Generate_FitParam_File:
             if self.sw_constrain: 
                 order_BIA_collision_duration.append('BIA_collision_duration_' + diluent)
                 if (self.dataset.BIA_model['sw_depletion']) and (self.dataset.BIA_model['farwing_continuum'] == 'LBL'):
-                    param_linelist_df['BIA_collision_duration' + diluent + '_vary'] = len(param_linelist_df)*[False]
-                    param_linelist_df['BIA_slope_' + diluent + '_err'] = len(param_linelist_df)*[0.0]
+                    param_linelist_df['BIA_collision_duration_' + diluent + '_vary'] = len(param_linelist_df)*[False]
+                    param_linelist_df['BIA_collision_duration_' + diluent + '_err'] = len(param_linelist_df)*[0.0]
                     if vary_BIA_collision_duration != {}:
                         for molecule in vary_BIA_collision_duration:
                             for isotope in vary_BIA_collision_duration[molecule]:
-                                param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'BIA_collision_duration_' +diluent + '_vary'] = (vary_BIA_slope[molecule][isotope])
+                                param_linelist_df.loc[(param_linelist_df['nu'] >= dataset_min)&(param_linelist_df['nu'] <= dataset_max)&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), 'BIA_collision_duration_' +diluent + '_vary'] = (vary_BIA_collision_duration[molecule][isotope])
                 else:
                     param_linelist_df['BIA_collision_duration_' + diluent] = 0.0
                     

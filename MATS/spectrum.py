@@ -603,6 +603,9 @@ def simulate_spectrum(parameter_linelist,
         comp_factor.drop('Pressure (MPa)', inplace=True, axis=1) 
         comp_factor_array = comp_factor.to_numpy()
         interp_comp_factor = RegularGridInterpolator(points = [pressures, temperatures], values = comp_factor_array)
+    BIA_FW_LBL = False
+    if BIA_model['farwing_continuum'] == 'LBL':
+        BIA_FW_LBL = True
     
     for seg in range(0, num_segments):
 
@@ -622,11 +625,12 @@ def simulate_spectrum(parameter_linelist,
                                 natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,
                                 Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold, TIPS = TIPS, compressability_factor = compressability_factor)
         else:
+            
             waves, alpha = HTP_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
                     p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, isotope_list = isotope_list,
                     natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,
                     Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold, TIPS = TIPS, compressability_factor = compressability_factor, 
-                    BIA_slope = BIA_model['sw_depletion'])
+                    BIA_slope = BIA_model['sw_depletion'], BIA_FW_LBL = BIA_FW_LBL)
         alpha_array[np.min(segment_array): np.max(segment_array)+1] = alpha * 1e6
 
         pressure_array[np.min(segment_array): np.max(segment_array)+1] = len(alpha)*[segment_pressure]
