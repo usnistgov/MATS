@@ -425,18 +425,18 @@ class Dataset:
                     line['molefraction_' + (self.isotope_list[(molecule, 1)][4])] = (spectrum.molefraction[molecule])
                 for i in range(0, self.baseline_order + 1):
                     if chr(i+97) == 'a':
-                        line['baseline_' + chr(i+97)] = 0
+                        line['baseline_' + chr(i+97)] = 0.
                     else:
-                        line['baseline_' + chr(i+97)] = 0
+                        line['baseline_' + chr(i+97)] = 0.
                 for etalon_name in spectrum.etalons:
                     line['etalon_' + str(etalon_name) + '_amp'] = spectrum.etalons[etalon_name][0]
                     line['etalon_' + str(etalon_name) + '_period'] = spectrum.etalons[etalon_name][1]
-                    line['etalon_' + str(etalon_name) + '_phase'] = 0
+                    line['etalon_' + str(etalon_name) + '_phase'] = 0.
                 if self.ILS_function_dict != {}:
                     for ILS_function in self.ILS_function_dict:
                         for res_param in range(0, self.ILS_function_dict[ILS_function]):
                             if (spectrum.ILS_function == None) or (spectrum.ILS_function.__name__ != ILS_function):
-                                line[ILS_function + '_res_' + str(res_param)] = 0
+                                line[ILS_function + '_res_' + str(res_param)] = 0.
                             elif (type(spectrum.ILS_resolution) == float) or (type(spectrum.ILS_resolution) == int):
                                 line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution
                             else:

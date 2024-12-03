@@ -168,13 +168,13 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
     #Calculate Doppler Broadening
     linelist['GammaD'] = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(linelist['m'].values))*linelist['nu'] / CONSTANTS['c']
     # Calculated Line Parameters across Broadeners
-    linelist['Gamma0'] = 0
-    linelist['Shift0'] = 0
-    linelist['Gamma2'] = 0
-    linelist['Shift2'] = 0
-    linelist['NuVC'] = 0
-    linelist['Eta'] = 0
-    linelist['Y'] = 0
+    linelist['Gamma0'] = 0.
+    linelist['Shift0'] = 0.
+    linelist['Gamma2'] = 0.
+    linelist['Shift2'] = 0.
+    linelist['NuVC'] = 0.
+    linelist['Eta'] = 0.
+    linelist['Y'] = 0.
     for species in Diluent:
         abun = Diluent[species]['composition']
         #Gamma0: pressure broadening coefficient HWHM
@@ -318,7 +318,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
     wavenumbers = waves
 
     #Set Omegas to X-values
-    Xsect = [0]*len(wavenumbers)
+    Xsect = [0.]*len(wavenumbers)
 
     #define reference temperature/pressure and calculate molecular density
     Tref = 296. # K
@@ -332,18 +332,18 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
          if diluent == 'air':
              Diluent = {diluent: {'composition':1, 'm':28.95734}}
          elif diluent == 'self':
-            Diluent = {diluent: {'composition':1, 'm':0}}
+            Diluent = {diluent: {'composition':1, 'm':0.}}
          else:
-            Diluent = {diluent: {'composition':1, 'm':0}}
+            Diluent = {diluent: {'composition':1, 'm':0.}}
             print ('THIS IS GOING TO BREAK WITH A DIVISION ERROR.  GO BACK AND USE DILUENT FORMALISM FOR THE SPECTRUM DEFINITION')
 
 
 
     #Calculate line intensity
-    linelist['SigmaT'] = 0
-    linelist['SigmaTref'] = 0
-    linelist['GammaD'] = 0
-    linelist['m'] = 0
+    linelist['SigmaT'] = 0.
+    linelist['SigmaTref'] = 0.
+    linelist['GammaD'] = 0.
+    linelist['m'] = 0.
     linelist['abun_ratio'] = 1
 
     for molec in linelist['molec_id'].unique():
@@ -364,7 +364,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
             if ( natural_abundance == False) and abundance_ratio_MI != {}:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'abun_ratio'] = abundance_ratio_MI[molec][iso]
     # Calculate mp
-    mp = 0
+    mp = 0.
     for diluent in Diluent:
         mp += Diluent[diluent]['composition']*Diluent[diluent]['m']
 
@@ -378,13 +378,13 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
     linelist['GammaD'] = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(linelist['m'].values))*linelist['nu'] / CONSTANTS['c']
 
     # Calculated Line Parameters across Broadeners
-    linelist['Gamma0'] = 0
-    linelist['Shift0'] = 0
-    linelist['Gamma2'] = 0
-    linelist['Shift2'] = 0
-    linelist['NuVC'] = 0
-    linelist['Eta'] = 0
-    linelist['Y'] = 0
+    linelist['Gamma0'] = 0.
+    linelist['Shift0'] = 0.
+    linelist['Gamma2'] = 0.
+    linelist['Shift2'] = 0.
+    linelist['NuVC'] = 0.
+    linelist['Eta'] = 0.
+    linelist['Y'] = 0.
     for species in Diluent:
         abun = Diluent[species]['composition']
         #Gamma0: pressure broadening coefficient HWHM
@@ -1108,8 +1108,8 @@ class Fit_DataSet:
                 linelist_params.append(param)
 
         for spectrum in self.dataset.spectra:
-            simulated_spectra = len(spectrum.wavenumber)*[0]
-            residuals = len(spectrum.alpha)*[0]
+            simulated_spectra = len(spectrum.wavenumber)*[0.]
+            residuals = len(spectrum.alpha)*[0.]
             wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
             Diluent = spectrum.Diluent
             spectrum_number = spectrum.spectrum_number
@@ -1246,7 +1246,7 @@ class Fit_DataSet:
 
             
                 ## Baseline Calculation
-                baseline_param_array = [0]*(self.dataset.baseline_order+1)
+                baseline_param_array = [0.]*(self.dataset.baseline_order+1)
                 for param in baseline_params:
                     if ('baseline' in param):
                         indices = [m.start() for m in re.finditer('_', param)]
@@ -1259,7 +1259,7 @@ class Fit_DataSet:
                 #Etalon Calculation
                 fit_etalon_parameters = {}
                 for i in range(1, len(spectrum.etalons)+1):
-                    fit_etalon_parameters[i] = {'amp': 0, 'period':1, 'phase':0}
+                    fit_etalon_parameters[i] = {'amp': 0., 'period':1., 'phase':0.}
                 for param in baseline_params:
                     if ('etalon' in param) and (str(spectrum_number) in param[param.find('_', 7):]):
                         etalon_num = int(param[param.find('_')+1: param.find('_', param.find('_')+1)])
@@ -1269,7 +1269,7 @@ class Fit_DataSet:
                             fit_etalon_parameters[etalon_num]['period'] =float(params[param])
                         if param == 'etalon_' + str(etalon_num) + '_phase_' + str(spectrum_number) +'_' + str(segment):#('phase' in param) and (str(etalon_num) in param):
                             fit_etalon_parameters[etalon_num]['phase'] = float(params[param])
-                etalons = len(wavenumbers)*[0]
+                etalons = len(wavenumbers)*[0.]
                 for i in range(1, len(spectrum.etalons)+1):
                     etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase'])
                 
@@ -1461,16 +1461,16 @@ class Fit_DataSet:
         #Calculate Baseline + Etalons and add to the Baseline term for each spectra
         for spectrum in self.dataset.spectra:
             wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
-            baseline = len(spectrum.wavenumber)*[0]
+            baseline = len(spectrum.wavenumber)*[0.0]
             for segment in set(spectrum.segments):
                 waves = wavenumber_segments[segment]
                 bound_min = np.min(indices_segments[segment])
                 bound_max = np.max(indices_segments[segment])
                 wave_rel = waves - np.min(spectrum.wavenumber)
-                baseline_param_array = [0]*(self.dataset.baseline_order+1)
+                baseline_param_array = [0.0]*(self.dataset.baseline_order+1)
                 fit_etalon_parameters = {}
                 for i in range(1, len(spectrum.etalons)+1):
-                    fit_etalon_parameters[i] = {'amp': 0, 'period':0, 'phase':0}
+                    fit_etalon_parameters[i] = {'amp': 0., 'period':0., 'phase':0.}
                 for key, par in result.params.items():
                     if ('baseline' in par.name) and ((str(spectrum.spectrum_number) + '_' + str(segment)) in par.name):
                         baseline_param_array[ord(par.name[9:par.name.find('_',9)])-97] = float(par.value)
@@ -1581,7 +1581,7 @@ class Fit_DataSet:
                         GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['m'].values))*beta_summary_list['nu'] / CONSTANTS['c']#change with nu
                     else:
                         GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['m'].values))*beta_summary_list['nu' + '_' + str(spectrum.spectrum_number)] / CONSTANTS['c'] #change with nu
-                    nuVC = len(GammaD)*[0]
+                    nuVC = len(GammaD)*[0.]
                     for diluent in spectrum.Diluent:
                         abun = spectrum.Diluent[diluent]['composition']
                         if nuVC_constrain:
