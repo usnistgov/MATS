@@ -1,2 +1,0 @@
-Spectrum Number,Segment Number,Pressure,Pressure_err,Pressure_vary,Temperature,Temperature_err,Temperature_vary,x_shift,x_shift_err,x_shift_vary,molefraction_CO2,molefraction_CO2_err,molefraction_CO2_vary,baseline_a,baseline_a_err,baseline_a_vary,baseline_b,baseline_b_err,baseline_b_vary,SLIT_MICHELSON_res_0,SLIT_MICHELSON_res_0_err,SLIT_MICHELSON_res_0_vary,pathlength,pathlength_err,pathlength_vary
-1.0,1.0,0.976421052631538,0,False,295.3000000000097,0,False,0.0,0,False,0.090340664,0,False,0.0,0,False,0.0,0,False,0.012,0,False,3254.0,0,False
