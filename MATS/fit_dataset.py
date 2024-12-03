@@ -136,14 +136,14 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
          if diluent == 'air':
              Diluent = {diluent: {'composition':1, 'm':28.95734}}
          elif diluent == 'self':
-            Diluent = {diluent: {'composition':1, 'm':0}}
+            Diluent = {diluent: {'composition':1, 'm':0.}}
 
     #Calculate line intensity
-    linelist['SigmaT'] = 0
-    linelist['SigmaTref'] = 0
-    linelist['GammaD'] = 0
-    linelist['m'] = 0
-    linelist['abun_ratio'] = 1
+    linelist['SigmaT'] = 0.
+    linelist['SigmaTref'] = 0.
+    linelist['GammaD'] = 0.
+    linelist['m'] = 0.
+    linelist['abun_ratio'] = 1.
 
     for molec in linelist['molec_id'].unique():
         for iso in linelist ['local_iso_id'].unique():
@@ -1144,9 +1144,9 @@ class Fit_DataSet:
                 if param in columns:
                     if 'sw' in param:
                         #print (linelist_for_sim[line]['sw_scale_factor'])
-                        linelist_for_sim.loc[line, param] = np.float(params[parameter])
+                        linelist_for_sim.loc[line, param] = float(params[parameter])
                     else:
-                        linelist_for_sim.loc[line, param] = np.float(params[parameter])
+                        linelist_for_sim.loc[line, param] = float(params[parameter])
             #Renames columns to generic (no scan number)
             linelist_for_sim=linelist_for_sim.rename(columns = rename_dictionary)
             linelist_for_sim['sw'] = linelist_for_sim['sw']*linelist_for_sim['sw_scale_factor']
@@ -1154,18 +1154,18 @@ class Fit_DataSet:
             #Calculate CIA for Spectrum
             if self.dataset.CIA_model['model'] == "Karman":
                 CIA = o2_cia_karman_model(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
-                        np.float(params['S_SO_O2_O2']),
-                        np.float(params['S_SO_O2_N2']),
-                        np.float(params['S_EXCH_O2_O2']),
-                        np.float(params['EXCH_b_O2_O2']),
-                        np.float(params['EXCH_c_O2_O2']),
-                        np.float(params['SO_b_O2_O2']),
-                        np.float(params['SO_c_O2_O2']),
-                        np.float(params['SO_b_O2_N2']),
-                        np.float(params['SO_c_O2_N2']),
-                        np.float(params['SO_shift_O2_O2']),
-                        np.float(params['SO_shift_O2_N2']),
-                        np.float(params['EXCH_shift_O2_N2']),
+                        float(params['S_SO_O2_O2']),
+                        float(params['S_SO_O2_N2']),
+                        float(params['S_EXCH_O2_O2']),
+                        float(params['EXCH_b_O2_O2']),
+                        float(params['EXCH_c_O2_O2']),
+                        float(params['SO_b_O2_O2']),
+                        float(params['SO_c_O2_O2']),
+                        float(params['SO_b_O2_N2']),
+                        float(params['SO_c_O2_N2']),
+                        float(params['SO_shift_O2_O2']),
+                        float(params['SO_shift_O2_N2']),
+                        float(params['EXCH_shift_O2_N2']),
                         band = self.dataset.CIA_model['band'])
                 if not spectrum.low_OD_regime:
                     CIA *= 1e-6
@@ -1190,7 +1190,7 @@ class Fit_DataSet:
                 wavenumbers = wavenumber_segments[segment]
                 simulated_cia = len(wavenumbers)*[0]
                 wavenumbers_relative = wavenumbers - np.min(spectrum.wavenumber)
-                x_shift = np.float(params['x_shift_' + str(spectrum_number) + '_' + str(segment)])
+                x_shift = float(params['x_shift_' + str(spectrum_number) + '_' + str(segment)])
                 #linelist_for_sim['nu'] = linelist_for_sim['nu'] + x_shift # Q
                 wavenumbers += x_shift
                 wavenumbers_relative+= x_shift
@@ -1198,10 +1198,10 @@ class Fit_DataSet:
                 fit_molefraction = spectrum.molefraction
                 for molecule in spectrum.molefraction:
                     if ('molefraction_'+ self.dataset.isotope_list[(molecule, 1)][4]) + '_' + str(spectrum_number) + '_' + str(segment) in baseline_params:
-                        fit_molefraction[molecule] = np.float(params[('molefraction_'+ self.dataset.isotope_list[(molecule, 1)][4]) + '_' + str(spectrum_number) + '_' + str(segment)])
+                        fit_molefraction[molecule] = float(params[('molefraction_'+ self.dataset.isotope_list[(molecule, 1)][4]) + '_' + str(spectrum_number) + '_' + str(segment)])
                 #Get Environmental Parameters
-                p = np.float(params['Pressure_' + str(spectrum_number) + '_' + str(segment)])
-                T = np.float(params['Temperature_' + str(spectrum_number) + '_' + str(segment)])
+                p = float(params['Pressure_' + str(spectrum_number) + '_' + str(segment)])
+                T = float(params['Temperature_' + str(spectrum_number) + '_' + str(segment)])
                 if spectrum.compressability_file != None:
                     compressability_factor = interp_comp_factor([p, T])[0]
                 else:
@@ -1231,15 +1231,15 @@ class Fit_DataSet:
                 else:
 
                     if spectrum.transmittance_space:
-                        fit_coef = np.exp(-fit_coef*np.float(params['pathlength_' + str(spectrum_number) +'_'+ str(segment)]))
+                        fit_coef = np.exp(-fit_coef*float(params['pathlength_' + str(spectrum_number) +'_'+ str(segment)]))
                         if self.dataset.CIA_model['model'] == "Karman":
-                            simulated_cia = np.exp(-CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]*np.float(params['pathlength_' + str(spectrum_number)+'_' + str(segment)]))
+                            simulated_cia = np.exp(-CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]*float(params['pathlength_' + str(spectrum_number)+'_' + str(segment)]))
                         else:
                             simulated_cia = CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]
                     else:
-                        fit_coef = 1 - np.exp(-fit_coef*np.float(params['pathlength_' + str(spectrum_number)+'_'+ str(segment)]))
+                        fit_coef = 1 - np.exp(-fit_coef*float(params['pathlength_' + str(spectrum_number)+'_'+ str(segment)]))
                         if self.dataset.CIA_model['model'] == "Karman":
-                            simulated_cia = 1- np.exp(-CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]*np.float(params['pathlength_' + str(spectrum_number)+'_' + str(segment)]))
+                            simulated_cia = 1- np.exp(-CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]*float(params['pathlength_' + str(spectrum_number)+'_' + str(segment)]))
                         else:
                             simulated_cia = CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]
 
@@ -1253,7 +1253,7 @@ class Fit_DataSet:
                         spectrum_num = int(param[indices[1]+1:indices[2]])
                         segment_num = int(param[indices[2]+1:])
                         if (spectrum_num == spectrum_number) and (segment_num == segment):
-                            baseline_param_array[ord(param[9:param.find('_',9)])-97] = np.float(params[param])
+                            baseline_param_array[ord(param[9:param.find('_',9)])-97] = float(params[param])
                 baseline_param_array = baseline_param_array[::-1] # reverses array to be used for polyval
                 baseline = np.polyval(baseline_param_array, wavenumbers_relative)
                 #Etalon Calculation
@@ -1264,11 +1264,11 @@ class Fit_DataSet:
                     if ('etalon' in param) and (str(spectrum_number) in param[param.find('_', 7):]):
                         etalon_num = int(param[param.find('_')+1: param.find('_', param.find('_')+1)])
                         if param == 'etalon_' + str(etalon_num) + '_amp_' + str(spectrum_number) + '_' +str(segment):#('amp' in param) and (str(etalon_num) in param):
-                            fit_etalon_parameters[etalon_num]['amp'] = np.float(params[param])
+                            fit_etalon_parameters[etalon_num]['amp'] = float(params[param])
                         if param == 'etalon_' + str(etalon_num) + '_period_' + str(spectrum_number) + '_' +str(segment):#('period' in param) and (str(etalon_num) in param):
-                            fit_etalon_parameters[etalon_num]['period'] = np.float(params[param])
+                            fit_etalon_parameters[etalon_num]['period'] =float(params[param])
                         if param == 'etalon_' + str(etalon_num) + '_phase_' + str(spectrum_number) +'_' + str(segment):#('phase' in param) and (str(etalon_num) in param):
-                            fit_etalon_parameters[etalon_num]['phase'] = np.float(params[param])
+                            fit_etalon_parameters[etalon_num]['phase'] = float(params[param])
                 etalons = len(wavenumbers)*[0]
                 for i in range(1, len(spectrum.etalons)+1):
                     etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase'])
@@ -1277,11 +1277,11 @@ class Fit_DataSet:
                 #ILS_Function
                 if spectrum.ILS_function != None:
                     if self.dataset.ILS_function_dict[spectrum.ILS_function.__name__] ==1:
-                        spec_seg_ILS_resolution  = np.float(params[spectrum.ILS_function.__name__ + '_res_0_' + str(spectrum_number) + '_' +str(segment)])
+                        spec_seg_ILS_resolution  = float(params[spectrum.ILS_function.__name__ + '_res_0_' + str(spectrum_number) + '_' +str(segment)])
                     else:
                         spec_seg_ILS_resolution  = []
                         for res_param in range(0, self.dataset.ILS_function_dict[spectrum.ILS_function.__name__]):
-                            spec_seg_ILS_resolution  += np.float(params[spectrum.ILS_function.__name__ + '_res_' + str(res_param) +'_' + str(spectrum_number) + '_' +str(segment)])
+                            spec_seg_ILS_resolution  += float(params[spectrum.ILS_function.__name__ + '_res_' + str(res_param) +'_' + str(spectrum_number) + '_' +str(segment)])
                     wavenumbers, segment_alpha, i1, i2m, slit = convolveSpectrumSame(wavenumbers, segment_alpha, SlitFunction = spectrum.ILS_function, Resolution = spec_seg_ILS_resolution ,AF_wing=spectrum.ILS_wing)
                 simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = (segment_alpha)
                 #Weighted Spectra
@@ -1473,7 +1473,7 @@ class Fit_DataSet:
                     fit_etalon_parameters[i] = {'amp': 0, 'period':0, 'phase':0}
                 for key, par in result.params.items():
                     if ('baseline' in par.name) and ((str(spectrum.spectrum_number) + '_' + str(segment)) in par.name):
-                        baseline_param_array[ord(par.name[9:par.name.find('_',9)])-97] = np.float(par.value)
+                        baseline_param_array[ord(par.name[9:par.name.find('_',9)])-97] = float(par.value)
                     elif ('etalon' in par.name) and ((str(spectrum.spectrum_number) + '_' + str(segment)) in par.name[par.name.find('_', 7):]):
                         etalon_num = int(par.name[par.name.find('_')+1: par.name.find('_', par.name.find('_')+1)])
                         if ('amp' in par.name) and (str(etalon_num) in par.name):
@@ -1492,18 +1492,18 @@ class Fit_DataSet:
             if self.dataset.CIA_model['model']=='Karman':
                 for spectrum in self.dataset.spectra:
                     CIA = o2_cia_karman_model(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
-                        np.float(result.params['S_SO_O2_O2'].value),
-                        np.float(result.params['S_SO_O2_N2'].value),
-                        np.float(result.params['S_EXCH_O2_O2'].value),
-                        np.float(result.params['EXCH_b_O2_O2'].value),
-                        np.float(result.params['EXCH_c_O2_O2'].value),
-                        np.float(result.params['SO_b_O2_O2'].value),
-                        np.float(result.params['SO_c_O2_O2'].value),
-                        np.float(result.params['SO_b_O2_N2'].value),
-                        np.float(result.params['SO_c_O2_N2'].value),
-                        np.float(result.params['SO_shift_O2_O2'].value),
-                        np.float(result.params['SO_shift_O2_N2'].value),
-                        np.float(result.params['EXCH_shift_O2_N2'].value),
+                        float(result.params['S_SO_O2_O2'].value),
+                        float(result.params['S_SO_O2_N2'].value),
+                        float(result.params['S_EXCH_O2_O2'].value),
+                        float(result.params['EXCH_b_O2_O2'].value),
+                        float(result.params['EXCH_c_O2_O2'].value),
+                        float(result.params['SO_b_O2_O2'].value),
+                        float(result.params['SO_c_O2_O2'].value),
+                        float(result.params['SO_b_O2_N2'].value),
+                        float(result.params['SO_c_O2_N2'].value),
+                        float(result.params['SO_shift_O2_O2'].value),
+                        float(result.params['SO_shift_O2_N2'].value),
+                        float(result.params['EXCH_shift_O2_N2'].value),
                         band = self.dataset.CIA_model['band'])
                     
                     if not spectrum.low_OD_regime:
@@ -1513,9 +1513,9 @@ class Fit_DataSet:
                         for segment in list(set(spectrum.segments)):
                             if spectrum.transmittance_space:
                                 
-                                CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = np.exp(-CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]*np.float(result.params['pathlength_' + str(spectrum.spectrum_number) + str(segment)]))
+                                CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = np.exp(-CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]*float(result.params['pathlength_' + str(spectrum.spectrum_number) + str(segment)]))
                             else:
-                                CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = 1- np.exp(-CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]*np.float(result.params['pathlength_' + str(spectrum.spectrum_number) + str(segment)]))
+                                CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = 1- np.exp(-CIA[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]*float(result.params['pathlength_' + str(spectrum.spectrum_number) + str(segment)]))
 
                             
                     spectrum.set_cia(CIA)

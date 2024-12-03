@@ -444,7 +444,8 @@ class Dataset:
                 if (self.yaxis_types['absorption'] != 0) or (self.yaxis_types['transmittance'] != 0):
                     line['pathlength'] = spectrum.pathlength
                     
-                baseline_paramlist  = baseline_paramlist.append(line, ignore_index=True)
+                baseline_paramlist  = pd.concat([baseline_paramlist, pd.DataFrame(line, index = [0])], ignore_index = True, sort = False)
+
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
         baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv', index = True)
         return baseline_paramlist
@@ -519,7 +520,7 @@ class Dataset:
         summary_file = pd.DataFrame()
         for spectrum in self.spectra:
             spectrum_data = spectrum.save_spectrum_info(save_file = False)
-            summary_file = summary_file.append(spectrum_data)
+            summary_file = pd.concat([summary_file, spectrum_data], ignore_index = True, sort = False)
         if save_file:
             summary_file.to_csv(self.dataset_name + '.csv', index = False)
         return summary_file
