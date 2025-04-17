@@ -64,15 +64,15 @@ class Generate_FitParam_File:
                  nuVC_constrain = True, eta_constrain =True, linemixing_constrain = True,
                  additional_columns = []):
         self.dataset = dataset
-        if param_linelist == None:
+        if param_linelist is None:
             self.param_linelist = self.dataset.param_linelist
         else:
             self.param_linelist = param_linelist
-        if base_linelist == None:
+        if base_linelist is None:
             self.base_linelist = self.dataset.base_linelist
         else:
             self.base_linelist = base_linelist
-        if self.dataset.CIA_model == None:
+        if self.dataset.CIA_model is None:
             self.CIA_linelist = None
             self.CIA_linelist_savename = None
         else:
