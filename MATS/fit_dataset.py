@@ -142,7 +142,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
     linelist['SigmaT'] = 0.0
     linelist['SigmaTref'] = 0.0
     linelist['GammaD'] = 0.0
-    linelist['m'] = 0.0
+    linelist['m_mass'] = 0.0
     linelist['abun_ratio'] = 1.0
     
     
@@ -156,7 +156,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = TIPS(molec,iso,Tref)
             except:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = 1
-            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso, isotope_list = isotope_list) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm_mass'] = molecularMass(molec,iso, isotope_list = isotope_list) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion
             if ( natural_abundance == False) and abundance_ratio_MI != {}:
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'abun_ratio'] = abundance_ratio_MI[molec][iso]
 
@@ -170,7 +170,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
     
 
     #Calculate Doppler Broadening
-    linelist['GammaD'] = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(linelist['m'].values))*linelist['nu'] / CONSTANTS['c']
+    linelist['GammaD'] = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(linelist['m_mass'].values))*linelist['nu'] / CONSTANTS['c']
     # Calculated Line Parameters across Broadeners
     linelist['Gamma0'] = 0.0
     linelist['Shift0'] = 0.0
@@ -374,7 +374,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
     linelist['SigmaT'] = 0.0
     linelist['SigmaTref'] = 0.0
     linelist['GammaD'] = 0.0
-    linelist['m'] = 0.0
+    linelist['m_mass'] = 0.0
     linelist['abun_ratio'] = 1.0
 
     for molec in linelist['molec_id'].unique():
@@ -389,7 +389,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
                 linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'SigmaTref'] = 1
 
 
-            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm'] = molecularMass(molec,iso, isotope_list = isotope_list) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion
+            linelist.loc[(linelist['molec_id']==molec) & (linelist['local_iso_id']==iso), 'm_mass'] = molecularMass(molec,iso, isotope_list = isotope_list) #* 1.66053873e-27 * 1000 #cmassmol and kg conversion
             if (len(Diluent) == 1) & ('self' in Diluent):
                 Diluent['self']['mp'] = molecularMass(molec,iso, isotope_list = isotope_list)
             if ( natural_abundance == False) and abundance_ratio_MI != {}:
@@ -405,8 +405,8 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
         linelist.loc[(linelist['SigmaT' == 1]) & (linelist['SigmaTref' == 1])] = linelist[(linelist['SigmaT' == 1]) & (linelist['SigmaTref' == 1])]['sw'].values
 
     #Calculate Doppler Broadening
-    #linelist['GammaD'] = np.sqrt(2*1.380648813E-16*T*np.log(2)/linelist['m']/2.99792458e10**2)*linelist['nu']
-    linelist['GammaD'] = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(linelist['m'].values))*linelist['nu'] / CONSTANTS['c']
+    #linelist['GammaD'] = np.sqrt(2*1.380648813E-16*T*np.log(2)/linelist['m_mass']/2.99792458e10**2)*linelist['nu']
+    linelist['GammaD'] = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(linelist['m_mass'].values))*linelist['nu'] / CONSTANTS['c']
 
     # Calculated Line Parameters across Broadeners
     linelist['Gamma0'] = 0.0
@@ -434,7 +434,7 @@ def HTP_wBeta_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers
         #linelist['Y'] += abun*(linelist['y_%s'%species]*(p/pref))
         linelist['Y'] += abun*(linelist['y_%s'%species]*(p/pref)*((Tref/T)**(linelist['n_y_%s'%species])))
 
-    linelist['alpha'] =  mp / linelist['m']
+    linelist['alpha'] =  mp / linelist['m_mass']
     linelist['Chi'] = linelist['NuVC'] / linelist['GammaD']
     linelist['A'] = 0.0534 + 0.1585*np.exp(-0.451*linelist['alpha'].values)
     linelist['B'] = 1.9595 - 0.1258*linelist['alpha'].values + 0.0056*linelist['alpha'].values**2 + 0.0050*linelist['alpha'].values**3
@@ -1583,7 +1583,7 @@ class Fit_DataSet:
             #Add Column for mass
             for molec in beta_summary_list['molec_id'].unique():
                 for iso in beta_summary_list ['local_iso_id'].unique():
-                    beta_summary_list.loc[(beta_summary_list['molec_id']==molec) & (beta_summary_list['local_iso_id']==iso), 'm'] = molecularMass(molec,iso, isotope_list = self.dataset.isotope_list, )
+                    beta_summary_list.loc[(beta_summary_list['molec_id']==molec) & (beta_summary_list['local_iso_id']==iso), 'm_mass'] = molecularMass(molec,iso, isotope_list = self.dataset.isotope_list, )
 
             #Single or MS for nu and nuVC
             for spectrum in self.dataset.spectra:
@@ -1598,11 +1598,11 @@ class Fit_DataSet:
                     wave_min = np.min(wavenumber_segments[segment])
                     wave_max = np.max(wavenumber_segments[segment])
 
-                    beta_summary_list['alpha'] = mp / beta_summary_list['m']
+                    beta_summary_list['alpha'] = mp / beta_summary_list['m_mass']
                     if nu_constrain:
-                        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['m'].values))*beta_summary_list['nu'] / CONSTANTS['c']#change with nu
+                        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['m_mass'].values))*beta_summary_list['nu'] / CONSTANTS['c']#change with nu
                     else:
-                        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['m'].values))*beta_summary_list['nu' + '_' + str(spectrum.spectrum_number)] / CONSTANTS['c'] #change with nu
+                        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['m_mass'].values))*beta_summary_list['nu' + '_' + str(spectrum.spectrum_number)] / CONSTANTS['c'] #change with nu
                     nuVC = len(GammaD)*[0]
                     for diluent in spectrum.Diluent:
                         abun = spectrum.Diluent[diluent]['composition']
