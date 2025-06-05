@@ -1,0 +1,77 @@
+[build-system]
+requires = ["setuptools >= 77.0.3", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "MATS"
+authors = [{ name = "Erin M. Adkins", email = "erin.adkins@nist.gov" }]
+license = "NIST-PD-fallback"
+description = "A NIST based multi-spectrum fitting tool for spectroscopic data"
+keywords = ["MATS"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+]
+dynamic = ["version"]
+readme = "README.md"
+license-files = ["LICENSE"]
+requires-python = ">=3.6"
+dependencies = [
+    "numpy",
+    "pandas",
+    "lmfit",
+    "matplotlib",
+    "seaborn",
+    "scipy",
+    "qgrid",
+    "mpmath",
+    "jupyter",
+]
+
+[project.urls]
+Homepage = "https://github.com/usnistgov/MATS"
+
+[tool.setuptools]
+zip-safe = true             # if using mypy, must be False
+include-package-data = true
+
+[tool.setuptools.packages]
+find = { namespaces = false }
+
+[tool.setuptools.dynamic]
+readme = { file = ["README.md"], content-type = "text/markdown" }
+
+[tool.aliases]
+test = "pytest"
+
+[tool.pytest.ini_options]
+addopts = "--verbose"
+testpaths = ["tests"]
+
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+force_to_top = ["true"]
+default_section = "THIRDPARTY"
+known_first_party = ["MATS"]
+
+[tool.flake8]
+ignore = [
+    "E203", # whitespace before ':' - doesn't work well with black
+    "E402", # module level import not at top of file
+    "E501", # line too long - let black worry about that
+    "E731", # do not assign a lambda expression, use a def
+    "W503", # line break before binary operator"""
+]
+exclude = [".eggs", "doc", "docs"]
