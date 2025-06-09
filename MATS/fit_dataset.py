@@ -13,6 +13,10 @@ from .o2_cia_karman import o2_cia_karman_model
 
 from lmfit import Minimizer,  Parameters
 
+def convert_int_to_float(df, exclude_cols=None):
+    mask = (df.drop(columns=exclude_cols, axis=1) if exclude_cols else df).select_dtypes(int)
+    df[mask.columns] = mask.astype(float)
+    return df
 
 def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff',
                 p = 1, T = 296, molefraction = {}, isotope_list = ISO,
@@ -591,7 +595,9 @@ class Fit_DataSet:
         self.base_linelist_file = base_linelist_file
         self.baseline_list = pd.read_csv(self.base_linelist_file + '.csv')#, index_col = 0
         self.param_linelist_file = param_linelist_file
-        self.lineparam_list = pd.read_csv(self.param_linelist_file + '.csv', index_col = 0)
+        self.lineparam_list = convert_int_to_float(
+            pd.read_csv(self.param_linelist_file + ".csv", index_col=0), ["trans_id", "m", "molec_id", "local_iso_id"]
+        )
         self.CIA_linelist_file = CIA_linelist_file
         if self.CIA_linelist_file == None:
             self.CIAparam_list = None
