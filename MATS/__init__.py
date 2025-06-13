@@ -27,13 +27,7 @@ try:
     import importlib.metadata
 
     __version__ = importlib.metadata.version("MATS")
-except Exception:
-    # importlib.metadata only works reliably for Python >=3.10, and was added in Python 3.8
-    try:
-        import pkg_resources
-
-        __version__ = pkg_resources.get_distribution("MATS").version
-    except Exception:
-        # Local copy or not installed with setuptools.
-        # Disable minimum version checks on downstream libraries.
-        __version__ = "999"
+except importlib.metadata.PackageNotFoundError:
+    # Local copy or not installed with setuptools.
+    # Disable minimum version checks on downstream libraries.
+    __version__ = "999"
