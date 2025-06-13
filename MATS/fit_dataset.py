@@ -2,6 +2,7 @@
 # from .Utilities import *
 from bisect import bisect
 import re
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -12,6 +13,10 @@ from .codata import CONSTANTS
 from .o2_cia_karman import o2_cia_karman_model
 
 from lmfit import Minimizer,  Parameters
+
+# lmfit generates warnings from the uncertainties module about params with zero uncertainty
+# this is expected behavior and we should be able to safely ignore them
+warnings.filterwarnings("ignore", category=UserWarning, module="uncertainties")
 
 def convert_int_to_float(df, exclude_cols=None):
     mask = (df.drop(columns=exclude_cols, axis=1) if exclude_cols else df).select_dtypes(int)
