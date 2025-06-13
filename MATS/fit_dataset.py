@@ -588,16 +588,16 @@ class Fit_DataSet:
                 nuVC_limit = False, nuVC_limit_factor  = 10, n_nuVC_limit = False, n_nuVC_limit_factor = 10,
                 eta_limit = False, eta_limit_factor  = 10,
                 linemixing_limit = False, linemixing_limit_factor  = 10, n_linemixing_limit = False, n_linemixing_limit_factor = 10,
-                beta_formalism = False):
+                beta_formalism = False, additional_columns = []):
 
+        int_cols = additional_columns.copy()
+        int_cols += ['molec_id', 'local_iso_id']
 
         self.dataset = dataset
         self.base_linelist_file = base_linelist_file
         self.baseline_list = pd.read_csv(self.base_linelist_file + '.csv')#, index_col = 0
         self.param_linelist_file = param_linelist_file
-        self.lineparam_list = convert_int_to_float(
-            pd.read_csv(self.param_linelist_file + ".csv", index_col=0), ["trans_id", "m", "molec_id", "local_iso_id"]
-        )
+        self.lineparam_list = convert_int_to_float(pd.read_csv(self.param_linelist_file + ".csv", index_col=0), int_cols)
         self.CIA_linelist_file = CIA_linelist_file
         if self.CIA_linelist_file == None:
             self.CIAparam_list = None
