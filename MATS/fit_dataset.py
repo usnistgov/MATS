@@ -124,9 +124,11 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
     #define reference temperature/pressure and calculate molecular density
     Tref = 296. # K
     pref = 1. # atm
+    mol_density_ref = (pref/ CONSTANTS['cpa_atm'])/(CONSTANTS['k']*273.15) #density at 1 atm and 273.15 K
     
     mol_dens = (p/ CONSTANTS['cpa_atm'])/(CONSTANTS['k']*T)
     mol_dens = mol_dens / compressability_factor
+    density_amagat = mol_dens / mol_density_ref
 
 
     #Sets-up the  Diluent (currently limited to air or self, unless manual input in Diluent)
@@ -202,7 +204,8 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
         linelist['Y'] += abun*(linelist['y_%s'%species]*(p/pref)*((Tref/T)**(linelist['n_y_%s'%species])))
         # Line Intensity at pressure for broadener       
         if BIA_slope:
-            linelist['LineIntensity_BIA'] += abun*(linelist['LineIntensity']*(1-0.01*linelist['BIA_slope_%s'%species]*(p/pref)))
+            linelist['LineIntensity_BIA'] += abun*(linelist['LineIntensity']*(1-0.01*linelist['BIA_slope_%s'%species]*(density_amagat)))
+
             if BIA_FW_LBL:
                 linelist['BIA_Collision_Duration'] += abun*(linelist['BIA_collision_duration_%s'%species])
             
