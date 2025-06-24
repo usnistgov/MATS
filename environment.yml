@@ -3,9 +3,9 @@ channels:
   - conda-forge
   - wpk-nist
 dependencies:
-  - python=3.8
+  - python==3.12
   # because using scm versioning
-  - setuptools>=38.4
+  - setuptools>=77.0.3
   # required packages
   - numpy
   - pandas
