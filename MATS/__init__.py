@@ -24,10 +24,10 @@ from .linelistdata import linelistdata
 from .o2_cia_karman import o2_cia_karman_model
 
 try:
-    import pkg_resources
+    import importlib.metadata
 
-    __version__ = pkg_resources.get_distribution("MATS").version
-except Exception:
+    __version__ = importlib.metadata.version("MATS")
+except importlib.metadata.PackageNotFoundError:
     # Local copy or not installed with setuptools.
     # Disable minimum version checks on downstream libraries.
     __version__ = "999"
