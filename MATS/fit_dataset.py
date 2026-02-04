@@ -208,8 +208,6 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
 
             if BIA_FW_LBL:
                 linelist['BIA_Collision_Duration'] += abun*(linelist['BIA_collision_duration_%s'%species])
-            
-
 
 
     #Line profile simulation cut-off determination
@@ -228,11 +226,7 @@ def HTP_from_DF_select(linelist, waves, wing_cutoff = 25, wing_wavenumbers = 25,
         lineshape_vals_real, lineshape_vals_imag = pcqsdhc(line['nu'],line['GammaD'],line['Gamma0'],line['Gamma2'],line['Shift0'],line['Shift2'],
                                                     line['NuVC'],line['Eta'],wavenumbers[BoundIndexLower:BoundIndexUpper])
         if BIA_slope:
-            '''
-            Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
-                                                        molefraction[line['molec_id']] * line['abun_ratio'] * \
-                                                        (line['LineIntensity_BIA'] * lineshape_vals_real + line['LineIntensity']*line['Y']*lineshape_vals_imag)  
-            '''
+
             Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
                                                         molefraction[line['molec_id']] * line['abun_ratio'] * \
                                                         line['LineIntensity_BIA'] * ( lineshape_vals_real + line['Y']*lineshape_vals_imag)     
