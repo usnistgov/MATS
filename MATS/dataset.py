@@ -47,6 +47,7 @@ class Dataset:
         self.ILS_function_dict = self.get_ILS_function_dict()
         self.base_linelist = self.generate_baseline_paramlist()
         self.check_param_list_BIA()
+        self.check_if_compressability()
 
     def renumber_spectra(self):
         """renumbers the spectra to be sequential starting at 1 (called in the initialization of the class).
@@ -500,8 +501,11 @@ class Dataset:
                     if 'BIA_collision_duration_%s'%species not in list(self.param_linelist):
                         self.param_linelist['BIA_collision_duration_%s'%species] = 0
 
-                    
-         
+    def check_if_compressability(self):
+        self.use_compressability = False
+        for spectrum in self.spectra:
+            if spectrum.compressability_file != None:
+                self.use_compressability = True        
 
 
         

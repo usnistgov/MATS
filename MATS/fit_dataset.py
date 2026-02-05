@@ -1119,8 +1119,35 @@ class Fit_DataSet:
                     if 'O2_O2' not in param:
                         params[param].set(expr = param[:9] + 'O2_O2')
         return params
+    def prep_sim(self):
+        spectrum_attributes = {"Compressability Factor": None,} # can add all potential pre-calculated parts
+        spectra_numbers = self.dataset.get_list_spectrum_numbers()
+
+        spectra_attribute_dict = {spec_num: spectrum_attributes.copy() for spec_num in spectra_numbers}        
     
-    def simulation_model(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff'):
+
+        for spectrum in self.dataset.spectra:
+            if spectrum.compressability_file != None:
+                comp_factor = pd.read_csv(spectrum.compressability_file + '.csv')
+                pressures = np.asarray(comp_factor['Pressure (MPa)'].values*1e6/101325)
+                pressures = pressures.astype(float)
+                temperatures = list(comp_factor)
+                temperatures.remove('Pressure (MPa)')
+                temperatures = np.asarray(temperatures)
+                temperatures = temperatures.astype(float)
+                comp_factor.drop('Pressure (MPa)', inplace=True, axis=1) 
+                comp_factor_array = comp_factor.to_numpy()
+                spectra_attribute_dict[spectrum.spectrum_number]['Compressability Factor'] = RegularGridInterpolator(points = [pressures, temperatures], values = comp_factor_array)
+            else:
+                spectra_attribute_dict[spectrum.spectrum_number]['Compressability Factor'] = None
+
+        return spectra_attribute_dict
+
+
+
+
+    
+    def simulation_model(self, params, spec_attrs, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff'):
         """This is the model used for fitting that includes baseline, resonant absorption, and CIA models.
 
 
@@ -1226,19 +1253,7 @@ class Fit_DataSet:
                         float(params['SO_shift_O2_N2']),
                         float(params['EXCH_shift_O2_N2']),
                         band = self.dataset.CIA_model['band'])
-                spectrum.set_cia(CIA)  
-            if spectrum.compressability_file != None:
-                comp_factor = pd.read_csv(spectrum.compressability_file + '.csv')
-                pressures = np.asarray(comp_factor['Pressure (MPa)'].values*1e6/101325)
-                pressures = pressures.astype(float)
-                temperatures = list(comp_factor)
-                temperatures.remove('Pressure (MPa)')
-                temperatures = np.asarray(temperatures)
-                temperatures = temperatures.astype(float)
-                comp_factor.drop('Pressure (MPa)', inplace=True, axis=1) 
-                comp_factor_array = comp_factor.to_numpy()
-                interp_comp_factor = RegularGridInterpolator(points = [pressures, temperatures], values = comp_factor_array)
-                                
+                spectrum.set_cia(CIA)      
             
             for segment in list(set(spectrum.segments)):
                 wavenumbers = wavenumber_segments[segment]
@@ -1256,8 +1271,7 @@ class Fit_DataSet:
                 p = float(params['Pressure_' + str(spectrum_number) + '_' + str(segment)])
                 T = float(params['Temperature_' + str(spectrum_number) + '_' + str(segment)])
                 if spectrum.compressability_file != None:
-                    compressability_factor = interp_comp_factor([p, T])[0]
-                    #print (p, T, compressability_factor)
+                    compressability_factor = spec_attrs[spectrum.spectrum_number]['Compressability Factor']([p,T])[0]
                 else:
                     compressability_factor = 1    
                 
@@ -1364,8 +1378,9 @@ class Fit_DataSet:
             contains all fit results as LMFit results object.
 
         """
+        spec_attrs = self.prep_sim()
         if (method == 'least_squares') or (method == 'leastsq'):
-            minner = Minimizer(self.simulation_model, params, xtol =xtol, max_nfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
+            minner = Minimizer(self.simulation_model, params, xtol =xtol, max_nfev =  maxfev, ftol = ftol, fcn_args=(spec_attrs, wing_cutoff, wing_wavenumbers, wing_method))
             floated_parameters = False
             for param in params:
                 if params[param].vary == True:
