@@ -10,7 +10,7 @@ from scipy.interpolate import RegularGridInterpolator
 from .hapi import ISO, PYTIPS2017, PYTIPS2011, PYTIPS2021, pcqsdhc, PROFILE_LORENTZ
 from .utilities import molecularMass, etalon, convolveSpectrumSame
 from .codata import CONSTANTS
-from .o2_cia_karman import o2_cia_karman_model
+from .o2_cia_karman import O2_CIA_Karman_Model
 
 from lmfit import Minimizer,  Parameters
 
@@ -659,6 +659,36 @@ class Fit_DataSet:
         self.n_linemixing_limit_factor = n_linemixing_limit_factor
         self.beta_formalism = beta_formalism
 
+        self.spec_attrs = self.prep_sim()
+
+    def prep_sim(self):
+        spectrum_attributes = {"Compressability Factor": None, 'CIA model': None} # can add all potential pre-calculated parts
+        spectra_numbers = self.dataset.get_list_spectrum_numbers()
+
+        spectra_attribute_dict = {spec_num: spectrum_attributes.copy() for spec_num in spectra_numbers}        
+    
+
+        for spectrum in self.dataset.spectra:
+            if spectrum.compressability_file != None:
+                comp_factor = pd.read_csv(spectrum.compressability_file + '.csv')
+                pressures = np.asarray(comp_factor['Pressure (MPa)'].values*1e6/101325)
+                pressures = pressures.astype(float)
+                temperatures = list(comp_factor)
+                temperatures.remove('Pressure (MPa)')
+                temperatures = np.asarray(temperatures)
+                temperatures = temperatures.astype(float)
+                comp_factor.drop('Pressure (MPa)', inplace=True, axis=1) 
+                comp_factor_array = comp_factor.to_numpy()
+                spectra_attribute_dict[spectrum.spectrum_number]['Compressability Factor'] = RegularGridInterpolator(points = [pressures, temperatures], values = comp_factor_array)
+            else:
+                spectra_attribute_dict[spectrum.spectrum_number]['Compressability Factor'] = None
+        
+        if self.dataset.CIA_model['model'] == 'Karman':
+            spectra_attribute_dict['Dataset']['CIA model'] =O2_CIA_Karman_Model(self.dataset.CIA_model['band'])
+
+        return spectra_attribute_dict
+ 
+
     def generate_params(self):
         """Generates the lmfit parameter object that will be used in fitting.
 
@@ -1119,35 +1149,9 @@ class Fit_DataSet:
                     if 'O2_O2' not in param:
                         params[param].set(expr = param[:9] + 'O2_O2')
         return params
-    def prep_sim(self):
-        spectrum_attributes = {"Compressability Factor": None,} # can add all potential pre-calculated parts
-        spectra_numbers = self.dataset.get_list_spectrum_numbers()
-
-        spectra_attribute_dict = {spec_num: spectrum_attributes.copy() for spec_num in spectra_numbers}        
-    
-
-        for spectrum in self.dataset.spectra:
-            if spectrum.compressability_file != None:
-                comp_factor = pd.read_csv(spectrum.compressability_file + '.csv')
-                pressures = np.asarray(comp_factor['Pressure (MPa)'].values*1e6/101325)
-                pressures = pressures.astype(float)
-                temperatures = list(comp_factor)
-                temperatures.remove('Pressure (MPa)')
-                temperatures = np.asarray(temperatures)
-                temperatures = temperatures.astype(float)
-                comp_factor.drop('Pressure (MPa)', inplace=True, axis=1) 
-                comp_factor_array = comp_factor.to_numpy()
-                spectra_attribute_dict[spectrum.spectrum_number]['Compressability Factor'] = RegularGridInterpolator(points = [pressures, temperatures], values = comp_factor_array)
-            else:
-                spectra_attribute_dict[spectrum.spectrum_number]['Compressability Factor'] = None
-
-        return spectra_attribute_dict
-
-
-
 
     
-    def simulation_model(self, params, spec_attrs, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff'):
+    def simulation_model(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff'):
         """This is the model used for fitting that includes baseline, resonant absorption, and CIA models.
 
 
@@ -1183,8 +1187,7 @@ class Fit_DataSet:
             if ('molefraction' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param) or ('Pressure' in param) or ('Temperature' in param) or ('_res_' in param):
                 baseline_params.append(param)
             elif (self.dataset.CIA_model['model']== 'Karman') and (param in Karman_CIA_params):
-                #print (param)
-                1+1
+                pass
             else:
                 linelist_params.append(param)
 
@@ -1239,7 +1242,8 @@ class Fit_DataSet:
             
             #Calculate CIA for Spectrum
             if self.dataset.CIA_model['model'] == "Karman":
-                CIA = o2_cia_karman_model(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
+
+                CIA = self.spec_attrs['Dataset']['CIA model'].calc(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
                         float(params['S_SO_O2_O2']),
                         float(params['S_SO_O2_N2']),
                         float(params['S_EXCH_O2_O2']),
@@ -1251,8 +1255,7 @@ class Fit_DataSet:
                         float(params['SO_c_O2_N2']),
                         float(params['SO_shift_O2_O2']),
                         float(params['SO_shift_O2_N2']),
-                        float(params['EXCH_shift_O2_N2']),
-                        band = self.dataset.CIA_model['band'])
+                        float(params['EXCH_shift_O2_N2']),)
                 spectrum.set_cia(CIA)      
             
             for segment in list(set(spectrum.segments)):
@@ -1271,7 +1274,7 @@ class Fit_DataSet:
                 p = float(params['Pressure_' + str(spectrum_number) + '_' + str(segment)])
                 T = float(params['Temperature_' + str(spectrum_number) + '_' + str(segment)])
                 if spectrum.compressability_file != None:
-                    compressability_factor = spec_attrs[spectrum.spectrum_number]['Compressability Factor']([p,T])[0]
+                    compressability_factor = self.spec_attrs[spectrum.spectrum_number]['Compressability Factor']([p,T])[0]
                 else:
                     compressability_factor = 1    
                 
@@ -1378,9 +1381,8 @@ class Fit_DataSet:
             contains all fit results as LMFit results object.
 
         """
-        spec_attrs = self.prep_sim()
         if (method == 'least_squares') or (method == 'leastsq'):
-            minner = Minimizer(self.simulation_model, params, xtol =xtol, max_nfev =  maxfev, ftol = ftol, fcn_args=(spec_attrs, wing_cutoff, wing_wavenumbers, wing_method))
+            minner = Minimizer(self.simulation_model, params, xtol =xtol, max_nfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
             floated_parameters = False
             for param in params:
                 if params[param].vary == True:
@@ -1552,10 +1554,13 @@ class Fit_DataSet:
                     baseline[bound_min: bound_max +1] += etalon(wave_rel, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase'])
             spectrum.set_background(baseline)
         #Calculate CIA
+
+
         if self.dataset.CIA_model['model']!= None:
             if self.dataset.CIA_model['model']=='Karman':
                 for spectrum in self.dataset.spectra:
-                    CIA = o2_cia_karman_model(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
+                    spec_attrs['Dataset']['CIA model'].calc(
+                    CIA = self.spec_attrs['Dataset']['CIA model'].calc(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
                         float(result.params['S_SO_O2_O2'].value),
                         float(result.params['S_SO_O2_N2'].value),
                         float(result.params['S_EXCH_O2_O2'].value),
@@ -1567,8 +1572,7 @@ class Fit_DataSet:
                         float(result.params['SO_c_O2_N2'].value),
                         float(result.params['SO_shift_O2_O2'].value),
                         float(result.params['SO_shift_O2_N2'].value),
-                        float(result.params['EXCH_shift_O2_N2'].value),
-                        band = self.dataset.CIA_model['band'])
+                        float(result.params['EXCH_shift_O2_N2'].value),)
                     spectrum.set_cia(CIA)
                     
     def generate_beta_output_file(self, beta_summary_filename = None ):
