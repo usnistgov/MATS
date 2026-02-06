@@ -72,10 +72,63 @@ class Spectroscopic_model:
         # (e.g., if 'nuVC_air' isn't in the file, we just skip Dicke narrowing).
         return None
 
-    def calculate_spectrum(self):
-        # replaces HTP_from_DF_select
+    def calculate_spectrum(self, waves, 
+                            T, p, molefraction, Diluent, spectrum_number, spectrum_min, 
+                            baseline_coeffs = None, 
+                            etalon_dict = None, 
+                            cia_config = None, 
+                            ILS_function = None, ILS_parameters = None, ILS_wing = None,
+                            interpolated_compressability_file=None,
+                            #pass through for LBL_alpha
+                             TIPS = PYTIPS2021, isotope_list = ISO, 
+                            natural_abundance = True, abundance_ratio_MI = {}, 
+                            BIA_slope=False, BIA_FW_LBL=False,
+                            IntensityThreshold = 1e-30, 
+                            wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers',):
+        
+        #Calculate LBL
+        LBL_alpha = self.calculate_lbl_absorbance(waves, T, p, molefraction, Diluent, 
+                                 spectrum_number, 
+                                 interpolated_compressability_file = interpolated_compressability_file, TIPS = TIPS, isotope_list = isotope_list, 
+                                 natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI, 
+                                 BIA_slope=BIA_slope, BIA_FW_LBL=BIA_FW_LBL,
+                                 IntensityThreshold = IntensityThreshold, 
+                                 wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,)
+        LBL_alpha = LBL_alpha* 1e6
+        
+        # Calculate CIA
+        alpha_cia = np.zeros_like(waves)
+        if cia_config and cia_config['model'] == 'Karman':
+            if 'calculator' in cia_config:
+                 alpha_cia = cia_config['calculator'].calculate_cia(
+                     waves, T, p, Diluent, 
+                     **cia_config['params'])  # Check on this implementation
+                 
+        #Baseline
+        baseline = np.zeros_like(waves)
+        w_rel = waves - spectrum_min
+        if baseline_coeffs is not None:
+            baseline = np.polyval(baseline_coeffs, w_rel)
 
-        pass
+        #Etalon Calculation
+        etalon_signal = np.zeros_like(waves)
+        if etalon_dict is not None:
+            for i, params in etalon_dict.items():
+                etalon_signal += etalon(w_rel, params['amp'], params['period'], params['phase'])
+
+        total_alpha = baseline + etalon_signal + LBL_alpha + alpha_cia
+
+        if ILS_function is not None and ILS_parameters is not None:
+            # Note: convolveSpectrumSame returns (waves, alpha, ...)
+            # We ignore the extra returns for the model result
+            _, total_alpha, _, _, _ = convolveSpectrumSame(
+                waves, total_alpha, 
+                SlitFunction=ILS_function, 
+                Resolution=ILS_parameters, 
+                AF_wing=ILS_wing)
+        
+        return total_alpha
+
     def calculate_lbl_absorbance(self, waves, T, p, molefraction, Diluent, 
                                  spectrum_number, 
                                  interpolated_compressability_file = None, TIPS = PYTIPS2021, isotope_list = ISO, 
