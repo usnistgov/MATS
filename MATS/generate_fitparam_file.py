@@ -1,9 +1,7 @@
 #Import Packages
 # from .Utilities import *
 #import re
-from .o2_cia_karman import (
-    o2_cia_karman_model
-)
+from .o2_cia_karman import (O2_CIA_Karman_Model)
 
 class Generate_FitParam_File:
     """Class generates the parameter files used in fitting and sets up fit settings.
@@ -702,10 +700,10 @@ class Generate_FitParam_File:
         parameters =  (list(CIA_linelist_df))
          #Initial Calculation of the Karman CIA based on initial guesses and application to spectra
         if self.dataset.CIA_model['model'] == 'Karman':
-            #CIA_pairs = CIA_linelist_df['CIA Pair'].unique()
+            cia_model = O2_CIA_Karman_Model(self.dataset.CIA_model['band'])
             for spectrum in self.dataset.spectra:
              
-                CIA = o2_cia_karman_model(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
+                CIA = cia_model.calculate_cia(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
                         CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['S_SO'].values[0], 
                         CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_N2']['S_SO'].values[0], 
                         CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['S_EXCH'].values[0], 
@@ -717,8 +715,7 @@ class Generate_FitParam_File:
                         CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_N2']['SO_c'].values[0], 
                         SO_shift_O2_O2 = CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['SO_shift'].values[0], 
                         SO_shift_O2_N2 = CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_N2']['SO_shift'].values[0], 
-                        EXCH_shift = CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['EXCH_shift'].values[0],
-                        band = self.dataset.CIA_model['band'])
+                        EXCH_shift = CIA_linelist_df[CIA_linelist_df['CIA Pair']=='O2_O2']['EXCH_shift'].values[0])
                 spectrum.set_cia(CIA)
             # Set parameter floats
             for param in parameters:

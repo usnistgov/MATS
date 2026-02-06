@@ -664,9 +664,9 @@ class Fit_DataSet:
     def prep_sim(self):
         spectrum_attributes = {"Compressability Factor": None, 'CIA model': None} # can add all potential pre-calculated parts
         spectra_numbers = self.dataset.get_list_spectrum_numbers()
+        spectra_numbers.append('Dataset')
 
         spectra_attribute_dict = {spec_num: spectrum_attributes.copy() for spec_num in spectra_numbers}        
-    
 
         for spectrum in self.dataset.spectra:
             if spectrum.compressability_file != None:
@@ -1243,7 +1243,7 @@ class Fit_DataSet:
             #Calculate CIA for Spectrum
             if self.dataset.CIA_model['model'] == "Karman":
 
-                CIA = self.spec_attrs['Dataset']['CIA model'].calc(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
+                CIA = self.spec_attrs['Dataset']['CIA model'].calculate_cia(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
                         float(params['S_SO_O2_O2']),
                         float(params['S_SO_O2_N2']),
                         float(params['S_EXCH_O2_O2']),
@@ -1559,8 +1559,7 @@ class Fit_DataSet:
         if self.dataset.CIA_model['model']!= None:
             if self.dataset.CIA_model['model']=='Karman':
                 for spectrum in self.dataset.spectra:
-                    spec_attrs['Dataset']['CIA model'].calc(
-                    CIA = self.spec_attrs['Dataset']['CIA model'].calc(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
+                    CIA = self.spec_attrs['Dataset']['CIA model'].calculate_cia(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
                         float(result.params['S_SO_O2_O2'].value),
                         float(result.params['S_SO_O2_N2'].value),
                         float(result.params['S_EXCH_O2_O2'].value),
