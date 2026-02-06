@@ -7,7 +7,7 @@ from scipy.interpolate import RegularGridInterpolator
 
 from .utilities import etalon, convolveSpectrumSame
 
-from .fit_dataset import HTP_from_DF_select, HTP_wBeta_from_DF_select
+from .fit_dataset import HTP_from_DF_select
 from .hapi import ISO, PYTIPS2011, PYTIPS2017, PYTIPS2021
 from .codata import CONSTANTS
 

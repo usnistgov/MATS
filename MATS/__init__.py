@@ -22,6 +22,7 @@ from .fit_dataset import Fit_DataSet
 from .utilities import add_to_HITRANstyle_isotope_list
 from .linelistdata import linelistdata
 from .o2_cia_karman import O2_CIA_Karman_Model
+from .spectroscopic_model import Spectroscopic_model
 
 try:
     import importlib.metadata

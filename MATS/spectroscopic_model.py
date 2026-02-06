@@ -1,0 +1,228 @@
+from bisect import bisect
+import re
+import warnings
+
+import numpy as np
+import pandas as pd
+from scipy.interpolate import RegularGridInterpolator
+from .hapi import ISO, PYTIPS2017, PYTIPS2011, PYTIPS2021, pcqsdhc, PROFILE_LORENTZ
+from .utilities import molecularMass, etalon, convolveSpectrumSame
+from .codata import CONSTANTS
+from .o2_cia_karman import O2_CIA_Karman_Model
+
+class Spectroscopic_model:
+    #converts from pandas DF to numpy arrays
+    # LBL calcultion
+    def __init__(self, parameter_linelist):
+        self.nlines = len(parameter_linelist)
+
+        #Static arrays
+        self.elower = parameter_linelist['elower'].to_numpy(dtype=np.float64)
+        self.molec_id = parameter_linelist['molec_id'].to_numpy(dtype=np.int32)   
+        self.local_iso_id = parameter_linelist['local_iso_id'].to_numpy(dtype=np.int32)
+        self.sw_scale_factor = parameter_linelist['sw_scale_factor'].to_numpy(dtype=np.float64)
+
+        #Dynamic
+        self.dynamic_arrays = {}
+        for col in parameter_linelist.columns:
+            if col.startswith(('nu', 'sw', 
+                               'gamma0_', 'n_gamma0_', 
+                               'delta0_', 'n_delta0_', 
+                               'nuVC_', 'n_nuVC_', 
+                               'SD_gamma_', 'n_gamma2_', 
+                               'SD_delta_', 'n_delta2_', 
+                               'eta_', 
+                               'y_', 'n_y', 
+                               'BIA_slope_', 
+                               'BIA_collision_duration_')):
+                self.dynamic_arrays[col] = parameter_linelist[col].values.astype(np.float64)
+        
+        #MAPPING CACHE (Filled by the fit_dataset later)
+        self.param_index_map = []
+    def _resolve_array(self, param_base_name, spectrum_number):
+        """
+        The Waterfall Lookup.
+        Tries to find specific '{param}_{id}', then falls back to '{param}'.
+        
+        Parameters
+        ----------
+        param_base_name : str
+            The generic name of the parameter (e.g., 'sw', 'gamma0_air').
+        spectrum_id : int or str
+            The ID of the current spectrum being simulated (e.g., 5).
+            
+        Returns
+        -------
+        np.array or None
+            The requested array if found, otherwise None.
+        """
+        # 1. Try Specific (e.g., 'sw_5' or 'gamma0_air_5')
+        # This allows you to fit a parameter for just ONE spectrum.
+        specific_key = f"{param_base_name}_{spectrum_number}"
+        if specific_key in self.dynamic_arrays:
+            return self.dynamic_arrays[specific_key]
+        
+        # 2. Try Generic (e.g., 'sw' or 'gamma0_air')
+        # This uses the global value shared by all spectra.
+        if param_base_name in self.dynamic_arrays:
+            return self.dynamic_arrays[param_base_name]
+        
+        # 3. Return None if neither exists
+        # This allows the calculation engine to skip logic for missing parameters
+        # (e.g., if 'nuVC_air' isn't in the file, we just skip Dicke narrowing).
+        return None
+
+    def calculate_spectrum(self):
+        # replaces HTP_from_DF_select
+
+        pass
+    def calculate_lbl_absorbance(self, waves, T, p, molefraction, Diluent, 
+                                 spectrum_number, 
+                                 interpolated_compressability_file = None, TIPS = PYTIPS2021, isotope_list = ISO, 
+                                 natural_abundance = True, abundance_ratio_MI = {}, 
+                                 BIA_slope=False, BIA_FW_LBL=False,
+                                 IntensityThreshold = 1e-30, 
+                                 wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers',):
+
+
+        #define reference temperature/pressure and calculate molecular density
+        Tref = 296. # K
+        pref = 1. # atm
+        mol_density_ref = (pref/ CONSTANTS['cpa_atm'])/(CONSTANTS['k']*273.15) #density at 1 atm and 273.15 K
+        
+        mol_dens = (p/ CONSTANTS['cpa_atm'])/(CONSTANTS['k']*T)
+        if interpolated_compressability_file != None:
+            mol_dens = mol_dens / interpolated_compressability_file([p, T])[0]
+        density_amagat = mol_dens / mol_density_ref
+
+        #Vectorized
+        sigma_T = np.ones(self.nlines, dtype=np.float64)
+        sigma_Tref = np.ones(self.nlines, dtype=np.float64)
+        mass = np.ones(self.nlines, dtype=np.float64)
+        abundance_ratio = np.ones(self.nlines, dtype=np.float64)
+        unique_pairs = np.unique(np.column_stack((self.molec_id, self.local_iso_id)), axis=0)
+        for m, i in unique_pairs:
+            m, i = int(m), int(i)
+            mask = (self.molec_id == m) & (self.local_iso_id == i)
+            try:
+                sigma_T[mask] = TIPS(m, i, T)
+                sigma_Tref[mask] = TIPS(m, i, Tref)
+                mass[mask] = molecularMass(m,i, isotope_list = isotope_list)
+                if (not natural_abundance) and (abundance_ratio_MI != {}):
+                    abundance_ratio[mask] = abundance_ratio_MI[m][i]
+            except:
+                pass
+
+        #Calculate Doppler Broadening
+        
+
+        #Calculate Line Intensity and Doppler Broadening
+        
+        sw_array = self._resolve_array('sw', spectrum_number)
+        sw_array = sw_array*self.sw_scale_factor
+        nu_array = self._resolve_array('nu', spectrum_number)
+        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(mass))*nu_array / CONSTANTS['c']
+
+        line_intensity = sw_array * (sigma_Tref / sigma_T) * \
+                    (np.exp(-CONSTANTS['c2'] * self.elower / T) * (1 - np.exp(-CONSTANTS['c2'] * nu_array / T))) / \
+                    (np.exp(-CONSTANTS['c2'] * self.elower / Tref) * (1 - np.exp(-CONSTANTS['c2'] * nu_array / Tref)))
+        
+        # Calculated Line Parameters across Broadeners
+        Gamma0 = np.zeros(self.nlines)
+        Delta0 = np.zeros(self.nlines)
+        Gamma2 = np.zeros(self.nlines)
+        Delta2 = np.zeros(self.nlines)
+        NuVC   = np.zeros(self.nlines)
+        Eta    = np.zeros(self.nlines)
+        Y      = np.zeros(self.nlines)
+        intensity_bia = np.zeros(self.nlines)
+        bia_duration = np.zeros(self.nlines)
+
+        for species, info in Diluent.items():
+            abun = info['composition']
+
+            g0_arr = self._resolve_array(f'gamma0_{species}', spectrum_number)
+            n_g0_arr = self._resolve_array(f'n_gamma0_{species}', spectrum_number)
+            d0_arr = self._resolve_array(f'delta0_{species}', spectrum_number)
+            n_d0_arr = self._resolve_array(f'n_delta0_{species}', spectrum_number)
+            sd_gamma_arr = self._resolve_array(f'SD_gamma_{species}', spectrum_number)
+            n_gamma2_arr = self._resolve_array(f'n_gamma2_{species}', spectrum_number)
+            sd_delta_arr = self._resolve_array(f'SD_delta_{species}', spectrum_number)
+            n_delta2_arr = self._resolve_array(f'n_delta2_{species}', spectrum_number)
+            nuVC_arr = self._resolve_array(f'nuVC_{species}', spectrum_number)
+            n_nuvc_arr = self._resolve_array(f'n_nuVC_{species}', spectrum_number)
+            eta_arr = self._resolve_array(f'eta_{species}', spectrum_number)
+            y_arr = self._resolve_array(f'y_{species}', spectrum_number)
+            n_y_arr = self._resolve_array(f'n_y_{species}', spectrum_number)
+            
+
+            #Gamma0: pressure broadening coefficient HWHM
+            Gamma0 += abun*(g0_arr*(p/pref)*((Tref/T)**n_g0_arr))
+            #Delta0
+            Delta0 += abun*((d0_arr + n_d0_arr*(T-Tref))*p/pref)
+            #Gamma2
+            Gamma2+= abun*(sd_gamma_arr*g0_arr*(p/pref)*((Tref/T)**n_gamma2_arr))
+            #Delta2
+            Delta2 += abun*((sd_delta_arr*d0_arr + n_delta2_arr*(T-Tref))*p/pref)
+            #nuVC
+            NuVC += abun*(nuVC_arr*(p/pref)*((Tref/T)**(n_nuvc_arr)))
+            #eta
+            Eta += eta_arr *abun
+            #Line mixing
+            Y += abun*(y_arr*(p/pref)*((Tref/T)**(n_y_arr)))
+
+            if BIA_slope:
+                bia_slope_arr = self._resolve_array(f'BIA_slope_{species}', spectrum_number)
+                intensity_bia += abun*(line_intensity*(1-0.01*bia_slope_arr*(density_amagat)))
+                if BIA_FW_LBL:
+                    bia_dur_arr = self._resolve_array(f'BIA_collision_duration_{species}', spectrum_number)
+                    bia_duration += abun*(bia_dur_arr)
+        
+        #LBL Loop
+        Xsect = np.zeros_like(waves)
+        if wing_method == 'wing_wavenumbers':
+            line_cutoffs = np.ones(self.nlines)*wing_wavenumbers
+        elif wing_method == 'wing_cutoff':
+            line_cutoffs = (0.5346 * Gamma0 + np.sqrt(0.2166 * Gamma0**2 + GammaD**2)) * wing_cutoff
+
+
+        valid_indices = np.where(line_intensity >= IntensityThreshold)[0]
+
+        for i in valid_indices:
+            nu_i = nu_array[i]
+            cut_i = line_cutoffs[i]
+
+            
+            BoundIndexLower = bisect(waves, nu_i - cut_i)
+            BoundIndexUpper = bisect(waves, nu_i + cut_i)
+            wave_slice = waves[BoundIndexLower:BoundIndexUpper]
+
+            lineshape_vals_real, lineshape_vals_imag = pcqsdhc(
+                nu_i, GammaD[i], Gamma0[i], Gamma2[i], Delta0[i], Delta2[i],
+                NuVC[i], Eta[i], wave_slice)
+            
+            mf = molefraction[self.molec_id[i]]
+            line_abundance_ratio = abundance_ratio[i]
+            if BIA_slope:
+                 Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
+                                                            mf * line_abundance_ratio * \
+                                                            intensity_bia[i] * ( lineshape_vals_real + Y[i]*lineshape_vals_imag)
+                 if BIA_FW_LBL and bia_duration[i]!=0:
+                    BoundIndexLower_BIA = bisect(waves, nu_i - 5*cut_i)
+                    BoundIndexUpper_BIA = bisect(waves, nu_i + 5*cut_i)
+                    wave_slice_BIA = waves[BoundIndexLower_BIA:BoundIndexUpper_BIA]
+                    BIA_profile = PROFILE_LORENTZ(nu_i, 1/(2*np.pi*CONSTANTS['c']*1e-12*bia_duration[i]), 0, wave_slice_BIA)
+                    Xsect[BoundIndexLower_BIA:BoundIndexUpper_BIA] += mol_dens  * \
+                                                                mf * line_abundance_ratio * \
+                                                                (line_intensity[i] - intensity_bia[i]) * BIA_profile
+                     
+            else:
+                Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
+                                                            mf * line_abundance_ratio * \
+                                                            line_intensity[i] * ( lineshape_vals_real + Y[i]*lineshape_vals_imag)
+        
+        return (np.asarray(Xsect))
+
+
+
+ 
