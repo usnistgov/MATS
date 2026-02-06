@@ -620,10 +620,7 @@ def simulate_spectrum(parameter_linelist,
 
 
         if beta_formalism:
-            waves, alpha = HTP_wBeta_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
-                                p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, isotope_list = isotope_list,
-                                natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,
-                                Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold, TIPS = TIPS, compressability_factor = compressability_factor)
+            pass
         else:
             
             waves, alpha = HTP_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
