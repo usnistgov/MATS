@@ -443,7 +443,8 @@ def simulate_spectrum(parameter_linelist,
                         wave_min=None, wave_max= None, wave_space=None, wavenumbers = [],  wave_error = 0.0,
                         SNR = None, baseline_terms = [0.0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760,
                         pressure_err = {'per_bias': 0, 'function': None, 'params': {}},
-                        wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers', filename = 'temp', molefraction = {}, molefraction_err = {},
+                        wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers', sim_window = 5, 
+                        filename = 'temp', molefraction = {}, molefraction_err = {},
                         isotope_list = ISO, natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {},
                         nominal_temperature = 296, etalons = {}, x_shift = 0.0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False,
                         ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2021, 
@@ -541,7 +542,15 @@ def simulate_spectrum(parameter_linelist,
             Diluent = {diluent: {'composition':1, 'm':0.0}}
             print ('THIS IS GOING TO BREAK WITH A DIVISION ERROR IF YOU USE THE BETA VERSION')
 
+    if len(wavenumbers) == 0:
+        wavenumbers = np.arange(wave_min, wave_max + wave_space, wave_space)
+
     linelist_for_sim = parameter_linelist.copy()
+
+    linelist_for_sim = linelist_for_sim[
+        (linelist_for_sim['nu'] >= np.min(wavenumbers) - sim_window) & 
+        (linelist_for_sim['nu'] <= np.max(wavenumbers) + sim_window)]
+
     if 'nu' in linelist_for_sim.columns:
         linelist_for_sim.sort_values('nu', inplace=True)
     linelist_for_sim.reset_index(drop=True, inplace=True)
@@ -549,11 +558,12 @@ def simulate_spectrum(parameter_linelist,
     linelist_for_sim['sw'] /= IntensityThreshold
     linelist_for_sim['sw_scale_factor'] = IntensityThreshold
 
+    
+
     engine = Spectroscopic_model(linelist_for_sim)
 
     #Frequency axis
-    if len(wavenumbers) == 0:
-        wavenumbers = np.arange(wave_min, wave_max + wave_space, wave_space)
+    
     wavenumbers_err = wavenumbers + wave_error*np.random.normal(loc = 0, scale =1, size = len(wavenumbers))
 
     baseline_coeffs = np.flip(baseline_terms)
