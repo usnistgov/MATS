@@ -166,8 +166,6 @@ class Spectroscopic_model:
             except:
                 pass
 
-        #Calculate Doppler Broadening
-        
 
         #Calculate Line Intensity and Doppler Broadening
         
