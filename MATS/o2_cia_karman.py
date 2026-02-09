@@ -17,6 +17,36 @@ class O2_CIA_Karman_Model:
             self.df_Karman = pd.read_csv(paths_dict['singlet_delta'])
         elif band == 'a_band':
             self.df_Karman = pd.read_csv(paths_dict['a_band'])
+
+        self.defaults = {
+            'singlet_delta': {
+                'S_SO': [39.13, 70.74],          # [O2-O2, O2-N2]
+                'S_EXCH': [304.7448171031378, 0],
+                'EXCH_b': [0.0028385240774561797, 0],
+                'EXCH_c': [3.6307626466573398e-06, 0],
+                'SO_b': 0.00014594154382655564,  # Scalar (broadcasts to both)
+                'SO_c': 1.4670403122287775e-06,  # Scalar
+                'SO_shift': [0.0, 0.0],
+                'EXCH_shift': [0.0, 0.0]
+            },
+            'a_band': {
+                'S_SO': [6.20731994222978, 7.961801018674746],
+                'S_EXCH': [39.42079598436756, 0],
+                'EXCH_b': [0.011869752199984616, 0],
+                'EXCH_c': [6.559060698261758e-05, 0],
+                'SO_b': 0.00011263534228667677,
+                'SO_c': 1.5906417750834962e-06,
+                'SO_shift': [0.0, 0.0],
+                'EXCH_shift': [0.0, 0.0]
+            }
+        }
+
+    def get_defaults(self, band):
+        """Returns the default parameter dictionary for the specified band."""
+        if band in self.defaults:
+            return self.defaults[band]
+        else:
+            raise ValueError(f"Unknown band '{band}'. Options are: {list(self.defaults.keys())}")
     
     def calculate_cia(self, wavenumbers, T, P,Diluent,
                         SO_O2, SO_N2, EXCH_O2, 

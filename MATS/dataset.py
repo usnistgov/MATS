@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
+from .o2_cia_karman import O2_CIA_Karman_Model
 
 from .utilities import (
     isotope_list_molecules_isotopes,
@@ -441,55 +442,40 @@ class Dataset:
         return baseline_paramlist
     def generate_CIA_paramlist(self):
         """
-        Generates a csv file called dataset_name + _CIA_paramlist, which will be used to generate another csv file that is used for fitting the broadband CIA that is common across all spectra, where the columns will be dependent on the CIA model used. 
-
-        Parameters
-        ----------
-        band : str, optional
-            specifies the band for the CIA model. For the O2 CIA model reported by Karman et al. The options are a_band and singlet_delta. The default is None.
-
-        Returns
-        -------
-        CIA_paramlist : pandas dataframe
-            dataframe containing information decribing the CIA parameters based on the CIA model chosen.  This dataframe is also saved to a dataframe.  Either file can be edited before making the CIA parameter list used for fitting.  If editting the .csv file will need to regenerate dataframe from .csv.
-
+        Generates a csv file used for fitting the broadband CIA.
         """
         if self.CIA_model['model'] == 'ad hoc':
             return None
+            
         elif self.CIA_model['model'] == 'Karman':
             CIA_paramlist = pd.DataFrame()
             CIA_paramlist['CIA Pair'] = ['O2_O2', 'O2_N2']
-            #Default values based on Karman, T. et al., Icarus 2019, 328 , 160 175.
-            if self.CIA_model['band'] == 'a_band':
-                #Intensities
-                CIA_paramlist['S_SO'] = [6.20731994222978,7.961801018674746]
-                CIA_paramlist['S_EXCH'] = [39.42079598436756,0]
-                #Temp Dep
-                CIA_paramlist['EXCH_b'] = [0.011869752199984616,0]
-                CIA_paramlist['EXCH_c'] = [6.559060698261758e-05,0]
-                CIA_paramlist['SO_b'] = 0.00011263534228667677
-                CIA_paramlist['SO_c'] = 1.5906417750834962e-06
-                #Shift
-                CIA_paramlist['SO_shift'] = [0.0,0.0]
-                CIA_paramlist['EXCH_shift'] = [0.0,0.0]
-            if self.CIA_model['band'] == 'singlet_delta':
-                #Intensities
-                CIA_paramlist['S_SO'] = [39.13, 70.74]
-                CIA_paramlist['S_EXCH'] = [304.7448171031378, 0]
-                #Temp Dep
-                CIA_paramlist['EXCH_b'] = [0.0028385240774561797,0]
-                CIA_paramlist['EXCH_c'] = [3.6307626466573398e-06,0]
-                CIA_paramlist['SO_b'] = 0.00014594154382655564
-                CIA_paramlist['SO_c'] = 1.4670403122287775e-06
-                #Shift
-                CIA_paramlist['SO_shift'] = [0.0,0.0]
-                CIA_paramlist['EXCH_shift'] = [0.0,0.0]
-            CIA_paramlist.to_csv(self.dataset_name + '_CIA_paramlist.csv', index = False)
+            
+            # --- NEW LOGIC: RETRIEVE DEFAULTS ---
+            # 1. Instantiate the model (or access if already stored)
+            # We assume O2_CIA_Karman_Model is imported available
+            current_band = self.CIA_model['band']
+            temp_model = O2_CIA_Karman_Model(band=current_band)
+            
+            # 2. Get defaults for this band
+            defaults = temp_model.get_defaults(current_band)
+            
+            # 3. Populate DataFrame
+            # We map the keys from the defaults dict to the DataFrame columns
+            cols_to_populate = ['S_SO', 'S_EXCH', 'EXCH_b', 'EXCH_c', 
+                                'SO_b', 'SO_c', 'SO_shift', 'EXCH_shift']
+            
+            for col in cols_to_populate:
+                CIA_paramlist[col] = defaults[col]
+
+            # Save
+            CIA_paramlist.to_csv(self.dataset_name + '_CIA_paramlist.csv', index=False)
             return CIA_paramlist
             
         else:
             self.CIA_model['model'] = None
             return None
+        
     def check_param_list_BIA(self):
         if self.BIA_model != {'sw_depletion': False, 'farwing_continuum': None}:
             if self.BIA_model['sw_depletion']:
