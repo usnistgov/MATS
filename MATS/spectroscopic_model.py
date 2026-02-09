@@ -273,6 +273,37 @@ class Spectroscopic_model:
                                                             line_intensity[i] * ( lineshape_vals_real + Y[i]*lineshape_vals_imag)
         
         return (np.asarray(Xsect))
+    
+    def configure_for_fitting(self, lmfit_params):
+        """
+       Populate param_index_map from lmfit_params 
+        """
+        for name, param in lmfit_params.items():
+            if param.vary and "_line_" in name:
+                prefix, sep, suffix = name.rpartition('_line_')
+
+                if prefix in self.dynamic_arrays:
+                    try:
+                        line_idx = int(suffix)
+                        # Store tuple: (lmfit_name, array_key, array_index)
+                        self.param_index_map.append((name, prefix, line_idx))
+                    except ValueError:
+                        pass # Suffix wasn't an integer, ignore
+    
+    def update_from_lmfit(self, params):
+        """
+        The Fast Unpacker. Called every iteration of the fit.
+        """
+        for name, key, idx in self.param_index_map:
+            if name in params:
+                self.dynamic_arrays[key][idx] = params[name].value
+
+
+
+
+
+
+
 
 
 

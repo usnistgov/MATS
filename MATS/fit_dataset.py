@@ -11,6 +11,7 @@ from .hapi import ISO, PYTIPS2017, PYTIPS2011, PYTIPS2021, pcqsdhc, PROFILE_LORE
 from .utilities import molecularMass, etalon, convolveSpectrumSame
 from .codata import CONSTANTS
 from .o2_cia_karman import O2_CIA_Karman_Model
+from .spectroscopic_model import Spectroscopic_model
 
 from lmfit import Minimizer,  Parameters
 
@@ -144,22 +145,36 @@ class Fit_DataSet:
                 eta_limit = False, eta_limit_factor  = 10,
                 linemixing_limit = False, linemixing_limit_factor  = 10, n_linemixing_limit = False, n_linemixing_limit_factor = 10,
                 beta_formalism = False, additional_columns = []):
+        
 
-        int_cols = additional_columns.copy()
-        int_cols += ['molec_id', 'local_iso_id']
+
+        
 
         self.dataset = dataset
+        #baseline linelist ingest
         self.base_linelist_file = base_linelist_file
-        self.baseline_list = pd.read_csv(self.base_linelist_file + '.csv')#, index_col = 0
+        base_int_cols = ['Spectrum Number', 'Segment Number']
+        self.baseline_list = pd.read_csv(self.base_linelist_file + '.csv')
+        self.baseline_list = convert_int_to_float(self.baseline_list, exclude_cols=base_int_cols)
+        
+        #parameter linelist ingest
+        int_cols = additional_columns.copy()
+        int_cols += ['molec_id', 'local_iso_id']
         self.param_linelist_file = param_linelist_file
-        self.lineparam_list = convert_int_to_float(pd.read_csv(self.param_linelist_file + ".csv", index_col=0), int_cols)
+        self.lineparam_list = convert_int_to_float(pd.read_csv(self.param_linelist_file + ".csv", index_col=0), exclude_cols = int_cols)
+        self.engine = Spectroscopic_model(self.lineparam_list)
+        
+        #CIA linelist ingest
         self.CIA_linelist_file = CIA_linelist_file
         if self.CIA_linelist_file == None:
             self.CIAparam_list = None
         else:
             self.CIAparam_list = pd.read_csv(self.CIA_linelist_file + '.csv')
-        self.minimum_parameter_fit_intensity = minimum_parameter_fit_intensity
-        self.weight_spectra = weight_spectra
+        
+        self.minimum_parameter_fit_intensity = minimum_parameter_fit_intensity # Minimum fit intensity
+        self.weight_spectra = weight_spectra #Spectrum Weighting boolean
+
+        #Limits!
         self.baseline_limit = baseline_limit
         self.baseline_limit_factor  = baseline_limit_factor
         self.pressure_limit = pressure_limit
@@ -204,9 +219,85 @@ class Fit_DataSet:
         self.linemixing_limit_factor = linemixing_limit_factor
         self.n_linemixing_limit = n_linemixing_limit
         self.n_linemixing_limit_factor = n_linemixing_limit_factor
-        self.beta_formalism = beta_formalism
+
+        
+        self.beta_formalism = beta_formalism #Beta formalism
 
         self.spec_attrs = self.prep_sim()
+
+    def _extract_baseline_coeffs(self, params, spec_num, seg_num):
+        """Reconstructs polynomial coeffs list [c_n, ..., c_0] from params."""
+        baseline_coeffs = []
+        for i in range(self.dataset.baseline_order + 1):
+            char = chr(97 + i) # 0->'a', 1->'b'
+            p_name = f"baseline_{char}_{spec_num}_{seg_num}"
+            if p_name in params:
+                baseline_coeffs.append(params[p_name].value)
+            else:
+                baseline_coeffs.append(0.0)
+        
+        return baseline_coeffs[::-1]
+    
+    def _extract_etalon_dict(self, params, spec_num, seg_num):
+        """Reconstructs nested etalon dictionary {1: {'amp':...}, ...}"""
+        etalon_dict = {}
+        # Safely scan for up to 10 etalons per spectrum
+        for i in range(1, 11): 
+            amp_name = f"etalon_{i}_amp_{spec_num}_{seg_num}"
+            if amp_name in params:
+                period_name = f"etalon_{i}_period_{spec_num}_{seg_num}"
+                phase_name = f"etalon_{i}_phase_{spec_num}_{seg_num}"
+                
+                etalon_dict[i] = {
+                    'amp': params[amp_name].value,
+                    'period': params[period_name].value if period_name in params else 1.0,
+                    'phase': params[phase_name].value if phase_name in params else 0.0
+                }
+        return etalon_dict if etalon_dict else None
+    
+    def _extract_ils_resolution(self, params, spectrum, segment):
+        """Extracts ILS resolution parameters list."""
+        if spectrum.ILS_function is None: return None
+            
+        func_name = spectrum.ILS_function.__name__
+        num_params = self.dataset.ILS_function_dict.get(func_name, 0)
+        
+        if num_params == 0: return []
+            
+        resolution_params = []
+        for i in range(num_params):
+            # Naming convention: ILSFunc_res_0_Spec_Seg
+            p_name = f"{func_name}_res_{i}_{spectrum.spectrum_number}_{segment}"
+            if p_name in params:
+                resolution_params.append(params[p_name].value)
+            else:
+                resolution_params.append(0.0) 
+        return resolution_params
+
+    def _extract_cia_config(self, params):
+        """Packs CIA model and parameters into a config dict."""
+        if self.dataset.CIA_model['model'] != 'Karman':
+            return None
+        
+        else:
+            # Extract the specific Karman parameters
+            cia_params = {}
+            karman_keys = ['S_SO_O2_O2', 'S_SO_O2_N2', 'S_EXCH_O2_O2', 'EXCH_b_O2_O2', 
+                        'EXCH_c_O2_O2', 'SO_b_O2_O2', 'SO_c_O2_O2', 'SO_b_O2_N2', 
+                        'SO_c_O2_N2', 'SO_shift_O2_O2', 'SO_shift_O2_N2', 'EXCH_shift_O2_N2']
+            
+            for k in karman_keys:
+                if k in params:
+                    cia_params[k] = params[k].value
+                else:
+                    cia_params[k] = 0.0 # Or default values
+                    
+            return {
+                'model': 'Karman',
+                'calculator': self.spec_attrs['Dataset']['CIA model'],
+                'params': cia_params
+            }
+
 
     def prep_sim(self):
         spectrum_attributes = {"Compressability Factor": None, 'CIA model': None} # can add all potential pre-calculated parts
@@ -564,9 +655,7 @@ class Fit_DataSet:
                     #BIA farwing
                     elif ('BIA_collision_duration_' in line_param) and (sw_constrain):
                         params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
-                    
-                    
-        
+
         #CIA Parameters (O2 Karman Model)
         if self.dataset.CIA_model['model'] == "Karman":
             cia_parameters = []
@@ -585,6 +674,8 @@ class Fit_DataSet:
                                    self.CIAparam_list.loc[index][cia_param + '_vary'])
                         elif cia_pair =='O2_N2':
                             params.add(cia_param + '_'+ cia_pair, 0, False)
+
+        self.engine.configure_for_fitting(params)
         return (params)
 
     def constrained_baseline(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
@@ -697,204 +788,91 @@ class Fit_DataSet:
                         params[param].set(expr = param[:9] + 'O2_O2')
         return params
 
-    
-    def simulation_model(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_cutoff'):
-        """This is the model used for fitting that includes baseline, resonant absorption, and CIA models.
-
-
-        Parameters
-        ----------
-        params : lmfit parameter object
-            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
-        wing_cutoff : float, optional
-            number of voigt half-widths to simulate on either side of each line. The default is 25.
-        wing_wavenumbers : float, optional
-            number of wavenumbers to simulate on either side of each line. The default is 25
-        wing_method : TYPE, optional
-            Provides choice between the wing_cutoff and wing_wavenumbers line cut-off options. The default is 'wing_cutoff'.
-
-        Returns
-        -------
-        total_residuals : array
-            residuals for all spectra in Dataset.
-
+    def objective_function(self, params, wing_cutoff = 25, wing_wavenumbers=25, wing_method='wing_wavenumbers'):
+        """
+        Calculates residuals for the Minimizer.
         """
 
-        total_simulated = []
+        #Update arrays in spectroscopic_model
+        self.engine.update_from_lmfit(params)
         total_residuals = []
-        baseline_params = []
-        linelist_params = []
-        Karman_CIA_params = ['S_SO_O2_O2', 'S_SO_O2_N2', 'S_EXCH_O2_O2', 'EXCH_b_O2_O2', 'EXCH_c_O2_O2', 
-                             'SO_b_O2_O2', 'SO_c_O2_O2', 'SO_b_O2_N2', 'SO_c_O2_N2', 
-                             'SO_shift_O2_O2', 'SO_shift_O2_N2','EXCH_shift_O2_O2', 
-                             'EXCH_shift_O2_N2', 'S_EXCH_O2_N2', 'EXCH_b_O2_N2', 'EXCH_c_O2_N2'] #this row has unused parameters
 
-        # Set-up Baseline Parameters
-        for param in (list(params.valuesdict().keys())):
-            if ('molefraction' in param) or ('baseline' in param) or ('etalon' in param) or ('x_shift' in param) or ('Pressure' in param) or ('Temperature' in param) or ('_res_' in param):
-                baseline_params.append(param)
-            elif (self.dataset.CIA_model['model']== 'Karman') and (param in Karman_CIA_params):
-                pass
-            else:
-                linelist_params.append(param)
+        cia_config = self._extract_cia_config(params) #Get CIA parameters
 
+        #Loop over spectra
         for spectrum in self.dataset.spectra:
-            simulated_spectra = len(spectrum.wavenumber)*[0]
-            residuals = len(spectrum.alpha)*[0]
             wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
-            Diluent = spectrum.Diluent
-            spectrum_number = spectrum.spectrum_number
-            #nominal_temp = spectrum.nominal_temperature
-            columns = ['molec_id', 'local_iso_id', 'elower', 'nu', 'sw', 'sw_scale_factor']
-            for species in Diluent:
-                columns.append('gamma0_' + species)
-                columns.append('n_gamma0_'+ species)
-                columns.append('delta0_' + species)
-                columns.append('n_delta0_'+ species)
-                columns.append('SD_gamma_' + species)
-                columns.append('n_gamma2_'+ species )
-                columns.append('SD_delta_' + species)
-                columns.append('n_delta2_' + species)
-                columns.append('nuVC_' + species)
-                columns.append('n_nuVC_' + species)
-                columns.append('eta_' + species)
-                columns.append('y_' + species)
-                columns.append('n_y_' + species)
-                if self.dataset.BIA_model['sw_depletion']: 
-                    columns.append('BIA_slope_' + species)
-                    if self.dataset.BIA_model['farwing_continuum'] == 'LBL':
-                        columns.append('BIA_collision_duration_' + species)
-                        
-            rename_dictionary = {}
-            for column in self.lineparam_list:
-                if ('vary' not in column) and ('err' not in column):
-                    if ((column + '_' + str(spectrum_number)) in self.lineparam_list):
-                        columns = [(column + '_'  + str(spectrum_number))if x==column else x for x in columns]
-                        rename_dictionary[(column + '_'  + str(spectrum_number))] = column
-            linelist_for_sim = self.lineparam_list[columns].copy()
+            #Loop over segments
+            for segment in set(spectrum.segments):
 
-            # Replaces the relevant linelist locations with the
-            for parameter in linelist_params:
-                line = int(parameter[parameter.find('_line_') + 6:])
-                param = parameter[:parameter.find('_line_')]
-                if param in columns:
-                    if 'sw' in param:
-                        #print (linelist_for_sim[line]['sw_scale_factor'])
-                        linelist_for_sim.loc[line, param] = float(params[parameter])
-                    else:
-                        linelist_for_sim.loc[line, param] = float(params[parameter])
-            #Renames columns to generic (no scan number)
-            linelist_for_sim=linelist_for_sim.rename(columns = rename_dictionary)
-            linelist_for_sim['sw'] = linelist_for_sim['sw']*linelist_for_sim['sw_scale_factor']
-            
-            #Calculate CIA for Spectrum
-            if self.dataset.CIA_model['model'] == "Karman":
+                #x_shift
+                x_shift_name = f'x_shift_{spectrum.spectrum_number}_{segment}'
+                x_shift = params[x_shift_name].value if x_shift_name in params else 0.0
+                waves = wavenumber_segments[segment] + x_shift
 
-                CIA = self.spec_attrs['Dataset']['CIA model'].calculate_cia(spectrum.wavenumber, spectrum.get_temperature(), spectrum.get_pressure(), spectrum.get_Diluent(),
-                        float(params['S_SO_O2_O2']),
-                        float(params['S_SO_O2_N2']),
-                        float(params['S_EXCH_O2_O2']),
-                        float(params['EXCH_b_O2_O2']),
-                        float(params['EXCH_c_O2_O2']),
-                        float(params['SO_b_O2_O2']),
-                        float(params['SO_c_O2_O2']),
-                        float(params['SO_b_O2_N2']),
-                        float(params['SO_c_O2_N2']),
-                        float(params['SO_shift_O2_O2']),
-                        float(params['SO_shift_O2_N2']),
-                        float(params['EXCH_shift_O2_N2']),)
-                spectrum.set_cia(CIA)      
-            
-            for segment in list(set(spectrum.segments)):
-                wavenumbers = wavenumber_segments[segment]
-                wavenumbers_relative = wavenumbers - np.min(spectrum.wavenumber)
-                x_shift = float(params['x_shift_' + str(spectrum_number) + '_' + str(segment)])
-                #linelist_for_sim['nu'] = linelist_for_sim['nu'] + x_shift # Q
-                wavenumbers += x_shift
-                wavenumbers_relative+= x_shift
-                #Set-up MoleFraction for Fitting
-                fit_molefraction = spectrum.molefraction
-                for molecule in spectrum.molefraction:
-                    if ('molefraction_'+ self.dataset.isotope_list[(molecule, 1)][4]) + '_' + str(spectrum_number) + '_' + str(segment) in baseline_params:
-                        fit_molefraction[molecule] = float(params[('molefraction_'+ self.dataset.isotope_list[(molecule, 1)][4]) + '_' + str(spectrum_number) + '_' + str(segment)])
-                #Get Environmental Parameters
-                p = float(params['Pressure_' + str(spectrum_number) + '_' + str(segment)])
-                T = float(params['Temperature_' + str(spectrum_number) + '_' + str(segment)])
-                if spectrum.compressability_file != None:
-                    compressability_factor = self.spec_attrs[spectrum.spectrum_number]['Compressability Factor']([p,T])[0]
-                else:
-                    compressability_factor = 1    
-                
-                #Simulate Spectra
-                if self.beta_formalism == True:
-                    pass
-                else:
-                    BIA_FW_LBL = False
-                    if self.dataset.BIA_model['farwing_continuum'] == 'LBL':
-                        BIA_FW_LBL = True
-                    fit_nu, fit_coef = HTP_from_DF_select(linelist_for_sim, wavenumbers, wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,
-                            p = p, T = T, molefraction = fit_molefraction, isotope_list = self.dataset.isotope_list,
-                            natural_abundance = spectrum.natural_abundance, abundance_ratio_MI = spectrum.abundance_ratio_MI,  Diluent = Diluent, 
-                            TIPS = spectrum.TIPS, compressability_factor = compressability_factor, BIA_slope = self.dataset.BIA_model['sw_depletion'], BIA_FW_LBL = BIA_FW_LBL)
-                fit_coef = fit_coef * 1e6
-                                
-                ## CIA Calculation
-                CIA = spectrum.cia[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]
+                #Environmental Parameters
+                T = params[f'Temperature_{spectrum.spectrum_number}_{segment}'].value
+                p = params[f'Pressure_{spectrum.spectrum_number}_{segment}'].value
 
-                ## Baseline Calculation
-                baseline_param_array = [0]*(self.dataset.baseline_order+1)
-                for param in baseline_params:
-                    if ('baseline' in param):
-                        indices = [m.start() for m in re.finditer('_', param)]
-                        spectrum_num = int(param[indices[1]+1:indices[2]])
-                        segment_num = int(param[indices[2]+1:])
-                        if (spectrum_num == spectrum_number) and (segment_num == segment):
-                            baseline_param_array[ord(param[9:param.find('_',9)])-97] = float(params[param])
-                baseline_param_array = baseline_param_array[::-1] # reverses array to be used for polyval
-                baseline = np.polyval(baseline_param_array, wavenumbers_relative)
-                #Etalon Calculation
-                fit_etalon_parameters = {}
-                for i in range(1, len(spectrum.etalons)+1):
-                    fit_etalon_parameters[i] = {'amp': 0, 'period':1, 'phase':0}
-                for param in baseline_params:
-                    if ('etalon' in param) and (str(spectrum_number) in param[param.find('_', 7):]):
-                        etalon_num = int(param[param.find('_')+1: param.find('_', param.find('_')+1)])
-                        if param == 'etalon_' + str(etalon_num) + '_amp_' + str(spectrum_number) + '_' +str(segment):#('amp' in param) and (str(etalon_num) in param):
-                            fit_etalon_parameters[etalon_num]['amp'] = float(params[param])
-                        if param == 'etalon_' + str(etalon_num) + '_period_' + str(spectrum_number) + '_' +str(segment):#('period' in param) and (str(etalon_num) in param):
-                            fit_etalon_parameters[etalon_num]['period'] = float(params[param])
-                        if param == 'etalon_' + str(etalon_num) + '_phase_' + str(spectrum_number) +'_' + str(segment):#('phase' in param) and (str(etalon_num) in param):
-                            fit_etalon_parameters[etalon_num]['phase'] = float(params[param])
-                etalons = len(wavenumbers)*[0]
-                for i in range(1, len(spectrum.etalons)+1):
-                    etalons += etalon(wavenumbers_relative, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase'])
-                segment_alpha = baseline + etalons + fit_coef + CIA
-                #ILS_Function
-                if spectrum.ILS_function != None:
-                    if self.dataset.ILS_function_dict[spectrum.ILS_function.__name__] ==1:
-                        spec_seg_ILS_resolution  = float(params[spectrum.ILS_function.__name__ + '_res_0_' + str(spectrum_number) + '_' +str(segment)])
-                    else:
-                        spec_seg_ILS_resolution  = []
-                        for res_param in range(0, self.dataset.ILS_function_dict[spectrum.ILS_function.__name__]):
-                            spec_seg_ILS_resolution  += float(params[spectrum.ILS_function.__name__ + '_res_' + str(res_param) +'_' + str(spectrum_number) + '_' +str(segment)])
-                    wavenumbers, segment_alpha, i1, i2m, slit = convolveSpectrumSame(wavenumbers, segment_alpha, SlitFunction = spectrum.ILS_function, Resolution = spec_seg_ILS_resolution ,AF_wing=spectrum.ILS_wing)
-                simulated_spectra[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1] = (segment_alpha)
-                #Weighted Spectra
+                mf = spectrum.molefraction.copy()
+                for molec_id in mf:
+                    iso_name = self.dataset.isotope_list.get((molec_id, 1), [0,0,0,0,'Unknown'])[4]
+                    mf_param_name = f'molefraction_{iso_name}_{spectrum.spectrum_number}_{segment}'
+                    if mf_param_name in params:
+                        mf[molec_id] = params[mf_param_name].value
+
+                baseline_coeffs = self._extract_baseline_coeffs(params, spectrum.spectrum_number, segment)
+                etalon_dict = self._extract_etalon_dict(params, spectrum.spectrum_number, segment)
+                ils_res = self._extract_ils_resolution(params, spectrum, segment)
+
+                model_y = self.engine.calculate_spectrum(
+                    waves=waves,
+                    T=T, 
+                    p=p, 
+                    molefraction=mf,
+                    Diluent=spectrum.Diluent,
+                    spectrum_number=spectrum.spectrum_number,
+                    spectrum_min=np.min(spectrum.wavenumber), # For baseline relative shift logic
+                    
+                    baseline_coeffs=baseline_coeffs,
+                    etalon_dict=etalon_dict,
+                    cia_config=cia_config,
+                    
+                    ILS_function=spectrum.ILS_function,
+                    ILS_parameters=ils_res,
+                    ILS_wing=spectrum.ILS_wing,
+                    
+                    # Engine pass-throughs
+                    interpolated_compressability_file=self.spec_attrs[spectrum.spectrum_number]['Compressability Factor'],
+                    BIA_slope=self.dataset.BIA_model['sw_depletion'],
+                    BIA_FW_LBL=(self.dataset.BIA_model['farwing_continuum'] == 'LBL'),
+                    IntensityThreshold=self.minimum_parameter_fit_intensity, # Use class attribute
+                    wing_cutoff=wing_cutoff,
+                    wing_wavenumbers=wing_wavenumbers,
+                    wing_method=wing_method
+                )
+
+                data_y = alpha_segments[segment]
+                resid = data_y - model_y  #Earlier versions of MATS did model - data, we are switching this to the more excepted obs - calc
+
+                #Weighting
                 if self.weight_spectra:
+                    idx_min = np.min(indices_segments[segment])
+                    idx_max = np.max(indices_segments[segment])
                     if spectrum.tau_stats.all() == 0:
-                        weights = len(alpha_segments[segment])*[spectrum.weight]
+                        w = spectrum.weight
                     else:
-                        pt_by_pt_weights= 1 / (spectrum.tau_stats[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1])
-                        weights = spectrum.weight * pt_by_pt_weights
-                    residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = ((segment_alpha) - alpha_segments[segment])*weights
-                else:
-                    residuals[np.min(indices_segments[segment]): np.max(indices_segments[segment])+1]  = (segment_alpha) - alpha_segments[segment]
+                        seg_stats = spectrum.tau_stats[idx_min : idx_max + 1]
+                        w = spectrum.weight * (1.0 / seg_stats)
+                    
+                    resid = resid * w
 
-            total_simulated = np.append(total_simulated, simulated_spectra)
-            total_residuals = np.append(total_residuals, residuals)
-        total_residuals = np.asarray(total_residuals)
-        total_simulated = np.asarray(total_simulated)
-        return total_residuals
+                total_residuals.append(resid)
+        
+        return np.concatenate(total_residuals)
+                    
+
+
     def fit_data(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers', xtol = 1e-7, maxfev = 2000, ftol = 1e-7, 
                  method = 'least_squares'):
         """Uses the lmfit minimizer to do the fitting through the simulation model function.
@@ -925,24 +903,19 @@ class Fit_DataSet:
             contains all fit results as LMFit results object.
 
         """
-        if (method == 'least_squares') or (method == 'leastsq'):
-            minner = Minimizer(self.simulation_model, params, xtol =xtol, max_nfev =  maxfev, ftol = ftol, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
-            floated_parameters = False
-            for param in params:
-                if params[param].vary == True:
-                    floated_parameters = True
-            if floated_parameters == False:
-                if method == 'least_squares':
-                    method = 'leastsq'
-        else: 
-            minner = Minimizer(self.simulation_model, params, max_nfev =  maxfev, fcn_args=(wing_cutoff, wing_wavenumbers, wing_method))
-            #could add Ns = 20, and keep = 50
-        
 
-            
-            
-        result = minner.minimize(method = method)#'
+        fcn_args = (wing_cutoff, wing_wavenumbers, wing_method)
+
+        minner = Minimizer(self.objective_function, params, 
+                           xtol = xtol, max_nfev = maxfev, ftol = ftol, 
+                           fcn_args = fcn_args)
+        
+        floated_parameters = any(p.vary for p in params.values())
+        if not floated_parameters and method == 'least_squares':
+            method = 'leastsq'
+        result = minner.minimize(method = method)
         return result
+        
 
 
     def residual_analysis(self, result, indv_resid_plot = False):
