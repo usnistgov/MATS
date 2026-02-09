@@ -7,7 +7,6 @@ from scipy.interpolate import RegularGridInterpolator
 
 from .utilities import etalon, convolveSpectrumSame
 
-from .fit_dataset import HTP_from_DF_select
 from .hapi import ISO, PYTIPS2011, PYTIPS2017, PYTIPS2021
 from .codata import CONSTANTS
 
@@ -99,8 +98,6 @@ class Spectrum:
             else:
                 print ('If using the HTP_wBeta_from_DF_select then you need to go back and use the Diluent{diluent:{"composition": 1, "m": mass}} format')
                 self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
-
-
         else:
             self.Diluent = Diluent
             if 'self' in self.Diluent:

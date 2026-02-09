@@ -128,7 +128,8 @@ class Fit_DataSet:
     """
 
     def __init__(self, dataset, base_linelist_file, param_linelist_file, CIA_linelist_file = None,
-                minimum_parameter_fit_intensity = 1e-27, weight_spectra = False,
+                minimum_parameter_fit_intensity = 1e-27, minimum_simulation_intensity=1e-30,
+                weight_spectra = False,
                 baseline_limit = False, baseline_limit_factor = 10,
                 pressure_limit = False, pressure_limit_factor = 10,
                 temperature_limit = False, temperature_limit_factor = 10,
@@ -161,7 +162,11 @@ class Fit_DataSet:
         int_cols = additional_columns.copy()
         int_cols += ['molec_id', 'local_iso_id']
         self.param_linelist_file = param_linelist_file
-        self.lineparam_list = convert_int_to_float(pd.read_csv(self.param_linelist_file + ".csv", index_col=0), exclude_cols = int_cols)
+        raw_df = pd.read_csv(param_linelist_file + ".csv")
+        if 'nu' in raw_df.columns:
+            raw_df.sort_values('nu', inplace=True)
+        raw_df.reset_index(drop=True, inplace=True)
+        self.lineparam_list = convert_int_to_float(raw_df, exclude_cols=int_cols)
         self.engine = Spectroscopic_model(self.lineparam_list)
         
         #CIA linelist ingest
@@ -172,6 +177,7 @@ class Fit_DataSet:
             self.CIAparam_list = pd.read_csv(self.CIA_linelist_file + '.csv')
         
         self.minimum_parameter_fit_intensity = minimum_parameter_fit_intensity # Minimum fit intensity
+        self.minimum_simulation_intensity = minimum_simulation_intensity # Minimum simulation intensity
         self.weight_spectra = weight_spectra #Spectrum Weighting boolean
 
         #Limits!
@@ -846,7 +852,7 @@ class Fit_DataSet:
                     interpolated_compressability_file=self.spec_attrs[spectrum.spectrum_number]['Compressability Factor'],
                     BIA_slope=self.dataset.BIA_model['sw_depletion'],
                     BIA_FW_LBL=(self.dataset.BIA_model['farwing_continuum'] == 'LBL'),
-                    IntensityThreshold=self.minimum_parameter_fit_intensity, # Use class attribute
+                    IntensityThreshold=self.minimum_simulation_intensity, # Use class attribute
                     wing_cutoff=wing_cutoff,
                     wing_wavenumbers=wing_wavenumbers,
                     wing_method=wing_method
