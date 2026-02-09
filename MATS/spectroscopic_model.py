@@ -98,11 +98,14 @@ class Spectroscopic_model:
         
         # Calculate CIA
         alpha_cia = np.zeros_like(waves)
-        if cia_config and cia_config['model'] == 'Karman':
-            if 'calculator' in cia_config:
-                 alpha_cia = cia_config['calculator'].calculate_cia(
-                     waves, T, p, Diluent, 
-                     **cia_config['params'])  # Check on this implementation
+        if cia_config:
+            if cia_config['model'] == 'Karman':
+                    alpha_cia = cia_config['calculator'].calculate_cia(
+                        waves, T, p, Diluent, 
+                        **cia_config['params'])  
+                    
+            if cia_config['model'] == 'ad hoc':
+                alpha_cia = cia_config['values']
                  
         #Baseline
         baseline = np.zeros_like(waves)

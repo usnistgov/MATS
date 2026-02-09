@@ -128,7 +128,7 @@ class Fit_DataSet:
     """
 
     def __init__(self, dataset, base_linelist_file, param_linelist_file, CIA_linelist_file = None,
-                minimum_parameter_fit_intensity = 1e-27, minimum_simulation_intensity=1e-30,
+                minimum_parameter_fit_intensity = 1e-30, minimum_simulation_intensity=1e-30,
                 weight_spectra = False,
                 baseline_limit = False, baseline_limit_factor = 10,
                 pressure_limit = False, pressure_limit_factor = 10,
@@ -282,27 +282,45 @@ class Fit_DataSet:
 
     def _extract_cia_config(self, params):
         """Packs CIA model and parameters into a config dict."""
-        if self.dataset.CIA_model['model'] != 'Karman':
-            return None
-        
-        else:
+        if self.dataset.CIA_model['model'] == 'Karman':
             # Extract the specific Karman parameters
             cia_params = {}
-            karman_keys = ['S_SO_O2_O2', 'S_SO_O2_N2', 'S_EXCH_O2_O2', 'EXCH_b_O2_O2', 
-                        'EXCH_c_O2_O2', 'SO_b_O2_O2', 'SO_c_O2_O2', 'SO_b_O2_N2', 
-                        'SO_c_O2_N2', 'SO_shift_O2_O2', 'SO_shift_O2_N2', 'EXCH_shift_O2_N2']
+            param_map = {
+                # --- Scalar Magnitudes ---
+                'S_SO_O2_O2':   'SO_O2',       # Fit param S_SO_O2_O2 -> Arg SO_O2
+                'S_SO_O2_N2':   'SO_N2',       # Fit param S_SO_O2_N2 -> Arg SO_N2
+                'S_EXCH_O2_O2': 'EXCH_O2',     # Fit param S_EXCH_O2_O2 -> Arg EXCH_O2
+                
+                # --- Shape Parameters (Global) ---
+                'EXCH_b_O2_O2': 'EXCH_b',
+                'EXCH_c_O2_O2': 'EXCH_c',
+                
+                # --- Specific Shape Parameters ---
+                'SO_b_O2_O2':   'SO_b_O2_O2',
+                'SO_c_O2_O2':   'SO_c_O2_O2',
+                'SO_b_O2_N2':   'SO_b_O2_N2',
+                'SO_c_O2_N2':   'SO_c_O2_N2',
+                
+                # --- Shifts ---
+                'SO_shift_O2_O2':   'SO_shift_O2_O2',
+                'SO_shift_O2_N2':   'SO_shift_O2_N2',
+                'EXCH_shift_O2_N2': 'EXCH_shift' 
+            }
             
-            for k in karman_keys:
-                if k in params:
-                    cia_params[k] = params[k].value
+            for fit_name, arg_name in param_map.items():
+                if fit_name in params:
+                    cia_params[arg_name] = params[fit_name].value
                 else:
-                    cia_params[k] = 0.0 # Or default values
+
+                    cia_params[arg_name] = 0.0
                     
             return {
                 'model': 'Karman',
                 'calculator': self.spec_attrs['Dataset']['CIA model'],
                 'params': cia_params
             }
+        else:
+            return None
 
 
     def prep_sim(self):
@@ -802,8 +820,10 @@ class Fit_DataSet:
         #Update arrays in spectroscopic_model
         self.engine.update_from_lmfit(params)
         total_residuals = []
-
-        cia_config = self._extract_cia_config(params) #Get CIA parameters
+        cia_config = None
+        if self.dataset.CIA_model['model'] == 'Karman':
+            cia_config = self._extract_cia_config(params) #Get CIA parameters
+      
 
         #Loop over spectra
         for spectrum in self.dataset.spectra:
@@ -830,6 +850,14 @@ class Fit_DataSet:
                 baseline_coeffs = self._extract_baseline_coeffs(params, spectrum.spectrum_number, segment)
                 etalon_dict = self._extract_etalon_dict(params, spectrum.spectrum_number, segment)
                 ils_res = self._extract_ils_resolution(params, spectrum, segment)
+
+                if self.dataset.CIA_model['model'] == 'ad hoc':
+                    idx_min = np.min(indices_segments[segment])
+                    idx_max = np.max(indices_segments[segment])
+                    cia_slice = spectrum.cia[idx_min : idx_max + 1]
+                    cia_config = {
+                        'model': 'ad hoc',
+                        'values': cia_slice}
 
                 model_y = self.engine.calculate_spectrum(
                     waves=waves,

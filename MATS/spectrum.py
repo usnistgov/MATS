@@ -9,6 +9,8 @@ from .utilities import etalon, convolveSpectrumSame
 
 from .hapi import ISO, PYTIPS2011, PYTIPS2017, PYTIPS2021
 from .codata import CONSTANTS
+from .spectroscopic_model import Spectroscopic_model
+from .o2_cia_karman import O2_CIA_Karman_Model
 
 
 
@@ -81,7 +83,7 @@ class Spectrum:
                     tau_column = 'Mean tau/us', tau_stats_column = None, segment_column = None,
                     etalons = {}, nominal_temperature = 296, x_shift = 0.0, baseline_order = 1, weight = 1,
                     ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2021, 
-                    compressability_file = None):
+                    compressability_file = None, cia = None):
         self.filename = filename
         self.molefraction = molefraction
         self.natural_abundance = natural_abundance
@@ -160,7 +162,10 @@ class Spectrum:
         self.model = len(self.alpha)*[0.0]
         self.residuals = self.alpha - self.model
         self.background = len(self.alpha)*[0.0]
-        self.cia = len(self.alpha)*[0.0]
+        if cia is None:
+            self.cia = len(self.alpha)*[0.0]
+        else:
+            self.cia = cia
         self.compressability_file = compressability_file
 
 
@@ -442,7 +447,8 @@ def simulate_spectrum(parameter_linelist,
                         isotope_list = ISO, natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {},
                         nominal_temperature = 296, etalons = {}, x_shift = 0.0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False,
                         ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2021, 
-                        compressability_file = None, BIA_model = {'sw_depletion': False, 'farwing_continuum': None}):
+                        compressability_file = None, BIA_model = {'sw_depletion': False, 'farwing_continuum': None}, 
+                        CIA_model = {'model': None, 'params': None}):
     """Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.
 
 
@@ -535,138 +541,185 @@ def simulate_spectrum(parameter_linelist,
             Diluent = {diluent: {'composition':1, 'm':0.0}}
             print ('THIS IS GOING TO BREAK WITH A DIVISION ERROR IF YOU USE THE BETA VERSION')
 
-    #Set-Up Parameters
-    baseline_terms = np.flip(baseline_terms)
-    temperature_K = temperature + 273.15
-    pressure_atm = pressure / 760
+    linelist_for_sim = parameter_linelist.copy()
+    if 'nu' in linelist_for_sim.columns:
+        linelist_for_sim.sort_values('nu', inplace=True)
+    linelist_for_sim.reset_index(drop=True, inplace=True)
+
+    linelist_for_sim['sw'] /= IntensityThreshold
+    linelist_for_sim['sw_scale_factor'] = IntensityThreshold
+
+    engine = Spectroscopic_model(linelist_for_sim)
+
+    #Frequency axis
     if len(wavenumbers) == 0:
         wavenumbers = np.arange(wave_min, wave_max + wave_space, wave_space)
-
     wavenumbers_err = wavenumbers + wave_error*np.random.normal(loc = 0, scale =1, size = len(wavenumbers))
-    #molefraction error
-    #check that all moleules included in the parameter list are included in spectrum molefraction
-    dataset_molecule_list = list(molefraction.keys())
-    molecules_in_paramlist = parameter_linelist['molec_id'].unique()
-    for i in range(0, len(molecules_in_paramlist)):
-        dataset_molecule_list.append(molecules_in_paramlist[i])
-    dataset_molecule_list = list(set(dataset_molecule_list))
-    for molecule in dataset_molecule_list:
-        if molecule not in molefraction:
-            molefraction[molecule] = 0
 
+    baseline_coeffs = np.flip(baseline_terms)
+
+    engine_etalon_dict = {}
+    if etalons:
+        for i, vals in etalons.items():
+            # vals is [Amplitude, Period]
+            # Generate random phase (0 to 2pi)
+            phi = np.random.rand() * 2 * np.pi 
+            engine_etalon_dict[i] = {'amp': vals[0], 'period': vals[1], 'phase': phi}
+
+    # ILS Resolution: Ensure it is a list for the engine
+    if not isinstance(ILS_resolution, list) and not isinstance(ILS_resolution, np.ndarray):
+        engine_ils_res = [ILS_resolution]
+    else:
+        engine_ils_res = ILS_resolution
+    
+    #Temperature
+    temperature_K = temperature + 273.15
+    temperature_w_error = np.full(len(wavenumbers), temperature_K + temperature_err['bias'])
+    if temperature_err['function'] == 'linear' and 'params' in temperature_err:
+        temperature_w_error += temperature_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + temperature_err['params']['b']
+    elif temperature_err['function'] == 'sine' and 'params' in temperature_err:
+         temperature_w_error += etalon((wavenumbers-np.min(wavenumbers)), temperature_err['params']['amp'], temperature_err['params']['period'], temperature_err['params']['phase'])
+
+    #Pressure
+    pressure_atm = pressure / 760
+    pressure_w_error = np.full(len(wavenumbers), pressure_atm * (1 + pressure_err['per_bias']/100))
+    if pressure_err['function'] == 'linear' and 'params' in pressure_err:
+         pressure_w_error += pressure_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + pressure_err['params']['b']
+    elif pressure_err['function'] == 'sine' and 'params' in pressure_err:
+         pressure_w_error += etalon((wavenumbers-np.min(wavenumbers)), pressure_err['params']['amp'], pressure_err['params']['period'], pressure_err['params']['phase'])
+
+    #Molefraction
+    dataset_molecule_list = list(molefraction.keys())
+    molecules_in_paramlist = linelist_for_sim['molec_id'].unique()
+    for m in molecules_in_paramlist:
+        if m not in dataset_molecule_list: dataset_molecule_list.append(m)
+    
+    for molecule in dataset_molecule_list:
+        if molecule not in molefraction: molefraction[molecule] = 0
 
     molefraction_w_error = {}
     for species in molefraction:
-        if molefraction_err == {}:
-            molefraction_err[species] = 0.0
-        elif species not in molefraction_err:
-            molefraction_err[species] = 0.0
-        molefraction_w_error[species] = molefraction[species] + molefraction[species]*(molefraction_err[species]/100)
-    #pressure error
-    pressure_w_error = pressure_atm + pressure_atm*(pressure_err['per_bias']/100)#adds the pressure bias based on the percent bias of the pressure measaurement.  Can loop this or set this to be constant for all spectra
-    pressure_w_error = len(wavenumbers)*[pressure_w_error]
-    if pressure_err['function'] == 'linear':
-        if 'params' in pressure_err:
-            pressure_w_error += pressure_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + pressure_err['params']['b']
-    elif pressure_err['function'] == 'sine':
-        if 'params' in pressure_err:
-            pressure_w_error += etalon((wavenumbers-np.min(wavenumbers)), pressure_err['params']['amp'], pressure_err['params']['period'], pressure_err['params']['phase'])
-    #temperature error
-    temperature_w_error = temperature_K + temperature_err['bias']
-    temperature_w_error = len(wavenumbers)*[temperature_w_error]
-    if temperature_err['function'] == 'linear':
-        if 'params' in temperature_err:
-            temperature_w_error += temperature_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + temperature_err['params']['b']
-    elif pressure_err['function'] == 'sine':
-        if 'params' in temperature_err:
-            temperature_w_error += etalon((wavenumbers-np.min(wavenumbers)), temperature_err['params']['amp'], temperature_err['params']['period'], temperature_err['params']['phase'])
+        err = molefraction_err.get(species, 0.0)
+        molefraction_w_error[species] = molefraction[species] * (1 + err/100.0)
 
-    #Define Segments
+    # Compressibility Interpolator
+    interp_comp_factor = None
+    if compressability_file is not None:
+        comp_factor = pd.read_csv(compressability_file + '.csv')
+        pressures = np.asarray(comp_factor['Pressure (MPa)'].values*1e6/101325).astype(float)
+        temperatures = np.asarray([x for x in list(comp_factor) if 'Pressure' not in x]).astype(float)
+        comp_factor.drop('Pressure (MPa)', inplace=True, axis=1) 
+        interp_comp_factor = RegularGridInterpolator(points = [pressures, temperatures], values = comp_factor.to_numpy())
+
+    BIA_FW_LBL = (BIA_model['farwing_continuum'] == 'LBL')
+
+    #CIA
+    cia_config = None
+    cia_array = np.zeros_like(wavenumbers)
+    if CIA_model.get('model') == 'ad hoc':
+        cia_array = CIA_model.get('values')
+    elif CIA_model.get('model') == 'Karman':
+        cia_calc = O2_CIA_Karman_Model(band = CIA_model.get('band'))
+    
+        cia_config = {
+                'model': 'Karman',
+                'calculator': cia_calc,
+                'params': CIA_model.get('parameters')}
+        
+        cia_array = cia_calc.calculate_cia(
+            wavenumbers, 
+            temperature_K, 
+            pressure_atm, 
+            Diluent, 
+            **CIA_model.get('parameters'))
+
+
+
+
+
+
     seg_number = np.arange(len(wavenumbers))
     seg_number = np.abs(seg_number// (len(wavenumbers)/num_segments)).astype(int)
 
-    alpha_array = len(wavenumbers)*[0.0]
-    pressure_array = len(wavenumbers)*[0.0]
-    temperature_array = len(wavenumbers)*[0.0]
-    
-    if compressability_file != None:
-        comp_factor = pd.read_csv(compressability_file + '.csv')
-        pressures = np.asarray(comp_factor['Pressure (MPa)'].values*1e6/101325)
-        pressures = pressures.astype(float)
-        temperatures = list(comp_factor)
-        temperatures.remove('Pressure (MPa)')
-        temperatures = np.asarray(temperatures)
-        temperatures = temperatures.astype(float)
-        comp_factor.drop('Pressure (MPa)', inplace=True, axis=1) 
-        comp_factor_array = comp_factor.to_numpy()
-        interp_comp_factor = RegularGridInterpolator(points = [pressures, temperatures], values = comp_factor_array)
-    BIA_FW_LBL = False
-    if BIA_model['farwing_continuum'] == 'LBL':
-        BIA_FW_LBL = True
-    
-    for seg in range(0, num_segments):
+    alpha_array = np.zeros_like(wavenumbers)
+    final_pressure_array = np.zeros_like(wavenumbers)
+    final_temp_array = np.zeros_like(wavenumbers)
 
-        segment_array = (np.where(seg_number == seg)[0])
-        waves = np.take(wavenumbers, segment_array)
-        segment_pressure = np.mean(np.take(pressure_w_error, segment_array))
-        segment_temperature = np.mean(np.take(temperature_w_error, segment_array))
-        if compressability_file != None:
-            compressability_factor = interp_comp_factor([segment_pressure, segment_temperature])[0]
-        else:
-            compressability_factor = 1   
-
-
-        if beta_formalism:
-            pass
-        else:
+    for seg in range(num_segments):
+        idx = np.where(seg_number == seg)[0]
+        if len(idx) == 0: continue
             
-            waves, alpha = HTP_from_DF_select(parameter_linelist,waves , wing_cutoff, wing_wavenumbers, wing_method,
-                    p = segment_pressure, T = segment_temperature,  molefraction = molefraction_w_error, isotope_list = isotope_list,
-                    natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI,
-                    Diluent = Diluent, diluent = diluent, IntensityThreshold = IntensityThreshold, TIPS = TIPS, compressability_factor = compressability_factor, 
-                    BIA_slope = BIA_model['sw_depletion'], BIA_FW_LBL = BIA_FW_LBL)
-        alpha_array[np.min(segment_array): np.max(segment_array)+1] = alpha * 1e6
+        # Segment conditions
+        waves_seg = wavenumbers[idx]
+        seg_P = np.mean(pressure_w_error[idx])
+        seg_T = np.mean(temperature_w_error[idx])
+        
+        # Store for output file
+        final_pressure_array[idx] = seg_P
+        final_temp_array[idx] = seg_T
 
-        pressure_array[np.min(segment_array): np.max(segment_array)+1] = len(alpha)*[segment_pressure]
-        temperature_array[np.min(segment_array): np.max(segment_array)+1] = len(alpha)*[segment_temperature]
-    pressure_array = np.asarray(pressure_array) - pressure_atm*(pressure_err['per_bias'] / 100)
-    temperature_array = np.asarray(temperature_array) - temperature_err['bias']
+        # --- CALL ENGINE (Handles LBL + Baseline + Etalon + ILS) ---
+        alpha_seg = engine.calculate_spectrum(
+            waves=waves_seg,
+            T=seg_T,
+            p=seg_P,
+            molefraction=molefraction_w_error,
+            Diluent=Diluent,
+            spectrum_number=1,
+            spectrum_min=np.min(wavenumbers), # Ensure relative baseline x-axis is consistent
+            
+            baseline_coeffs=baseline_coeffs,
+            etalon_dict=engine_etalon_dict,
+            
+            ILS_function=ILS_function,
+            ILS_parameters=engine_ils_res,
+            ILS_wing=ILS_wing,
+            
+            interpolated_compressability_file=interp_comp_factor,
+            TIPS=TIPS,
+            isotope_list=isotope_list,
+            natural_abundance=natural_abundance,
+            abundance_ratio_MI=abundance_ratio_MI,
+            BIA_slope=BIA_model['sw_depletion'],
+            BIA_FW_LBL=BIA_FW_LBL,
+            cia_config=cia_config,
+            IntensityThreshold=IntensityThreshold,
+            wing_cutoff=wing_cutoff,
+            wing_wavenumbers=wing_wavenumbers,
+            wing_method=wing_method
+        )
 
-    #Calculate Baseline
-    baseline = np.polyval(baseline_terms, wavenumbers -np.min(wavenumbers) )
-    # Calculate Etalons
-    etalon_model = len(wavenumbers)*[0.0]
-    for r in range(1, len(etalons)+1):
-        amp = etalons[r][0]
-        period = etalons[r][1]
-        phase = np.random.rand()
-        x = wavenumbers - np.min(wavenumbers)
-        etalon_model += amp*np.sin((2*np.pi * period)*x+ phase)
-    alpha_array += (baseline + etalon_model)
-    if ILS_function != None:
-        wavenumbers, alpha_array, i1, i2m, slit = convolveSpectrumSame(wavenumbers, alpha_array, SlitFunction = ILS_function, Resolution = ILS_resolution ,AF_wing=ILS_wing)
-    #Calculate Noisy Spectrum
-    if SNR == None:
+        alpha_array[idx] = alpha_seg
+
+    if SNR is None:
         alpha_noise = alpha_array
     else:
-        alpha_noise = alpha_array + np.max(alpha_array)*np.random.normal(loc = 0, scale =1, size = len(alpha_array))*1/SNR
+        # Scale noise by max signal
+        alpha_noise = alpha_array + np.max(alpha_array) * np.random.normal(0, 1, len(alpha_array)) * (1/SNR)
 
-
-    #Generate and save Simulated Spectrum File
     spectrum = pd.DataFrame()
     spectrum['Segment Number'] = seg_number
     spectrum['Wavenumber (cm-1)'] = wavenumbers
     spectrum['Wavenumber + Noise (cm-1)'] = wavenumbers_err
     spectrum['Alpha (ppm/cm)'] = alpha_array
     spectrum['Alpha + Noise (ppm/cm)'] = alpha_noise
-    spectrum['Noise (%)'] = 100 *(alpha_noise - (alpha_array + baseline + etalon_model)) / np.max(alpha_noise)
-    spectrum['Pressure (Torr)'] = pressure_array*760
-    spectrum['Temperature (C)'] = temperature_array - 273.15
-    spectrum.to_csv(filename + '.csv', index = False)
-    # Returns a spectrum class object for facile integration into the fitting workflow
-    return Spectrum(filename, molefraction = molefraction, natural_abundance = natural_abundance, diluent = diluent, Diluent = Diluent, abundance_ratio_MI = abundance_ratio_MI, isotope_list = isotope_list,
-                    spectrum_number = 1, input_freq = False, input_tau = False,
-                pressure_column = 'Pressure (Torr)', temperature_column = 'Temperature (C)', frequency_column = 'Wavenumber + Noise (cm-1)',
-                tau_column = 'Alpha + Noise (ppm/cm)', tau_stats_column = 'Noise (%)', segment_column = 'Segment Number',
-                etalons = etalons, nominal_temperature = nominal_temperature, x_shift = x_shift, baseline_order = len(baseline_terms)-1, weight = 1,
-                ILS_function = ILS_function, ILS_resolution = ILS_resolution ,ILS_wing=ILS_wing, TIPS = TIPS, compressability_file = compressability_file)
+    # Calculate Noise % (Data - Clean_Model)
+    # Note: alpha_array ALREADY includes Baseline+Etalon from the engine
+    spectrum['CIA (ppm/cm)'] = cia_array
+    spectrum['Noise (%)'] = 100 * (alpha_noise - alpha_array) / np.max(alpha_noise) if np.max(alpha_noise) != 0 else 0
+    spectrum['Pressure (Torr)'] = final_pressure_array * 760
+    spectrum['Temperature (C)'] = final_temp_array - 273.15
+    spectrum.to_csv(filename + '.csv', index=False)
+
+    return Spectrum(filename, molefraction=molefraction, natural_abundance=natural_abundance, 
+                    diluent=diluent, Diluent=Diluent, abundance_ratio_MI=abundance_ratio_MI, isotope_list=isotope_list,
+                    spectrum_number=1, input_freq=False, input_tau=False,
+                    pressure_column='Pressure (Torr)', temperature_column='Temperature (C)', frequency_column='Wavenumber + Noise (cm-1)',
+                    tau_column='Alpha + Noise (ppm/cm)', tau_stats_column='Noise (%)', segment_column='Segment Number',
+                    etalons=etalons, nominal_temperature=nominal_temperature, x_shift=x_shift, 
+                    baseline_order=len(baseline_terms)-1, weight=1,
+                    ILS_function=ILS_function, ILS_resolution=ILS_resolution, ILS_wing=ILS_wing, 
+                    TIPS=TIPS, compressability_file=compressability_file, cia = cia_array)
+
+
+    

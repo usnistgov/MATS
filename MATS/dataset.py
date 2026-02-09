@@ -454,7 +454,7 @@ class Dataset:
             dataframe containing information decribing the CIA parameters based on the CIA model chosen.  This dataframe is also saved to a dataframe.  Either file can be edited before making the CIA parameter list used for fitting.  If editting the .csv file will need to regenerate dataframe from .csv.
 
         """
-        if self.CIA_model['model'] == None:
+        if self.CIA_model['model'] == 'ad hoc':
             return None
         elif self.CIA_model['model'] == 'Karman':
             CIA_paramlist = pd.DataFrame()
