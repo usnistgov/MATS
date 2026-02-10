@@ -164,6 +164,9 @@ class Generate_FitParam_File:
         extreme_dictionary = self.dataset.get_spectrum_extremes()
         param_linelist_df = param_linelist_df[param_linelist_df['nu'] < (dataset_max + self.sim_window)]
         param_linelist_df = param_linelist_df[param_linelist_df['nu'] > (dataset_min - self.sim_window)]
+
+        param_linelist_df.sort_values('nu', inplace = True)
+        param_linelist_df.reset_index(drop = True, inplace = True)
         
         #delete parameters not partaining to species (where relevant)
         diluent_list = []
