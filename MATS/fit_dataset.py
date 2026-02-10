@@ -128,6 +128,7 @@ class Fit_DataSet:
     """
 
     def __init__(self, dataset, base_linelist_file, param_linelist_file, CIA_linelist_file = None,
+                 lineprofile = 'mHTP',
                 minimum_parameter_fit_intensity = 1e-30, minimum_simulation_intensity=1e-30,
                 weight_spectra = False,
                 baseline_limit = False, baseline_limit_factor = 10,
@@ -167,7 +168,9 @@ class Fit_DataSet:
             raw_df.sort_values('nu', inplace=True)
         raw_df.reset_index(drop=True, inplace=True)
         self.lineparam_list = convert_int_to_float(raw_df, exclude_cols=int_cols)
-        self.engine = Spectroscopic_model(self.lineparam_list)
+        self.lineprofile = lineprofile
+        self.engine = Spectroscopic_model(self.lineparam_list, lineprofile = self.lineprofile, 
+                                          isotope_list = self.dataset.isotope_list)
         
         #CIA linelist ingest
         self.CIA_linelist_file = CIA_linelist_file
@@ -175,6 +178,7 @@ class Fit_DataSet:
             self.CIAparam_list = None
         else:
             self.CIAparam_list = pd.read_csv(self.CIA_linelist_file + '.csv')
+        
         
         self.minimum_parameter_fit_intensity = minimum_parameter_fit_intensity # Minimum fit intensity
         self.minimum_simulation_intensity = minimum_simulation_intensity # Minimum simulation intensity
