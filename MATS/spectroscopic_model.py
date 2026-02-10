@@ -9,11 +9,83 @@ from .hapi import ISO, PYTIPS2017, PYTIPS2011, PYTIPS2021, pcqsdhc, PROFILE_LORE
 from .utilities import molecularMass, etalon, convolveSpectrumSame
 from .codata import CONSTANTS
 from .o2_cia_karman import O2_CIA_Karman_Model
+from numba import jit, prange
+
+@jit(nopython=True, parallel=True, fastmath=True, cache=True)
+def fast_broadening_params(nlines, p, T, pref, Tref,
+                           abundances,
+                           # Arrays for Gamma0
+                           g0_arrs, n_g0_arrs,
+                           # Arrays for Delta0
+                           d0_arrs, n_d0_arrs,
+                           # Arrays for Gamma2 (SD)
+                           sd_gamma_arrs, n_gamma2_arrs,
+                           # Arrays for Delta2 (SD)
+                           sd_delta_arrs, n_delta2_arrs,
+                           # Arrays for NuVC
+                           nuvc_arrs, n_nuvc_arrs,
+                           # Arrays for Eta
+                           eta_arrs,
+                           # Arrays for Y (Line Mixing)
+                           y_arrs, n_y_arrs):
+    """
+    Calculates weighted sums of broadening parameters for all lines in parallel.
+    Avoids allocating temporary arrays for every intermediate math step.
+    """
+    
+    # Initialize output arrays
+    Gamma0 = np.zeros(nlines, dtype=np.float64)
+    Delta0 = np.zeros(nlines, dtype=np.float64)
+    Gamma2 = np.zeros(nlines, dtype=np.float64)
+    Delta2 = np.zeros(nlines, dtype=np.float64)
+    NuVC   = np.zeros(nlines, dtype=np.float64)
+    Eta    = np.zeros(nlines, dtype=np.float64)
+    Y      = np.zeros(nlines, dtype=np.float64)
+    
+    # Pre-calculate T ratio
+    T_ratio = Tref / T
+    delta_T = T - Tref
+    p_norm = p / pref
+    
+    # Loop over diluents (outer loop, usually small, e.g. 2 for Air)
+    num_diluents = len(abundances)
+    
+    for d in range(num_diluents):
+        abun = abundances[d]
+        
+        # Inner loop over lines (Parallelized)
+        for i in prange(nlines):
+            
+            # Gamma0
+            term_g0 = g0_arrs[d][i] * (T_ratio ** n_g0_arrs[d][i])
+            Gamma0[i] += abun * term_g0 * p_norm
+            
+            # Delta0
+            Delta0[i] += abun * (d0_arrs[d][i] + n_d0_arrs[d][i] * delta_T) * p_norm
+            
+            # Gamma2 (Speed Dependent)
+            # Formula: abun * (SD_gamma * gamma0_val) ... from your code logic
+            # Note: Your original code did: abun * (sd_gamma_arr * g0_arr * (p/pref) * (Tref/T)**n_gamma2)
+            Gamma2[i] += abun * (sd_gamma_arrs[d][i] * g0_arrs[d][i] * p_norm * (T_ratio ** n_gamma2_arrs[d][i]))
+            
+            # Delta2 (Speed Dependent)
+            Delta2[i] += abun * ((sd_delta_arrs[d][i] * d0_arrs[d][i] + n_delta2_arrs[d][i] * delta_T) * p_norm)
+            
+            # NuVC (Dicke)
+            NuVC[i] += abun * (nuvc_arrs[d][i] * p_norm * (T_ratio ** n_nuvc_arrs[d][i]))
+            
+            # Eta
+            Eta[i] += eta_arrs[d][i] * abun
+            
+            # Line Mixing
+            Y[i] += abun * (y_arrs[d][i] * p_norm * (T_ratio ** n_y_arrs[d][i]))
+            
+    return Gamma0, Delta0, Gamma2, Delta2, NuVC, Eta, Y
 
 class Spectroscopic_model:
     #converts from pandas DF to numpy arrays
     # LBL calcultion
-    def __init__(self, parameter_linelist):
+    def __init__(self, parameter_linelist, isotope_list = ISO, natural_abundance=True, abundance_ratio_MI={}, TIPS = PYTIPS2021):
         self.nlines = len(parameter_linelist)
 
         #Static arrays
@@ -36,7 +108,25 @@ class Spectroscopic_model:
                                'BIA_slope_', 
                                'BIA_collision_duration_')):
                 self.dynamic_arrays[col] = parameter_linelist[col].values.astype(np.float64)
-        
+
+        self.mass = np.zeros(self.nlines, dtype=np.float64)
+        self.sigma_Tref = np.zeros(self.nlines, dtype=np.float64) # Tref is fixed at 296K
+        #self.abundance_ratio = np.ones(self.nlines, dtype=np.float64) 
+        self.unique_pairs = np.unique(np.column_stack((self.molec_id, self.local_iso_id)), axis=0)
+
+        Tref = 296.0
+        for m, i in self.unique_pairs:
+            m, i = int(m), int(i)
+            mask = (self.molec_id == m) & (self.local_iso_id == i)
+            
+            # Mass
+            self.mass[mask] = molecularMass(m, i, isotope_list=isotope_list)
+            # Partition Sum at Ref Temp (296K)
+            try:
+                self.sigma_Tref[mask] = TIPS(m, i, Tref)
+            except:
+                pass # Handle TIPS failures gracefully
+            
         #MAPPING CACHE (Filled by the fit_dataset later)
         self.param_index_map = []
     def _resolve_array(self, param_base_name, spectrum_number):
@@ -145,7 +235,6 @@ class Spectroscopic_model:
         Tref = 296. # K
         pref = 1. # atm
         mol_density_ref = (pref/ CONSTANTS['cpa_atm'])/(CONSTANTS['k']*273.15) #density at 1 atm and 273.15 K
-        
         mol_dens = (p/ CONSTANTS['cpa_atm'])/(CONSTANTS['k']*T)
         if interpolated_compressability_file != None:
             mol_dens = mol_dens / interpolated_compressability_file([p, T])[0]
@@ -153,17 +242,14 @@ class Spectroscopic_model:
 
         #Vectorized
         sigma_T = np.ones(self.nlines, dtype=np.float64)
-        sigma_Tref = np.ones(self.nlines, dtype=np.float64)
-        mass = np.ones(self.nlines, dtype=np.float64)
+        #sigma_Tref = np.ones(self.nlines, dtype=np.float64)
+        #mass = np.ones(self.nlines, dtype=np.float64)
         abundance_ratio = np.ones(self.nlines, dtype=np.float64)
-        unique_pairs = np.unique(np.column_stack((self.molec_id, self.local_iso_id)), axis=0)
-        for m, i in unique_pairs:
+        for m, i in self.unique_pairs:
             m, i = int(m), int(i)
             mask = (self.molec_id == m) & (self.local_iso_id == i)
             try:
                 sigma_T[mask] = TIPS(m, i, T)
-                sigma_Tref[mask] = TIPS(m, i, Tref)
-                mass[mask] = molecularMass(m,i, isotope_list = isotope_list)
                 if (not natural_abundance) and (abundance_ratio_MI != {}):
                     abundance_ratio[mask] = abundance_ratio_MI[m][i]
             except:
@@ -175,57 +261,60 @@ class Spectroscopic_model:
         sw_array = self._resolve_array('sw', spectrum_number)
         sw_array = sw_array*self.sw_scale_factor
         nu_array = self._resolve_array('nu', spectrum_number)
-        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(mass))*nu_array / CONSTANTS['c']
+        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(self.mass))*nu_array / CONSTANTS['c']
 
-        line_intensity = sw_array * (sigma_Tref / sigma_T) * \
+        line_intensity = sw_array * (self.sigma_Tref / sigma_T) * \
                     (np.exp(-CONSTANTS['c2'] * self.elower / T) * (1 - np.exp(-CONSTANTS['c2'] * nu_array / T))) / \
                     (np.exp(-CONSTANTS['c2'] * self.elower / Tref) * (1 - np.exp(-CONSTANTS['c2'] * nu_array / Tref)))
         
         # Calculated Line Parameters across Broadeners
-        Gamma0 = np.zeros(self.nlines)
-        Delta0 = np.zeros(self.nlines)
-        Gamma2 = np.zeros(self.nlines)
-        Delta2 = np.zeros(self.nlines)
-        NuVC   = np.zeros(self.nlines)
-        Eta    = np.zeros(self.nlines)
-        Y      = np.zeros(self.nlines)
-        intensity_bia = np.zeros(self.nlines)
-        bia_duration = np.zeros(self.nlines)
+        abundances_list = []
+        
+        # Accumulate arrays for Numba
+        g0_list = []; n_g0_list = []
+        d0_list = []; n_d0_list = []
+        sd_gamma_list = []; n_gamma2_list = []
+        sd_delta_list = []; n_delta2_list = []
+        nuvc_list = []; n_nuvc_list = []
+        eta_list = []
+        y_list = []; n_y_list = []
 
         for species, info in Diluent.items():
-            abun = info['composition']
-
-            g0_arr = self._resolve_array(f'gamma0_{species}', spectrum_number)
-            n_g0_arr = self._resolve_array(f'n_gamma0_{species}', spectrum_number)
-            d0_arr = self._resolve_array(f'delta0_{species}', spectrum_number)
-            n_d0_arr = self._resolve_array(f'n_delta0_{species}', spectrum_number)
-            sd_gamma_arr = self._resolve_array(f'SD_gamma_{species}', spectrum_number)
-            n_gamma2_arr = self._resolve_array(f'n_gamma2_{species}', spectrum_number)
-            sd_delta_arr = self._resolve_array(f'SD_delta_{species}', spectrum_number)
-            n_delta2_arr = self._resolve_array(f'n_delta2_{species}', spectrum_number)
-            nuVC_arr = self._resolve_array(f'nuVC_{species}', spectrum_number)
-            n_nuvc_arr = self._resolve_array(f'n_nuVC_{species}', spectrum_number)
-            eta_arr = self._resolve_array(f'eta_{species}', spectrum_number)
-            y_arr = self._resolve_array(f'y_{species}', spectrum_number)
-            n_y_arr = self._resolve_array(f'n_y_{species}', spectrum_number)
+            abundances_list.append(info['composition'])
+            
+            # Resolve all arrays (using _resolve_array which now defaults to zeros if missing)
+            g0_list.append(self._resolve_array(f'gamma0_{species}', spectrum_number))
+            n_g0_list.append(self._resolve_array(f'n_gamma0_{species}', spectrum_number))
+            d0_list.append(self._resolve_array(f'delta0_{species}', spectrum_number))
+            n_d0_list.append(self._resolve_array(f'n_delta0_{species}', spectrum_number))
+            sd_gamma_list.append(self._resolve_array(f'SD_gamma_{species}', spectrum_number))
+            n_gamma2_list.append(self._resolve_array(f'n_gamma2_{species}', spectrum_number))
+            sd_delta_list.append(self._resolve_array(f'SD_delta_{species}', spectrum_number))
+            n_delta2_list.append(self._resolve_array(f'n_delta2_{species}', spectrum_number))
+            nuvc_list.append(self._resolve_array(f'nuVC_{species}', spectrum_number))
+            n_nuvc_list.append(self._resolve_array(f'n_nuVC_{species}', spectrum_number))
+            eta_list.append(self._resolve_array(f'eta_{species}', spectrum_number))
+            y_list.append(self._resolve_array(f'y_{species}', spectrum_number))
+            n_y_list.append(self._resolve_array(f'n_y_{species}', spectrum_number))
             
 
-            #Gamma0: pressure broadening coefficient HWHM
-            Gamma0 += abun*(g0_arr*(p/pref)*((Tref/T)**n_g0_arr))
-            #Delta0
-            Delta0 += abun*((d0_arr + n_d0_arr*(T-Tref))*p/pref)
-            #Gamma2
-            Gamma2+= abun*(sd_gamma_arr*g0_arr*(p/pref)*((Tref/T)**n_gamma2_arr))
-            #Delta2
-            Delta2 += abun*((sd_delta_arr*d0_arr + n_delta2_arr*(T-Tref))*p/pref)
-            #nuVC
-            NuVC += abun*(nuVC_arr*(p/pref)*((Tref/T)**(n_nuvc_arr)))
-            #eta
-            Eta += eta_arr *abun
-            #Line mixing
-            Y += abun*(y_arr*(p/pref)*((Tref/T)**(n_y_arr)))
+        Gamma0, Delta0, Gamma2, Delta2, NuVC, Eta, Y = fast_broadening_params(
+            self.nlines, p, T, pref, Tref,
+            np.array(abundances_list, dtype=np.float64),
+            np.array(g0_list, dtype=np.float64), np.array(n_g0_list, dtype=np.float64),
+            np.array(d0_list, dtype=np.float64), np.array(n_d0_list, dtype=np.float64),
+            np.array(sd_gamma_list, dtype=np.float64), np.array(n_gamma2_list, dtype=np.float64),
+            np.array(sd_delta_list, dtype=np.float64), np.array(n_delta2_list, dtype=np.float64),
+            np.array(nuvc_list, dtype=np.float64), np.array(n_nuvc_list, dtype=np.float64),
+            np.array(eta_list, dtype=np.float64),
+            np.array(y_list, dtype=np.float64), np.array(n_y_list, dtype=np.float64))
 
-            if BIA_slope:
+        # BIA Logic (Keep in NumPy for now as it's conditional)
+        intensity_bia = np.zeros(self.nlines)
+        bia_duration = np.zeros(self.nlines)
+        if BIA_slope:
+            for species, info in Diluent.items():
+                abun = info['composition']
                 bia_slope_arr = self._resolve_array(f'BIA_slope_{species}', spectrum_number)
                 intensity_bia += abun*(line_intensity*(1-0.01*bia_slope_arr*(density_amagat)))
                 if BIA_FW_LBL:
@@ -249,6 +338,9 @@ class Spectroscopic_model:
             
             BoundIndexLower = bisect(waves, nu_i - cut_i)
             BoundIndexUpper = bisect(waves, nu_i + cut_i)
+            if BoundIndexLower >= len(waves) or BoundIndexUpper <= 0:
+                continue
+            
             wave_slice = waves[BoundIndexLower:BoundIndexUpper]
 
             lineshape_vals_real, lineshape_vals_imag = pcqsdhc(
