@@ -10,6 +10,7 @@ from .utilities import molecularMass, etalon, convolveSpectrumSame
 from .codata import CONSTANTS
 from .o2_cia_karman import O2_CIA_Karman_Model
 from numba import jit, prange
+from .mHT.profile import mHTprofile_vector
 
 @jit(nopython=True, parallel=True, fastmath=True, cache=True)
 def fast_broadening_params(nlines, p, T, pref, Tref,
@@ -375,7 +376,9 @@ class Spectroscopic_model:
                     nu_i, GammaD[i], Gamma0[i], Gamma2[i], Delta0[i], Delta2[i],
                     ParamRe[i], ParamIm[i], wave_slice, Ylm=Y[i])  # This now includes the line-mixing component
             else:
-                pass
+                lineshape_PT = mHTprofile_vector(nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
+                                                 Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i])
+                
             
             mf = molefraction[self.molec_id[i]]
             line_abundance_ratio = abundance_ratio[i]
