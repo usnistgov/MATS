@@ -59,7 +59,9 @@ class Generate_FitParam_File:
                   threshold_intensity = 1e-30, fit_intensity = 1e-26, fit_window = 1.5, sim_window = 5,
                   param_linelist_savename = 'Parameter_LineList', base_linelist_savename = 'Baseline_LineList', CIA_linelist_savename = 'CIA_LineList',
                  nu_constrain = True, sw_constrain = True, gamma0_constrain = True, delta0_constrain = True, aw_constrain = True, as_constrain = True,
-                 nuVC_constrain = True, eta_constrain =True, linemixing_constrain = True,
+                 nuVC_constrain = True, eta_constrain =True, 
+                 nuOptRe_constrain = True, nuOptIm_constrain = True,
+                 linemixing_constrain = True,
                  additional_columns = []):
         self.dataset = dataset
         if param_linelist is None:
@@ -91,10 +93,24 @@ class Generate_FitParam_File:
         self.delta0_constrain = delta0_constrain
         self.aw_constrain = aw_constrain
         self.as_constrain = as_constrain
-        self.nuVC_constrain = nuVC_constrain
-        self.eta_constrain = eta_constrain
+        #self.nuVC_constrain = nuVC_constrain
+        #self.eta_constrain = eta_constrain
         self.linemixing_constrain = linemixing_constrain
         self.additional_columns = additional_columns
+
+        if lineprofile == 'HTP':
+            self.paramRe_constrain = nuVC_constrain
+            self.paramIm_constrain = eta_constrain
+            if (not nuOptRe_constrain) | (not nuOptIm_constrain):
+                print ('The HTP should use nuVC_constrain and eta_constrain')
+        else:
+            self.paramRe_constrain = nuOptRe_constrain
+            self.paramIm_constrain = nuOptIm_constrain
+            if (not nuVC_constrain) | (not eta_constrain):
+                print ('All line profiles other than HTP should use nuOptRe_constrain and nuOptIm_constrain')
+
+
+
     def get_dataset(self):
         return self.dataset
     def get_param_linelist(self):
@@ -108,8 +124,15 @@ class Generate_FitParam_File:
                                    vary_delta0 = {}, vary_n_delta0 = {},
                                    vary_aw = {}, vary_n_gamma2 = {},
                                    vary_as = {}, vary_n_delta2 = {},
+
+                                   #HTP logic
                                    vary_nuVC = {}, vary_n_nuVC = {},
-                                   vary_eta = {}, vary_linemixing = {}, vary_n_linemixing = {}, 
+                                   vary_eta = {}, 
+                                   #mHTP logic
+                                   vary_nuOptRe = {}, vary_n_nuOptRe = {}, 
+                                   vary_nuOptIm = {}, vary_n_nuOptIm = {},
+
+                                   vary_linemixing = {}, vary_n_linemixing = {}, 
                                    vary_BIA_slope = {}, vary_BIA_collision_duration = {}):
         """Generates the parameter line list used in fitting and updates the fitting booleans to desired settings.
 
@@ -174,8 +197,36 @@ class Generate_FitParam_File:
             for diluent in spectrum.Diluent:
                 if diluent not in diluent_list:
                     diluent_list.append(diluent)
-                    
+
         num_nominal_temps, list_nominal_temps = self.dataset.get_number_nominal_temperatures()
+        
+        #nuVC-nuOptRe and eta-nuOptIm logic
+        if self.lineprofile == 'HTP':
+            vary_paramRe = vary_nuVC
+            vary_n_paramRe = vary_n_nuVC
+            vary_paramIm = vary_eta
+            if (len(vary_nuOptRe) > 0) or (len(vary_nuOptRe) > 0) or (len(vary_nuOptIm) > 0) or (len(vary_n_nuOptIm) > 0):
+                print ('For HTP lineprofile make use of vary_nuVC, vary_n_nuVCm and vary_eta parameters')
+        else:
+            vary_paramRe = vary_nuOptRe
+            vary_n_paramRe = vary_nuOptRe
+            vary_paramIm = vary_nuOptIm
+            vary_n_paramIm = vary_n_nuOptIm
+            if (len(vary_nuVC) > 0) or (len(vary_n_nuVC) > 0) or (len(vary_eta) > 0) :
+                print ('For all line profiles other tha HTP make use of vary_nuOptRe, vary_nuOptRe, vary_nuOptIm, and vary_n_nuOptIm parameters')
+
+        if self.lineprofile == 'HTP':
+            p_re = 'nuVC_'
+            p_n_re = 'n_nuVC_'
+            p_im = 'eta_'
+            p_n_im = 'n_eta_'
+        else:
+            p_re = 'nuOptRe_'
+            p_n_re = 'n_nuOptRe_'
+            p_im = 'nuOptIm_'
+            p_n_im = 'n_nuOptIm_'
+                    
+        
         column_list =  self.additional_columns.copy()
         column_list += ['molec_id', 'local_iso_id','elower', 'nu', 'sw']
         for diluent in diluent_list:
