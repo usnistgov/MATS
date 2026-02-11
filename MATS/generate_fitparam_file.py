@@ -473,7 +473,8 @@ class Generate_FitParam_File:
                             for molecule in vary_paramIm:
                                 for isotope in vary_paramIm[molecule]:
                                     param_linelist_df.loc[(param_linelist_df['nu'] >= extreme_dictionary[spec][0])&(param_linelist_df['nu'] <= extreme_dictionary[spec][1])&(param_linelist_df['sw'] > 1) &(param_linelist_df['molec_id'] == molecule) & (param_linelist_df['local_iso_id'] == isotope), spec_col + '_vary'] = (vary_paramIm[molecule][isotope])
-            order_param_Im.append(n_param_Im +diluent)
+            if self.lineprofile != 'HTP':
+                order_param_Im.append(n_param_Im +diluent)
 
             # Linemixing
             order_linemixing.append('y_' + diluent)
@@ -544,8 +545,9 @@ class Generate_FitParam_File:
                 param_linelist_df[n_param_Re +diluent+'_vary'] = False
                 param_linelist_df[n_param_Re +diluent+'_err'] = 0.0
 
-                param_linelist_df[n_param_Im +diluent+'_vary'] = False
-                param_linelist_df[n_param_Im +diluent+'_err'] = 0.0
+                if self.lineprofile != 'HTP':
+                    param_linelist_df[n_param_Im +diluent+'_vary'] = False
+                    param_linelist_df[n_param_Im +diluent+'_err'] = 0.0
 
 
                 param_linelist_df['n_y_'+diluent+'_vary'] = False
@@ -633,6 +635,7 @@ class Generate_FitParam_File:
                 if 'n_' != item[:2]:
                     ordered_list.append(item + '_err')
                     ordered_list.append(item + '_vary')
+
         for item in order_SD_delta:
             ordered_list.append(item)
             if num_nominal_temps > 1:
@@ -655,9 +658,14 @@ class Generate_FitParam_File:
 
         for item in order_param_Im:
             ordered_list.append(item)
-            ordered_list.append(item + '_err')
-            ordered_list.append(item + '_vary')
-        
+            if self.lineprofile != 'HTP':
+                if num_nominal_temps > 1:
+                    ordered_list.append(item + '_err')
+                    ordered_list.append(item + '_vary')
+                else:
+                    if 'n_' != item[:2]:
+                        ordered_list.append(item + '_err')
+                        ordered_list.append(item + '_vary')
         for item in order_linemixing:          
             ordered_list.append(item)
             if num_nominal_temps > 1:
