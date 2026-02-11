@@ -172,6 +172,8 @@ class Fit_DataSet:
         if 'nu' in raw_df.columns:
             raw_df.sort_values('nu', inplace=True)
         raw_df.reset_index(drop=True, inplace=True)
+        raw_df = raw_df.loc[:, ~raw_df.columns.str.contains('Unnamed:')]
+        
         self.lineparam_list = convert_int_to_float(raw_df, exclude_cols=int_cols)
         self.lineprofile = lineprofile
         self.engine = Spectroscopic_model(self.lineparam_list, lineprofile = self.lineprofile, 
@@ -448,6 +450,7 @@ class Fit_DataSet:
         num_nominal_temps = self.dataset.get_number_nominal_temperatures()[0]
 
         for line_param in list(self.lineparam_list):
+            print ()
             if num_nominal_temps == 1:
                 if self.dataset.BIA_model['sw_depletion']:
                     if self.dataset.BIA_model['farwing_continuum'] == 'LBL':
@@ -507,11 +510,13 @@ class Fit_DataSet:
         if count_cols('y_') > limit_y: linemix_constrain = False
         
         for spec_line in self.lineparam_list.index.values:
-            sw_scaled = self.minimum_parameter_fit_intensity * self.lineparam_list.loc[spec_line]['sw_scale_factor']
+            sw_scaled = self.lineparam_list.loc[spec_line]['sw'] * self.lineparam_list.loc[spec_line]['sw_scale_factor']
             if sw_scaled < self.minimum_parameter_fit_intensity:
                 continue
             for line_param in linelist_params:
+                print (linelist_params)
                 val = self.lineparam_list.loc[spec_line][line_param]
+                print (line_param, val)
                 vary = self.lineparam_list.loc[spec_line][line_param + '_vary']
                 lmfit_name = f"{line_param}_line_{spec_line}"
 
