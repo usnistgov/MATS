@@ -407,7 +407,15 @@ class Fit_DataSet:
                               max = self.x_shift_limit_magnitude + self.baseline_list.loc[index][base_param])
                 else:
                     params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'])
-                
+        
+        if self.lineprofile == 'HTP':
+            param_Re = 'nuVC'
+            param_Im = 'eta'            
+        else: # HTP / VP / etc
+            param_Re = 'nuOptRe'
+            param_Im = 'nuOptIm'
+            
+
         #Lineshape parameters
         linelist_params = []
         for line_param in list(self.lineparam_list):
