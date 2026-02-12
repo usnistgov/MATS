@@ -182,7 +182,7 @@ class Fit_DataSet:
         self.lineparam_list = convert_int_to_float(raw_df, exclude_cols=int_cols)
         self.lineprofile = lineprofile
         self.engine = Spectroscopic_model(self.lineparam_list, lineprofile = self.lineprofile, 
-                                          isotope_list = self.dataset.isotope_list)
+                                          isotope_list = self.dataset.isotope_list, beta_formalism=beta_formalism)
         
         #CIA linelist ingest
         self.CIA_linelist_file = CIA_linelist_file
@@ -403,7 +403,6 @@ class Fit_DataSet:
                 else:
                     params.add(lmfit_name, val, vary)
         
-        print (self.lineprofile)
         if self.lineprofile == 'HTP':
             param_Re = 'nuVC'
             param_Im = 'eta'            

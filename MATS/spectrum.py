@@ -569,7 +569,7 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP',
                 if col.startswith(('SD_gamma_', 'n_gamma2_', 'SD_delta_', 'n_SD_delta_')):
                     lineprofile[col] = 0
 
-    engine = Spectroscopic_model(linelist_for_sim, lineprofile=lineprofile, isotope_list = isotope_list)
+    engine = Spectroscopic_model(linelist_for_sim, lineprofile=lineprofile, isotope_list = isotope_list, beta_formalism=beta_formalism)
 
     #Frequency axis
     

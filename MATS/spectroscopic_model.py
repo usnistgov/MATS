@@ -92,9 +92,13 @@ class Spectroscopic_model:
     #converts from pandas DF to numpy arrays
     # LBL calcultion
     def __init__(self, parameter_linelist, isotope_list = ISO, 
-                 lineprofile = 'mHTP'):
+                 lineprofile = 'mHTP', beta_formalism = False):
         self.nlines = len(parameter_linelist)
         self.lineprofile = lineprofile
+        if lineprofile != 'HTP':
+            self.beta_formalism = beta_formalism
+        else:
+            self.beta_formalism = False
 
         #Static arrays
         self.elower = parameter_linelist['elower'].to_numpy(dtype=np.float64)
@@ -283,6 +287,7 @@ class Spectroscopic_model:
         sw_array = sw_array*self.sw_scale_factor
         nu_array = self._resolve_array('nu', spectrum_number)
         GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(self.mass))*nu_array / CONSTANTS['c']
+        
 
         line_intensity = sw_array * (sigma_Tref / sigma_T) * \
                     (np.exp(-CONSTANTS['c2'] * self.elower / T) * (1 - np.exp(-CONSTANTS['c2'] * nu_array / T))) / \
@@ -302,8 +307,10 @@ class Spectroscopic_model:
         param_im_list = []; n_param_im_list = []
         y_list = []; n_y_list = []
 
+        perturber_mass = 0
         for species, info in Diluent.items():
             abundances_list.append(info['composition'])
+            perturber_mass += Diluent[species]['composition']*Diluent[species]['m']
             
             # Resolve all arrays (using _resolve_array which now defaults to zeros if missing)
             g0_list.append(self._resolve_array(f'gamma0_{species}', spectrum_number))
@@ -325,7 +332,12 @@ class Spectroscopic_model:
 
             y_list.append(self._resolve_array(f'y_{species}', spectrum_number))
             n_y_list.append(self._resolve_array(f'n_y_{species}', spectrum_number))
-            
+        
+        if self.beta_formalism:
+            alpha = perturber_mass / self.mass
+        else:
+            alpha = np.ones(self.nlines, dtype=np.float64)*10.0
+        
         lineprofile_mode = 0 if self.lineprofile == 'HTP' else 1
 
         Gamma0, Delta0, Gamma2, Delta2, ParamRe, ParamIm, Y = fast_broadening_params(
@@ -379,7 +391,7 @@ class Spectroscopic_model:
                     ParamRe[i], ParamIm[i], wave_slice, Ylm=Y[i])  # This now includes the line-mixing component
             else:
                 lineshape_PT = mHTprofile_vector(nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
-                                                 Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i])
+                                                 Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i], 0, alpha[i])
                 
             
             mf = molefraction[self.molec_id[i]]
