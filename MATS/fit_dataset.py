@@ -131,26 +131,31 @@ class Fit_DataSet:
                  lineprofile = 'mHTP',
                 minimum_parameter_fit_intensity = 1e-30, minimum_simulation_intensity=1e-30,
                 weight_spectra = False,
-                baseline_limit = False, baseline_limit_factor = 10,
-                pressure_limit = False, pressure_limit_factor = 10,
-                temperature_limit = False, temperature_limit_factor = 10,
-                molefraction_limit = False, molefraction_limit_factor = 10,
-                etalon_limit = False, etalon_limit_factor = 50, #phase is constrained to +/- 2pi,
-                x_shift_limit = False, x_shift_limit_magnitude = 0.1,
-                nu_limit = False, nu_limit_magnitude = 0.1,
+                
+                pressure_bounds = None,
+                temperature_bounds = None,
+                molefraction_bounds = None, # This will need to be a dictionary of bounds
+                etalon_amp_bounds = None,  #This will need to be a dictionary of dictionary bounds
+                etalon_period_bounds = None, 
+                etalon_phase_bounds = None, 
+                x_shift_bounds = None,
 
-                sw_limit = False, sw_limit_factor = 10,
-                gamma0_limit = False, gamma0_limit_factor = 10, n_gamma0_limit= False, n_gamma0_limit_factor = 10,
-                delta0_limit = False, delta0_limit_factor = 10, n_delta0_limit = False, n_delta0_limit_factor = 10,
-                SD_gamma_limit = False, SD_gamma_limit_factor  = 10, n_gamma2_limit = False, n_gamma2_limit_factor  = 10,
-                SD_delta_limit = False, SD_delta_limit_factor  = 10, n_delta2_limit = False, n_delta2_limit_factor  = 10,
-                nuVC_limit = False, nuVC_limit_factor  = 10, n_nuVC_limit = False, n_nuVC_limit_factor = 10,
-                eta_limit = False, eta_limit_factor  = 10,
+                nu_relative_bounds = None, # These will be limits from initial gues
+                sw_bound_scalars = None, #These will be multiplicative factors on the initial guess, could still set to 0 to be sw can't be negative
 
-                nuOptRe_limit = False, nuOptRe_limit_factor = 10, n_nuOptRe_limit = False, n_nuOptRe_limit_factor = 10, 
-                nuOptIm_limit = False, nuOptIm_limit_factor = 10, n_nuOptIm_limit = False, n_nuOptIm_limit_factor = 10,
+                gamma0_bounds = None, n_gamma0_bounds = None,
+                delta0_bounds = None, n_delta0_bounds = None,
+                SD_gamma_bounds  = None, n_gamma2_bounds  = None,
+                SD_delta_bounds  = None, n_delta2_bounds  = None,
+                nuVC_bounds  = None, n_nuVC_bounds = None,
+                eta_bounds  = None,
+                nuOptRe_bounds = None, n_nuOptRe_bounds = None, 
+                nuOptIm_bounds = None, n_nuOptIm_bounds = None,
+                linemixing_bounds = None, n_linemixing_bounds = None, 
 
-                linemixing_limit = False, linemixing_limit_factor  = 10, n_linemixing_limit = False, n_linemixing_limit_factor = 10,
+                BIA_intensity_depletion_bounds = None, 
+                BIA_collision_duration_bounds = None,
+
                 beta_formalism = False, additional_columns = []):
         
 
@@ -192,66 +197,46 @@ class Fit_DataSet:
         self.weight_spectra = weight_spectra #Spectrum Weighting boolean
 
         #Limits!
-        self.baseline_limit = baseline_limit
-        self.baseline_limit_factor  = baseline_limit_factor
-        self.pressure_limit = pressure_limit
-        self.pressure_limit_factor = pressure_limit_factor
-        self.temperature_limit = temperature_limit
-        self.temperature_limit_factor = temperature_limit_factor
-        self.etalon_limit = etalon_limit
-        self.etalon_limit_factor = etalon_limit_factor
-        self.molefraction_limit = molefraction_limit
-        self.molefraction_limit_factor = molefraction_limit_factor
-        self.etalon_limit = etalon_limit
-        self.etalon_limit_factor = etalon_limit_factor
-        self.x_shift_limit = x_shift_limit
-        self.x_shift_limit_magnitude = x_shift_limit_magnitude
-        self.nu_limit = nu_limit
-        self.nu_limit_magnitude = nu_limit_magnitude
-        self.sw_limit = sw_limit
-        self.sw_limit_factor = sw_limit_factor
-        self.gamma0_limit = gamma0_limit
-        self.gamma0_limit_factor = gamma0_limit_factor
-        self.n_gamma0_limit = n_gamma0_limit
-        self.n_gamma0_limit_factor = n_gamma0_limit_factor
-        self.delta0_limit = delta0_limit
-        self.delta0_limit_factor= delta0_limit_factor
-        self.n_delta0_limit = n_delta0_limit
-        self.n_delta0_limit_factor = n_delta0_limit_factor
-        self.SD_gamma_limit = SD_gamma_limit
-        self.SD_gamma_limit_factor = SD_gamma_limit_factor
-        self.n_gamma2_limit = n_gamma2_limit
-        self.n_gamma2_limit_factor = n_gamma2_limit_factor
-        self.SD_delta_limit = SD_delta_limit
-        self.SD_delta_limit_factor = SD_delta_limit_factor
-        self.n_delta2_limit = n_delta2_limit
-        self.n_delta2_limit_factor = n_delta2_limit_factor
+
+
+        def init_bounds(b): return b if b is not None else [-np.inf, np.inf]
+
+        self.pressure_bounds = init_bounds(pressure_bounds)
+        self.temperature_bounds = init_bounds(temperature_bounds)
+        self.x_shift_bounds = init_bounds(x_shift_bounds)
+
+        self.etalon_amp_bounds = init_bounds(etalon_amp_bounds)
+        self.etalon_period_bounds = init_bounds(etalon_period_bounds)
+        self.etalon_phase_bounds = init_bounds(etalon_phase_bounds)
+
+        self.nu_relative_bounds = init_bounds(nu_relative_bounds) #These need further definition in the generate_params
+        self.sw_bound_scalars = init_bounds(sw_bound_scalars)  #These need further definition in the generate_params
+
+        self.gamma0_bounds = init_bounds(gamma0_bounds)
+        self.n_gamma0_bounds = init_bounds(n_gamma0_bounds)
+        self.delta0_bounds = init_bounds(delta0_bounds)
+        self.n_delta0_bounds = init_bounds(n_delta0_bounds)
+        self.SD_gamma_bounds = init_bounds(SD_gamma_bounds)
+        self.n_gamma2_bounds = init_bounds(n_gamma2_bounds)
+        self.SD_delta_bounds = init_bounds(SD_delta_bounds)
+        self.n_delta2_bounds = init_bounds(n_delta2_bounds)
         
-
         if lineprofile == 'HTP':
-            self.paramRe_limit = nuVC_limit
-            self.paramRe_limit_factor = nuVC_limit_factor
-            self.n_paramRe_limit = n_nuVC_limit
-            self.n_paramRe_limit_factor = n_nuVC_limit_factor
-            self.paramIm_limit = eta_limit
-            self.paramIm_limit_factor = eta_limit_factor
-            self.n_paramIm_limit = False
-            self.n_paramIm_limit_factor = None
-
+            self.paramRe_bounds = init_bounds(nuVC_bounds)
+            self.n_paramRe_bounds = init_bounds(n_nuVC_bounds)
+            self.paramIm_bounds = init_bounds(eta_bounds)
+            self.n_paramIm_bounds = [-np.inf, np.inf]
         else:
-            self.paramRe_limit = nuOptRe_limit
-            self.paramRe_limit_factor = nuOptRe_limit_factor
-            self.n_paramRe_limit = n_nuOptRe_limit
-            self.n_paramRe_limit_factor = n_nuOptRe_limit_factor
-            self.paramIm_limit = nuOptIm_limit
-            self.paramIm_limit_factor = nuOptIm_limit_factor
-            self.n_paramIm_limit = n_nuOptIm_limit
-            self.n_paramIm_limit_factor = n_nuOptIm_limit_factor
+            self.paramRe_bounds = init_bounds(nuOptRe_bounds)
+            self.n_paramRe_bounds = init_bounds(n_nuOptRe_bounds)
+            self.paramIm_bounds = init_bounds(nuOptIm_bounds)
+            self.n_paramIm_bounds = init_bounds(n_nuOptIm_bounds)
+        
+        self.linemixing_bounds = init_bounds(linemixing_bounds)
+        self.n_linemixing_bounds = init_bounds(n_linemixing_bounds)
+        self.BIA_intensity_depletion_bounds = init_bounds(BIA_intensity_depletion_bounds)
+        self.BIA_collision_duration_bounds = init_bounds(BIA_collision_duration_bounds)
 
-        self.linemixing_limit = linemixing_limit
-        self.linemixing_limit_factor = linemixing_limit_factor
-        self.n_linemixing_limit = n_linemixing_limit
-        self.n_linemixing_limit_factor = n_linemixing_limit_factor
 
         
         self.beta_formalism = beta_formalism #Beta formalism
@@ -396,40 +381,27 @@ class Fit_DataSet:
             if ('_vary' not in base_param) and ('_err' not in base_param) and ('Spectrum Number' not in base_param) and ('Segment Number' not in base_param):
                 baseline_parameters.append(base_param)
         for index in self.baseline_list.index.values:
-            spec_num = self.baseline_list.iloc[index]['Spectrum Number']
-            seg_num = self.baseline_list.iloc[index]['Segment Number']
+            spec_num = int(self.baseline_list.iloc[index]['Spectrum Number'])
+            seg_num = int(self.baseline_list.iloc[index]['Segment Number'])
+            
             for base_param in baseline_parameters:
-                if self.baseline_list.loc[index][base_param] == 0:
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'])
-                elif ('Pressure' in base_param) and self.pressure_limit:
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
-                              min = (1 / self.pressure_limit_factor)*self.baseline_list.loc[index][base_param],
-                              max = self.pressure_limit_factor*self.baseline_list.loc[index][base_param])
-                elif ('Temperature' in base_param) and self.temperature_limit:
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
-                              min = (1 / self.temperature_limit_factor)*self.baseline_list.loc[index][base_param],
-                              max = self.temperature_limit_factor*self.baseline_list.loc[index][base_param])
-                elif ('molefraction' in base_param) and self.molefraction_limit:
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
-                              min = (1 / self.molefraction_limit_factor)*self.baseline_list.loc[index][base_param],
-                              max = self.molefraction_limit_factor*self.baseline_list.loc[index][base_param])
-                elif ('baseline' in base_param) and self.baseline_limit:
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
-                              min = (1 / self.baseline_limit_factor)*self.baseline_list.loc[index][base_param],
-                              max = self.baseline_limit_factor *self.baseline_list.loc[index][base_param])
-                elif ('etalon_' in base_param) and self.etalon_limit and ('phase' not in base_param):
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
-                              min = (1 / self.etalon_limit_factor )*self.baseline_list.loc[index][base_param],
-                              max = self.etalon_limit_factor *self.baseline_list.loc[index][base_param])
-                elif ('etalon_' in base_param) and self.etalon_limit and ('phase' in base_param):
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
-                              min = -2*np.pi, max = 2*np.pi)
-                elif ('x_shift' in base_param) and self.x_shift_limit:
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'],
-                              min = (self.baseline_list.loc[index][base_param] - self.x_shift_limit_magnitude),
-                              max = self.x_shift_limit_magnitude + self.baseline_list.loc[index][base_param])
+                val = self.baseline_list.loc[index][base_param]
+                vary = self.baseline_list.loc[index][base_param + '_vary']
+                lmfit_name = f"{base_param}_{spec_num}_{seg_num}"
+                if ('Pressure' in base_param) and self.pressure_bounds != [-np.inf, np.inf]:
+                    params.add(lmfit_name, val, vary, min = self.pressure_bounds[0], max = self.pressure_bounds[1])
+                elif ('Temperature' in base_param) and self.temperature_bounds != [-np.inf, np.inf]:
+                    params.add(lmfit_name, val, vary, min = self.temperature_bounds[0], max = self.temperature_bounds[1])
+                elif ('etalon_' in base_param) and self.etalon_amp_bounds and ('amp' in base_param):
+                    params.add(lmfit_name, val, vary, min = self.etalon_amp_bounds[0], max = self.etalon_amp_bounds[1])
+                elif ('etalon_' in base_param) and self.etalon_amp_bounds and ('period' in base_param):
+                    params.add(lmfit_name, val, vary, min = self.etalon_period_bounds[0], max = self.etalon_period_bounds[1])
+                elif ('etalon_' in base_param) and self.etalon_amp_bounds and ('phase' in base_param):
+                    params.add(lmfit_name, val, vary, min = self.etalon_phase_bounds[0], max = self.etalon_phase_bounds[1])
+                elif ('x_shift' in base_param) and self.x_shift_bounds != [-np.inf, np.inf]:
+                    params.add(lmfit_name, val, vary, min = self.x_shift_bounds[0], max = self.x_shift_bounds[1])
                 else:
-                    params.add(base_param + '_'+str(int(spec_num))+'_'+ str(int(seg_num)), self.baseline_list.loc[index][base_param], self.baseline_list.loc[index][base_param + '_vary'])
+                    params.add(lmfit_name, val, vary)
         
         if self.lineprofile == 'HTP':
             param_Re = 'nuVC'
@@ -478,6 +450,7 @@ class Fit_DataSet:
                     suffix = other_col[len(col)+1:]
                     if suffix.isdigit():
                         spectrum_specific = True
+                        '''
                         if col == 'nu': constrain_dictionary['nu'] = False
                         elif col == 'sw': constrain_dictionary['sw'] = False
                         elif col.startswith('gamma0'): constrain_dictionary['gamma0'] = False
@@ -487,13 +460,13 @@ class Fit_DataSet:
                         elif col.startswith('y'): constrain_dictionary['y'] = False
                         elif col.startswith(param_Re): constrain_dictionary[param_Re] = False
                         elif col.startswith(param_Im): constrain_dictionary[param_Im] = False
+                        '''
                         break
             if not spectrum_specific:
                 linelist_params.append(col)
         
-        print (linelist_params)
-        print (constrain_dictionary)
-
+        #print (linelist_params)
+        #print (constrain_dictionary)
         
         for spec_line in self.lineparam_list.index.values:
             sw_scaled = self.lineparam_list.loc[spec_line]['sw'] * self.lineparam_list.loc[spec_line]['sw_scale_factor']
@@ -504,162 +477,53 @@ class Fit_DataSet:
                 vary = self.lineparam_list.loc[spec_line][line_param + '_vary']
                 lmfit_name = f"{line_param}_line_{spec_line}"
 
+                if (line_param == 'nu') or (('nu_' in line_param) and (param_Re not in line_param) and (param_Im not in line_param)):
+                    params.add(lmfit_name, val, vary, min = val + self.nu_relative_bounds[0], max = val + self.nu_relative_bounds[1])
+                elif ('sw' in line_param):
+                    params.add(lmfit_name, val, vary, min = val * self.sw_bound_scalars[0], max = val * self.sw_bound_scalars[1])
+                elif ('gamma0_' in line_param) and ('n_' not in line_param): 
+                    params.add(lmfit_name, val, vary, min =self.gamma0_bounds[0], max = self.gamma0_bounds[1])
+                elif ('n_gamma0_' in line_param):
+                    params.add(lmfit_name, val, vary, min = self.n_gamma0_bounds[0], max = self.n_gamma0_bounds[1])
 
-                #indices = [m.start() for m in re.finditer('_', line_param)]
-                #index_length = len(indices)
-                #NU
-                if line_param == 'nu' and constrain_dictionary['nu']:
-                    if self.nu_limit:
-                        params.add(lmfit_name, val, vary, min = val - self.nu_limit_magnitude, max = val + self.nu_limit_magnitude)
-                    else:
-                        params.add(lmfit_name, val, vary)
-                elif (line_param != 'nu') and ('nu_' in line_param) and (param_Re not in line_param) and (param_Im not in line_param) and (not constrain_dictionary['nu']):
-                    if self.nu_limit:
-                        params.add(lmfit_name, val, vary, min = val - self.nu_limit_magnitude, max = val + self.nu_limit_magnitude)
-                    else:
-                        params.add(lmfit_name, val, vary)
-                #SW
-                elif line_param == 'sw' and constrain_dictionary['sw']:
-                    if self.sw_limit:
-                        params.add(lmfit_name, val, vary, min = (1 / self.sw_limit_factor)* val, max = self.sw_limit_factor* val)
-                    else:
-                        params.add(lmfit_name, val, vary)
-                elif (line_param != 'sw') and ('sw' in line_param) and (not constrain_dictionary['sw']) and (line_param != 'sw_scale_factor'):
-                    if self.sw_limit:
-                        params.add(lmfit_name, val, vary,min =  (1 / self.sw_limit_factor)* val, max = self.sw_limit_factor*val)
-                    else:
-                        params.add(lmfit_name, val, vary)
-                #GAMMA0
-                elif ('gamma0_' in line_param) and ('n_' not in line_param) and (constrain_dictionary['gamma0']) : #and (index_length==1)
-                    if self.gamma0_limit and val != 0:
-                        params.add(lmfit_name, val, vary, min = (1 / self.gamma0_limit_factor)*val, max = self.gamma0_limit_factor*val)
-                    else:
-                        params.add(lmfit_name, val, vary)
-                elif ('gamma0_' in line_param) and ('n_' not in line_param) and (not constrain_dictionary['gamma0']): #and (index_length>1)
-                    if self.gamma0_limit and val != 0:
-                            params.add(lmfit_name, val, vary, min = (1 / self.gamma0_limit_factor)*val,max = self.gamma0_limit_factor*val)
-                    else:
-                            params.add(lmfit_name, val, vary)
-                elif ('n_gamma0' in line_param):
-                    if self.n_gamma0_limit and val != 0:
-                        params.add(lmfit_name, val, vary, min = (1 / self.n_gamma0_limit_factor) *val, max = self.n_gamma0_limit_factor*val)
-                    else:
-                        params.add(lmfit_name, val, vary)
-                #DELTA0
-                elif ('delta0' in line_param) and ('n_' not in line_param) and (constrain_dictionary['delta0']) : #and (index_length==1)
-                    if self.delta0_limit and val != 0:
-                        params.add(lmfit_name, val, vary, min = (1 / self.delta0_limit_factor )*val, max = self.delta0_limit_factor*val)
-                    else:
-                        params.add(lmfit_name, val, vary)
-                elif ('delta0_' in line_param) and ('n_' not in line_param) and (not constrain_dictionary['delta0']) : #and (index_length>1)
-                    if self.delta0_limit and val != 0:
-                            params.add(lmfit_name, val, vary, min = (1 / self.delta0_limit_factor)*val, max = self.delta0_limit_factor*val)
-                    else:
-                            params.add(lmfit_name, val, vary)
+                #DELTA
+                elif ('delta0_' in line_param) and ('n_' not in line_param):
+                    params.add(lmfit_name, val, vary, min = self.delta0_bounds[0], max = self.delta0_bounds[1])
                 elif ('n_delta0' in line_param):
-                    if self.n_delta0_limit and val != 0:
-                        params.add(lmfit_name, val, vary, min = (1 / self.n_delta0_limit_factor)*val, max = self.n_delta0_limit_factor / 100*val)
-                    else:
-                        params.add(lmfit_name, val, vary)
+                    params.add(lmfit_name, val, vary, min =self.n_delta0_bounds[0], max = self.n_delta0_bounds[1])
                 #SD Gamma
-                elif ('SD_gamma' in line_param) and (constrain_dictionary['SD_gamma']): #and (index_length==2)
-                    if self.SD_gamma_limit and val != 0:
-                        params.add(lmfit_name, val, vary, min = (1 / self.SD_gamma_limit_factor) *val, max = self.SD_gamma_limit_factor*val)
-                    else:
-                        params.add(lmfit_name, val, vary)
-                elif ('SD_gamma' in line_param) and (not constrain_dictionary['SD_gamma']): #and (index_length>2)
-                    if self.SD_gamma_limit and val != 0:
-                            params.add(lmfit_name, val, vary, min = (1 / self.SD_gamma_limit_factor)*val, max = self.SD_gamma_limit_factor*val)
-                    else:
-                            params.add(lmfit_name, val, vary)
+                elif ('SD_gamma' in line_param): 
+                    params.add(lmfit_name, val, vary, min = self.SD_gamma_bounds[0], max = self.SD_gamma_bounds[1])
                 elif ('n_gamma2' in line_param):
-                    if self.n_gamma2_limit and val != 0:
-                        params.add(lmfit_name, val, vary, min = (1 / self.n_gamma2_limit_factor)*val, max = (self.n_gamma2_limit_factor / 100)*val)
-                    else:
-                        params.add(lmfit_name, val, vary)
-                #SD Delta
-                elif ('SD_delta' in line_param) and (constrain_dictionary['SD_delta']): #and (index_length==2)
-                    if self.SD_delta_limit and val != 0:
-                        params.add(lmfit_name, val, vary, min = (1 / self.SD_delta_limit_factor )*val, max = self.SD_delta_limit_factor*val)
-                    else:
-                        params.add(line_param + '_' + 'line_' + str(spec_line), val, vary)
-                elif ('SD_delta' in line_param) and (not constrain_dictionary['SD_delta']): #and (index_length>2)
-                    if self.SD_delta_limit and val != 0:
-                            params.add(lmfit_name, val, vary,
-                                min = (1 / self.SD_delta_limit_factor )*val,
-                                max =self.SD_delta_limit_factor * val)
-                    else:
-                            params.add(lmfit_name, val, vary)
+                    params.add(lmfit_name, val, vary, min = self.n_gamma2_bounds[0], max = self.n_gamma2_bounds[1])
+                elif ('SD_delta' in line_param):
+                    params.add(lmfit_name, val, vary, min = self.SD_delta_bounds[0], max = self.SD_delta_bounds[1])
                 elif ('n_delta2' in line_param):
-                    if self.n_delta2_limit and val != 0:
-                        params.add(lmfit_name, val, vary, min = (1 / self.n_delta2_limit_factor )*val, max = self.n_delta2_limit_factor*val)
-                    else:
-                        params.add(lmfit_name, val, vary)
+                    params.add(lmfit_name, val, vary, min = self.SD_delta_bounds[0], max = self.SD_delta_bounds[1])
                 #nuVC
-                elif (param_Re in line_param) and ('n_'+ param_Re not in line_param) and (constrain_dictionary[param_Re]): #and (index_length==1)
-                    if self.paramRe_limit and val!= 0:
-                        params.add(lmfit_name, val, vary, min = (1 /self.paramRe_limit_factor)*val, max = self.paramRe_limit_factor*val)
-                    else:
-                        params.add(lmfit_name, val, vary)
-                elif (param_Re in line_param) and ('n_' + param_Re not in line_param) and (not constrain_dictionary[param_Re]): #(index_length>1)
-                    if self.paramRe_limit and val != 0:
-                            params.add(lmfit_name, val, vary, min = (1 / self.paramRe_limit_factor)*val, max = self.paramRe_limit_factor*val)  
-                    else:
-                        params.add(lmfit_name, val, vary)
-
+                elif (param_Re in line_param) and ('n_'+ param_Re not in line_param): #and (index_length==1)
+                    params.add(lmfit_name, val, vary, min = self.paramRe_bounds[0], max = self.paramRe_bounds[1])
                 elif ('n_' + param_Re in line_param):
-                    if self.n_paramRe_limit and val != 0:
-                        params.add(lmfit_name, val, vary, min = (1 / self.n_paramRe_limit_factor )*val, max = self.n_paramRe_limit_factor*val)
-                    else:
-                        params.add(lmfit_name, val, vary)                
+                    params.add(lmfit_name, val, vary, min = self.n_paramRe_bounds[0], max = self.n_paramRe_bounds[1])
                 #eta
-                elif (param_Im in line_param) and ('n_'  + param_Im not in line_param) and (constrain_dictionary[param_Im]): # and (index_length==1)
-                    if self.paramIm_limit and val != 0:
-                        params.add(lmfit_name, val, vary, min = (1 / self.paramIm_limit_factor)*val, max = (self.paramIm_limit_factor)*val)
-                    else:
-                        params.add(lmfit_name, val, vary)
-                elif (param_Im in line_param) and ('n_'  + param_Im not in line_param) and (not constrain_dictionary[param_Im]): # and (index_length>1)
-                    if self.paramIm_limit and val != 0:
-                            params.add(lmfit_name, val, vary, min = (1 / self.paramIm_limit)*val, max = self.paramIm_limit*val)
-                    else:
-                            params.add(lmfit_name, val, vary)
-
+                elif (param_Im in line_param) and ('n_'  + param_Im not in line_param): # and (index_length==1)
+                    params.add(lmfit_name, val, vary, min = self.paramIm_bounds[0], max = self.paramIm_bounds[1])
                 elif ('n_' + param_Im in line_param):
-                    if self.n_paramIm_limit and val != 0:
-                        params.add(lmfit_name, val, vary, min = (1 / self.n_paramIm_limit_factor )*val, max = self.n_paramIm_limit_factor*val)
-                    else:
-                        params.add(lmfit_name, val, vary)
+                    params.add(lmfit_name, val, vary, min = self.n_paramIm_bounds[0], max = self.n_paramIm_bounds[1])
+
                 
                 # linemixing
                 
-                elif ('y_' in line_param) and ('n_' not in line_param) and (constrain_dictionary['y']): # and (index_length==1)
-                    if self.linemixing_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                        params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
-                                min = (1 / self.linemixing_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param] ,
-                                max = self.linemixing_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
-                    else:
-                        params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
-                elif ('y_' in line_param) and ('n_' not in line_param) and (not constrain_dictionary['y']): # and (index_length>1)
-                    if self.linemixing_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
-                                min = (1 / self.linemixing_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
-                                max = self.linemixing_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
-                    else:
-                            params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
+                elif ('y_' in line_param) and ('n_' not in line_param): # and (index_length==1)
+                    params.add(lmfit_name, val, vary, min = self.linemixing_bounds[0], max = self.linemixing_bounds[1])
                 elif ('n_y_' in line_param):
-                    if self.n_linemixing_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
-                        params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
-                                min = (1 / self.n_linemixing_limit_factor) *self.lineparam_list.loc[int(spec_line)][line_param],
-                                max = self.n_linemixing_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
-                    else:
-                        params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param],self.lineparam_list.loc[spec_line][line_param + '_vary'])
-                
+                    params.add(lmfit_name, val, vary, min = self.n_linemixing_bounds[0], max = self.n_linemixing_bounds[1])
                 #BIA
                 elif ('BIA_slope_' in line_param) and (constrain_dictionary['sw']):
-                    params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
+                    params.add(lmfit_name, val, vary, min = self.BIA_intensity_depletion_bounds[0], max = self.BIA_intensity_depletion_bounds[1])
                 #BIA farwing
                 elif ('BIA_collision_duration_' in line_param) and (constrain_dictionary['sw']):
-                    params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
+                    params.add(lmfit_name, val, vary, min = self.BIA_collision_duration_bounds[0], max = self.BIA_collision_duration_bounds[1])
 
         #CIA Parameters (O2 Karman Model)
         if self.dataset.CIA_model['model'] == "Karman":
