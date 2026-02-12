@@ -173,7 +173,7 @@ class Fit_DataSet:
             raw_df.sort_values('nu', inplace=True)
         raw_df.reset_index(drop=True, inplace=True)
         raw_df = raw_df.loc[:, ~raw_df.columns.str.contains('Unnamed:')]
-        
+
         self.lineparam_list = convert_int_to_float(raw_df, exclude_cols=int_cols)
         self.lineprofile = lineprofile
         self.engine = Spectroscopic_model(self.lineparam_list, lineprofile = self.lineprofile, 
@@ -438,85 +438,69 @@ class Fit_DataSet:
             param_Re = 'nuOptRe'
             param_Im = 'nuOptIm'
         
-        diluent_list = []
-        for spectrum in self.dataset.spectra:
-            for diluent in spectrum.Diluent:
-                if diluent not in diluent_list:
-                    diluent_list.append(diluent)
-        n_dil = len(diluent_list)
 
         #Lineshape parameters
         linelist_params = []
         num_nominal_temps = self.dataset.get_number_nominal_temperatures()[0]
 
-        for line_param in list(self.lineparam_list):
-            print ()
-            if num_nominal_temps == 1:
-                if self.dataset.BIA_model['sw_depletion']:
-                    if self.dataset.BIA_model['farwing_continuum'] == 'LBL':
-                        if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower') and ('n_' not in line_param):
-                            linelist_params.append(line_param)
-                    else:
-                        if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower') and ('n_' not in line_param) and ('BIA_collision_duration' not in line_param):
-                            linelist_params.append(line_param)
-                else:
-                    if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower') and ('n_' not in line_param) and ('BIA' not in line_param):
-                        linelist_params.append(line_param)
-            else:
-                if self.dataset.BIA_model['sw_depletion']:
-                    if self.dataset.BIA_model['farwing_continuum'] == 'LBL':
-                        if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower'):
-                            linelist_params.append(line_param)
-                    else:
-                        if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower') and ('BIA_collision_duration' not in line_param):
-                            linelist_params.append(line_param)
-                else:
-                    if ('_vary' not in line_param) and ('_err' not in line_param) and (line_param != 'molec_id') and (line_param != 'local_iso_id') and (line_param != 'elower') and ('BIA' not in line_param):
-                        linelist_params.append(line_param)
+        valid_column_prefix = ['nu', 'sw', 
+                                   'gamma0', 'delta0', 
+                                   'SD_gamma', 'SD_delta', 
+                                   param_Re, param_Im, 'y']
+        
+        #Temperature Dependence 
+        if num_nominal_temps > 1:
+            valid_column_prefix.append('n_')
+        #BIA
+        if self.dataset.BIA_model['sw_depletion']:
+            valid_column_prefix.append('BIA_slope')
+            if self.dataset.BIA_model['farwing_continuum'] == 'LBL':
+                valid_column_prefix.append('BIA_collision_duration')
 
+        #Exclusions
+        column_suffix_to_ignore = ['_err', '_vary']
+        excluded_cols = ['molec_id', 'local_iso_id', 'elower', 'sw_scale_factor']
 
-        def count_cols(key): return sum(key in p for p in linelist_params)
+        candidate_params = [
+            col for col in self.lineparam_list.columns
+            if any(col.startswith(p) for p in valid_column_prefix)       # Must start with a valid prefix
+            and not any(col.endswith(s) for s in column_suffix_to_ignore)  # Must NOT end with invalid suffix
+            and col not in excluded_cols                            # Must NOT be in the exclusion list
+        ]
+        constrain_dictionary = {'nu':True,'sw':True, 'gamma0': True, 'delta0': True, 
+                                   'SD_gamma': True, 'SD_delta': True, param_Re: True, param_Im: True, 'y': True }
 
-        nu_constrain = True
-        sw_constrain = True
-        if ((sum(('nu' in param) & (param_Re not in param) & (param_Im not in param) & ('n_' not in param) for param in linelist_params))) > 1:
-            nu_constrain = False
-        if (sum(('sw' in param) & ('sw_scale_factor' not in param) for param in linelist_params)) > 1:
-            sw_constrain = False
+        
+        for col in candidate_params:
+            spectrum_specific = False
+            for other_col in candidate_params:
+                if other_col.startswith(col + '_') and other_col != col:
+                    suffix = other_col[len(col)+1:]
+                    if suffix.isdigit():
+                        spectrum_specific = True
+                        if col == 'nu': constrain_dictionary['nu'] = False
+                        elif col == 'sw': constrain_dictionary['sw'] = False
+                        elif col.startswith('gamma0'): constrain_dictionary['gamma0'] = False
+                        elif col.startswith('delta0'): constrain_dictionary['delta0'] = False
+                        elif col.startswith('SD_gamma'): constrain_dictionary['SD_gamma'] = False
+                        elif col.startswith('SD_delta'): constrain_dictionary['SD_delta'] = False
+                        elif col.startswith('y'): constrain_dictionary['y'] = False
+                        elif col.startswith(param_Re): constrain_dictionary[param_Re] = False
+                        elif col.startswith(param_Im): constrain_dictionary[param_Im] = False
+                        break
+            if not spectrum_specific:
+                linelist_params.append(col)
+        
+        print (linelist_params)
+        print (constrain_dictionary)
 
-        gamma0_constrain = True
-        delta0_constrain = True
-        SD_gamma_constrain = True
-        SD_delta_constrain = True
-        paramRe_constrain = True
-        paramIm_constrain = True
-        linemix_constrain = True
-
-        limit_g0 = n_dil * 2 if num_nominal_temps > 1 else n_dil
-        if count_cols('gamma0_') > limit_g0: gamma0_constrain = False
-        limit_d0 = n_dil * 2 if num_nominal_temps > 1 else n_dil
-        if count_cols('delta0_') > limit_d0: delta0_constrain = False
-
-        if count_cols('SD_gamma_') > n_dil: SD_gamma_constrain = False # Should this be +1 for >1 temperature
-        if count_cols('SD_delta_') > n_dil: SD_delta_constrain = False # Should this be +1 for >1 temperature
-
-        limit_re = n_dil * 2 if num_nominal_temps > 1 else n_dil
-        if count_cols(param_Re) > limit_re: paramRe_constrain = False
-
-        limit_im = n_dil * 2 if (self.lineprofile != 'HTP' and num_nominal_temps > 1) else n_dil
-        if count_cols(param_Im) > limit_im: paramIm_constrain = False
-
-        limit_y = n_dil * 2 if num_nominal_temps > 1 else n_dil
-        if count_cols('y_') > limit_y: linemix_constrain = False
         
         for spec_line in self.lineparam_list.index.values:
             sw_scaled = self.lineparam_list.loc[spec_line]['sw'] * self.lineparam_list.loc[spec_line]['sw_scale_factor']
             if sw_scaled < self.minimum_parameter_fit_intensity:
                 continue
             for line_param in linelist_params:
-                print (linelist_params)
                 val = self.lineparam_list.loc[spec_line][line_param]
-                print (line_param, val)
                 vary = self.lineparam_list.loc[spec_line][line_param + '_vary']
                 lmfit_name = f"{line_param}_line_{spec_line}"
 
@@ -524,34 +508,34 @@ class Fit_DataSet:
                 #indices = [m.start() for m in re.finditer('_', line_param)]
                 #index_length = len(indices)
                 #NU
-                if line_param == 'nu' and nu_constrain:
+                if line_param == 'nu' and constrain_dictionary['nu']:
                     if self.nu_limit:
                         params.add(lmfit_name, val, vary, min = val - self.nu_limit_magnitude, max = val + self.nu_limit_magnitude)
                     else:
                         params.add(lmfit_name, val, vary)
-                elif (line_param != 'nu') and ('nu_' in line_param) and (param_Re not in line_param) and (param_Im not in line_param) and (not nu_constrain):
+                elif (line_param != 'nu') and ('nu_' in line_param) and (param_Re not in line_param) and (param_Im not in line_param) and (not constrain_dictionary['nu']):
                     if self.nu_limit:
                         params.add(lmfit_name, val, vary, min = val - self.nu_limit_magnitude, max = val + self.nu_limit_magnitude)
                     else:
                         params.add(lmfit_name, val, vary)
                 #SW
-                elif line_param == 'sw' and sw_constrain:
+                elif line_param == 'sw' and constrain_dictionary['sw']:
                     if self.sw_limit:
                         params.add(lmfit_name, val, vary, min = (1 / self.sw_limit_factor)* val, max = self.sw_limit_factor* val)
                     else:
                         params.add(lmfit_name, val, vary)
-                elif (line_param != 'sw') and ('sw' in line_param) and (not sw_constrain) and (line_param != 'sw_scale_factor'):
+                elif (line_param != 'sw') and ('sw' in line_param) and (not constrain_dictionary['sw']) and (line_param != 'sw_scale_factor'):
                     if self.sw_limit:
                         params.add(lmfit_name, val, vary,min =  (1 / self.sw_limit_factor)* val, max = self.sw_limit_factor*val)
                     else:
                         params.add(lmfit_name, val, vary)
                 #GAMMA0
-                elif ('gamma0_' in line_param) and ('n_' not in line_param) and (gamma0_constrain) : #and (index_length==1)
+                elif ('gamma0_' in line_param) and ('n_' not in line_param) and (constrain_dictionary['gamma0']) : #and (index_length==1)
                     if self.gamma0_limit and val != 0:
                         params.add(lmfit_name, val, vary, min = (1 / self.gamma0_limit_factor)*val, max = self.gamma0_limit_factor*val)
                     else:
                         params.add(lmfit_name, val, vary)
-                elif ('gamma0_' in line_param) and ('n_' not in line_param) and (not gamma0_constrain): #and (index_length>1)
+                elif ('gamma0_' in line_param) and ('n_' not in line_param) and (not constrain_dictionary['gamma0']): #and (index_length>1)
                     if self.gamma0_limit and val != 0:
                             params.add(lmfit_name, val, vary, min = (1 / self.gamma0_limit_factor)*val,max = self.gamma0_limit_factor*val)
                     else:
@@ -562,12 +546,12 @@ class Fit_DataSet:
                     else:
                         params.add(lmfit_name, val, vary)
                 #DELTA0
-                elif ('delta0' in line_param) and ('n_' not in line_param) and (delta0_constrain) : #and (index_length==1)
+                elif ('delta0' in line_param) and ('n_' not in line_param) and (constrain_dictionary['delta0']) : #and (index_length==1)
                     if self.delta0_limit and val != 0:
                         params.add(lmfit_name, val, vary, min = (1 / self.delta0_limit_factor )*val, max = self.delta0_limit_factor*val)
                     else:
                         params.add(lmfit_name, val, vary)
-                elif ('delta0_' in line_param) and ('n_' not in line_param) and (not delta0_constrain) : #and (index_length>1)
+                elif ('delta0_' in line_param) and ('n_' not in line_param) and (not constrain_dictionary['delta0']) : #and (index_length>1)
                     if self.delta0_limit and val != 0:
                             params.add(lmfit_name, val, vary, min = (1 / self.delta0_limit_factor)*val, max = self.delta0_limit_factor*val)
                     else:
@@ -578,12 +562,12 @@ class Fit_DataSet:
                     else:
                         params.add(lmfit_name, val, vary)
                 #SD Gamma
-                elif ('SD_gamma' in line_param) and (SD_gamma_constrain): #and (index_length==2)
+                elif ('SD_gamma' in line_param) and (constrain_dictionary['SD_gamma']): #and (index_length==2)
                     if self.SD_gamma_limit and val != 0:
                         params.add(lmfit_name, val, vary, min = (1 / self.SD_gamma_limit_factor) *val, max = self.SD_gamma_limit_factor*val)
                     else:
                         params.add(lmfit_name, val, vary)
-                elif ('SD_gamma' in line_param) and (not SD_gamma_constrain): #and (index_length>2)
+                elif ('SD_gamma' in line_param) and (not constrain_dictionary['SD_gamma']): #and (index_length>2)
                     if self.SD_gamma_limit and val != 0:
                             params.add(lmfit_name, val, vary, min = (1 / self.SD_gamma_limit_factor)*val, max = self.SD_gamma_limit_factor*val)
                     else:
@@ -594,12 +578,12 @@ class Fit_DataSet:
                     else:
                         params.add(lmfit_name, val, vary)
                 #SD Delta
-                elif ('SD_delta' in line_param) and (SD_delta_constrain): #and (index_length==2)
+                elif ('SD_delta' in line_param) and (constrain_dictionary['SD_delta']): #and (index_length==2)
                     if self.SD_delta_limit and val != 0:
                         params.add(lmfit_name, val, vary, min = (1 / self.SD_delta_limit_factor )*val, max = self.SD_delta_limit_factor*val)
                     else:
                         params.add(line_param + '_' + 'line_' + str(spec_line), val, vary)
-                elif ('SD_delta' in line_param) and (not SD_delta_constrain): #and (index_length>2)
+                elif ('SD_delta' in line_param) and (not constrain_dictionary['SD_delta']): #and (index_length>2)
                     if self.SD_delta_limit and val != 0:
                             params.add(lmfit_name, val, vary,
                                 min = (1 / self.SD_delta_limit_factor )*val,
@@ -612,12 +596,12 @@ class Fit_DataSet:
                     else:
                         params.add(lmfit_name, val, vary)
                 #nuVC
-                elif (param_Re in line_param) and ('n_'+ param_Re not in line_param) and (paramRe_constrain): #and (index_length==1)
+                elif (param_Re in line_param) and ('n_'+ param_Re not in line_param) and (constrain_dictionary[param_Re]): #and (index_length==1)
                     if self.paramRe_limit and val!= 0:
                         params.add(lmfit_name, val, vary, min = (1 /self.paramRe_limit_factor)*val, max = self.paramRe_limit_factor*val)
                     else:
                         params.add(lmfit_name, val, vary)
-                elif (param_Re in line_param) and ('n_' + param_Re not in line_param) and (not paramRe_constrain): #(index_length>1)
+                elif (param_Re in line_param) and ('n_' + param_Re not in line_param) and (not constrain_dictionary[param_Re]): #(index_length>1)
                     if self.paramRe_limit and val != 0:
                             params.add(lmfit_name, val, vary, min = (1 / self.paramRe_limit_factor)*val, max = self.paramRe_limit_factor*val)  
                     else:
@@ -629,12 +613,12 @@ class Fit_DataSet:
                     else:
                         params.add(lmfit_name, val, vary)                
                 #eta
-                elif (param_Im in line_param) and ('n_'  + param_Im not in line_param) and (paramIm_constrain): # and (index_length==1)
+                elif (param_Im in line_param) and ('n_'  + param_Im not in line_param) and (constrain_dictionary[param_Im]): # and (index_length==1)
                     if self.paramIm_limit and val != 0:
                         params.add(lmfit_name, val, vary, min = (1 / self.paramIm_limit_factor)*val, max = (self.paramIm_limit_factor)*val)
                     else:
                         params.add(lmfit_name, val, vary)
-                elif (param_Im in line_param) and ('n_'  + param_Im not in line_param) and (not paramIm_constrain): # and (index_length>1)
+                elif (param_Im in line_param) and ('n_'  + param_Im not in line_param) and (not constrain_dictionary[param_Im]): # and (index_length>1)
                     if self.paramIm_limit and val != 0:
                             params.add(lmfit_name, val, vary, min = (1 / self.paramIm_limit)*val, max = self.paramIm_limit*val)
                     else:
@@ -648,14 +632,14 @@ class Fit_DataSet:
                 
                 # linemixing
                 
-                elif ('y_' in line_param) and ('n_' not in line_param) and (linemix_constrain): # and (index_length==1)
+                elif ('y_' in line_param) and ('n_' not in line_param) and (constrain_dictionary['y']): # and (index_length==1)
                     if self.linemixing_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                         params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
                                 min = (1 / self.linemixing_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param] ,
                                 max = self.linemixing_limit_factor*self.lineparam_list.loc[int(spec_line)][line_param])
                     else:
                         params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
-                elif ('y_' in line_param) and ('n_' not in line_param) and (not linemix_constrain): # and (index_length>1)
+                elif ('y_' in line_param) and ('n_' not in line_param) and (not constrain_dictionary['y']): # and (index_length>1)
                     if self.linemixing_limit and self.lineparam_list.loc[spec_line][line_param] != 0:
                             params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'],
                                 min = (1 / self.linemixing_limit_factor)*self.lineparam_list.loc[int(spec_line)][line_param],
@@ -671,10 +655,10 @@ class Fit_DataSet:
                         params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param],self.lineparam_list.loc[spec_line][line_param + '_vary'])
                 
                 #BIA
-                elif ('BIA_slope_' in line_param) and (sw_constrain):
+                elif ('BIA_slope_' in line_param) and (constrain_dictionary['sw']):
                     params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
                 #BIA farwing
-                elif ('BIA_collision_duration_' in line_param) and (sw_constrain):
+                elif ('BIA_collision_duration_' in line_param) and (constrain_dictionary['sw']):
                     params.add(line_param + '_' + 'line_' + str(spec_line), self.lineparam_list.loc[spec_line][line_param], self.lineparam_list.loc[spec_line][line_param + '_vary'])
 
         #CIA Parameters (O2 Karman Model)
