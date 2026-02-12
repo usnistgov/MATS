@@ -666,6 +666,11 @@ class Generate_FitParam_File:
                     if 'n_' != item[:2]:
                         ordered_list.append(item + '_err')
                         ordered_list.append(item + '_vary')
+            if self.lineprofile == 'HTP':
+                if 'n_' != item[:2]:
+                    ordered_list.append(item + '_err')
+                    ordered_list.append(item + '_vary')
+
         for item in order_linemixing:          
             ordered_list.append(item)
             if num_nominal_temps > 1:

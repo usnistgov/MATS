@@ -403,6 +403,7 @@ class Fit_DataSet:
                 else:
                     params.add(lmfit_name, val, vary)
         
+        print (self.lineprofile)
         if self.lineprofile == 'HTP':
             param_Re = 'nuVC'
             param_Im = 'eta'            
@@ -464,10 +465,7 @@ class Fit_DataSet:
                         break
             if not spectrum_specific:
                 linelist_params.append(col)
-        
-        #print (linelist_params)
-        #print (constrain_dictionary)
-        
+        print (linelist_params)
         for spec_line in self.lineparam_list.index.values:
             sw_scaled = self.lineparam_list.loc[spec_line]['sw'] * self.lineparam_list.loc[spec_line]['sw_scale_factor']
             if sw_scaled < self.minimum_parameter_fit_intensity:
@@ -501,7 +499,7 @@ class Fit_DataSet:
                 elif ('n_delta2' in line_param):
                     params.add(lmfit_name, val, vary, min = self.SD_delta_bounds[0], max = self.SD_delta_bounds[1])
                 #nuVC
-                elif (param_Re in line_param) and ('n_'+ param_Re not in line_param): #and (index_length==1)
+                elif (param_Re in line_param) : #and (index_length==1) #and ('n_'+ param_Re not in line_param)
                     params.add(lmfit_name, val, vary, min = self.paramRe_bounds[0], max = self.paramRe_bounds[1])
                 elif ('n_' + param_Re in line_param):
                     params.add(lmfit_name, val, vary, min = self.n_paramRe_bounds[0], max = self.n_paramRe_bounds[1])
@@ -524,6 +522,8 @@ class Fit_DataSet:
                 #BIA farwing
                 elif ('BIA_collision_duration_' in line_param) and (constrain_dictionary['sw']):
                     params.add(lmfit_name, val, vary, min = self.BIA_collision_duration_bounds[0], max = self.BIA_collision_duration_bounds[1])
+                else:
+                    print (line_param)
 
         #CIA Parameters (O2 Karman Model)
         if self.dataset.CIA_model['model'] == "Karman":

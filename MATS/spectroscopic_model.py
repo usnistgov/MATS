@@ -105,14 +105,14 @@ class Spectroscopic_model:
         if self.lineprofile == 'HTP':
             # HTP: Real = nuVC, Imag = eta (Eta has no T-dep in HTP)
             self.col_map = {
-                're': 'nuVC_', 'n_re': 'n_nuVC_',
-                'im': 'eta_',  'n_im': 'n_eta_' # Map even if unused, will default to 0
+                'param_Re': 'nuVC_', 'n_param_Re': 'n_nuVC_',
+                'param_Im': 'eta_',  'n_param_Im': 'n_eta_' # Map even if unused, will default to 0
             }
         else:
             # mHTP: Real = NuOptRe, Imag = NuOptIm (Both have T-dependence)
             self.col_map = {
-                're': 'nuOptRe_', 'n_re': 'n_nuOptRe_',
-                'im': 'nuOptIm_', 'n_im': 'n_nuOptIm_'
+                'param_Re': 'nuOptRe_', 'n_param_Re': 'n_nuOptRe_',
+                'param_Im': 'nuOptIm_', 'n_param_Im': 'n_nuOptIm_'
             }
 
 
@@ -121,12 +121,14 @@ class Spectroscopic_model:
         for col in parameter_linelist.columns:
             # Check if this column is one of our special mapped ones
             is_mapped = False
-            for key in ['re', 'n_re', 'im', 'n_im']:
+            for key in ['param_Re', 'n_param_Re', 'param_Im', 'n_param_Im']:
                 prefix = self.col_map[key]
                 if col.startswith(prefix):
                     diluent = col[len(prefix):] 
-                    internal_name = f"p_{key}_{diluent}" # e.g. p_re_air
-                    self.dynamic_arrays[internal_name] = parameter_linelist[col].values.astype(np.float64)
+                    internal_name = f"{key}_{diluent}" # e.g. re_air
+                    data_array = parameter_linelist[col].values.astype(np.float64)
+                    self.dynamic_arrays[internal_name] = data_array
+                    self.dynamic_arrays[col] = data_array
                     is_mapped = True
             
             # If not mapped, check if it is a standard parameter
@@ -315,11 +317,11 @@ class Spectroscopic_model:
             #nuvc_list.append(self._resolve_array(f'nuVC_{species}', spectrum_number))
             #n_nuvc_list.append(self._resolve_array(f'n_nuVC_{species}', spectrum_number))
             #eta_list.append(self._resolve_array(f'eta_{species}', spectrum_number))
-            param_re_list.append(self._resolve_array(f'p_re_{species}', spectrum_number))
-            n_param_re_list.append(self._resolve_array(f'p_n_re_{species}', spectrum_number))
+            param_re_list.append(self._resolve_array(f'param_Re_{species}', spectrum_number))
+            n_param_re_list.append(self._resolve_array(f'n_param_Re_{species}', spectrum_number))
             
-            param_im_list.append(self._resolve_array(f'p_im_{species}', spectrum_number))
-            n_param_im_list.append(self._resolve_array(f'p_n_im_{species}', spectrum_number))
+            param_im_list.append(self._resolve_array(f'param_Im_{species}', spectrum_number))
+            n_param_im_list.append(self._resolve_array(f'n_param_Im_{species}', spectrum_number))
 
             y_list.append(self._resolve_array(f'y_{species}', spectrum_number))
             n_y_list.append(self._resolve_array(f'n_y_{species}', spectrum_number))
