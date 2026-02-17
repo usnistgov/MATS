@@ -439,7 +439,7 @@ class Spectrum:
         plt.ylabel('Amplitude (ppm/cm')
         plt.show()
 
-def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP',
+def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofile = True,
                         wave_min=None, wave_max= None, wave_space=None, wavenumbers = [],  wave_error = 0.0,
                         SNR = None, baseline_terms = [0.0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760,
                         pressure_err = {'per_bias': 0, 'function': None, 'params': {}},
@@ -569,7 +569,8 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP',
                 if col.startswith(('SD_gamma_', 'n_gamma2_', 'SD_delta_', 'n_SD_delta_')):
                     lineprofile[col] = 0
 
-    engine = Spectroscopic_model(linelist_for_sim, lineprofile=lineprofile, isotope_list = isotope_list, beta_formalism=beta_formalism)
+    engine = Spectroscopic_model(linelist_for_sim, lineprofile=lineprofile, numba_lineprofile = numba_lineprofile,
+                                 isotope_list = isotope_list, beta_formalism=beta_formalism)
 
     #Frequency axis
     

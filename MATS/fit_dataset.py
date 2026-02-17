@@ -128,7 +128,7 @@ class Fit_DataSet:
     """
 
     def __init__(self, dataset, base_linelist_file, param_linelist_file, CIA_linelist_file = None,
-                 lineprofile = 'mHTP',
+                 lineprofile = 'mHTP', numba_lineprofile = True,
                 minimum_parameter_fit_intensity = 1e-30, minimum_simulation_intensity=1e-30,
                 weight_spectra = False,
                 
@@ -181,7 +181,8 @@ class Fit_DataSet:
 
         self.lineparam_list = convert_int_to_float(raw_df, exclude_cols=int_cols)
         self.lineprofile = lineprofile
-        self.engine = Spectroscopic_model(self.lineparam_list, lineprofile = self.lineprofile, 
+        self.numba_lineprofile = numba_lineprofile
+        self.engine = Spectroscopic_model(self.lineparam_list, lineprofile = self.lineprofile, numba_lineprofile = self.numba_lineprofile,
                                           isotope_list = self.dataset.isotope_list, beta_formalism=beta_formalism)
         
         #CIA linelist ingest

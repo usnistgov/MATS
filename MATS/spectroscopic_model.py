@@ -11,6 +11,7 @@ from .codata import CONSTANTS
 from .o2_cia_karman import O2_CIA_Karman_Model
 from numba import jit, prange
 from .mHT.profile import mHTprofile_vector
+from .mHT.numba_mHTP import mHTprofile_vector_numba
 
 @jit(nopython=True, parallel=True, fastmath=True, cache=True)
 def fast_broadening_params(nlines, p, T, pref, Tref,
@@ -92,13 +93,16 @@ class Spectroscopic_model:
     #converts from pandas DF to numpy arrays
     # LBL calcultion
     def __init__(self, parameter_linelist, isotope_list = ISO, 
-                 lineprofile = 'mHTP', beta_formalism = False):
+                 lineprofile = 'mHTP', numba_lineprofile = True,
+                 beta_formalism = False):
         self.nlines = len(parameter_linelist)
         self.lineprofile = lineprofile
         if lineprofile != 'HTP':
             self.beta_formalism = beta_formalism
+            self.numba_lineprofile = numba_lineprofile
         else:
             self.beta_formalism = False
+            self.numba_lineprofile = False
 
         #Static arrays
         self.elower = parameter_linelist['elower'].to_numpy(dtype=np.float64)
@@ -390,7 +394,11 @@ class Spectroscopic_model:
                     nu_i, GammaD[i], Gamma0[i], Gamma2[i], Delta0[i], Delta2[i],
                     ParamRe[i], ParamIm[i], wave_slice, Ylm=Y[i])  # This now includes the line-mixing component
             else:
-                lineshape_PT = mHTprofile_vector(nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
+                if self.numba_lineprofile:
+                    lineshape_PT = mHTprofile_vector_numba(nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
+                                                 Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i], 0, alpha[i])
+                else:
+                    lineshape_PT = mHTprofile_vector(nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
                                                  Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i], 0, alpha[i])
                 
             
