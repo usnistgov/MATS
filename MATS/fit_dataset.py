@@ -465,7 +465,6 @@ class Fit_DataSet:
                         break
             if not spectrum_specific:
                 linelist_params.append(col)
-        print (linelist_params)
         for spec_line in self.lineparam_list.index.values:
             sw_scaled = self.lineparam_list.loc[spec_line]['sw'] * self.lineparam_list.loc[spec_line]['sw_scale_factor']
             if sw_scaled < self.minimum_parameter_fit_intensity:

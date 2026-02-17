@@ -558,16 +558,16 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
     linelist_for_sim['sw'] /= IntensityThreshold
     linelist_for_sim['sw_scale_factor'] = IntensityThreshold
 
-    if lineprofile != 'HTP' or lineprofile != 'mHTP':
+    if lineprofile != 'HTP' and lineprofile != 'mHTP':
         for col in linelist_for_sim.columns:
             if col.startswith(('eta_', 'nuOptIm_', 'n_nuOptIm_')):
-                lineprofile[col] = 0
+                linelist_for_sim[col] = 0
             if lineprofile == 'VP' or lineprofile == 'SDVP':
                 if col.startswith(('nuVC_', 'n_nuVC_', 'nuOptRe_', 'n_nuOptRe_')):
-                    lineprofile[col] = 0
+                    linelist_for_sim[col] = 0
             if lineprofile == 'VP' or lineprofile == 'NGP':
-                if col.startswith(('SD_gamma_', 'n_gamma2_', 'SD_delta_', 'n_SD_delta_')):
-                    lineprofile[col] = 0
+                if col.startswith(('SD_gamma_', 'n_gamma2_', 'SD_delta_', 'n_delta2_')):
+                    linelist_for_sim[col] = 0
 
     engine = Spectroscopic_model(linelist_for_sim, lineprofile=lineprofile, numba_lineprofile = numba_lineprofile,
                                  isotope_list = isotope_list, beta_formalism=beta_formalism)

@@ -396,7 +396,7 @@ class Spectroscopic_model:
             else:
                 if self.numba_lineprofile:
                     lineshape_PT = mHTprofile_vector_numba(nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
-                                                 Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i], 0, alpha[i])
+                                                 Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i], 0, alpha[i], 0)
                 else:
                     lineshape_PT = mHTprofile_vector(nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
                                                  Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i], 0, alpha[i])
