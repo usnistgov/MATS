@@ -147,7 +147,7 @@ def mHTprofile_vector(nu0: float, GammaD: float, Gamma0: float, Gamma2: float, D
     Real or imaginary (depending on disp value) part of the normalized spectral shape in cm.
   """
   nuD = 1.2011224087864498*GammaD
-  nu  = numpy_array(nu,dtype=float).flatten()
+  #nu  = numpy_array(nu,dtype=float).flatten()
   
   match len(args):
     case 4:
