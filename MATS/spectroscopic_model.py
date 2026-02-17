@@ -377,17 +377,40 @@ class Spectroscopic_model:
 
         valid_indices = np.where(line_intensity >= IntensityThreshold)[0]
 
-        for i in valid_indices:
+        valid_nu = nu_array[valid_indices]
+        valid_cut = line_cutoffs[valid_indices]
+        
+        lower_bounds = valid_nu - valid_cut
+        upper_bounds = valid_nu + valid_cut
+        
+        # 2. Vectorized Search (Replaces loop bisect)
+        # searchsorted is significantly faster than repeated bisect calls
+        idx_low_arr = np.searchsorted(waves, lower_bounds)
+        idx_high_arr = np.searchsorted(waves, upper_bounds)
+        
+        n_waves = len(waves)
+
+        for k, i in enumerate(valid_indices):
+            idx_low = idx_low_arr[k]
+            idx_high = idx_high_arr[k]
+            
+            # Check bounds
+            if idx_low >= n_waves or idx_high <= 0:
+                continue
+                
+            # Clamp indices to array bounds to prevent errors
+            idx_low = max(0, idx_low)
+            idx_high = min(n_waves, idx_high)
+            
+            if idx_low >= idx_high: 
+                continue
+
+            wave_slice = waves[idx_low:idx_high]
+
+
             nu_i = nu_array[i]
             cut_i = line_cutoffs[i]
 
-            
-            BoundIndexLower = bisect(waves, nu_i - cut_i)
-            BoundIndexUpper = bisect(waves, nu_i + cut_i)
-            if BoundIndexLower >= len(waves) or BoundIndexUpper <= 0:
-                continue
-            
-            wave_slice = waves[BoundIndexLower:BoundIndexUpper]
 
             if self.lineprofile == 'HTP':
                 lineshape_PT, lineshape_vals_imag = pcqsdhc(
@@ -405,7 +428,7 @@ class Spectroscopic_model:
             mf = molefraction[self.molec_id[i]]
             line_abundance_ratio = abundance_ratio[i]
             if BIA_slope:
-                 Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
+                 Xsect[idx_low:idx_high] += mol_dens  * \
                                                             mf * line_abundance_ratio * \
                                                             intensity_bia[i] * ( lineshape_PT)
                  if BIA_FW_LBL and bia_duration[i]!=0:
@@ -418,7 +441,7 @@ class Spectroscopic_model:
                                                                 (line_intensity[i] - intensity_bia[i]) * BIA_profile
                      
             else:
-                Xsect[BoundIndexLower:BoundIndexUpper] += mol_dens  * \
+                Xsect[idx_low:idx_high] += mol_dens  * \
                                                             mf * line_abundance_ratio * \
                                                             line_intensity[i] * ( lineshape_PT)
         
