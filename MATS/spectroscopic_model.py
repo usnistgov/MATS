@@ -249,6 +249,62 @@ class Spectroscopic_model:
                 AF_wing=ILS_wing)
         
         return total_alpha
+    @staticmethod
+    @jit(nopython=True, parallel=True, fastmath=True, cache=True)
+    def calculate_lbl_numba_kernel(waves, 
+                                   nu_arr, intensity_arr, 
+                                   gamma0_arr, gamma2_arr, delta0_arr, delta2_arr, 
+                                   re_arr, im_arr, y_arr, 
+                                   gammaD_arr, alpha_arr, 
+                                   idx_low_arr, idx_high_arr,
+                                   mol_dens):
+        
+        n_points = len(waves)
+        n_lines = len(nu_arr)
+        Xsect = np.zeros(n_points, dtype=np.float64)
+        
+        # --- THE CRITICAL OPTIMIZATION: Scratch Buffer ---
+        # Allocate ONCE, reuse for 10,000 lines.
+        # 20,000 is a safe upper bound for typical simulations.
+        MAX_POINTS = 20000 
+        scratch_buffer = np.zeros(MAX_POINTS, dtype=np.float64)
+        
+        for i in range(n_lines):
+            idx_start = idx_low_arr[i]
+            idx_end = idx_high_arr[i]
+            
+            slice_len = idx_end - idx_start
+            if slice_len <= 0: continue
+            
+            # 1. Get the buffer
+            if slice_len > MAX_POINTS:
+                # Fallback allocation only for huge lines
+                line_buffer = np.zeros(slice_len, dtype=np.float64)
+            else:
+                # Reuse the existing memory
+                line_buffer = scratch_buffer[:slice_len]
+            
+            # 2. View of waves
+            wave_slice = waves[idx_start:idx_end]
+            
+            # 3. Call Profile - WRITES IN PLACE to line_buffer
+            # This avoids creating a new array for every line
+            mHTprofile_vector_numba(
+                nu_arr[i], gammaD_arr[i], 
+                gamma0_arr[i], gamma2_arr[i], delta0_arr[i], delta2_arr[i],
+                re_arr[i], im_arr[i], 
+                wave_slice, 
+                y_arr[i], 0.0, alpha_arr[i], 0.0,
+                line_buffer # <--- Passes the buffer to write into
+            )
+            
+            # 4. Accumulate results into Xsect
+            factor = mol_dens * intensity_arr[i]
+            
+            for k in range(slice_len):
+                Xsect[idx_start + k] += factor * line_buffer[k]
+            
+        return Xsect
 
     def calculate_lbl_absorbance(self, waves, T, p, molefraction, Diluent, 
                                  spectrum_number, 
@@ -390,62 +446,102 @@ class Spectroscopic_model:
         
         n_waves = len(waves)
 
-        for k, i in enumerate(valid_indices):
-            idx_low = idx_low_arr[k]
-            idx_high = idx_high_arr[k]
-            
-            # Check bounds
-            if idx_low >= n_waves or idx_high <= 0:
-                continue
-                
-            # Clamp indices to array bounds to prevent errors
-            idx_low = max(0, idx_low)
-            idx_high = min(n_waves, idx_high)
-            
-            if idx_low >= idx_high: 
-                continue
-
-            wave_slice = waves[idx_low:idx_high]
-
-
-            nu_i = nu_array[i]
-            cut_i = line_cutoffs[i]
-
-
-            if self.lineprofile == 'HTP':
-                lineshape_PT, lineshape_vals_imag = pcqsdhc(
-                    nu_i, GammaD[i], Gamma0[i], Gamma2[i], Delta0[i], Delta2[i],
-                    ParamRe[i], ParamIm[i], wave_slice, Ylm=Y[i])  # This now includes the line-mixing component
-            else:
-                if self.numba_lineprofile:
-                    lineshape_PT = mHTprofile_vector_numba(nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
-                                                 Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i], 0, alpha[i], 0)
-                else:
-                    lineshape_PT = mHTprofile_vector(nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
-                                                 Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i], 0, alpha[i])
-                
-            
-            mf = molefraction[self.molec_id[i]]
-            line_abundance_ratio = abundance_ratio[i]
+        if self.lineprofile != 'HTP' and self.numba_lineprofile:
+            mf_vector = np.array([molefraction[self.molec_id[i]] for i in valid_indices])
+            eff_intensity = mf_vector * abundance_ratio[valid_indices] * line_intensity[valid_indices]
             if BIA_slope:
-                 Xsect[idx_low:idx_high] += mol_dens  * \
-                                                            mf * line_abundance_ratio * \
-                                                            intensity_bia[i] * ( lineshape_PT)
-                 if BIA_FW_LBL and bia_duration[i]!=0:
-                    BoundIndexLower_BIA = bisect(waves, nu_i - 5*cut_i)
-                    BoundIndexUpper_BIA = bisect(waves, nu_i + 5*cut_i)
-                    wave_slice_BIA = waves[BoundIndexLower_BIA:BoundIndexUpper_BIA]
-                    BIA_profile = PROFILE_LORENTZ(nu_i, 1/(2*np.pi*CONSTANTS['c']*1e-12*bia_duration[i]), 0, wave_slice_BIA)
-                    Xsect[BoundIndexLower_BIA:BoundIndexUpper_BIA] += mol_dens  * \
+                # If BIA, apply the intensity modification here
+                eff_intensity = eff_intensity * intensity_bia[valid_indices]
+            Xsect = self.calculate_lbl_numba_kernel(
+                waves,
+                valid_nu,
+                eff_intensity,
+                Gamma0[valid_indices], Gamma2[valid_indices],
+                Delta0[valid_indices], Delta2[valid_indices],
+                ParamRe[valid_indices], ParamIm[valid_indices],
+                Y[valid_indices],
+                GammaD[valid_indices], # Must pass GammaD array
+                alpha[valid_indices],
+                idx_low_arr, idx_high_arr,
+                mol_dens
+            )
+
+            if BIA_slope and BIA_FW_LBL:
+                # Add the residual far-wing continuum using Python loop
+                # This adds to the Xsect array we just computed
+                for k, i in enumerate(valid_indices):
+                    if bia_duration[i] != 0:
+                        cut_i = valid_cut[k]
+                        BoundIndexLower_BIA = bisect(waves, valid_nu[k] - 5*cut_i)
+                        BoundIndexUpper_BIA = bisect(waves, valid_nu[k] + 5*cut_i)
+                        
+                        wave_slice_BIA = waves[BoundIndexLower_BIA:BoundIndexUpper_BIA]
+                        BIA_profile = PROFILE_LORENTZ(valid_nu[k], 1/(2*np.pi*CONSTANTS['c']*1e-12*bia_duration[i]), 0, wave_slice_BIA)
+                        
+                        # Add contribution
+                        mf = molefraction[self.molec_id[i]]
+                        ratio = abundance_ratio[i]
+                        val = (line_intensity[i] - intensity_bia[i])
+                        Xsect[BoundIndexLower_BIA:BoundIndexUpper_BIA] += mol_dens * mf * ratio * val * BIA_profile
+            return Xsect
+
+        else:
+            for k, i in enumerate(valid_indices):
+                idx_low = idx_low_arr[k]
+                idx_high = idx_high_arr[k]
+                
+                # Check bounds
+                if idx_low >= n_waves or idx_high <= 0:
+                    continue
+                    
+                # Clamp indices to array bounds to prevent errors
+                idx_low = max(0, idx_low)
+                idx_high = min(n_waves, idx_high)
+                
+                if idx_low >= idx_high: 
+                    continue
+
+                wave_slice = waves[idx_low:idx_high]
+
+
+                nu_i = nu_array[i]
+                cut_i = line_cutoffs[i]
+
+
+                if self.lineprofile == 'HTP':
+                    lineshape_PT, lineshape_vals_imag = pcqsdhc(
+                        nu_i, GammaD[i], Gamma0[i], Gamma2[i], Delta0[i], Delta2[i],
+                        ParamRe[i], ParamIm[i], wave_slice, Ylm=Y[i])  # This now includes the line-mixing component
+                else:
+                    if self.numba_lineprofile:
+                        lineshape_PT = mHTprofile_vector_numba(nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
+                                                    Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i], 0, alpha[i], 0)
+                    else:
+                        lineshape_PT = mHTprofile_vector(nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
+                                                    Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i], 0, alpha[i])
+                    
+                
+                mf = molefraction[self.molec_id[i]]
+                line_abundance_ratio = abundance_ratio[i]
+                if BIA_slope:
+                    Xsect[idx_low:idx_high] += mol_dens  * \
                                                                 mf * line_abundance_ratio * \
-                                                                (line_intensity[i] - intensity_bia[i]) * BIA_profile
-                     
-            else:
-                Xsect[idx_low:idx_high] += mol_dens  * \
-                                                            mf * line_abundance_ratio * \
-                                                            line_intensity[i] * ( lineshape_PT)
-        
-        return (np.asarray(Xsect))
+                                                                intensity_bia[i] * ( lineshape_PT)
+                    if BIA_FW_LBL and bia_duration[i]!=0:
+                        BoundIndexLower_BIA = bisect(waves, nu_i - 5*cut_i)
+                        BoundIndexUpper_BIA = bisect(waves, nu_i + 5*cut_i)
+                        wave_slice_BIA = waves[BoundIndexLower_BIA:BoundIndexUpper_BIA]
+                        BIA_profile = PROFILE_LORENTZ(nu_i, 1/(2*np.pi*CONSTANTS['c']*1e-12*bia_duration[i]), 0, wave_slice_BIA)
+                        Xsect[BoundIndexLower_BIA:BoundIndexUpper_BIA] += mol_dens  * \
+                                                                    mf * line_abundance_ratio * \
+                                                                    (line_intensity[i] - intensity_bia[i]) * BIA_profile
+                        
+                else:
+                    Xsect[idx_low:idx_high] += mol_dens  * \
+                                                                mf * line_abundance_ratio * \
+                                                                line_intensity[i] * ( lineshape_PT)
+            
+            return (np.asarray(Xsect))
     
     def configure_for_fitting(self, lmfit_params):
         """

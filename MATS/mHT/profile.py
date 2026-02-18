@@ -11,7 +11,7 @@ except ImportError as msg:
 # Choice of CPF, comment one of below
 # -----------------------------------
 #from mHT.CPF import cpf_accurate_vector as cpf_vector, cpf_accurate as cpf
-# from mHT.CPF import cpf_fast_vector as cpf_vector, cpf_fast as cpf
+#from .CPF import cpf_fast_vector as cpf_vector, cpf_fast as cpf
 from .CPF import cpf_accurate_vector as cpf_vector, cpf_accurate as cpf
 
 def mHTprofile(nu0: float, GammaD: float, Gamma0: float, Gamma2: float, Delta0: float, Delta2: float, NuOptRe: float, NuOptIm: float, nu: float, *args) -> float:
