@@ -670,7 +670,7 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
         if len(idx) == 0: continue
             
         # Segment conditions
-        waves_seg = wavenumbers[idx]
+        waves_seg = wavenumbers[idx] + x_shift
         seg_P = np.mean(pressure_w_error[idx])
         seg_T = np.mean(temperature_w_error[idx])
         

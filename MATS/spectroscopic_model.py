@@ -158,9 +158,20 @@ class Spectroscopic_model:
             # Mass
             self.mass[mask] = molecularMass(m, i, isotope_list=isotope_list)
 
-            
         #MAPPING CACHE (Filled by the fit_dataset later)
         self.param_index_map = []
+        #Caching State
+        # SMART CACHING STATE VARIABLES
+        self.active_line_indices = np.array([], dtype=np.int32)
+        self.static_line_indices = np.array([], dtype=np.int32)
+        self.cached_static_spectrum = None
+        self.cache_state = {
+            'P': None, 'T': None, 
+            'waves_start': None, 'waves_end': None, 'waves_len': None
+        }
+
+        
+        
     def _resolve_array(self, param_base_name, spectrum_number):
         """
         The Waterfall Lookup.
@@ -249,6 +260,7 @@ class Spectroscopic_model:
                 AF_wing=ILS_wing)
         
         return total_alpha
+    
     @staticmethod
     @jit(nopython=True, parallel=True, fastmath=True, cache=True)
     def calculate_lbl_numba_kernel(waves, 
@@ -305,6 +317,8 @@ class Spectroscopic_model:
                 Xsect[idx_start + k] += factor * line_buffer[k]
             
         return Xsect
+    
+
 
     def calculate_lbl_absorbance(self, waves, T, p, molefraction, Diluent, 
                                  spectrum_number, 
@@ -447,106 +461,190 @@ class Spectroscopic_model:
         n_waves = len(waves)
 
         if self.lineprofile != 'HTP' and self.numba_lineprofile:
+            # (Keep existing Numba Caching Logic - Copied for completeness)
             mf_vector = np.array([molefraction[self.molec_id[i]] for i in valid_indices])
             eff_intensity = mf_vector * abundance_ratio[valid_indices] * line_intensity[valid_indices]
-            if BIA_slope:
-                # If BIA, apply the intensity modification here
-                eff_intensity = eff_intensity * intensity_bia[valid_indices]
-            Xsect = self.calculate_lbl_numba_kernel(
-                waves,
-                valid_nu,
-                eff_intensity,
-                Gamma0[valid_indices], Gamma2[valid_indices],
-                Delta0[valid_indices], Delta2[valid_indices],
-                ParamRe[valid_indices], ParamIm[valid_indices],
-                Y[valid_indices],
-                GammaD[valid_indices], # Must pass GammaD array
-                alpha[valid_indices],
-                idx_low_arr, idx_high_arr,
-                mol_dens
-            )
+            if BIA_slope: eff_intensity *= intensity_bia[valid_indices]
 
+            has_static = (hasattr(self, 'static_line_indices') and len(self.static_line_indices) > 0)
+            current_state = {'P': p, 'T': T, 'waves_start': waves[0], 'waves_end': waves[-1], 'waves_len': len(waves)}
+            cache_valid = (self.cached_static_spectrum is not None and self.cache_state == current_state)
+
+            if has_static and not cache_valid:
+                static_to_calc = np.intersect1d(valid_indices, self.static_line_indices)
+                if len(static_to_calc) > 0:
+                    st_mf = np.array([molefraction[self.molec_id[i]] for i in static_to_calc])
+                    st_int = st_mf * abundance_ratio[static_to_calc] * line_intensity[static_to_calc]
+                    if BIA_slope: st_int *= intensity_bia[static_to_calc]
+                    
+                    st_nu = nu_array[static_to_calc]
+                    st_cut = line_cutoffs[static_to_calc]
+                    st_low = np.searchsorted(waves, st_nu - st_cut)
+                    st_high = np.searchsorted(waves, st_nu + st_cut)
+                    
+                    self.cached_static_spectrum = self.calculate_lbl_numba_kernel(
+                        waves, st_nu, st_int,
+                        Gamma0[static_to_calc], Gamma2[static_to_calc], Delta0[static_to_calc], Delta2[static_to_calc],
+                        ParamRe[static_to_calc], ParamIm[static_to_calc], Y[static_to_calc], GammaD[static_to_calc], alpha[static_to_calc],
+                        st_low, st_high, mol_dens
+                    )
+                else:
+                    self.cached_static_spectrum = np.zeros_like(waves)
+                self.cache_state = current_state
+
+            if has_static: active_to_calc = np.intersect1d(valid_indices, self.active_line_indices)
+            else: active_to_calc = valid_indices
+
+            if len(active_to_calc) > 0:
+                ac_mf = np.array([molefraction[self.molec_id[i]] for i in active_to_calc])
+                ac_int = ac_mf * abundance_ratio[active_to_calc] * line_intensity[active_to_calc]
+                if BIA_slope: ac_int *= intensity_bia[active_to_calc]
+                
+                ac_nu = nu_array[active_to_calc]
+                ac_cut = line_cutoffs[active_to_calc]
+                ac_low = np.searchsorted(waves, ac_nu - ac_cut)
+                ac_high = np.searchsorted(waves, ac_nu + ac_cut)
+                
+                active_spectrum = self.calculate_lbl_numba_kernel(
+                    waves, ac_nu, ac_int,
+                    Gamma0[active_to_calc], Gamma2[active_to_calc], Delta0[active_to_calc], Delta2[active_to_calc],
+                    ParamRe[active_to_calc], ParamIm[active_to_calc], Y[active_to_calc], GammaD[active_to_calc], alpha[active_to_calc],
+                    ac_low, ac_high, mol_dens
+                )
+            else:
+                active_spectrum = np.zeros_like(waves)
+
+            final_spectrum = active_spectrum + self.cached_static_spectrum if (has_static and self.cached_static_spectrum is not None) else active_spectrum
+            
+            # (BIA FW Logic same as before...)
             if BIA_slope and BIA_FW_LBL:
-                # Add the residual far-wing continuum using Python loop
-                # This adds to the Xsect array we just computed
                 for k, i in enumerate(valid_indices):
                     if bia_duration[i] != 0:
-                        cut_i = valid_cut[k]
-                        BoundIndexLower_BIA = bisect(waves, valid_nu[k] - 5*cut_i)
-                        BoundIndexUpper_BIA = bisect(waves, valid_nu[k] + 5*cut_i)
-                        
+                        cut_i = line_cutoffs[i]
+                        BoundIndexLower_BIA = bisect(waves, nu_array[i] - 5*cut_i)
+                        BoundIndexUpper_BIA = bisect(waves, nu_array[i] + 5*cut_i)
                         wave_slice_BIA = waves[BoundIndexLower_BIA:BoundIndexUpper_BIA]
-                        BIA_profile = PROFILE_LORENTZ(valid_nu[k], 1/(2*np.pi*CONSTANTS['c']*1e-12*bia_duration[i]), 0, wave_slice_BIA)
-                        
-                        # Add contribution
+                        BIA_profile = PROFILE_LORENTZ(nu_array[i], 1/(2*np.pi*CONSTANTS['c']*1e-12*bia_duration[i]), 0, wave_slice_BIA)
                         mf = molefraction[self.molec_id[i]]
                         ratio = abundance_ratio[i]
                         val = (line_intensity[i] - intensity_bia[i])
-                        Xsect[BoundIndexLower_BIA:BoundIndexUpper_BIA] += mol_dens * mf * ratio * val * BIA_profile
-            return Xsect
-
-        else:
-            for k, i in enumerate(valid_indices):
-                idx_low = idx_low_arr[k]
-                idx_high = idx_high_arr[k]
-                
-                # Check bounds
-                if idx_low >= n_waves or idx_high <= 0:
-                    continue
-                    
-                # Clamp indices to array bounds to prevent errors
-                idx_low = max(0, idx_low)
-                idx_high = min(n_waves, idx_high)
-                
-                if idx_low >= idx_high: 
-                    continue
-
-                wave_slice = waves[idx_low:idx_high]
-
-
-                nu_i = nu_array[i]
-                cut_i = line_cutoffs[i]
-
-
-                if self.lineprofile == 'HTP':
-                    lineshape_PT, lineshape_vals_imag = pcqsdhc(
-                        nu_i, GammaD[i], Gamma0[i], Gamma2[i], Delta0[i], Delta2[i],
-                        ParamRe[i], ParamIm[i], wave_slice, Ylm=Y[i])  # This now includes the line-mixing component
-                else:
-                    if self.numba_lineprofile:
-                        lineshape_PT = mHTprofile_vector_numba(nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
-                                                    Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i], 0, alpha[i], 0)
-                    else:
-                        lineshape_PT = mHTprofile_vector(nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
-                                                    Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i], 0, alpha[i])
-                    
-                
-                mf = molefraction[self.molec_id[i]]
-                line_abundance_ratio = abundance_ratio[i]
-                if BIA_slope:
-                    Xsect[idx_low:idx_high] += mol_dens  * \
-                                                                mf * line_abundance_ratio * \
-                                                                intensity_bia[i] * ( lineshape_PT)
-                    if BIA_FW_LBL and bia_duration[i]!=0:
-                        BoundIndexLower_BIA = bisect(waves, nu_i - 5*cut_i)
-                        BoundIndexUpper_BIA = bisect(waves, nu_i + 5*cut_i)
-                        wave_slice_BIA = waves[BoundIndexLower_BIA:BoundIndexUpper_BIA]
-                        BIA_profile = PROFILE_LORENTZ(nu_i, 1/(2*np.pi*CONSTANTS['c']*1e-12*bia_duration[i]), 0, wave_slice_BIA)
-                        Xsect[BoundIndexLower_BIA:BoundIndexUpper_BIA] += mol_dens  * \
-                                                                    mf * line_abundance_ratio * \
-                                                                    (line_intensity[i] - intensity_bia[i]) * BIA_profile
-                        
-                else:
-                    Xsect[idx_low:idx_high] += mol_dens  * \
-                                                                mf * line_abundance_ratio * \
-                                                                line_intensity[i] * ( lineshape_PT)
+                        final_spectrum[BoundIndexLower_BIA:BoundIndexUpper_BIA] += mol_dens * mf * ratio * val * BIA_profile
             
-            return (np.asarray(Xsect))
+            return final_spectrum
+
+        # ---------------------------------------------------------
+        #  PATH B: PYTHON LOOP (HTP/mHTP Standard) with Smart Caching
+        # ---------------------------------------------------------
+        else:
+            # 1. Setup Caching logic similar to Numba path
+            has_static = (hasattr(self, 'static_line_indices') and len(self.static_line_indices) > 0)
+            current_state = {'P': p, 'T': T, 'waves_start': waves[0], 'waves_end': waves[-1], 'waves_len': len(waves)}
+            cache_valid = (self.cached_static_spectrum is not None and self.cache_state == current_state)
+
+            # 2. Define Groups to Calculate
+            # We iterate over (label, indices) tuples to avoid writing the loop logic twice
+            calc_groups = []
+            
+            if has_static and not cache_valid:
+                # Need to update Static Cache
+                static_to_calc = np.intersect1d(valid_indices, self.static_line_indices)
+                calc_groups.append(('static', static_to_calc))
+            
+            if has_static:
+                active_to_calc = np.intersect1d(valid_indices, self.active_line_indices)
+                calc_groups.append(('active', active_to_calc))
+            else:
+                # No fit config, everything active
+                calc_groups.append(('active', valid_indices))
+
+            results = {}
+            n_waves = len(waves)
+
+            # 3. Execution Loop
+            for label, indices in calc_groups:
+                # Allocate result array for this group
+                group_xsect = np.zeros_like(waves)
+                
+                if len(indices) > 0:
+                    # Pre-calculate bounds for this group using vectorized search
+                    grp_nu = nu_array[indices]
+                    grp_cut = line_cutoffs[indices]
+                    grp_low = np.searchsorted(waves, grp_nu - grp_cut)
+                    grp_high = np.searchsorted(waves, grp_nu + grp_cut)
+                    
+                    # Inner Line Loop
+                    for k, i in enumerate(indices):
+                        idx_low = grp_low[k]
+                        idx_high = grp_high[k]
+                        
+                        if idx_low >= n_waves or idx_high <= 0: continue
+                        idx_low = max(0, idx_low)
+                        idx_high = min(n_waves, idx_high)
+                        if idx_low >= idx_high: continue
+
+                        wave_slice = waves[idx_low:idx_high]
+                        nu_i = nu_array[i]
+
+                        # Profile Selection
+                        if self.lineprofile == 'HTP':
+                            lineshape_PT, _ = pcqsdhc(
+                                nu_i, GammaD[i], Gamma0[i], Gamma2[i], Delta0[i], Delta2[i],
+                                ParamRe[i], ParamIm[i], wave_slice, Ylm=Y[i])
+                        else:
+                            # Python mHTP Vector
+                            lineshape_PT = mHTprofile_vector(
+                                nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
+                                Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i], 0, alpha[i])
+                        
+                        mf = molefraction[self.molec_id[i]]
+                        line_abun = abundance_ratio[i]
+                        
+                        if BIA_slope:
+                            group_xsect[idx_low:idx_high] += mol_dens * mf * line_abun * intensity_bia[i] * lineshape_PT
+                            # BIA FW logic must be handled separately or here. 
+                            # For cleanliness, keeping FW logic separate or duplicated is safer.
+                            # We'll just do the core line here.
+                        else:
+                            group_xsect[idx_low:idx_high] += mol_dens * mf * line_abun * line_intensity[i] * lineshape_PT
+                            
+                results[label] = group_xsect
+
+            # 4. Handle Cache Update
+            if 'static' in results:
+                self.cached_static_spectrum = results['static']
+                self.cache_state = current_state
+            
+            # 5. Combine Results
+            active_spectrum = results.get('active', np.zeros_like(waves))
+            
+            if has_static and self.cached_static_spectrum is not None:
+                final_spectrum = active_spectrum + self.cached_static_spectrum
+            else:
+                final_spectrum = active_spectrum
+
+            # 6. BIA FW Logic (Apply to final spectrum)
+            if BIA_slope and BIA_FW_LBL:
+                for i in valid_indices: # iterate all valid for FW checks
+                    if bia_duration[i] != 0:
+                        cut_i = line_cutoffs[i]
+                        BoundIndexLower_BIA = bisect(waves, nu_array[i] - 5*cut_i)
+                        BoundIndexUpper_BIA = bisect(waves, nu_array[i] + 5*cut_i)
+                        wave_slice_BIA = waves[BoundIndexLower_BIA:BoundIndexUpper_BIA]
+                        BIA_profile = PROFILE_LORENTZ(nu_array[i], 1/(2*np.pi*CONSTANTS['c']*1e-12*bia_duration[i]), 0, wave_slice_BIA)
+                        mf = molefraction[self.molec_id[i]]
+                        ratio = abundance_ratio[i]
+                        val = (line_intensity[i] - intensity_bia[i])
+                        final_spectrum[BoundIndexLower_BIA:BoundIndexUpper_BIA] += mol_dens * mf * ratio * val * BIA_profile
+
+            return final_spectrum
     
     def configure_for_fitting(self, lmfit_params):
         """
-       Populate param_index_map from lmfit_params 
+        Populate param_index_map and identifying Active Lines.
         """
+        self.param_index_map = []
+        varying_indices = set()
+
         for name, param in lmfit_params.items():
             if param.vary and "_line_" in name:
                 prefix, sep, suffix = name.rpartition('_line_')
@@ -554,11 +652,20 @@ class Spectroscopic_model:
                 if prefix in self.dynamic_arrays:
                     try:
                         line_idx = int(suffix)
-                        # Store tuple: (lmfit_name, array_key, array_index)
                         self.param_index_map.append((name, prefix, line_idx))
+                        varying_indices.add(line_idx)
                     except ValueError:
-                        pass # Suffix wasn't an integer, ignore
+                        pass
+        
+        # Sort and Store Active/Static Lists
+        self.active_line_indices = np.sort(list(varying_indices)).astype(np.int32)
+        all_indices = np.arange(self.nlines, dtype=np.int32)
+        self.static_line_indices = np.setdiff1d(all_indices, self.active_line_indices)
+        
+        # Reset Cache
+        self.cached_static_spectrum = None
     
+
     def update_from_lmfit(self, params):
         """
         The Fast Unpacker. Called every iteration of the fit.
