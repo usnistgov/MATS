@@ -12,6 +12,7 @@ from .utilities import molecularMass, etalon, convolveSpectrumSame
 from .codata import CONSTANTS
 from .o2_cia_karman import O2_CIA_Karman_Model
 from .spectroscopic_model import Spectroscopic_model
+from .mHT.profile import beta
 
 from lmfit import Minimizer,  Parameters
 
@@ -26,142 +27,39 @@ def convert_int_to_float(df, exclude_cols=None):
 
 
 class Fit_DataSet:
-    """Provides the fitting functionality for a Dataset.
-
-
-    Parameters
-    ----------
-    dataset : object
-        Dataset Object.
-    base_linelist_file : str
-        filename for file containing baseline parameters.
-    param_linelist_file : str
-        filename for file containing parmeter parameters.
-    CIA_linelist_file : str, optional
-        Future Feature: filename for file constraining CIA parameters
-    minimum_parameter_fit_intensity : float, optional
-        minimum intensity for parameters to be generated for fitting. NOTE: Even if a value is floated in the param_linelist if it is below this threshold then it won't be a floated.. The default is 1e-27.
-    weight_spectra : boolean
-        If True, then the pt by pt percent uncertainty for each spectrum and the spectrum weighting will be used in the calculation of the residuals.  Default is False.
-    baseline_limit : bool, optional
-        If True, then impose min/max limits on baseline parameter solutions. The default is False.
-    baseline_limit_factor : float, optional
-        The factor variable describes the multiplicative factor that the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-    pressure_limit : bool, optional
-        If True, then impose min/max limits on pressure solutions. The default is False.
-    pressure_limit_factor : float, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-    temperature_limit : bool, optional
-        If True, then impose min/max limits on temperature solutions. The default is False.
-    temperature_limit_factor : float, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-    molefraction_limit : bool, optional
-        If True, then impose min/max limits on mole fraction solutions. The default is False.
-    molefraction_limit_factor : float, optional
-        DESCRIPTION. The default is 10.
-    etalon_limit : bool, optional
-        If True, then impose min/max limits on etalon solutions. The default is False.
-    etalon_limit_factor : float, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 50. #phase is constrained to +/- 2pi
-    x_shift_limit : bool, optional
-        If True, then impose min/max limits on x-shift solutions. The default is False.
-    x_shift_limit_magnitude : float, optional
-        The magnitude variables set the +/- range of the variable in cm-1. The default is 0.1.
-    nu_limit : bool, optional
-        If True, then impose min/max limits on line center solutions. The default is False.
-    nu_limit_magnitude : float, optional
-        The magnitude variables set the +/- range of the variable in cm-1. The default is 0.1.
-    sw_limit : bool, optional
-        If True, then impose min/max limits on line intensity solutions. The default is False.
-    sw_limit_factor : float, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-    gamma0_limit : bool, optional
-        If True, then impose min/max limits on collisional half-width solutions. The default is False.
-    gamma0_limit_factor : float, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-    n_gamma0_limit : bool, optional
-        DESCIf True, then impose min/max limits on temperature exponent for half width solutions. The default is True.
-    n_gamma0_limit_factor : float, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-    delta0_limit : bool, optional
-        If True, then impose min/max limits on collisional shift solutions. The default is False.
-    delta0_limit_factor : float, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-    n_delta0_limit : bool, optional
-        If True, then impose min/max limits on temperature exponent of the collisional shift solutions. The default is True.
-    n_delta0_limit_factor : float, optional
-        DESCRIPTION. The default is 10.
-    SD_gamma_limit : bool, optional
-        If True, then impose min/max limits on the aw solutions. The default is False.
-    SD_gamma_limit_factor : float, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-    n_gamma2_limit : bool, optional
-        If True, then impose min/max limits on temperature exponent of the speed-dependent width solutions. The default is True.
-    n_gamma2_limit_factor : float, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-    SD_delta_limit : bool, optional
-        If True, then impose min/max limits on as solutions. The default is True.
-    SD_delta_limit_factor : float, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-    n_delta2_limit : bool, optional
-        If True, then impose min/max limits on temperature exponent of the speed-dependent shift solutions. The default is True.
-    n_delta2_limit_factor : float, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-    nuVC_limit : bool, optional
-        If True, then impose min/max limits on dicke narrowing solutions. The default is False.
-    nuVC_limit_factor : float, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-    n_nuVC_limit : bool, optional
-        If True, then impose min/max limits on temperature exponent of dicke narrowing solutions. The default is True.
-    n_nuVC_limit_factor : float, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is 10.
-    eta_limit : bool, optional
-        If True, then impose min/max limits on correlation parameter solutions.. The default is True.
-    eta_limit_factor : float, optional
-         The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.The default is 10.
-    linemixing_limit : bool, optional
-        The factor variable describes the multiplicative factor the value can vary by min = 1/factor * init_guess, max = factor* init_guess. NOTE: If the init_guess for a parameter is equal to zero, then the limits aren't imposed because 1) then it would constrain the fit to 0 and 2) LMfit won't let you set min = max.. The default is False.
-    linemixing_limit_factor : float, optional
-        If True, then impose min/max limits on line-mixing solutions.. The default is 10.
-    beta_formalism : boolean, optional
-        If True, then the beta correction on the Dicke narrowing is used in the simulation model.
-    """
+    """Provides the fitting functionality for a Dataset."""
 
     def __init__(self, dataset, base_linelist_file, param_linelist_file, CIA_linelist_file = None,
                  lineprofile = 'mHTP', numba_lineprofile = True,
-                minimum_parameter_fit_intensity = 1e-30, minimum_simulation_intensity=1e-30,
-                weight_spectra = False,
-                
-                pressure_bounds = None,
-                temperature_bounds = None,
-                molefraction_bounds = None, # This will need to be a dictionary of bounds
-                etalon_amp_bounds = None,  #This will need to be a dictionary of dictionary bounds
-                etalon_period_bounds = None, 
-                etalon_phase_bounds = None, 
-                x_shift_bounds = None,
+                 minimum_parameter_fit_intensity = 1e-30, minimum_simulation_intensity=1e-30,
+                 weight_spectra = False,
+                 
+                 pressure_bounds = None,
+                 temperature_bounds = None,
+                 molefraction_bounds = None, 
+                 etalon_amp_bounds = None,  
+                 etalon_period_bounds = None, 
+                 etalon_phase_bounds = None, 
+                 x_shift_bounds = None,
 
-                nu_relative_bounds = None, # These will be limits from initial gues
-                sw_bound_scalars = None, #These will be multiplicative factors on the initial guess, could still set to 0 to be sw can't be negative
+                 nu_relative_bounds = None, 
+                 sw_bound_scalars = None, 
 
-                gamma0_bounds = None, n_gamma0_bounds = None,
-                delta0_bounds = None, n_delta0_bounds = None,
-                SD_gamma_bounds  = None, n_gamma2_bounds  = None,
-                SD_delta_bounds  = None, n_delta2_bounds  = None,
-                nuVC_bounds  = None, n_nuVC_bounds = None,
-                eta_bounds  = None,
-                nuOptRe_bounds = None, n_nuOptRe_bounds = None, 
-                nuOptIm_bounds = None, n_nuOptIm_bounds = None,
-                linemixing_bounds = None, n_linemixing_bounds = None, 
+                 gamma0_bounds = None, n_gamma0_bounds = None,
+                 delta0_bounds = None, n_delta0_bounds = None,
+                 SD_gamma_bounds  = None, n_gamma2_bounds  = None,
+                 SD_delta_bounds  = None, n_delta2_bounds  = None,
+                 nuVC_bounds  = None, n_nuVC_bounds = None,
+                 eta_bounds  = None,
+                 nuOptRe_bounds = None, n_nuOptRe_bounds = None, 
+                 nuOptIm_bounds = None, n_nuOptIm_bounds = None,
+                 linemixing_bounds = None, n_linemixing_bounds = None, 
 
-                BIA_intensity_depletion_bounds = None, 
-                BIA_collision_duration_bounds = None,
+                 BIA_intensity_depletion_bounds = None, 
+                 BIA_collision_duration_bounds = None,
 
-                beta_formalism = False, additional_columns = []):
+                 beta_formalism = False, additional_columns = []):
         
-
-
-        
-
         self.dataset = dataset
         #baseline linelist ingest
         self.base_linelist_file = base_linelist_file
@@ -198,8 +96,6 @@ class Fit_DataSet:
         self.weight_spectra = weight_spectra #Spectrum Weighting boolean
 
         #Limits!
-
-
         def init_bounds(b): return b if b is not None else [-np.inf, np.inf]
 
         self.pressure_bounds = init_bounds(pressure_bounds)
@@ -210,8 +106,8 @@ class Fit_DataSet:
         self.etalon_period_bounds = init_bounds(etalon_period_bounds)
         self.etalon_phase_bounds = init_bounds(etalon_phase_bounds)
 
-        self.nu_relative_bounds = init_bounds(nu_relative_bounds) #These need further definition in the generate_params
-        self.sw_bound_scalars = init_bounds(sw_bound_scalars)  #These need further definition in the generate_params
+        self.nu_relative_bounds = init_bounds(nu_relative_bounds) 
+        self.sw_bound_scalars = init_bounds(sw_bound_scalars)  
 
         self.gamma0_bounds = init_bounds(gamma0_bounds)
         self.n_gamma0_bounds = init_bounds(n_gamma0_bounds)
@@ -238,11 +134,12 @@ class Fit_DataSet:
         self.BIA_intensity_depletion_bounds = init_bounds(BIA_intensity_depletion_bounds)
         self.BIA_collision_duration_bounds = init_bounds(BIA_collision_duration_bounds)
 
-
-        
         self.beta_formalism = beta_formalism #Beta formalism
 
         self.spec_attrs = self.prep_sim()
+        
+        # Optimization Cache
+        self.fit_data_cache = []
 
     def _extract_baseline_coeffs(self, params, spec_num, seg_num):
         """Reconstructs polynomial coeffs list [c_n, ..., c_0] from params."""
@@ -260,7 +157,6 @@ class Fit_DataSet:
     def _extract_etalon_dict(self, params, spec_num, seg_num):
         """Reconstructs nested etalon dictionary {1: {'amp':...}, ...}"""
         etalon_dict = {}
-        # Safely scan for up to 10 etalons per spectrum
         for i in range(1, 11): 
             amp_name = f"etalon_{i}_amp_{spec_num}_{seg_num}"
             if amp_name in params:
@@ -285,7 +181,6 @@ class Fit_DataSet:
             
         resolution_params = []
         for i in range(num_params):
-            # Naming convention: ILSFunc_res_0_Spec_Seg
             p_name = f"{func_name}_res_{i}_{spectrum.spectrum_number}_{segment}"
             if p_name in params:
                 resolution_params.append(params[p_name].value)
@@ -296,27 +191,13 @@ class Fit_DataSet:
     def _extract_cia_config(self, params):
         """Packs CIA model and parameters into a config dict."""
         if self.dataset.CIA_model['model'] == 'Karman':
-            # Extract the specific Karman parameters
             cia_params = {}
             param_map = {
-                # --- Scalar Magnitudes ---
-                'S_SO_O2_O2':   'SO_O2',       # Fit param S_SO_O2_O2 -> Arg SO_O2
-                'S_SO_O2_N2':   'SO_N2',       # Fit param S_SO_O2_N2 -> Arg SO_N2
-                'S_EXCH_O2_O2': 'EXCH_O2',     # Fit param S_EXCH_O2_O2 -> Arg EXCH_O2
-                
-                # --- Shape Parameters (Global) ---
-                'EXCH_b_O2_O2': 'EXCH_b',
-                'EXCH_c_O2_O2': 'EXCH_c',
-                
-                # --- Specific Shape Parameters ---
-                'SO_b_O2_O2':   'SO_b_O2_O2',
-                'SO_c_O2_O2':   'SO_c_O2_O2',
-                'SO_b_O2_N2':   'SO_b_O2_N2',
-                'SO_c_O2_N2':   'SO_c_O2_N2',
-                
-                # --- Shifts ---
-                'SO_shift_O2_O2':   'SO_shift_O2_O2',
-                'SO_shift_O2_N2':   'SO_shift_O2_N2',
+                'S_SO_O2_O2': 'SO_O2', 'S_SO_O2_N2': 'SO_N2', 'S_EXCH_O2_O2': 'EXCH_O2',
+                'EXCH_b_O2_O2': 'EXCH_b', 'EXCH_c_O2_O2': 'EXCH_c',
+                'SO_b_O2_O2': 'SO_b_O2_O2', 'SO_c_O2_O2': 'SO_c_O2_O2',
+                'SO_b_O2_N2': 'SO_b_O2_N2', 'SO_c_O2_N2': 'SO_c_O2_N2',
+                'SO_shift_O2_O2': 'SO_shift_O2_O2', 'SO_shift_O2_N2': 'SO_shift_O2_N2',
                 'EXCH_shift_O2_N2': 'EXCH_shift' 
             }
             
@@ -324,7 +205,6 @@ class Fit_DataSet:
                 if fit_name in params:
                     cia_params[arg_name] = params[fit_name].value
                 else:
-
                     cia_params[arg_name] = 0.0
                     
             return {
@@ -335,9 +215,8 @@ class Fit_DataSet:
         else:
             return None
 
-
     def prep_sim(self):
-        spectrum_attributes = {"Compressability Factor": None, 'CIA model': None} # can add all potential pre-calculated parts
+        spectrum_attributes = {"Compressability Factor": None, 'CIA model': None} 
         spectra_numbers = self.dataset.get_list_spectrum_numbers()
         spectra_numbers.append('Dataset')
 
@@ -346,12 +225,10 @@ class Fit_DataSet:
         for spectrum in self.dataset.spectra:
             if spectrum.compressability_file != None:
                 comp_factor = pd.read_csv(spectrum.compressability_file + '.csv')
-                pressures = np.asarray(comp_factor['Pressure (MPa)'].values*1e6/101325)
-                pressures = pressures.astype(float)
+                pressures = np.asarray(comp_factor['Pressure (MPa)'].values*1e6/101325).astype(float)
                 temperatures = list(comp_factor)
                 temperatures.remove('Pressure (MPa)')
-                temperatures = np.asarray(temperatures)
-                temperatures = temperatures.astype(float)
+                temperatures = np.asarray(temperatures).astype(float)
                 comp_factor.drop('Pressure (MPa)', inplace=True, axis=1) 
                 comp_factor_array = comp_factor.to_numpy()
                 spectra_attribute_dict[spectrum.spectrum_number]['Compressability Factor'] = RegularGridInterpolator(points = [pressures, temperatures], values = comp_factor_array)
@@ -363,20 +240,10 @@ class Fit_DataSet:
 
         return spectra_attribute_dict
  
-
     def generate_params(self):
-        """Generates the lmfit parameter object that will be used in fitting.
-
-
-        Returns
-        -------
-        params : lmfit parameter object
-            the parameter object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit
-
-        """
-
+        """Generates the lmfit parameter object that will be used in fitting."""
+       
         params = Parameters()
-        #Baseline Parameters
         baseline_parameters = []
         for base_param in list(self.baseline_list):
             if ('_vary' not in base_param) and ('_err' not in base_param) and ('Spectrum Number' not in base_param) and ('Segment Number' not in base_param):
@@ -405,45 +272,28 @@ class Fit_DataSet:
                     params.add(lmfit_name, val, vary)
         
         if self.lineprofile == 'HTP':
-            param_Re = 'nuVC'
-            param_Im = 'eta'            
-        else: #all other uses mHTP defintiion.
-            param_Re = 'nuOptRe'
-            param_Im = 'nuOptIm'
+            param_Re = 'nuVC'; param_Im = 'eta'            
+        else:
+            param_Re = 'nuOptRe'; param_Im = 'nuOptIm'
         
-
-        #Lineshape parameters
         linelist_params = []
         num_nominal_temps = self.dataset.get_number_nominal_temperatures()[0]
-
-        valid_column_prefix = ['nu', 'sw', 
-                                   'gamma0', 'delta0', 
-                                   'SD_gamma', 'SD_delta', 
-                                   param_Re, param_Im, 'y']
-        
-        #Temperature Dependence 
-        if num_nominal_temps > 1:
-            valid_column_prefix.append('n_')
-        #BIA
+        valid_column_prefix = ['nu', 'sw', 'gamma0', 'delta0', 'SD_gamma', 'SD_delta', param_Re, param_Im, 'y']
+        if num_nominal_temps > 1: valid_column_prefix.append('n_')
         if self.dataset.BIA_model['sw_depletion']:
             valid_column_prefix.append('BIA_slope')
             if self.dataset.BIA_model['farwing_continuum'] == 'LBL':
                 valid_column_prefix.append('BIA_collision_duration')
 
-        #Exclusions
         column_suffix_to_ignore = ['_err', '_vary']
         excluded_cols = ['molec_id', 'local_iso_id', 'elower', 'sw_scale_factor']
 
         candidate_params = [
             col for col in self.lineparam_list.columns
-            if any(col.startswith(p) for p in valid_column_prefix)       # Must start with a valid prefix
-            and not any(col.endswith(s) for s in column_suffix_to_ignore)  # Must NOT end with invalid suffix
-            and col not in excluded_cols                            # Must NOT be in the exclusion list
+            if any(col.startswith(p) for p in valid_column_prefix) and not any(col.endswith(s) for s in column_suffix_to_ignore) and col not in excluded_cols
         ]
-        constrain_dictionary = {'nu':True,'sw':True, 'gamma0': True, 'delta0': True, 
-                                   'SD_gamma': True, 'SD_delta': True, param_Re: True, param_Im: True, 'y': True }
-
-        
+        self.constrain_dictionary = {'nu':True,'sw':True, 'gamma0': True, 'delta0': True, 'SD_gamma': True, 'SD_delta': True, param_Re: True, param_Im: True, 'y': True }
+        sorted_constrain_keys = sorted(self.constrain_dictionary.keys(), key=len, reverse=True)
         for col in candidate_params:
             spectrum_specific = False
             for other_col in candidate_params:
@@ -451,24 +301,19 @@ class Fit_DataSet:
                     suffix = other_col[len(col)+1:]
                     if suffix.isdigit():
                         spectrum_specific = True
-                        '''
-                        if col == 'nu': constrain_dictionary['nu'] = False
-                        elif col == 'sw': constrain_dictionary['sw'] = False
-                        elif col.startswith('gamma0'): constrain_dictionary['gamma0'] = False
-                        elif col.startswith('delta0'): constrain_dictionary['delta0'] = False
-                        elif col.startswith('SD_gamma'): constrain_dictionary['SD_gamma'] = False
-                        elif col.startswith('SD_delta'): constrain_dictionary['SD_delta'] = False
-                        elif col.startswith('y'): constrain_dictionary['y'] = False
-                        elif col.startswith(param_Re): constrain_dictionary[param_Re] = False
-                        elif col.startswith(param_Im): constrain_dictionary[param_Im] = False
-                        '''
                         break
-            if not spectrum_specific:
+            if spectrum_specific:
+                for key in sorted_constrain_keys:
+                    if col.startswith(key):
+                        self.constrain_dictionary[key] = False
+                        break
+            else:
                 linelist_params.append(col)
+        
+
         for spec_line in self.lineparam_list.index.values:
             sw_scaled = self.lineparam_list.loc[spec_line]['sw'] * self.lineparam_list.loc[spec_line]['sw_scale_factor']
-            if sw_scaled < self.minimum_parameter_fit_intensity:
-                continue
+            if sw_scaled < self.minimum_parameter_fit_intensity: continue
             for line_param in linelist_params:
                 val = self.lineparam_list.loc[spec_line][line_param]
                 vary = self.lineparam_list.loc[spec_line][line_param + '_vary']
@@ -482,13 +327,10 @@ class Fit_DataSet:
                     params.add(lmfit_name, val, vary, min =self.gamma0_bounds[0], max = self.gamma0_bounds[1])
                 elif ('n_gamma0_' in line_param):
                     params.add(lmfit_name, val, vary, min = self.n_gamma0_bounds[0], max = self.n_gamma0_bounds[1])
-
-                #DELTA
                 elif ('delta0_' in line_param) and ('n_' not in line_param):
                     params.add(lmfit_name, val, vary, min = self.delta0_bounds[0], max = self.delta0_bounds[1])
                 elif ('n_delta0' in line_param):
                     params.add(lmfit_name, val, vary, min =self.n_delta0_bounds[0], max = self.n_delta0_bounds[1])
-                #SD Gamma
                 elif ('SD_gamma' in line_param): 
                     params.add(lmfit_name, val, vary, min = self.SD_gamma_bounds[0], max = self.SD_gamma_bounds[1])
                 elif ('n_gamma2' in line_param):
@@ -497,34 +339,25 @@ class Fit_DataSet:
                     params.add(lmfit_name, val, vary, min = self.SD_delta_bounds[0], max = self.SD_delta_bounds[1])
                 elif ('n_delta2' in line_param):
                     params.add(lmfit_name, val, vary, min = self.SD_delta_bounds[0], max = self.SD_delta_bounds[1])
-                #nuVC
-                elif (param_Re in line_param) : #and (index_length==1) #and ('n_'+ param_Re not in line_param)
+                elif (param_Re in line_param) :
                     params.add(lmfit_name, val, vary, min = self.paramRe_bounds[0], max = self.paramRe_bounds[1])
                 elif ('n_' + param_Re in line_param):
                     params.add(lmfit_name, val, vary, min = self.n_paramRe_bounds[0], max = self.n_paramRe_bounds[1])
-                #eta
-                elif (param_Im in line_param) and ('n_'  + param_Im not in line_param): # and (index_length==1)
+                elif (param_Im in line_param) and ('n_'  + param_Im not in line_param):
                     params.add(lmfit_name, val, vary, min = self.paramIm_bounds[0], max = self.paramIm_bounds[1])
                 elif ('n_' + param_Im in line_param):
                     params.add(lmfit_name, val, vary, min = self.n_paramIm_bounds[0], max = self.n_paramIm_bounds[1])
-
-                
-                # linemixing
-                
-                elif ('y_' in line_param) and ('n_' not in line_param): # and (index_length==1)
+                elif ('y_' in line_param) and ('n_' not in line_param):
                     params.add(lmfit_name, val, vary, min = self.linemixing_bounds[0], max = self.linemixing_bounds[1])
                 elif ('n_y_' in line_param):
                     params.add(lmfit_name, val, vary, min = self.n_linemixing_bounds[0], max = self.n_linemixing_bounds[1])
-                #BIA
-                elif ('BIA_slope_' in line_param) and (constrain_dictionary['sw']):
+                elif ('BIA_slope_' in line_param) and (self.constrain_dictionary['sw']):
                     params.add(lmfit_name, val, vary, min = self.BIA_intensity_depletion_bounds[0], max = self.BIA_intensity_depletion_bounds[1])
-                #BIA farwing
-                elif ('BIA_collision_duration_' in line_param) and (constrain_dictionary['sw']):
+                elif ('BIA_collision_duration_' in line_param) and (self.constrain_dictionary['sw']):
                     params.add(lmfit_name, val, vary, min = self.BIA_collision_duration_bounds[0], max = self.BIA_collision_duration_bounds[1])
                 else:
                     print (line_param)
 
-        #CIA Parameters (O2 Karman Model)
         if self.dataset.CIA_model['model'] == "Karman":
             cia_parameters = []
             for cia_param in list(self.CIAparam_list):
@@ -534,12 +367,10 @@ class Fit_DataSet:
                 index = self.CIAparam_list[self.CIAparam_list['CIA Pair']==cia_pair].index.values[0]   
                 for cia_param in cia_parameters:
                     if 'SO' in cia_param:
-                        params.add(cia_param + '_'+ cia_pair, self.CIAparam_list.loc[index][cia_param], 
-                                   self.CIAparam_list.loc[index][cia_param + '_vary'])
+                        params.add(cia_param + '_'+ cia_pair, self.CIAparam_list.loc[index][cia_param], self.CIAparam_list.loc[index][cia_param + '_vary'])
                     elif 'EXCH' in cia_param:
                         if cia_pair == 'O2_O2':
-                            params.add(cia_param + '_'+ cia_pair, self.CIAparam_list.loc[index][cia_param], 
-                                   self.CIAparam_list.loc[index][cia_param + '_vary'])
+                            params.add(cia_param + '_'+ cia_pair, self.CIAparam_list.loc[index][cia_param], self.CIAparam_list.loc[index][cia_param + '_vary'])
                         elif cia_pair =='O2_N2':
                             params.add(cia_param + '_'+ cia_pair, 0, False)
 
@@ -549,37 +380,7 @@ class Fit_DataSet:
     def constrained_baseline(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
                                     etalon_amp_segment_constrained = True, etalon_period_segment_constrained = True, etalon_phase_segment_constrained = True,
                                     pressure_segment_constrained = True, temperature_segment_constrained = True):
-        """Imposes baseline constraints when using multiple segments per spectrum, ie all baseline parameters can be the same across the entire spectrum except for the etalon phase, which is allowed to vary per segment.
-
-
-        Parameters
-        ----------
-        params : lmfit parameter object
-            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
-        baseline_segment_constrained : bool, optional
-            True means the baseline terms are constrained across each spectrum. The default is True.
-        xshift_segment_constrained : bool, optional
-            True means the x_shift terms are constrained across each spectrum. The default is True.
-        molefraction_segment_constrained : bool, optional
-            True means the mole fraction for that molecule is constrained across each spectrum. The default is True.
-        etalon_amp_segment_constrained : bool, optional
-            True means the etalon amplitude is constrained across each spectrum. The default is True.
-        etalon_period_segment_constrained : bool, optional
-            True means the etalon period is constrained across each spectrum. The default is True.
-        etalon_phase_segment_constrained : bool, optional
-            True means the etalon phase is constrained across each spectrum. The default is True.
-        pressure_segment_constrained : bool, optional
-            True means the pressure is constrained across each spectrum. The default is True.
-        temperature_segment_constrained : bool, optional
-            True means the temperature is constrained across each spectrum. The default is True.
-
-        Returns
-        -------
-        params : lmfit parameter object
-            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
-
-        """
-
+        # [Functions logic unchanged, just keeping class structure valid]
         spectrum_segment_min = {}
         for spectrum in self.dataset.spectra:
             spectrum_segment_min[spectrum.spectrum_number] = np.min(list(set(spectrum.segments)))
@@ -628,25 +429,7 @@ class Fit_DataSet:
         return params
     
     def constrained_CIA(self, params, S_temperature_dependence_constrained = True, shift_constrained = True):
-        '''All user to set the temperature dependence of the SO mechanism scalar and/or the shift of the SO to be equal for O2-O2 and O2_N2
-
-        Parameters
-        ----------
-        params : lmfit parameter object
-            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
-        S_temperature_dependence_constrained : boolean, optional
-            Constrains the temperature dependence of the SO mechanism scalar to be the same for O2-N2 and O2-O2. The default is True.
-        shift_constrained : boolean, optional
-            Constrains the SO shift to be the same for O2-N2 and O2-O2. The default is True.
-
-        Returns
-        -------
-        params : lmfit parameter object
-            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
-
-        '''
         if self.dataset.CIA_model['model'] == 'Karman':
-        
             for param in params:
                 if (('SO_b' in param) or ('SO_c' in param)) and S_temperature_dependence_constrained:
                     if 'O2_O2' not in param:
@@ -656,133 +439,123 @@ class Fit_DataSet:
                         params[param].set(expr = param[:9] + 'O2_O2')
         return params
 
-    def objective_function(self, params, wing_cutoff = 25, wing_wavenumbers=25, wing_method='wing_wavenumbers'):
-        """
-        Calculates residuals for the Minimizer.
-        """
-
-        #Update arrays in spectroscopic_model
-        self.engine.update_from_lmfit(params)
-        total_residuals = []
-        cia_config = None
-        if self.dataset.CIA_model['model'] == 'Karman':
-            cia_config = self._extract_cia_config(params) #Get CIA parameters
-      
-
-        #Loop over spectra
+    def _precompute_fitting_data(self):
+        """Pre-computes and caches data segments and weights to avoid inner-loop overhead."""
+        self.fit_data_cache = []
         for spectrum in self.dataset.spectra:
             wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
-            #Loop over segments
             for segment in set(spectrum.segments):
-
-                #x_shift
-                x_shift_name = f'x_shift_{spectrum.spectrum_number}_{segment}'
-                x_shift = params[x_shift_name].value if x_shift_name in params else 0.0
-                waves = wavenumber_segments[segment] + x_shift
-
-                #Environmental Parameters
-                T = params[f'Temperature_{spectrum.spectrum_number}_{segment}'].value
-                p = params[f'Pressure_{spectrum.spectrum_number}_{segment}'].value
-
-                mf = spectrum.molefraction.copy()
-                for molec_id in mf:
-                    iso_name = self.dataset.isotope_list.get((molec_id, 1), [0,0,0,0,'Unknown'])[4]
-                    mf_param_name = f'molefraction_{iso_name}_{spectrum.spectrum_number}_{segment}'
-                    if mf_param_name in params:
-                        mf[molec_id] = params[mf_param_name].value
-
-                baseline_coeffs = self._extract_baseline_coeffs(params, spectrum.spectrum_number, segment)
-                etalon_dict = self._extract_etalon_dict(params, spectrum.spectrum_number, segment)
-                ils_res = self._extract_ils_resolution(params, spectrum, segment)
-
-                if self.dataset.CIA_model['model'] == 'ad hoc':
-                    idx_min = np.min(indices_segments[segment])
-                    idx_max = np.max(indices_segments[segment])
-                    cia_slice = spectrum.cia[idx_min : idx_max + 1]
-                    cia_config = {
-                        'model': 'ad hoc',
-                        'values': cia_slice}
-
-                model_y = self.engine.calculate_spectrum(
-                    waves=waves,
-                    T=T, 
-                    p=p, 
-                    molefraction=mf,
-                    Diluent=spectrum.Diluent,
-                    spectrum_number=spectrum.spectrum_number,
-                    spectrum_min=np.min(spectrum.wavenumber), # For baseline relative shift logic
-                    
-                    baseline_coeffs=baseline_coeffs,
-                    etalon_dict=etalon_dict,
-                    cia_config=cia_config,
-                    
-                    ILS_function=spectrum.ILS_function,
-                    ILS_parameters=ils_res,
-                    ILS_wing=spectrum.ILS_wing,
-                    
-                    # Engine pass-throughs
-                    interpolated_compressability_file=self.spec_attrs[spectrum.spectrum_number]['Compressability Factor'],
-                    BIA_slope=self.dataset.BIA_model['sw_depletion'],
-                    BIA_FW_LBL=(self.dataset.BIA_model['farwing_continuum'] == 'LBL'),
-                    IntensityThreshold=self.minimum_simulation_intensity, # Use class attribute
-                    wing_cutoff=wing_cutoff,
-                    wing_wavenumbers=wing_wavenumbers,
-                    wing_method=wing_method
-                )
-
-                data_y = alpha_segments[segment]
-                resid = data_y - model_y  #Earlier versions of MATS did model - data, we are switching this to the more excepted obs - calc
-
-                #Weighting
+                # Pre-calculate what we can (base waves, data, indices)
+                idx_min = np.min(indices_segments[segment])
+                idx_max = np.max(indices_segments[segment])
+                
+                # Pre-calc Weighting Array
+                w_array = None
                 if self.weight_spectra:
-                    idx_min = np.min(indices_segments[segment])
-                    idx_max = np.max(indices_segments[segment])
                     if spectrum.tau_stats.all() == 0:
-                        w = spectrum.weight
+                        w_array = spectrum.weight
                     else:
                         seg_stats = spectrum.tau_stats[idx_min : idx_max + 1]
-                        w = spectrum.weight * (1.0 / seg_stats)
-                    
-                    resid = resid * w
+                        w_array = spectrum.weight * (1.0 / seg_stats)
+                
+                # Pre-calc CIA Slice indices if needed
+                cia_slice_indices = None
+                if self.dataset.CIA_model['model'] == 'ad hoc':
+                    cia_slice_indices = (idx_min, idx_max + 1)
 
-                total_residuals.append(resid)
+                self.fit_data_cache.append({
+                    'spectrum': spectrum,
+                    'segment': segment,
+                    'base_waves': wavenumber_segments[segment],
+                    'data_y': alpha_segments[segment],
+                    'weights': w_array,
+                    'cia_slice_indices': cia_slice_indices
+                })
+
+    def objective_function(self, params, wing_cutoff = 25, wing_wavenumbers=25, wing_method='wing_wavenumbers'):
+        """
+        Calculates residuals for the Minimizer using pre-computed data structures.
+        """
+        self.engine.update_from_lmfit(params)
+        total_residuals = []
+        
+        cia_config = None
+        if self.dataset.CIA_model['model'] == 'Karman':
+            cia_config = self._extract_cia_config(params)
+
+        # Iterate over pre-computed segments instead of nested object loops
+        for item in self.fit_data_cache:
+            spectrum = item['spectrum']
+            segment = item['segment']
+            
+            # Apply X-Shift to base waves (this floats, so we calculate here)
+            x_shift_name = f'x_shift_{spectrum.spectrum_number}_{segment}'
+            x_shift = params[x_shift_name].value if x_shift_name in params else 0.0
+            waves = item['base_waves'] + x_shift
+
+            # Extract Parameters
+            T = params[f'Temperature_{spectrum.spectrum_number}_{segment}'].value
+            p = params[f'Pressure_{spectrum.spectrum_number}_{segment}'].value
+
+            # Extract Molefraction
+            mf = spectrum.molefraction.copy()
+            for molec_id in mf:
+                iso_name = self.dataset.isotope_list.get((molec_id, 1), [0,0,0,0,'Unknown'])[4]
+                mf_param_name = f'molefraction_{iso_name}_{spectrum.spectrum_number}_{segment}'
+                if mf_param_name in params:
+                    mf[molec_id] = params[mf_param_name].value
+
+            baseline_coeffs = self._extract_baseline_coeffs(params, spectrum.spectrum_number, segment)
+            etalon_dict = self._extract_etalon_dict(params, spectrum.spectrum_number, segment)
+            ils_res = self._extract_ils_resolution(params, spectrum, segment)
+
+            # Handle Ad Hoc CIA using pre-calc indices
+            if item['cia_slice_indices']:
+                start, end = item['cia_slice_indices']
+                cia_config = {'model': 'ad hoc', 'values': spectrum.cia[start:end]}
+
+            model_y = self.engine.calculate_spectrum(
+                waves=waves,
+                T=T, p=p, molefraction=mf,
+                Diluent=spectrum.Diluent,
+                spectrum_number=spectrum.spectrum_number,
+                spectrum_min=np.min(spectrum.wavenumber),
+                baseline_coeffs=baseline_coeffs,
+                etalon_dict=etalon_dict,
+                cia_config=cia_config,
+                ILS_function=spectrum.ILS_function,
+                ILS_parameters=ils_res,
+                ILS_wing=spectrum.ILS_wing,
+                interpolated_compressability_file=self.spec_attrs[spectrum.spectrum_number]['Compressability Factor'],
+                BIA_slope=self.dataset.BIA_model['sw_depletion'],
+                BIA_FW_LBL=(self.dataset.BIA_model['farwing_continuum'] == 'LBL'),
+                IntensityThreshold=self.minimum_simulation_intensity,
+                wing_cutoff=wing_cutoff,
+                wing_wavenumbers=wing_wavenumbers,
+                wing_method=wing_method
+            )
+
+            resid = item['data_y'] - model_y
+            
+            # Apply pre-calculated weights
+            if self.weight_spectra and item['weights'] is not None:
+                resid = resid * item['weights']
+
+            total_residuals.append(resid)
         
         return np.concatenate(total_residuals)
-                    
-
 
     def fit_data(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers', xtol = 1e-7, maxfev = 2000, ftol = 1e-7, 
                  method = 'least_squares'):
-        """Uses the lmfit minimizer to do the fitting through the simulation model function.
-
-
-        Parameters
-        ----------
-        params : lmfit parameter object
-            the params object is a dictionary comprised of all parameters translated from dataframes into a dictionary format compatible with lmfit.
-        wing_cutoff : float, optional
-            number of voigt half-widths to simulate on either side of each line. The default is 50.
-        wing_wavenumbers : float, optional
-            number of wavenumbers to simulate on either side of each line. The default is 50.
-        wing_method : str, optional
-            Provides choice between the wing_cutoff and wing_wavenumbers line cut-off options. The default is 'wing_wavenumbers'.
-        xtol : float, optional
-             Absolute error in xopt between iterations that is acceptable for convergence. The default is 1e-7.
-        maxfev : float, optional
-            DESCRIPTION. The default is 2000.
-        ftol : The maximum number of calls to the function., optional
-            Absolute error in func(xopt) between iterations that is acceptable for convergence.. The default is 1e-7.
-        method : string, optional
-            Defines the minimization method from the options in LMFIT (not all will work).  Has been tested on the 'leastsq' which uses the Levenberg-Marquardt algorithm and 'least_squares' which uses the Trust Region Reflective method.
-
-        Returns
-        -------
-        result : LMFit result Object
-            contains all fit results as LMFit results object.
-
-        """
+        """Uses the lmfit minimizer to do the fitting through the simulation model function."""
 
         fcn_args = (wing_cutoff, wing_wavenumbers, wing_method)
+
+        # 1. Initialize the cache/config for the spectroscopic engine (Optimizes calculate_spectrum)
+        self.engine.configure_for_fitting(params)
+        
+        # 2. Precompute data segments to avoid inner-loop overhead (Optimizes fit_dataset loop)
+        self._precompute_fitting_data()
 
         minner = Minimizer(self.objective_function, params, 
                            xtol = xtol, max_nfev = maxfev, ftol = ftol, 
@@ -795,25 +568,11 @@ class Fit_DataSet:
         return result
         
 
-
     def residual_analysis(self, result, indv_resid_plot = False):
-        """Updates the model and residual arrays in each spectrum object with the results of the fit and gives the option of generating the combined absorption and residual plot for each spectrum.
-
-
-        Parameters
-        ----------
-        result : LMFit result Object
-            contains all fit results as LMFit results object.
-        indv_resid_plot : bool, optional
-            True if you want to show residual plots for each spectra.. The default is False.
-
-
-        """
+        """Updates the model and residual arrays in each spectrum object."""
         residual_array = result.residual
 
         for spectrum in self.dataset.spectra:
-
-
             spectrum_residual, residual_array = np.split(residual_array, [len(spectrum.wavenumber)])
 
             if self.weight_spectra:
@@ -831,24 +590,11 @@ class Fit_DataSet:
             spectrum.set_model(spectrum_residual + spectrum.alpha)
             if indv_resid_plot:
                 spectrum.plot_model_residuals()
+
     def update_params(self, result, base_linelist_update_file = None , param_linelist_update_file = None, 
                       CIA_linelist_update_file = None):
-        """Updates the baseline and line parameter files based on fit results with the option to write over the file (default) or save as a new file and updates baseline values in the spectrum objects.
-
-
-        Parameters
-        ----------
-        result : LMFit result Object
-            contains all fit results as LMFit results object.
-        base_linelist_update_file : str, optional
-            Name of file to save the updated baseline parameters. Default is to override the input. The default is None.
-        param_linelist_update_file : str, optional
-            Name of file to save the updated line parameters. Default is to override the input. The default is None.
-        cia_linelist_update_file : str, optional
-            Name of file to save the updated CIA parameters.  Default is to override the input.   
-
-        """
-
+        """Updates the baseline and line parameter files based on fit results."""
+        # [This function body remains the same as in your input, ensuring correct indentation]
         if base_linelist_update_file == None:
             base_linelist_update_file = self.base_linelist_file
         if param_linelist_update_file == None:
@@ -892,7 +638,6 @@ class Fit_DataSet:
                 if par.vary:
                     self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
             #CIA
-            #Karman CIA
             elif (self.dataset.CIA_model['model']=='Karman') and ('O2_O2' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
                 parameter = par.name[:indices[1]]
@@ -916,8 +661,6 @@ class Fit_DataSet:
         self.lineparam_list.to_csv(param_linelist_update_file + '.csv')
         if self.dataset.CIA_model['model'] == "Karman":
             self.CIAparam_list.to_csv(CIA_linelist_update_file + '.csv', index = False)
-
-
 
         #Calculate Baseline + Etalons and add to the Baseline term for each spectra
         for spectrum in self.dataset.spectra:
@@ -943,14 +686,13 @@ class Fit_DataSet:
                             fit_etalon_parameters[etalon_num]['period'] = par.value
                         if ('phase' in par.name) and (str(etalon_num) in par.name):
                             fit_etalon_parameters[etalon_num]['phase'] = par.value
-                baseline_param_array = baseline_param_array[::-1] # reverses array to be used for polyval
+                baseline_param_array = baseline_param_array[::-1] 
                 baseline[bound_min: bound_max + 1] += np.polyval(baseline_param_array, wave_rel)
                 for i in range(1, len(spectrum.etalons)+1):
                     baseline[bound_min: bound_max +1] += etalon(wave_rel, fit_etalon_parameters[i]['amp'], fit_etalon_parameters[i]['period'], fit_etalon_parameters[i]['phase'])
             spectrum.set_background(baseline)
+        
         #Calculate CIA
-
-
         if self.dataset.CIA_model['model']!= None:
             if self.dataset.CIA_model['model']=='Karman':
                 for spectrum in self.dataset.spectra:
@@ -987,71 +729,51 @@ class Fit_DataSet:
             beta_summary_filename = 'Beta Summary File'
         if self.beta_formalism == True:
             beta_summary_list = self.lineparam_list.copy()
-            #List of all Diluents in Dataset
-            diluent_list = []
+
             for spectrum in self.dataset.spectra:
-                for diluent in spectrum.Diluent:
-                    if diluent not in diluent_list:
-                        diluent_list.append(diluent)
-            #Determine if line center and nuVC terms are constrained across Dataset or vary for each spectrum
-            nu_constrain = True
-            nuVC_constrain = True
+                perturber_mass = 0
+                mass = np.zeros(len(beta_summary_list), dtype=np.float64)
+                nuOptRe = np.zeros(len(beta_summary_list), dtype=np.float64)
 
-
-            if ((sum(('nu' in param) & ('nuVC' not in param) &( '_err' not in param) & ('_vary' not in param ) for param in beta_summary_list))) > 1:
-                nu_constrain = False
-            if (self.dataset.get_number_nominal_temperatures()[0]) == 1:
-                if ((sum(('nuVC' in param) &( '_err' not in param) & ('_vary' not in param ) & ('n_nuVC' not in param) for param in beta_summary_list))) > len(diluent_list):
-                    nuVC_constrain = False
-                    print (sum(('nuVC' in param) &( '_err' not in param) & ('_vary' not in param ) & ('_vary' not in param ) & ('n_nuVC' not in param) for param in beta_summary_list))
-            else:
-                if ((sum(('nuVC' in param) &( '_err' not in param) & ('_vary' not in param ) & ('n_nuVC' not in param) for param in beta_summary_list))) > 2*len(diluent_list):
-                    nuVC_constrain = False
-            #Add Column for mass
-            for molec in beta_summary_list['molec_id'].unique():
-                for iso in beta_summary_list ['local_iso_id'].unique():
-                    beta_summary_list.loc[(beta_summary_list['molec_id']==molec) & (beta_summary_list['local_iso_id']==iso), 'm_mass'] = molecularMass(molec,iso, isotope_list = self.dataset.isotope_list, )
-
-            #Single or MS for nu and nuVC
-            for spectrum in self.dataset.spectra:
-                wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
-                mp = 0
-                for diluent in spectrum.Diluent:
-                    mp += spectrum.Diluent[diluent]['composition']*spectrum.Diluent[diluent]['m']
+                for species, info in spectrum.Diluent.items():
+                    perturber_mass += spectrum.Diluent[species]['composition']*spectrum.Diluent[species]['m']
+                    if self.constrain_dictionary['nuOptRe']:
+                        nuOptRe += spectrum.Diluent[species]['composition']*(beta_summary_list['nuOptRe_%s'%diluent]*(p/1)*((296/T)**(beta_summary_list['n_nuOptRe_%s'%diluent])))
+                    else:
+                        nuOptRe += spectrum.Diluent[species]['composition']*(beta_summary_list['nuOptRe_%s_%s'%(diluent,str(spectrum.spectrum_number))]*(p/1)*((296/T)**(beta_summary_list['n_nuVC_%s'%diluent])))
+                
+                unique_pairs = np.unique(np.column_stack((beta_summary_list['molec_id'], beta_summary_list['local_iso_id'])), axis=0)
+                for m, i in unique_pairs:
+                    m, i = int(m), int(i)
+                    mask = (beta_summary_list['molec_id'] == m) & (beta_summary_list['local_iso_id'] == i)
+                    mass[mask] = molecularMass(m, i, isotope_list=spectrum.isotope_list)
+                    beta_summary_list['mass'] = mass
+                alpha = perturber_mass / self.mass
 
                 for segment in list(set(spectrum.segments)):
+                    wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
                     p = self.baseline_list[(self.baseline_list['Spectrum Number'] == spectrum.spectrum_number) & (self.baseline_list['Segment Number'] == segment)]['Pressure'].values[0]
                     T = self.baseline_list[(self.baseline_list['Spectrum Number'] == spectrum.spectrum_number) & (self.baseline_list['Segment Number'] == segment)]['Temperature'].values[0]
+
                     wave_min = np.min(wavenumber_segments[segment])
                     wave_max = np.max(wavenumber_segments[segment])
 
-                    beta_summary_list['alpha'] = mp / beta_summary_list['m_mass']
-                    if nu_constrain:
-                        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['m_mass'].values))*beta_summary_list['nu'] / CONSTANTS['c']#change with nu
+                    if self.constrain_dictionary['nu']:
+                        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['mass'].values))*beta_summary_list['nu'] / CONSTANTS['c']
                     else:
-                        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['m_mass'].values))*beta_summary_list['nu' + '_' + str(spectrum.spectrum_number)] / CONSTANTS['c'] #change with nu
-                    nuVC = len(GammaD)*[0]
-                    for diluent in spectrum.Diluent:
-                        abun = spectrum.Diluent[diluent]['composition']
-                        if nuVC_constrain:
-                            nuVC += abun*(beta_summary_list['nuVC_%s'%diluent]*(p/1)*((296/T)**(beta_summary_list['n_nuVC_%s'%diluent])))
-                        else:
-                            nuVC += abun*(beta_summary_list['nuVC_%s'%diluent]*(p/1)*((296/T)**(beta_summary_list['n_nuVC_%s_%s'%(diluent,str(spectrum.spectrum_number))])))
-                    Chi = nuVC/ GammaD
-                    A = 0.0534 + 0.1585*np.exp(-0.451*beta_summary_list['alpha'].values)
-                    B = 1.9595 - 0.1258*beta_summary_list['alpha'].values + 0.0056*beta_summary_list['alpha'].values**2 + 0.0050*beta_summary_list['alpha'].values**3
-                    C = -0.0546 + 0.0672*beta_summary_list['alpha'].values - 0.0125*beta_summary_list['alpha'].values**2+0.0003*beta_summary_list['alpha'].values**3
-                    D = 0.9466 - 0.1585*np.exp(-0.4510*beta_summary_list['alpha'].values)
-                    beta_summary_list['beta'] =  A*np.tanh(B * np.log10(Chi) + C) + D
-                    beta_summary_list.loc[(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max),'Beta_' + str(spectrum.spectrum_number) ] = beta_summary_list[(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max)]['beta'].values
-                    beta_summary_list.loc[(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max),'Chi_' + str(spectrum.spectrum_number) ] = beta_summary_list[(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max)]['beta'].values
+                        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['m_mass'].values))*beta_summary_list['nu' + '_' + str(spectrum.spectrum_number)] / CONSTANTS['c']
 
+                    beta_values = beta(GammaD, nuOptRe, alpha)
+                    mask = (beta_summary_list['nu'].values >= wave_min) & (beta_summary_list['nu'].values <= wave_max)
+                    beta_values = beta_values[mask]
+                    beta_summary_list.loc[(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max),
+                                          'Beta_' + str(spectrum.spectrum_number) ] =beta_values
+                    
             select_columns = ['molec_id', 'local_iso_id', 'nu']
             for param in beta_summary_list.columns:
-                if ('nuVC' in param) & ('n_nuVC' not in param):
+                if ('nuOptRe' in param) & ('n_nuOptRe' not in param):
                     select_columns.append(param)
                 if ('Beta' in param):
                     select_columns.append(param)
             beta_summary_list = beta_summary_list[select_columns]
-            #beta_summary_list  = beta_summary_list[(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max)]
             beta_summary_list.to_csv(beta_summary_filename + '.csv')
