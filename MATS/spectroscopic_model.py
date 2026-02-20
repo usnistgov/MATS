@@ -455,8 +455,11 @@ class Spectroscopic_model:
                 static_to_calc = np.intersect1d(valid_indices, self.static_line_indices)
                 if len(static_to_calc) > 0:
                     st_mf = np.array([molefraction[self.molec_id[i]] for i in static_to_calc])
-                    st_int = st_mf * abundance_ratio[static_to_calc] * line_intensity[static_to_calc]
-                    if BIA_slope: st_int *= intensity_bia[static_to_calc]
+                    #st_int = st_mf * abundance_ratio[static_to_calc] * line_intensity[static_to_calc]
+                    if BIA_slope: 
+                        st_int = st_mf * abundance_ratio[static_to_calc] * intensity_bia[static_to_calc]
+                    else:
+                        st_int = st_mf * abundance_ratio[static_to_calc] * line_intensity[static_to_calc]
                     
                     st_nu = nu_array[static_to_calc]
                     st_cut = line_cutoffs[static_to_calc]
@@ -478,8 +481,10 @@ class Spectroscopic_model:
 
             if len(active_to_calc) > 0:
                 ac_mf = np.array([molefraction[self.molec_id[i]] for i in active_to_calc])
-                ac_int = ac_mf * abundance_ratio[active_to_calc] * line_intensity[active_to_calc]
-                if BIA_slope: ac_int *= intensity_bia[active_to_calc]
+                if BIA_slope: 
+                    ac_int = ac_mf * abundance_ratio[active_to_calc] * intensity_bia[active_to_calc]
+                else:
+                    ac_int = ac_mf * abundance_ratio[active_to_calc] * line_intensity[active_to_calc]
                 
                 ac_nu = nu_array[active_to_calc]
                 ac_cut = line_cutoffs[active_to_calc]
