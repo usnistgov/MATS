@@ -2,8 +2,8 @@ import numpy as np
 from numba import jit, float64, complex128
 from math import tanh, log10, exp, sqrt, pi, cos, sin, atan2
 #from .CPF import cpf_accurate
-#from .CPF import cpf_accurate_vector as cpf_vector, cpf_accurate as cpf
-from .CPF import cpf_fast_vector as cpf_vector, cpf_fast as cpf
+from .CPF import cpf_accurate_vector as cpf_vector, cpf_accurate as cpf
+#from .CPF import cpf_fast_vector as cpf_vector, cpf_fast as cpf
 
 @jit(float64(float64, float64, float64), nopython=True, fastmath=True, cache=True)
 def beta_jit(GammaD, NuOptRe, alpha):

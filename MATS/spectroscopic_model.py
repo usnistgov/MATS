@@ -110,6 +110,8 @@ class Spectroscopic_model:
         self.local_iso_id = parameter_linelist['local_iso_id'].to_numpy(dtype=np.int32)
         self.sw_scale_factor = parameter_linelist['sw_scale_factor'].to_numpy(dtype=np.float64)
 
+        self.global_to_local_idx = {g_idx: l_idx for l_idx, g_idx in enumerate(parameter_linelist.index)}
+
         if self.lineprofile == 'HTP':
             # HTP: Real = nuVC, Imag = eta (Eta has no T-dep in HTP)
             self.col_map = {
@@ -618,9 +620,12 @@ class Spectroscopic_model:
 
                 if prefix in self.dynamic_arrays:
                     try:
-                        line_idx = int(suffix)
-                        self.param_index_map.append((name, prefix, line_idx))
-                        varying_indices.add(line_idx)
+                        global_idx = int(suffix)
+                        
+                        local_idx = self.global_to_local_idx[global_idx]
+                        
+                        self.param_index_map.append((name, prefix, local_idx))
+                        varying_indices.add(local_idx)
                     except ValueError:
                         pass
         

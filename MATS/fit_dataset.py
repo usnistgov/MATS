@@ -71,11 +71,11 @@ class Fit_DataSet:
         int_cols = additional_columns.copy()
         int_cols += ['molec_id', 'local_iso_id']
         self.param_linelist_file = param_linelist_file
-        raw_df = pd.read_csv(param_linelist_file + ".csv")
+        raw_df = pd.read_csv(param_linelist_file + ".csv", index_col = 0)
         if 'nu' in raw_df.columns:
             raw_df.sort_values('nu', inplace=True)
-        raw_df.reset_index(drop=True, inplace=True)
-        raw_df = raw_df.loc[:, ~raw_df.columns.str.contains('Unnamed:')]
+        #raw_df.reset_index(drop=True, inplace=True)
+        #raw_df = raw_df.loc[:, ~raw_df.columns.str.contains('Unnamed:')]
 
         self.lineparam_list = convert_int_to_float(raw_df, exclude_cols=int_cols)
         self.lineprofile = lineprofile

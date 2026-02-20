@@ -256,7 +256,7 @@ class Generate_FitParam_File:
                 
 
         param_linelist_df = param_linelist_df[column_list]
-        param_linelist_df = param_linelist_df.reset_index(drop = True)
+        #param_linelist_df = param_linelist_df.reset_index(drop = True)
         
         #Re-defines the Line intensity as sw*sw_scale_factor
         param_linelist_df['sw'] = param_linelist_df['sw'] / self.fit_intensity
@@ -695,7 +695,7 @@ class Generate_FitParam_File:
             
             
         param_linelist_df = param_linelist_df[ordered_list]
-        param_linelist_df.to_csv(self.param_linelist_savename + '.csv') #
+        param_linelist_df.to_csv(self.param_linelist_savename + '.csv', index = True) #
 
         #Warnings of SD_gamma, SD_delta, nuVC, eta are zero and floated
         for param in ordered_list:
