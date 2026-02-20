@@ -250,10 +250,14 @@ class Spectroscopic_model:
         if ILS_function is not None and ILS_parameters is not None:
             # Note: convolveSpectrumSame returns (waves, alpha, ...)
             # We ignore the extra returns for the model result
+            res_to_pass = ILS_parameters
+            if (isinstance(ILS_parameters, list) or isinstance(ILS_parameters, np.ndarray)) and len(ILS_parameters) == 1:
+                res_to_pass = ILS_parameters[0]
+                
             _, total_alpha, _, _, _ = convolveSpectrumSame(
                 waves, total_alpha, 
                 SlitFunction=ILS_function, 
-                Resolution=ILS_parameters, 
+                Resolution=res_to_pass, 
                 AF_wing=ILS_wing)
         
         return total_alpha
