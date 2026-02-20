@@ -164,11 +164,8 @@ class Spectroscopic_model:
         # SMART CACHING STATE VARIABLES
         self.active_line_indices = np.array([], dtype=np.int32)
         self.static_line_indices = np.array([], dtype=np.int32)
-        self.cached_static_spectrum = None
-        self.cache_state = {
-            'P': None, 'T': None, 
-            'waves_start': None, 'waves_end': None, 'waves_len': None
-        }
+        self.cached_static_spectrum = {}
+        self.cache_state = {}
 
         
         
@@ -213,7 +210,7 @@ class Spectroscopic_model:
                             natural_abundance = True, abundance_ratio_MI = {}, 
                             BIA_slope=False, BIA_FW_LBL=False,
                             IntensityThreshold = 1e-30, 
-                            wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers',):
+                            wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers',segment = None):
         
         #Calculate LBL
         LBL_alpha = self.calculate_lbl_absorbance(waves, T, p, molefraction, Diluent, 
@@ -222,7 +219,7 @@ class Spectroscopic_model:
                                  natural_abundance = natural_abundance, abundance_ratio_MI = abundance_ratio_MI, 
                                  BIA_slope=BIA_slope, BIA_FW_LBL=BIA_FW_LBL,
                                  IntensityThreshold = IntensityThreshold, 
-                                 wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,)
+                                 wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,segment=segment)
         LBL_alpha = LBL_alpha* 1e6
         
         # Calculate CIA
@@ -320,28 +317,23 @@ class Spectroscopic_model:
     
 
 
-    def calculate_lbl_absorbance(self, waves, T, p, molefraction, Diluent, 
-                                 spectrum_number, 
+    def calculate_lbl_absorbance(self, waves, T, p, molefraction, Diluent, spectrum_number, 
                                  interpolated_compressability_file = None, TIPS = PYTIPS2021, isotope_list = ISO, 
                                  natural_abundance = True, abundance_ratio_MI = {}, 
                                  BIA_slope=False, BIA_FW_LBL=False,
                                  IntensityThreshold = 1e-30, 
-                                 wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers',):
+                                 wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers',segment = None):
 
-
-        #define reference temperature/pressure and calculate molecular density
-        Tref = 296. # K
-        pref = 1. # atm
-        mol_density_ref = (pref/ CONSTANTS['cpa_atm'])/(CONSTANTS['k']*273.15) #density at 1 atm and 273.15 K
+        Tref = 296. 
+        pref = 1. 
+        mol_density_ref = (pref/ CONSTANTS['cpa_atm'])/(CONSTANTS['k']*273.15) 
         mol_dens = (p/ CONSTANTS['cpa_atm'])/(CONSTANTS['k']*T)
         if interpolated_compressability_file != None:
             mol_dens = mol_dens / interpolated_compressability_file([p, T])[0]
         density_amagat = mol_dens / mol_density_ref
 
-        #Vectorized
         sigma_T = np.ones(self.nlines, dtype=np.float64)
         sigma_Tref = np.ones(self.nlines, dtype=np.float64)
-        #mass = np.ones(self.nlines, dtype=np.float64)
         abundance_ratio = np.ones(self.nlines, dtype=np.float64)
         for m, i in self.unique_pairs:
             m, i = int(m), int(i)
@@ -354,31 +346,19 @@ class Spectroscopic_model:
             except:
                 pass
 
-
-        #Calculate Line Intensity and Doppler Broadening
-        
         sw_array = self._resolve_array('sw', spectrum_number)
         sw_array = sw_array*self.sw_scale_factor
         nu_array = self._resolve_array('nu', spectrum_number)
         GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(self.mass))*nu_array / CONSTANTS['c']
         
-
         line_intensity = sw_array * (sigma_Tref / sigma_T) * \
                     (np.exp(-CONSTANTS['c2'] * self.elower / T) * (1 - np.exp(-CONSTANTS['c2'] * nu_array / T))) / \
                     (np.exp(-CONSTANTS['c2'] * self.elower / Tref) * (1 - np.exp(-CONSTANTS['c2'] * nu_array / Tref)))
         
-        # Calculated Line Parameters across Broadeners
         abundances_list = []
-        
-        # Accumulate arrays for Numba
-        g0_list = []; n_g0_list = []
-        d0_list = []; n_d0_list = []
-        sd_gamma_list = []; n_gamma2_list = []
-        sd_delta_list = []; n_delta2_list = []
-        #nuvc_list = []; n_nuvc_list = []
-        #eta_list = []
-        param_re_list = []; n_param_re_list = []
-        param_im_list = []; n_param_im_list = []
+        g0_list = []; n_g0_list = []; d0_list = []; n_d0_list = []
+        sd_gamma_list = []; n_gamma2_list = []; sd_delta_list = []; n_delta2_list = []
+        param_re_list = []; n_param_re_list = []; param_im_list = []; n_param_im_list = []
         y_list = []; n_y_list = []
 
         perturber_mass = 0
@@ -386,7 +366,6 @@ class Spectroscopic_model:
             abundances_list.append(info['composition'])
             perturber_mass += Diluent[species]['composition']*Diluent[species]['m']
             
-            # Resolve all arrays (using _resolve_array which now defaults to zeros if missing)
             g0_list.append(self._resolve_array(f'gamma0_{species}', spectrum_number))
             n_g0_list.append(self._resolve_array(f'n_gamma0_{species}', spectrum_number))
             d0_list.append(self._resolve_array(f'delta0_{species}', spectrum_number))
@@ -395,15 +374,10 @@ class Spectroscopic_model:
             n_gamma2_list.append(self._resolve_array(f'n_gamma2_{species}', spectrum_number))
             sd_delta_list.append(self._resolve_array(f'SD_delta_{species}', spectrum_number))
             n_delta2_list.append(self._resolve_array(f'n_delta2_{species}', spectrum_number))
-            #nuvc_list.append(self._resolve_array(f'nuVC_{species}', spectrum_number))
-            #n_nuvc_list.append(self._resolve_array(f'n_nuVC_{species}', spectrum_number))
-            #eta_list.append(self._resolve_array(f'eta_{species}', spectrum_number))
             param_re_list.append(self._resolve_array(f'param_Re_{species}', spectrum_number))
             n_param_re_list.append(self._resolve_array(f'n_param_Re_{species}', spectrum_number))
-            
             param_im_list.append(self._resolve_array(f'param_Im_{species}', spectrum_number))
             n_param_im_list.append(self._resolve_array(f'n_param_Im_{species}', spectrum_number))
-
             y_list.append(self._resolve_array(f'y_{species}', spectrum_number))
             n_y_list.append(self._resolve_array(f'n_y_{species}', spectrum_number))
         
@@ -425,7 +399,6 @@ class Spectroscopic_model:
             np.array(param_im_list, dtype=np.float64), np.array(n_param_im_list, dtype=np.float64),
             np.array(y_list, dtype=np.float64), np.array(n_y_list, dtype=np.float64), lineprofile_mode)
 
-        # BIA Logic (Keep in NumPy for now as it's conditional)
         intensity_bia = np.zeros(self.nlines)
         bia_duration = np.zeros(self.nlines)
         if BIA_slope:
@@ -437,38 +410,46 @@ class Spectroscopic_model:
                     bia_dur_arr = self._resolve_array(f'BIA_collision_duration_{species}', spectrum_number)
                     bia_duration += abun*(bia_dur_arr)
         
-        #LBL Loop
-        Xsect = np.zeros_like(waves)
         if wing_method == 'wing_wavenumbers':
             line_cutoffs = np.ones(self.nlines)*wing_wavenumbers
         elif wing_method == 'wing_cutoff':
             line_cutoffs = (0.5346 * Gamma0 + np.sqrt(0.2166 * Gamma0**2 + GammaD**2)) * wing_cutoff
 
-
         valid_indices = np.where(line_intensity >= IntensityThreshold)[0]
+        if len(valid_indices) == 0:
+            return np.zeros_like(waves)
 
         valid_nu = nu_array[valid_indices]
         valid_cut = line_cutoffs[valid_indices]
-        
         lower_bounds = valid_nu - valid_cut
         upper_bounds = valid_nu + valid_cut
-        
-        # 2. Vectorized Search (Replaces loop bisect)
-        # searchsorted is significantly faster than repeated bisect calls
         idx_low_arr = np.searchsorted(waves, lower_bounds)
         idx_high_arr = np.searchsorted(waves, upper_bounds)
-        
         n_waves = len(waves)
 
+        # Cache check variables
+        cache_key = f"{spectrum_number}_{segment}" if segment is not None else spectrum_number
+
+        has_static = (hasattr(self, 'static_line_indices') and len(self.static_line_indices) > 0)
+        mf_state = tuple(sorted(molefraction.items()))
+        current_state = {
+            'P': p, 'T': T, 
+            'waves_start': waves[0], 'waves_end': waves[-1], 'waves_len': len(waves),
+            'mf': mf_state
+        }
+        
+        cache_valid = False
+        # Use cache_key instead of spectrum_number
+        if cache_key in self.cache_state:
+            cache_valid = (self.cache_state[cache_key] == current_state)
+
+        # ---------------------------------------------------------
+        #  PATH A: NUMBA KERNEL (mHTP-Numba)
+        # ---------------------------------------------------------
         if self.lineprofile != 'HTP' and self.numba_lineprofile:
-            # (Keep existing Numba Caching Logic - Copied for completeness)
             mf_vector = np.array([molefraction[self.molec_id[i]] for i in valid_indices])
             eff_intensity = mf_vector * abundance_ratio[valid_indices] * line_intensity[valid_indices]
             if BIA_slope: eff_intensity *= intensity_bia[valid_indices]
-
-            has_static = (hasattr(self, 'static_line_indices') and len(self.static_line_indices) > 0)
-            current_state = {'P': p, 'T': T, 'waves_start': waves[0], 'waves_end': waves[-1], 'waves_len': len(waves)}
-            cache_valid = (self.cached_static_spectrum is not None and self.cache_state == current_state)
 
             if has_static and not cache_valid:
                 static_to_calc = np.intersect1d(valid_indices, self.static_line_indices)
@@ -482,15 +463,15 @@ class Spectroscopic_model:
                     st_low = np.searchsorted(waves, st_nu - st_cut)
                     st_high = np.searchsorted(waves, st_nu + st_cut)
                     
-                    self.cached_static_spectrum = self.calculate_lbl_numba_kernel(
+                    self.cached_static_spectrum[cache_key] = self.calculate_lbl_numba_kernel(
                         waves, st_nu, st_int,
                         Gamma0[static_to_calc], Gamma2[static_to_calc], Delta0[static_to_calc], Delta2[static_to_calc],
                         ParamRe[static_to_calc], ParamIm[static_to_calc], Y[static_to_calc], GammaD[static_to_calc], alpha[static_to_calc],
                         st_low, st_high, mol_dens
                     )
                 else:
-                    self.cached_static_spectrum = np.zeros_like(waves)
-                self.cache_state = current_state
+                    self.cached_static_spectrum[cache_key] = np.zeros_like(waves)
+                self.cache_state[cache_key] = current_state
 
             if has_static: active_to_calc = np.intersect1d(valid_indices, self.active_line_indices)
             else: active_to_calc = valid_indices
@@ -514,9 +495,11 @@ class Spectroscopic_model:
             else:
                 active_spectrum = np.zeros_like(waves)
 
-            final_spectrum = active_spectrum + self.cached_static_spectrum if (has_static and self.cached_static_spectrum is not None) else active_spectrum
+            if has_static and cache_key in self.cached_static_spectrum:
+                final_spectrum = active_spectrum + self.cached_static_spectrum[cache_key]
+            else:
+                final_spectrum = active_spectrum
             
-            # (BIA FW Logic same as before...)
             if BIA_slope and BIA_FW_LBL:
                 for k, i in enumerate(valid_indices):
                     if bia_duration[i] != 0:
@@ -536,17 +519,8 @@ class Spectroscopic_model:
         #  PATH B: PYTHON LOOP (HTP/mHTP Standard) with Smart Caching
         # ---------------------------------------------------------
         else:
-            # 1. Setup Caching logic similar to Numba path
-            has_static = (hasattr(self, 'static_line_indices') and len(self.static_line_indices) > 0)
-            current_state = {'P': p, 'T': T, 'waves_start': waves[0], 'waves_end': waves[-1], 'waves_len': len(waves)}
-            cache_valid = (self.cached_static_spectrum is not None and self.cache_state == current_state)
-
-            # 2. Define Groups to Calculate
-            # We iterate over (label, indices) tuples to avoid writing the loop logic twice
             calc_groups = []
-            
             if has_static and not cache_valid:
-                # Need to update Static Cache
                 static_to_calc = np.intersect1d(valid_indices, self.static_line_indices)
                 calc_groups.append(('static', static_to_calc))
             
@@ -554,29 +528,20 @@ class Spectroscopic_model:
                 active_to_calc = np.intersect1d(valid_indices, self.active_line_indices)
                 calc_groups.append(('active', active_to_calc))
             else:
-                # No fit config, everything active
                 calc_groups.append(('active', valid_indices))
 
             results = {}
-            n_waves = len(waves)
-
-            # 3. Execution Loop
             for label, indices in calc_groups:
-                # Allocate result array for this group
                 group_xsect = np.zeros_like(waves)
-                
                 if len(indices) > 0:
-                    # Pre-calculate bounds for this group using vectorized search
                     grp_nu = nu_array[indices]
                     grp_cut = line_cutoffs[indices]
                     grp_low = np.searchsorted(waves, grp_nu - grp_cut)
                     grp_high = np.searchsorted(waves, grp_nu + grp_cut)
                     
-                    # Inner Line Loop
                     for k, i in enumerate(indices):
                         idx_low = grp_low[k]
                         idx_high = grp_high[k]
-                        
                         if idx_low >= n_waves or idx_high <= 0: continue
                         idx_low = max(0, idx_low)
                         idx_high = min(n_waves, idx_high)
@@ -585,13 +550,11 @@ class Spectroscopic_model:
                         wave_slice = waves[idx_low:idx_high]
                         nu_i = nu_array[i]
 
-                        # Profile Selection
                         if self.lineprofile == 'HTP':
                             lineshape_PT, _ = pcqsdhc(
                                 nu_i, GammaD[i], Gamma0[i], Gamma2[i], Delta0[i], Delta2[i],
                                 ParamRe[i], ParamIm[i], wave_slice, Ylm=Y[i])
                         else:
-                            # Python mHTP Vector
                             lineshape_PT = mHTprofile_vector(
                                 nu_i, GammaD[i], Gamma0[i], Gamma2[i], 
                                 Delta0[i], Delta2[i], ParamRe[i], ParamIm[i], wave_slice, Y[i], 0, alpha[i])
@@ -601,30 +564,25 @@ class Spectroscopic_model:
                         
                         if BIA_slope:
                             group_xsect[idx_low:idx_high] += mol_dens * mf * line_abun * intensity_bia[i] * lineshape_PT
-                            # BIA FW logic must be handled separately or here. 
-                            # For cleanliness, keeping FW logic separate or duplicated is safer.
-                            # We'll just do the core line here.
                         else:
                             group_xsect[idx_low:idx_high] += mol_dens * mf * line_abun * line_intensity[i] * lineshape_PT
                             
                 results[label] = group_xsect
 
-            # 4. Handle Cache Update
             if 'static' in results:
-                self.cached_static_spectrum = results['static']
-                self.cache_state = current_state
+                self.cached_static_spectrum[cache_key] = results['static']
+                self.cache_state[cache_key] = current_state
             
-            # 5. Combine Results
             active_spectrum = results.get('active', np.zeros_like(waves))
             
-            if has_static and self.cached_static_spectrum is not None:
-                final_spectrum = active_spectrum + self.cached_static_spectrum
+            if has_static and cache_key in self.cached_static_spectrum:
+                final_spectrum = active_spectrum + self.cached_static_spectrum[cache_key]
             else:
                 final_spectrum = active_spectrum
 
-            # 6. BIA FW Logic (Apply to final spectrum)
+
             if BIA_slope and BIA_FW_LBL:
-                for i in valid_indices: # iterate all valid for FW checks
+                for i in valid_indices:
                     if bia_duration[i] != 0:
                         cut_i = line_cutoffs[i]
                         BoundIndexLower_BIA = bisect(waves, nu_array[i] - 5*cut_i)
@@ -663,7 +621,8 @@ class Spectroscopic_model:
         self.static_line_indices = np.setdiff1d(all_indices, self.active_line_indices)
         
         # Reset Cache
-        self.cached_static_spectrum = None
+        self.cached_static_spectrum = {}
+        self.cache_state = {}
     
 
     def update_from_lmfit(self, params):

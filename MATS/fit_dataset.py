@@ -356,7 +356,7 @@ class Fit_DataSet:
                 elif ('BIA_collision_duration_' in line_param) and (self.constrain_dictionary['sw']):
                     params.add(lmfit_name, val, vary, min = self.BIA_collision_duration_bounds[0], max = self.BIA_collision_duration_bounds[1])
                 else:
-                    print (line_param)
+                    print ('yup' + line_param)
 
         if self.dataset.CIA_model['model'] == "Karman":
             cia_parameters = []
@@ -520,6 +520,7 @@ class Fit_DataSet:
                 Diluent=spectrum.Diluent,
                 spectrum_number=spectrum.spectrum_number,
                 spectrum_min=np.min(spectrum.wavenumber),
+                segment = segment,
                 baseline_coeffs=baseline_coeffs,
                 etalon_dict=etalon_dict,
                 cia_config=cia_config,
@@ -545,7 +546,7 @@ class Fit_DataSet:
         
         return np.concatenate(total_residuals)
 
-    def fit_data(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers', xtol = 1e-7, maxfev = 2000, ftol = 1e-7, 
+    def fit_data(self, params, wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers', xtol = 1e-10, maxfev = 10000, ftol = 1e-10, 
                  method = 'least_squares'):
         """Uses the lmfit minimizer to do the fitting through the simulation model function."""
 
@@ -557,13 +558,23 @@ class Fit_DataSet:
         # 2. Precompute data segments to avoid inner-loop overhead (Optimizes fit_dataset loop)
         self._precompute_fitting_data()
 
-        minner = Minimizer(self.objective_function, params, 
-                           xtol = xtol, max_nfev = maxfev, ftol = ftol, 
-                           fcn_args = fcn_args)
-        
         floated_parameters = any(p.vary for p in params.values())
         if not floated_parameters and method == 'least_squares':
             method = 'leastsq'
+
+        kws = {
+            'xtol': xtol,
+            'ftol': ftol,
+        }
+
+        if method == 'least_squares':
+            kws['gtol'] = ftol
+            kws['x_scale'] = 'jac'
+
+        minner = Minimizer(self.objective_function, params, max_nfev=maxfev,
+                           fcn_args = fcn_args, **kws)
+        
+        
         result = minner.minimize(method = method)
         return result
         
@@ -731,26 +742,20 @@ class Fit_DataSet:
             beta_summary_list = self.lineparam_list.copy()
 
             for spectrum in self.dataset.spectra:
-                perturber_mass = 0
-                mass = np.zeros(len(beta_summary_list), dtype=np.float64)
-                nuOptRe = np.zeros(len(beta_summary_list), dtype=np.float64)
-
-                for species, info in spectrum.Diluent.items():
-                    perturber_mass += spectrum.Diluent[species]['composition']*spectrum.Diluent[species]['m']
-                    if self.constrain_dictionary['nuOptRe']:
-                        nuOptRe += spectrum.Diluent[species]['composition']*(beta_summary_list['nuOptRe_%s'%diluent]*(p/1)*((296/T)**(beta_summary_list['n_nuOptRe_%s'%diluent])))
-                    else:
-                        nuOptRe += spectrum.Diluent[species]['composition']*(beta_summary_list['nuOptRe_%s_%s'%(diluent,str(spectrum.spectrum_number))]*(p/1)*((296/T)**(beta_summary_list['n_nuVC_%s'%diluent])))
                 
+                mass = np.zeros(len(beta_summary_list), dtype=np.float64)
                 unique_pairs = np.unique(np.column_stack((beta_summary_list['molec_id'], beta_summary_list['local_iso_id'])), axis=0)
                 for m, i in unique_pairs:
                     m, i = int(m), int(i)
                     mask = (beta_summary_list['molec_id'] == m) & (beta_summary_list['local_iso_id'] == i)
                     mass[mask] = molecularMass(m, i, isotope_list=spectrum.isotope_list)
-                    beta_summary_list['mass'] = mass
-                alpha = perturber_mass / self.mass
-
+                beta_summary_list['mass'] = mass
+                
                 for segment in list(set(spectrum.segments)):
+                    perturber_mass = 0
+                    nuOptRe = np.zeros(len(beta_summary_list), dtype=np.float64)
+                    beta_values = np.zeros(len(beta_summary_list), dtype=np.float64)
+
                     wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
                     p = self.baseline_list[(self.baseline_list['Spectrum Number'] == spectrum.spectrum_number) & (self.baseline_list['Segment Number'] == segment)]['Pressure'].values[0]
                     T = self.baseline_list[(self.baseline_list['Spectrum Number'] == spectrum.spectrum_number) & (self.baseline_list['Segment Number'] == segment)]['Temperature'].values[0]
@@ -758,16 +763,28 @@ class Fit_DataSet:
                     wave_min = np.min(wavenumber_segments[segment])
                     wave_max = np.max(wavenumber_segments[segment])
 
+                    for species, info in spectrum.Diluent.items():
+                        perturber_mass += spectrum.Diluent[species]['composition']*spectrum.Diluent[species]['m']
+                        if self.constrain_dictionary['nuOptRe']:
+                            nuOptRe += spectrum.Diluent[species]['composition']*(beta_summary_list['nuOptRe_%s'%species]*(p/1)*((296/T)**(beta_summary_list['n_nuOptRe_%s'%species])))
+                        else:
+                            nuOptRe += spectrum.Diluent[species]['composition']*(beta_summary_list['nuOptRe_%s_%s'%(species,str(spectrum.spectrum_number))]*(p/1)*((296/T)**(beta_summary_list['n_nuVC_%s'%species])))
+                    alpha = perturber_mass / mass
+
                     if self.constrain_dictionary['nu']:
                         GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['mass'].values))*beta_summary_list['nu'] / CONSTANTS['c']
                     else:
                         GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['m_mass'].values))*beta_summary_list['nu' + '_' + str(spectrum.spectrum_number)] / CONSTANTS['c']
-
-                    beta_values = beta(GammaD, nuOptRe, alpha)
+                    
                     mask = (beta_summary_list['nu'].values >= wave_min) & (beta_summary_list['nu'].values <= wave_max)
-                    beta_values = beta_values[mask]
-                    beta_summary_list.loc[(beta_summary_list['nu'] >= wave_min) & (beta_summary_list['nu'] <= wave_max),
-                                          'Beta_' + str(spectrum.spectrum_number) ] =beta_values
+                    valid_indices = np.where(mask)[0]
+                    beta_segment_values = np.ones(len(valid_indices), dtype=np.float64)
+
+                    for k, ii in enumerate(valid_indices):
+                        if nuOptRe[ii] > 0.0:
+                            beta_segment_values[k] = beta(GammaD[ii], nuOptRe[ii], alpha[ii])
+                    
+                    beta_summary_list.loc[mask, 'Beta_' + str(spectrum.spectrum_number)] = beta_segment_values
                     
             select_columns = ['molec_id', 'local_iso_id', 'nu']
             for param in beta_summary_list.columns:
