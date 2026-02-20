@@ -1,0 +1,2 @@
+Spectrum Number,Segment Number,Baseline Order,Pressure,Temperature,x_shift,molefraction_CO2,baseline_a,baseline_b,etalon_1_amp,etalon_1_period,etalon_1_phase,etalon_2_amp,etalon_2_period,etalon_2_phase,etalon_3_amp,etalon_3_period,etalon_3_phase
+1,0,1,0.3552631578947368,296.0,0.0,0.0004254,0.0,0.0,0.004321,1.168,0.0,0.001377,59.38,0.0,0.0004578,29.75,0.0
