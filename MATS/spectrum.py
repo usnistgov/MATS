@@ -7,7 +7,7 @@ from scipy.interpolate import RegularGridInterpolator
 
 from .utilities import etalon, convolveSpectrumSame
 
-from .hapi import ISO, PYTIPS2011, PYTIPS2017, PYTIPS2021
+from .hapi import ISO, PYTIPS2011, PYTIPS2017, PYTIPS2021, PYTIPS2025
 from .codata import CONSTANTS
 from .spectroscopic_model import Spectroscopic_model
 from .o2_cia_karman import O2_CIA_Karman_Model
@@ -82,7 +82,7 @@ class Spectrum:
                     pressure_column = 'Cavity Pressure /Torr', temperature_column = 'Cavity Temperature Side 2 /C', frequency_column = 'Total Frequency /MHz',
                     tau_column = 'Mean tau/us', tau_stats_column = None, segment_column = None,
                     etalons = {}, nominal_temperature = 296, x_shift = 0.0, baseline_order = 1, weight = 1,
-                    ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2021, 
+                    ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2025, 
                     compressability_file = None, cia = None):
         self.filename = filename
         self.molefraction = molefraction
@@ -447,7 +447,7 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
                         filename = 'temp', molefraction = {}, molefraction_err = {},
                         isotope_list = ISO, natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {},
                         nominal_temperature = 296, etalons = {}, x_shift = 0.0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False,
-                        ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2021, 
+                        ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2025, 
                         compressability_file = None, BIA_model = {'sw_depletion': False, 'farwing_continuum': None}, 
                         CIA_model = {'model': None, 'params': None}):
     """Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.

@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 import pandas as pd
 from scipy.interpolate import RegularGridInterpolator
-from .hapi import ISO, PYTIPS2017, PYTIPS2011, PYTIPS2021, pcqsdhc, PROFILE_LORENTZ
+from .hapi import ISO, PYTIPS2017, PYTIPS2011, PYTIPS2021, PYTIPS2025, pcqsdhc, PROFILE_LORENTZ
 from .utilities import molecularMass, etalon, convolveSpectrumSame
 from .codata import CONSTANTS
 from .o2_cia_karman import O2_CIA_Karman_Model
@@ -208,7 +208,7 @@ class Spectroscopic_model:
                             ILS_function = None, ILS_parameters = None, ILS_wing = None,
                             interpolated_compressability_file=None,
                             #pass through for LBL_alpha
-                             TIPS = PYTIPS2021, isotope_list = ISO, 
+                             TIPS = PYTIPS2025, isotope_list = ISO, 
                             natural_abundance = True, abundance_ratio_MI = {}, 
                             BIA_slope=False, BIA_FW_LBL=False,
                             IntensityThreshold = 1e-30, 
@@ -324,7 +324,7 @@ class Spectroscopic_model:
 
 
     def calculate_lbl_absorbance(self, waves, T, p, molefraction, Diluent, spectrum_number, 
-                                 interpolated_compressability_file = None, TIPS = PYTIPS2021, isotope_list = ISO, 
+                                 interpolated_compressability_file = None, TIPS = PYTIPS2025, isotope_list = ISO, 
                                  natural_abundance = True, abundance_ratio_MI = {}, 
                                  BIA_slope=False, BIA_FW_LBL=False,
                                  IntensityThreshold = 1e-30, 
