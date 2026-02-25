@@ -711,7 +711,8 @@ class Generate_FitParam_File:
 
         return param_linelist_df
 
-    def generate_fit_baseline_linelist(self, vary_baseline = False, vary_pressure = False, vary_temperature = False,vary_molefraction = {}, vary_xshift = False,
+    def generate_fit_baseline_linelist(self, vary_baseline = False, vary_pressure = False, vary_temperature = False,vary_molefraction = {}, vary_abundance_ratio_MI = {},
+                                       vary_xshift = False,
                                       vary_etalon_amp= False, vary_etalon_period= False, vary_etalon_phase= False,
                                       vary_ILS_res = False):
         """Generates the baseline line list used in fitting and updates the fitting booleans to desired settings.
@@ -775,6 +776,13 @@ class Generate_FitParam_File:
                 for molecule in vary_molefraction:
                     if (self.dataset.isotope_list[(molecule, 1)][4]) in param:
                         base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_molefraction[molecule])
+            if 'abundance_ratio_' in param:
+                for molecule in vary_abundance_ratio_MI:
+                    molec_name = self.dataset.isotope_list[(molecule, 1)][4]
+                    for local_iso_id in vary_abundance_ratio_MI[molecule].keys():
+                        if 'abundance_ratio_' + molec_name + '_' + str(local_iso_id) in param:
+                             base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_abundance_ratio_MI[molecule][local_iso_id])
+
             if 'amp' in param:
                 base_linelist_df.loc[base_linelist_df[param]!=0, param + '_vary'] = (vary_etalon_amp)
             if 'period' in param:

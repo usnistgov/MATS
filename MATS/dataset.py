@@ -45,6 +45,8 @@ class Dataset:
         self.correct_etalon_list()
         self.max_baseline_order()
         self.broadener_list = self.get_broadener_list()
+        self.correct_abundance_dict()
+
         self.ILS_function_dict = self.get_ILS_function_dict()
         self.base_linelist = self.generate_baseline_paramlist()
         self.check_param_list_BIA()
@@ -148,11 +150,13 @@ class Dataset:
             return ISO
 
     def correct_abundance_dict(self):
-
+        self.at_natural_abundance = True
         for spectrum in self.spectra:
+            if not spectrum.natural_abundance:
+                self.at_natural_abundance = False
             abundance_dict = {}
             for molec_id in self.molecule_list:
-                local_iso_ids = self.param_linelist[self.param_linelist['molec_id'] == molec_id]['local_iso_id'].unique()
+                local_iso_ids = sorted(self.param_linelist[self.param_linelist['molec_id'] == molec_id]['local_iso_id'].unique())
                 local_abundance_dict = {}
                 for local_id in local_iso_ids:
                     if molec_id in spectrum.abundance_ratio_MI.keys():
@@ -164,16 +168,6 @@ class Dataset:
                         local_abundance_dict[local_id] = 1
                     abundance_dict[molec_id] = local_abundance_dict
             spectrum.abundance_ratio_MI = abundance_dict
-
-
-
-                        
-                         
-
-
-
-
-
 
 
     def get_broadener_list(self):
@@ -443,6 +437,9 @@ class Dataset:
                 line['x_shift'] = spectrum.x_shift
                 for molecule in spectrum.molefraction:
                     line['molefraction_' + (self.isotope_list[(molecule, 1)][4])] = (spectrum.molefraction[molecule])
+                    if not self.at_natural_abundance:
+                        for local_iso_id in spectrum.abundance_ratio_MI[molecule].keys():
+                            line['abundance_ratio_' + (self.isotope_list[(molecule, 1)][4]) + '_' + str(local_iso_id)] = spectrum.abundance_ratio_MI[molecule][local_iso_id]
                 for i in range(0, self.baseline_order + 1):
                     if chr(i+97) == 'a':
                         line['baseline_' + chr(i+97)] = 0.0
