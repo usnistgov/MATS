@@ -7,14 +7,14 @@ import warnings
 import numpy as np
 import pandas as pd
 from scipy.interpolate import RegularGridInterpolator
-from .hapi import ISO, PYTIPS2017, PYTIPS2011, PYTIPS2021, pcqsdhc, PROFILE_LORENTZ
+from .hapi import ISO, PYTIPS2017, PYTIPS2011, PYTIPS2021, PYTIPS2025, pcqsdhc, PROFILE_LORENTZ
 from .utilities import molecularMass, etalon, convolveSpectrumSame
 from .codata import CONSTANTS
 from .o2_cia_karman import O2_CIA_Karman_Model
 from .spectroscopic_model import Spectroscopic_model
 from .mHT.profile import beta
 
-from lmfit import Minimizer,  Parameters
+from lmfit import Minimizer,  Parameters, conf_interval, printfuncs
 
 # lmfit generates warnings from the uncertainties module about params with zero uncertainty
 # this is expected behavior and we should be able to safely ignore them
@@ -571,11 +571,11 @@ class Fit_DataSet:
             kws['gtol'] = ftol
             kws['x_scale'] = 'jac'
 
-        minner = Minimizer(self.objective_function, params, max_nfev=maxfev,
+        self.minner = Minimizer(self.objective_function, params, max_nfev=maxfev,
                            fcn_args = fcn_args, **kws)
         
         
-        result = minner.minimize(method = method)
+        result = self.minner.minimize(method = method)
         return result
         
 
@@ -601,9 +601,17 @@ class Fit_DataSet:
             spectrum.set_model(spectrum_residual + spectrum.alpha)
             if indv_resid_plot:
                 spectrum.plot_model_residuals()
+    
+    def calculate_confidence_intervals(self, result, sigma = 1):
+        ci_dict = conf_interval(self.minner, result, sigmas = [sigma])
+        printfuncs.report_ci(ci_dict)
+        return ci_dict
+    
+        
+
 
     def update_params(self, result, base_linelist_update_file = None , param_linelist_update_file = None, 
-                      CIA_linelist_update_file = None):
+                      CIA_linelist_update_file = None, ci_dict = None):
         """Updates the baseline and line parameter files based on fit results."""
         # [This function body remains the same as in your input, ensuring correct indentation]
         if base_linelist_update_file == None:
@@ -613,6 +621,12 @@ class Fit_DataSet:
         if CIA_linelist_update_file == None:
             CIA_linelist_update_file = self.CIA_linelist_file
 
+        def apply_ci(df, row_indexer, param_col, lmfit_name):
+            if ci_dict and lmfit_name in ci_dict:
+                vals = sorted([tup[1] for tup in ci_dict[lmfit_name]])
+                df.loc[row_indexer, param_col + '_ci_lower'] = vals[0]
+                df.loc[row_indexer, param_col + '_ci_upper'] = vals[-1]
+
         for key, par in result.params.items():
             #Baseline
             if ('Pressure' in par.name) or ('Temperature' in par.name):
@@ -620,47 +634,64 @@ class Fit_DataSet:
                 parameter = (par.name[:indices[0]])
                 spectrum = int(par.name[indices[0] + 1:indices[1]])
                 segment = int(par.name[indices[1] + 1:])
-                self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
+                mask = (self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum)
+                self.baseline_list.loc[mask, parameter] = par.value
                 if par.vary:
-                    self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
-
+                    self.baseline_list.loc[mask, parameter + '_err'] = par.stderr
+                    apply_ci(self.baseline_list, mask, parameter, par.name)
             elif ('molefraction' in par.name) or ('baseline' in par.name) or ('x_shift' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
                 parameter = (par.name[:indices[1]])
                 spectrum = int(par.name[indices[1] + 1:indices[2]])
                 segment = int(par.name[indices[2] + 1:])
-                self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
+                mask = (self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum)
+                self.baseline_list.loc[mask, parameter] = par.value
                 if par.vary:
-                    self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
+                    self.baseline_list.loc[mask, parameter + '_err'] = par.stderr
+                    apply_ci(self.baseline_list, mask, parameter, par.name)
+
             elif ('etalon' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
                 parameter = par.name[:indices[2]]
                 spectrum = int(par.name[indices[2]+1:indices[3]])
                 segment = int(par.name[indices[3]+1:])
-                self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
+                mask = (self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum)
+                self.baseline_list.loc[mask, parameter] = par.value
                 if par.vary:
-                    self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
+                    self.baseline_list.loc[mask, parameter + '_err'] = par.stderr
+                    apply_ci(self.baseline_list, mask, parameter, par.name)
+
             elif ('_res_' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name[par.name.find('_res_') + 5:])]
                 spectrum = par.name[par.name.find('_res_') + 5:][indices[0]+1:indices[1]]
                 segment = par.name[par.name.find('_res_') + 5:][indices[1]+1:]
                 parameter = par.name[:par.name.find('_res_')] + '_res_' + par.name[par.name.find('_res_') + 5:][:indices[0]]
-                self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter] = par.value
+                mask = (self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum)
+                self.baseline_list.loc[mask, parameter] = par.value
                 if par.vary:
-                    self.baseline_list.loc[(self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum), parameter + '_err'] = par.stderr
+                    self.baseline_list.loc[mask, parameter + '_err'] = par.stderr
+                    apply_ci(self.baseline_list, mask, parameter, par.name)
             #CIA
             elif (self.dataset.CIA_model['model']=='Karman') and ('O2_O2' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
                 parameter = par.name[:indices[1]]
-                self.CIAparam_list.loc[(self.CIAparam_list['CIA Pair'] == 'O2_O2'), parameter] = par.value
+                mask = (self.CIAparam_list['CIA Pair'] == 'O2_O2')
+                self.CIAparam_list.loc[mask, parameter] = par.value
+
                 if par.vary:
-                    self.CIAparam_list.loc[(self.CIAparam_list['CIA Pair'] == 'O2_O2'), parameter + '_err'] = par.stderr
+                    self.CIAparam_list.loc[mask, parameter + '_err'] = par.stderr
+                    apply_ci(self.CIAparam_list, mask, parameter, par.name)
+
             elif (self.dataset.CIA_model['model']=='Karman') and ('O2_N2' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
                 parameter = par.name[:indices[1]]
-                self.CIAparam_list.loc[(self.CIAparam_list['CIA Pair'] == 'O2_N2'), parameter] = par.value
+                mask = (self.CIAparam_list['CIA Pair'] == 'O2_N2')
+                self.CIAparam_list.loc[mask, parameter] = par.value
                 if par.vary:
-                    self.CIAparam_list.loc[(self.CIAparam_list['CIA Pair'] == 'O2_N2'), parameter + '_err'] = par.stderr 
+                    self.CIAparam_list.loc[mask, parameter + '_err'] = par.stderr
+                    apply_ci(self.CIAparam_list, mask, parameter, par.name)
+
+
             #Line shape Parameters
             else:
                 parameter = par.name[:par.name.find('_line')]
@@ -668,6 +699,10 @@ class Fit_DataSet:
                 self.lineparam_list.loc[line, parameter] = par.value
                 if par.vary:
                     self.lineparam_list.loc[line, parameter + '_err'] = par.stderr
+                    apply_ci(self.lineparam_list, line, parameter, par.name)
+
+
+
         self.baseline_list.to_csv(base_linelist_update_file + '.csv', index = False)
         self.lineparam_list.to_csv(param_linelist_update_file + '.csv')
         if self.dataset.CIA_model['model'] == "Karman":
