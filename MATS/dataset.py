@@ -75,6 +75,7 @@ class Dataset:
         dataset_molecule_list = []
         for spectrum in self.spectra:
             dataset_molecule_list += (spectrum.molefraction.keys())
+        dataset_molecule_list = list(dict.fromkeys(dataset_molecule_list))
         molecules_in_paramlist = self.param_linelist['molec_id'].unique()
         for i in range(0, len(molecules_in_paramlist)):
             if molecules_in_paramlist[i] not in dataset_molecule_list:
@@ -145,6 +146,31 @@ class Dataset:
             return ISO
         else:
             return ISO
+
+    def correct_abundance_dict(self):
+
+        for spectrum in self.spectra:
+            abundance_dict = {}
+            for molec_id in self.molecule_list:
+                local_iso_ids = self.param_linelist[self.param_linelist['molec_id'] == molec_id]['local_iso_id'].unique()
+                local_abundance_dict = {}
+                for local_id in local_iso_ids:
+                    if molec_id in spectrum.abundance_ratio_MI.keys():
+                        if local_id in spectrum.abundance_ratio_MI[molec_id].keys():
+                            local_abundance_dict[local_id] = spectrum.abundance_ratio_MI[molec_id][local_id]
+                        else:
+                            local_abundance_dict[local_id] = 1
+                    else:
+                        local_abundance_dict[local_id] = 1
+                    abundance_dict[molec_id] = local_abundance_dict
+            spectrum.abundance_ratio_MI = abundance_dict
+
+
+
+                        
+                         
+
+
 
 
 
