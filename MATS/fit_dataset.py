@@ -600,18 +600,11 @@ class Fit_DataSet:
             spectrum.set_residuals(spectrum_residual)
             spectrum.set_model(spectrum_residual + spectrum.alpha)
             if indv_resid_plot:
-                spectrum.plot_model_residuals()
-    
-    def calculate_confidence_intervals(self, result, sigma = 1):
-        ci_dict = conf_interval(self.minner, result, sigmas = [sigma])
-        printfuncs.report_ci(ci_dict)
-        return ci_dict
-    
-        
+                spectrum.plot_model_residuals()       
 
 
     def update_params(self, result, base_linelist_update_file = None , param_linelist_update_file = None, 
-                      CIA_linelist_update_file = None, ci_dict = None):
+                      CIA_linelist_update_file = None):
         """Updates the baseline and line parameter files based on fit results."""
         # [This function body remains the same as in your input, ensuring correct indentation]
         if base_linelist_update_file == None:
@@ -621,11 +614,6 @@ class Fit_DataSet:
         if CIA_linelist_update_file == None:
             CIA_linelist_update_file = self.CIA_linelist_file
 
-        def apply_ci(df, row_indexer, param_col, lmfit_name):
-            if ci_dict and lmfit_name in ci_dict:
-                vals = sorted([tup[1] for tup in ci_dict[lmfit_name]])
-                df.loc[row_indexer, param_col + '_ci_lower'] = vals[0]
-                df.loc[row_indexer, param_col + '_ci_upper'] = vals[-1]
 
         for key, par in result.params.items():
             #Baseline
@@ -638,7 +626,6 @@ class Fit_DataSet:
                 self.baseline_list.loc[mask, parameter] = par.value
                 if par.vary:
                     self.baseline_list.loc[mask, parameter + '_err'] = par.stderr
-                    apply_ci(self.baseline_list, mask, parameter, par.name)
             elif ('molefraction' in par.name) or ('baseline' in par.name) or ('x_shift' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
                 parameter = (par.name[:indices[1]])
@@ -648,7 +635,6 @@ class Fit_DataSet:
                 self.baseline_list.loc[mask, parameter] = par.value
                 if par.vary:
                     self.baseline_list.loc[mask, parameter + '_err'] = par.stderr
-                    apply_ci(self.baseline_list, mask, parameter, par.name)
 
             elif ('etalon' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
@@ -659,7 +645,6 @@ class Fit_DataSet:
                 self.baseline_list.loc[mask, parameter] = par.value
                 if par.vary:
                     self.baseline_list.loc[mask, parameter + '_err'] = par.stderr
-                    apply_ci(self.baseline_list, mask, parameter, par.name)
 
             elif ('_res_' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name[par.name.find('_res_') + 5:])]
@@ -670,7 +655,6 @@ class Fit_DataSet:
                 self.baseline_list.loc[mask, parameter] = par.value
                 if par.vary:
                     self.baseline_list.loc[mask, parameter + '_err'] = par.stderr
-                    apply_ci(self.baseline_list, mask, parameter, par.name)
             #CIA
             elif (self.dataset.CIA_model['model']=='Karman') and ('O2_O2' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
@@ -680,7 +664,6 @@ class Fit_DataSet:
 
                 if par.vary:
                     self.CIAparam_list.loc[mask, parameter + '_err'] = par.stderr
-                    apply_ci(self.CIAparam_list, mask, parameter, par.name)
 
             elif (self.dataset.CIA_model['model']=='Karman') and ('O2_N2' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
@@ -689,7 +672,6 @@ class Fit_DataSet:
                 self.CIAparam_list.loc[mask, parameter] = par.value
                 if par.vary:
                     self.CIAparam_list.loc[mask, parameter + '_err'] = par.stderr
-                    apply_ci(self.CIAparam_list, mask, parameter, par.name)
 
 
             #Line shape Parameters
@@ -699,7 +681,6 @@ class Fit_DataSet:
                 self.lineparam_list.loc[line, parameter] = par.value
                 if par.vary:
                     self.lineparam_list.loc[line, parameter + '_err'] = par.stderr
-                    apply_ci(self.lineparam_list, line, parameter, par.name)
 
 
 
