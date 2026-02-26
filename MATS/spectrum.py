@@ -654,7 +654,15 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
             **CIA_model.get('parameters'))
 
 
-
+    flat_abundance_ratios = {}
+    unique_pairs = np.unique(np.column_stack((linelist_for_sim['molec_id'], linelist_for_sim['local_iso_id'])), axis=0)
+    for m, i in unique_pairs:
+        flat_abundance_ratios[(int(m), int(i))] = 1.0
+    if not natural_abundance and abundance_ratio_MI:
+        for m, iso_dict in abundance_ratio_MI.items():
+            for i, val in iso_dict.items():
+                if (int(m), int(i)) in flat_abundance_ratios:
+                    flat_abundance_ratios[(int(m), int(i))] = val
 
 
 
@@ -684,6 +692,7 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
             T=seg_T,
             p=seg_P,
             molefraction=molefraction_w_error,
+            abundance_ratios=flat_abundance_ratios,
             Diluent=Diluent,
             spectrum_number=1,
             spectrum_min=np.min(wavenumbers), # Ensure relative baseline x-axis is consistent

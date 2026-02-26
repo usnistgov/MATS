@@ -36,7 +36,7 @@ class Fit_DataSet:
                  
                  pressure_bounds = None,
                  temperature_bounds = None,
-                 molefraction_bounds = None, 
+                 abundance_ratio_bounds = None,
                  etalon_amp_bounds = None,  
                  etalon_period_bounds = None, 
                  etalon_phase_bounds = None, 
@@ -101,6 +101,7 @@ class Fit_DataSet:
         self.pressure_bounds = init_bounds(pressure_bounds)
         self.temperature_bounds = init_bounds(temperature_bounds)
         self.x_shift_bounds = init_bounds(x_shift_bounds)
+        self.abundance_ratio_bounds = init_bounds(abundance_ratio_bounds)
 
         self.etalon_amp_bounds = init_bounds(etalon_amp_bounds)
         self.etalon_period_bounds = init_bounds(etalon_period_bounds)
@@ -268,6 +269,8 @@ class Fit_DataSet:
                     params.add(lmfit_name, val, vary, min = self.etalon_phase_bounds[0], max = self.etalon_phase_bounds[1])
                 elif ('x_shift' in base_param) and self.x_shift_bounds != [-np.inf, np.inf]:
                     params.add(lmfit_name, val, vary, min = self.x_shift_bounds[0], max = self.x_shift_bounds[1])
+                elif ('abundance_ratio_' in base_param) and self.abundance_ratio_bounds != [-np.inf, np.inf]:
+                     params.add(lmfit_name, val, vary, min = self.abundance_ratio_bounds[0], max = self.abundance_ratio_bounds[1])
                 else:
                     params.add(lmfit_name, val, vary)
         
@@ -379,8 +382,8 @@ class Fit_DataSet:
 
     def constrained_baseline(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
                                     etalon_amp_segment_constrained = True, etalon_period_segment_constrained = True, etalon_phase_segment_constrained = True,
-                                    pressure_segment_constrained = True, temperature_segment_constrained = True):
-        # [Functions logic unchanged, just keeping class structure valid]
+                                    pressure_segment_constrained = True, temperature_segment_constrained = True, abundance_ratio_segment_constrained = True):
+
         spectrum_segment_min = {}
         for spectrum in self.dataset.spectra:
             spectrum_segment_min[spectrum.spectrum_number] = np.min(list(set(spectrum.segments)))
@@ -413,6 +416,15 @@ class Fit_DataSet:
                 segment_num = int(param[indices[2]+1:])
                 if segment_num != spectrum_segment_min[spectrum_num]:
                     params[param].set(expr = param[:indices[1]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
+            elif ('abundance_ratio' in param) and abundance_ratio_segment_constrained: #
+                parts = param.split('_')
+                spectrum_num = int(parts[-2])
+                segment_num = int(parts[-1])
+                if segment_num != spectrum_segment_min[spectrum_num]:
+                    base_name = '_'.join(parts[:-2])
+                    params[param].set(expr = f"{base_name}_{spectrum_num}_{spectrum_segment_min[spectrum_num]}")
+                    
+                
             elif ('etalon' in param):
                 indices = [m.start() for m in re.finditer('_', param)]
                 spectrum_num = int(param[indices[2]+1:indices[3]])
@@ -504,6 +516,21 @@ class Fit_DataSet:
                 mf_param_name = f'molefraction_{iso_name}_{spectrum.spectrum_number}_{segment}'
                 if mf_param_name in params:
                     mf[molec_id] = params[mf_param_name].value
+            
+            #Extract abundance ratios
+            abundance_ratios = {}
+            for m, iso_dict in spectrum.abundance_ratio_MI.items():
+                for i, val in iso_dict.items():
+                    abundance_ratios[(int(m), int(i))] = val
+
+            unique_pairs = np.unique(np.column_stack((self.lineparam_list['molec_id'], self.lineparam_list['local_iso_id'])), axis=0)
+            for m, i in unique_pairs:
+                m, i = int(m), int(i)
+                mol_name = self.dataset.isotope_list.get((m, 1), [0,0,0,0,'Unknown'])[4]
+                abund_param_name = f'abundance_ratio_{mol_name}_{i}_{spectrum.spectrum_number}_{segment}'
+                if abund_param_name in params:
+                    abundance_ratios[(m, i)] = params[abund_param_name].value
+
 
             baseline_coeffs = self._extract_baseline_coeffs(params, spectrum.spectrum_number, segment)
             etalon_dict = self._extract_etalon_dict(params, spectrum.spectrum_number, segment)
@@ -516,7 +543,7 @@ class Fit_DataSet:
 
             model_y = self.engine.calculate_spectrum(
                 waves=waves,
-                T=T, p=p, molefraction=mf,
+                T=T, p=p, molefraction=mf, abundance_ratios=abundance_ratios,
                 Diluent=spectrum.Diluent,
                 spectrum_number=spectrum.spectrum_number,
                 spectrum_min=np.min(spectrum.wavenumber),
@@ -598,7 +625,7 @@ class Fit_DataSet:
                     spectrum_residual  = spectrum_residual / weights
 
             spectrum.set_residuals(spectrum_residual)
-            spectrum.set_model(spectrum_residual + spectrum.alpha)
+            spectrum.set_model(spectrum.alpha - spectrum_residual)
             if indv_resid_plot:
                 spectrum.plot_model_residuals()       
 
@@ -626,7 +653,19 @@ class Fit_DataSet:
                 self.baseline_list.loc[mask, parameter] = par.value
                 if par.vary:
                     self.baseline_list.loc[mask, parameter + '_err'] = par.stderr
-            elif ('molefraction' in par.name) or ('baseline' in par.name) or ('x_shift' in par.name):
+            elif ('molefraction' in par.name) or ('baseline' in par.name) or ('x_shift' in par.name) or ('abundance_ratio' in par.name):
+                parts = par.name.split('_')
+                segment = int(parts[-1])
+                spectrum = int(parts[-2])
+
+                parameter = '_'.join(parts[:-2])
+                mask = (self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum)
+                self.baseline_list.loc[mask, parameter] = par.value
+                if par.vary:
+                    self.baseline_list.loc[mask, parameter + '_err'] = par.stderr
+
+
+                '''
                 indices = [m.start() for m in re.finditer('_', par.name)]
                 parameter = (par.name[:indices[1]])
                 spectrum = int(par.name[indices[1] + 1:indices[2]])
@@ -635,6 +674,7 @@ class Fit_DataSet:
                 self.baseline_list.loc[mask, parameter] = par.value
                 if par.vary:
                     self.baseline_list.loc[mask, parameter + '_err'] = par.stderr
+                '''
 
             elif ('etalon' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
