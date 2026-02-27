@@ -235,9 +235,6 @@ class Spectroscopic_model:
                     cia_alpha = cia_config['calculator'].calculate_cia(
                         waves, T, p, Diluent, 
                         **cia_config['params'])
-            if dataspace == 'alpha':
-                pass  
-                    
             if cia_config['model'] == 'ad hoc':
                 cia_alpha = cia_config['values']
 
@@ -254,9 +251,10 @@ class Spectroscopic_model:
                 etalon_signal += etalon(w_rel, params['amp'], params['period'], params['phase'])
         
         if dataspace == 'alpha':
-            model_y = LBL_alpha + cia_alpha + baseline + etalon_signal
+            model_y = (LBL_alpha + cia_alpha)*1e6 + baseline + etalon_signal
         elif dataspace == 'absorbance':
-            model_y = (LBL_alpha + cia_alpha)*pathlength + (baseline + etalon_signal)
+            OD = (LBL_alpha + cia_alpha)*pathlength
+            model_y = OD + (baseline + etalon_signal)
         elif (dataspace == 'absorption')  or (dataspace == 'transmittance'):
             OD = (LBL_alpha + cia_alpha)*pathlength
             model_y = np.exp(-OD)*(1+baseline + etalon_signal)
