@@ -48,10 +48,11 @@ class Dataset:
         self.correct_abundance_dict()
 
         self.ILS_function_dict = self.get_ILS_function_dict()
+        self.dataspace_summary = self.get_dataspace_counts()
         self.base_linelist = self.generate_baseline_paramlist()
         self.check_param_list_BIA()
         self.check_if_compressability()
-        self.dataspace_summary = self.get_dataspace_counts()
+        
 
     def renumber_spectra(self):
         """renumbers the spectra to be sequential starting at 1 (called in the initialization of the class).
@@ -476,6 +477,8 @@ class Dataset:
                                 line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution
                             else:
                                 line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution[res_param]
+                if (self.dataspace_summary['absorbance']['count']!=0) or (self.dataspace_summary['absorption']['count']!=0) or (self.dataspace_summary['transmittance']['count']!=0):
+                    line['pathlength'] = spectrum.pathlength
                 baseline_paramlist = pd.concat([baseline_paramlist, pd.DataFrame(line, index = [0])], ignore_index = True, sort = False)
 
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
