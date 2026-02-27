@@ -396,6 +396,18 @@ class Spectrum:
         return self.cia
     def get_nominal_temperature(self):
         return self.nominal_temperature
+    
+    def get_temperature_at_segment(self, segment_number):
+        mask = (self.segments == segment_number)
+        if not np.any(mask):
+            raise ValueError(f"Segment {segment_number} not found in this spectrum.")
+        return np.mean(self.temperature_array[mask])
+        
+    def get_pressure_at_segment(self, segment_number):
+        mask = (self.segments == segment_number)
+        if not np.any(mask):
+            raise ValueError(f"Segment {segment_number} not found in this spectrum.")
+        return np.mean(self.pressure_array[mask])
 
     ##SETTERS
     def set_weight(self, new_weight):

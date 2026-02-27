@@ -445,14 +445,15 @@ class Dataset:
         """
 
         baseline_paramlist = pd.DataFrame()
+        baseline_rows = []
         for spectrum in self.spectra:
             for segment in list(set(spectrum.segments)):
                 line = {}
                 line['Spectrum Number'] = spectrum.spectrum_number
                 line['Segment Number'] = segment
                 line['Baseline Order'] = spectrum.baseline_order
-                line['Pressure'] = spectrum.get_pressure()
-                line['Temperature'] = spectrum.get_temperature()
+                line['Pressure'] = spectrum.get_pressure_at_segment(segment)
+                line['Temperature'] = spectrum.get_temperature_at_segment(segment)
                 line['x_shift'] = spectrum.x_shift
                 for molecule in spectrum.molefraction:
                     line['molefraction_' + (self.isotope_list[(molecule, 1)][4])] = (spectrum.molefraction[molecule])
@@ -479,7 +480,9 @@ class Dataset:
                                 line[ILS_function + '_res_' + str(res_param)] = spectrum.ILS_resolution[res_param]
                 if (self.dataspace_summary['absorbance']['count']!=0) or (self.dataspace_summary['absorption']['count']!=0) or (self.dataspace_summary['transmittance']['count']!=0):
                     line['pathlength'] = spectrum.pathlength
-                baseline_paramlist = pd.concat([baseline_paramlist, pd.DataFrame(line, index = [0])], ignore_index = True, sort = False)
+                baseline_rows.append(line)
+
+        baseline_paramlist = pd.DataFrame(baseline_rows)
 
         baseline_paramlist = baseline_paramlist.set_index('Spectrum Number')
         baseline_paramlist.to_csv(self.dataset_name + '_baseline_paramlist.csv', index = True)
