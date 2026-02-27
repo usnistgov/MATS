@@ -41,6 +41,7 @@ class Fit_DataSet:
                  etalon_period_bounds = None, 
                  etalon_phase_bounds = None, 
                  x_shift_bounds = None,
+                 pathlength_bounds = None,
 
                  nu_relative_bounds = None, 
                  sw_bound_scalars = None, 
@@ -102,6 +103,7 @@ class Fit_DataSet:
         self.temperature_bounds = init_bounds(temperature_bounds)
         self.x_shift_bounds = init_bounds(x_shift_bounds)
         self.abundance_ratio_bounds = init_bounds(abundance_ratio_bounds)
+        self.pathlength_bounds = init_bounds(self.pathlength_bounds)
 
         self.etalon_amp_bounds = init_bounds(etalon_amp_bounds)
         self.etalon_period_bounds = init_bounds(etalon_period_bounds)
@@ -118,6 +120,7 @@ class Fit_DataSet:
         self.n_gamma2_bounds = init_bounds(n_gamma2_bounds)
         self.SD_delta_bounds = init_bounds(SD_delta_bounds)
         self.n_delta2_bounds = init_bounds(n_delta2_bounds)
+
         
         if lineprofile == 'HTP':
             self.paramRe_bounds = init_bounds(nuVC_bounds)
@@ -188,6 +191,7 @@ class Fit_DataSet:
             else:
                 resolution_params.append(0.0) 
         return resolution_params
+    
 
     def _extract_cia_config(self, params):
         """Packs CIA model and parameters into a config dict."""
@@ -271,6 +275,8 @@ class Fit_DataSet:
                     params.add(lmfit_name, val, vary, min = self.x_shift_bounds[0], max = self.x_shift_bounds[1])
                 elif ('abundance_ratio_' in base_param) and self.abundance_ratio_bounds != [-np.inf, np.inf]:
                      params.add(lmfit_name, val, vary, min = self.abundance_ratio_bounds[0], max = self.abundance_ratio_bounds[1])
+                elif ('pathlength_' in base_param) and self.pathlength_bounds != [-np.inf, np.inf]:
+                    params.add(lmfit_name, val, vary, min = self.pathlength_bounds[0], max = self.pathlength_bounds[1])
                 else:
                     params.add(lmfit_name, val, vary)
         
@@ -382,7 +388,8 @@ class Fit_DataSet:
 
     def constrained_baseline(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
                                     etalon_amp_segment_constrained = True, etalon_period_segment_constrained = True, etalon_phase_segment_constrained = True,
-                                    pressure_segment_constrained = True, temperature_segment_constrained = True, abundance_ratio_segment_constrained = True):
+                                    pressure_segment_constrained = True, temperature_segment_constrained = True, abundance_ratio_segment_constrained = True, 
+                                    pathlength_segment_constrained = True):
 
         spectrum_segment_min = {}
         for spectrum in self.dataset.spectra:
@@ -410,6 +417,7 @@ class Fit_DataSet:
                 segment_num = int(param[indices[2]+1:])
                 if segment_num != spectrum_segment_min[spectrum_num]:
                     params[param].set(expr = param[:indices[1]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
+            
             elif ('molefraction' in param) and molefraction_segment_constrained:
                 indices = [m.start() for m in re.finditer('_', param)]
                 spectrum_num = int(param[indices[1]+1:indices[2]])
@@ -423,8 +431,14 @@ class Fit_DataSet:
                 if segment_num != spectrum_segment_min[spectrum_num]:
                     base_name = '_'.join(parts[:-2])
                     params[param].set(expr = f"{base_name}_{spectrum_num}_{spectrum_segment_min[spectrum_num]}")
-                    
-                
+            elif ('pathlength' in param) and pathlength_segment_constrained:
+                parts = param.split('_')
+                spectrum_num = int(parts[-2])   
+                segment_num = int(parts[-1])
+                if segment_num != spectrum_segment_min[spectrum_num]:
+                    base_name = '_'.join(parts[:-2])
+                    params[param].set(expr = f"{base_name}_{spectrum_num}_{spectrum_segment_min[spectrum_num]}")
+               
             elif ('etalon' in param):
                 indices = [m.start() for m in re.finditer('_', param)]
                 spectrum_num = int(param[indices[2]+1:indices[3]])
@@ -455,7 +469,7 @@ class Fit_DataSet:
         """Pre-computes and caches data segments and weights to avoid inner-loop overhead."""
         self.fit_data_cache = []
         for spectrum in self.dataset.spectra:
-            wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
+            wavenumber_segments, y_segments, indices_segments = spectrum.segment_wave_y()
             for segment in set(spectrum.segments):
                 # Pre-calculate what we can (base waves, data, indices)
                 idx_min = np.min(indices_segments[segment])
@@ -464,11 +478,11 @@ class Fit_DataSet:
                 # Pre-calc Weighting Array
                 w_array = None
                 if self.weight_spectra:
-                    if spectrum.tau_stats.all() == 0:
+                    if spectrum.y_unc.all() == 0:
                         w_array = spectrum.weight
                     else:
-                        seg_stats = spectrum.tau_stats[idx_min : idx_max + 1]
-                        w_array = spectrum.weight * (1.0 / seg_stats)
+                        seg_stats = spectrum.y_unc[idx_min : idx_max + 1]
+                        w_array = spectrum.weight * (1.0 / seg_stats)**2
                 
                 # Pre-calc CIA Slice indices if needed
                 cia_slice_indices = None
@@ -479,7 +493,7 @@ class Fit_DataSet:
                     'spectrum': spectrum,
                     'segment': segment,
                     'base_waves': wavenumber_segments[segment],
-                    'data_y': alpha_segments[segment],
+                    'data_y': y_segments[segment],
                     'weights': w_array,
                     'cia_slice_indices': cia_slice_indices
                 })
@@ -509,6 +523,11 @@ class Fit_DataSet:
             T = params[f'Temperature_{spectrum.spectrum_number}_{segment}'].value
             p = params[f'Pressure_{spectrum.spectrum_number}_{segment}'].value
 
+            if spectrum.dataspace != 'alpha':
+                pathlength = params[f'pathlength_{spectrum.spectrum_number}_{segment}'].value
+            else:
+                pathlength = 0
+
             # Extract Molefraction
             mf = spectrum.molefraction.copy()
             for molec_id in mf:
@@ -531,7 +550,7 @@ class Fit_DataSet:
                 if abund_param_name in params:
                     abundance_ratios[(m, i)] = params[abund_param_name].value
 
-
+            
             baseline_coeffs = self._extract_baseline_coeffs(params, spectrum.spectrum_number, segment)
             etalon_dict = self._extract_etalon_dict(params, spectrum.spectrum_number, segment)
             ils_res = self._extract_ils_resolution(params, spectrum, segment)
@@ -560,7 +579,9 @@ class Fit_DataSet:
                 IntensityThreshold=self.minimum_simulation_intensity,
                 wing_cutoff=wing_cutoff,
                 wing_wavenumbers=wing_wavenumbers,
-                wing_method=wing_method
+                wing_method=wing_method, 
+                pathlength = pathlength,
+                dataspace = spectrum.dataspace
             )
 
             resid = item['data_y'] - model_y
@@ -614,10 +635,10 @@ class Fit_DataSet:
             spectrum_residual, residual_array = np.split(residual_array, [len(spectrum.wavenumber)])
 
             if self.weight_spectra:
-                if spectrum.tau_stats.all() == 0:
+                if spectrum.y_unc.all() == 0:
                     weights = len(spectrum_residual)*[spectrum.weight]
                 else:
-                    pt_by_pt_weights= 1 / (spectrum.tau_stats)**2
+                    pt_by_pt_weights= 1 / (spectrum.y_unc)**2
                     weights = spectrum.weight * pt_by_pt_weights
                 if spectrum.weight == 0:
                     spectrum_residual = np.asarray(len(spectrum_residual)*[0])
@@ -625,7 +646,7 @@ class Fit_DataSet:
                     spectrum_residual  = spectrum_residual / weights
 
             spectrum.set_residuals(spectrum_residual)
-            spectrum.set_model(spectrum.alpha - spectrum_residual)
+            spectrum.set_model(spectrum.y_data - spectrum_residual)
             if indv_resid_plot:
                 spectrum.plot_model_residuals()       
 
@@ -634,11 +655,11 @@ class Fit_DataSet:
                       CIA_linelist_update_file = None):
         """Updates the baseline and line parameter files based on fit results."""
         # [This function body remains the same as in your input, ensuring correct indentation]
-        if base_linelist_update_file == None:
+        if base_linelist_update_file is None:
             base_linelist_update_file = self.base_linelist_file
-        if param_linelist_update_file == None:
+        if param_linelist_update_file is None:
             param_linelist_update_file = self.param_linelist_file
-        if CIA_linelist_update_file == None:
+        if CIA_linelist_update_file is None:
             CIA_linelist_update_file = self.CIA_linelist_file
 
 
@@ -653,7 +674,7 @@ class Fit_DataSet:
                 self.baseline_list.loc[mask, parameter] = par.value
                 if par.vary:
                     self.baseline_list.loc[mask, parameter + '_err'] = par.stderr
-            elif ('molefraction' in par.name) or ('baseline' in par.name) or ('x_shift' in par.name) or ('abundance_ratio' in par.name):
+            elif ('molefraction' in par.name) or ('baseline' in par.name) or ('x_shift' in par.name) or ('abundance_ratio' in par.name) or ('pathlength' in par.name):
                 parts = par.name.split('_')
                 segment = int(parts[-1])
                 spectrum = int(parts[-2])
@@ -664,17 +685,6 @@ class Fit_DataSet:
                 if par.vary:
                     self.baseline_list.loc[mask, parameter + '_err'] = par.stderr
 
-
-                '''
-                indices = [m.start() for m in re.finditer('_', par.name)]
-                parameter = (par.name[:indices[1]])
-                spectrum = int(par.name[indices[1] + 1:indices[2]])
-                segment = int(par.name[indices[2] + 1:])
-                mask = (self.baseline_list['Segment Number'] == segment) & (self.baseline_list['Spectrum Number'] == spectrum)
-                self.baseline_list.loc[mask, parameter] = par.value
-                if par.vary:
-                    self.baseline_list.loc[mask, parameter + '_err'] = par.stderr
-                '''
 
             elif ('etalon' in par.name):
                 indices = [m.start() for m in re.finditer('_', par.name)]
@@ -731,7 +741,7 @@ class Fit_DataSet:
 
         #Calculate Baseline + Etalons and add to the Baseline term for each spectra
         for spectrum in self.dataset.spectra:
-            wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
+            wavenumber_segments, y_segments, indices_segments = spectrum.segment_wave_y()
             baseline = len(spectrum.wavenumber)*[0]
             for segment in set(spectrum.segments):
                 waves = wavenumber_segments[segment]
@@ -812,7 +822,7 @@ class Fit_DataSet:
                     nuOptRe = np.zeros(len(beta_summary_list), dtype=np.float64)
                     beta_values = np.zeros(len(beta_summary_list), dtype=np.float64)
 
-                    wavenumber_segments, alpha_segments, indices_segments = spectrum.segment_wave_alpha()
+                    wavenumber_segments, y_segments, indices_segments = spectrum.segment_wave_y()
                     p = self.baseline_list[(self.baseline_list['Spectrum Number'] == spectrum.spectrum_number) & (self.baseline_list['Segment Number'] == segment)]['Pressure'].values[0]
                     T = self.baseline_list[(self.baseline_list['Spectrum Number'] == spectrum.spectrum_number) & (self.baseline_list['Segment Number'] == segment)]['Temperature'].values[0]
 

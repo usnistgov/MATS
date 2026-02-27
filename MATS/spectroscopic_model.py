@@ -212,7 +212,9 @@ class Spectroscopic_model:
                             natural_abundance = True, abundance_ratio_MI = {}, 
                             BIA_slope=False, BIA_FW_LBL=False,
                             IntensityThreshold = 1e-30, 
-                            wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers',segment = None):
+                            wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers',segment = None, 
+                            pathlength = 0,
+                            dataspace = 'alpha'):
         
         #Calculate LBL
         LBL_alpha = self.calculate_lbl_absorbance(waves, T, p, molefraction, abundance_ratios, Diluent, 
@@ -221,20 +223,24 @@ class Spectroscopic_model:
                                  natural_abundance = natural_abundance, 
                                  BIA_slope=BIA_slope, BIA_FW_LBL=BIA_FW_LBL,
                                  IntensityThreshold = IntensityThreshold, 
-                                 wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,segment=segment)
-        LBL_alpha = LBL_alpha* 1e6
+                                 wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,segment=segment)      
         
+        if dataspace == 'alpha':
+            LBL_alpha = LBL_alpha* 1e6
+
         # Calculate CIA
-        alpha_cia = np.zeros_like(waves)
+        cia_alpha = np.zeros_like(waves)
         if cia_config:
             if cia_config['model'] == 'Karman':
-                    alpha_cia = cia_config['calculator'].calculate_cia(
+                    cia_alpha = cia_config['calculator'].calculate_cia(
                         waves, T, p, Diluent, 
-                        **cia_config['params'])  
+                        **cia_config['params'])
+            if dataspace == 'alpha':
+                pass  
                     
             if cia_config['model'] == 'ad hoc':
-                alpha_cia = cia_config['values']
-                 
+                cia_alpha = cia_config['values']
+
         #Baseline
         baseline = np.zeros_like(waves)
         w_rel = waves - spectrum_min
@@ -246,8 +252,15 @@ class Spectroscopic_model:
         if etalon_dict is not None:
             for i, params in etalon_dict.items():
                 etalon_signal += etalon(w_rel, params['amp'], params['period'], params['phase'])
+        
+        if dataspace == 'alpha':
+            model_y = LBL_alpha + cia_alpha + baseline + etalon_signal
+        elif dataspace == 'absorbance':
+            model_y = (LBL_alpha + cia_alpha)*pathlength + (baseline + etalon_signal)
+        elif (dataspace == 'absorption')  or (dataspace == 'transmittance'):
+            OD = (LBL_alpha + cia_alpha)*pathlength
+            model_y = np.exp(-OD)*(1+baseline + etalon_signal)
 
-        total_alpha = baseline + etalon_signal + LBL_alpha + alpha_cia
 
         if ILS_function is not None and ILS_parameters is not None:
             # Note: convolveSpectrumSame returns (waves, alpha, ...)
@@ -256,13 +269,15 @@ class Spectroscopic_model:
             if (isinstance(ILS_parameters, list) or isinstance(ILS_parameters, np.ndarray)) and len(ILS_parameters) == 1:
                 res_to_pass = ILS_parameters[0]
                 
-            _, total_alpha, _, _, _ = convolveSpectrumSame(
-                waves, total_alpha, 
+            _, model_y, _, _, _ = convolveSpectrumSame(
+                waves, model_y, 
                 SlitFunction=ILS_function, 
                 Resolution=res_to_pass, 
                 AF_wing=ILS_wing)
-        
-        return total_alpha
+        if dataspace == 'absorption':
+            model_y = 1-model_y
+
+        return model_y
     
     @staticmethod
     @jit(nopython=True, fastmath=True, cache=True)

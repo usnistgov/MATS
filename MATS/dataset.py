@@ -417,21 +417,21 @@ class Dataset:
         return spec_num_list
     
     def get_dataspace_counts(self):
-        data_space_summary = {'alpha':{'count':0, 'spectrum_numbers':[]}, 
+        dataspace_summary = {'alpha':{'count':0, 'spectrum_numbers':[]}, 
                               'absorbance':{'count':0, 'spectrum_numbers':[]}, 
                               'absorption':{'count':0, 'spectrum_numbers':[]}, 
                               'transmittance':{'count':0, 'spectrum_numbers':[]}
                               }
         
         for spectrum in self.spectra:
-            ds = spectrum.data_space
-            if ds in data_space_summary:
-                data_space_summary[ds]['count'] += 1
-                data_space_summary[ds]['spectrum_numbers'].append(spectrum.spectrum_number)
+            ds = spectrum.data_pace
+            if ds in dataspace_summary:
+                dataspace_summary[ds]['count'] += 1
+                dataspace_summary[ds]['spectrum_numbers'].append(spectrum.spectrum_number)
             else:
-                print(f"Warning: Spectrum {spectrum.spectrum_number} has an unrecognized data_space '{ds}'.  Valid data_spaces are 'alpha', 'absorbance','absorption', and 'transmittance'.")
+                print(f"Warning: Spectrum {spectrum.spectrum_number} has an unrecognized dataspace '{ds}'.  Valid dataspaces are 'alpha', 'absorbance','absorption', and 'transmittance'.")
 
-        return data_space_summary
+        return dataspace_summary
 
     def generate_baseline_paramlist(self):
         """Generates a csv file called dataset_name + _baseline_paramlist, which will be used to generate another csv file that is used for fitting spectrum dependent parameters with columns for
@@ -572,7 +572,7 @@ class Dataset:
         else:
             summary_dict = {ds: pd.DataFrame() for ds in active_dataspaces}
             for spectrum in self.spectra:
-                ds = spectrum.data_space
+                ds = spectrum.dataspace
                 spectrum_data = spectrum.save_spectrum_info(save_file=False)
                 summary_dict[ds] = pd.concat([summary_dict[ds], spectrum_data], ignore_index=True, sort=False)
             if save_file:

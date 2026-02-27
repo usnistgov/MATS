@@ -119,7 +119,7 @@ class Spectrum:
                     y_column = 'Mean tau/us',  y_input_units = 'ppm/cm', y_unc_column = None, y_unc_input_units = '',
                     pressure_column = 'Cavity Pressure /Torr', pressure_input_units = 'torr',
                     temperature_column = 'Cavity Temperature Side 2 /C', temperature_input_units = 'C',
-                    data_space = 'alpha', pathlength = 0., 
+                    dataspace = 'alpha', pathlength = 0., 
                      
                     segment_column = None,
                     etalons = {}, nominal_temperature = 296, x_shift = 0.0, baseline_order = 1, weight = 1,
@@ -147,8 +147,8 @@ class Spectrum:
                 print ("Double check that you did not include the equivalent of the self term explicitly (ie in an oxygen spectra having both 'O2' and 'self').")
         self.spectrum_number = spectrum_number
 
-        self.data_space = data_space.lower()
-        if self.data_space == 'alpha':
+        self.dataspace = dataspace.lower()
+        if self.dataspace == 'alpha':
             self.pathlength = 0.
         else:
             self.pathlength = pathlength
@@ -159,17 +159,17 @@ class Spectrum:
             raise ValueError(f"Unknown x_units '{self.x_input_units}'. Add it to X_CONVERSION dict.")
 
         self.y_input_units = y_input_units.lower()
-        if self.y_input_units not in self.ALLOWED_Y_UNITS.get(self.data_space, []):
+        if self.y_input_units not in self.ALLOWED_Y_UNITS.get(self.dataspace, []):
             raise ValueError(
-                f"Invalid y_units '{self.y_input_units}' for data_space '{self.data_space}'. "
-                f"Allowed units: {self.ALLOWED_Y_UNITS[self.data_space]}"
+                f"Invalid y_units '{self.y_input_units}' for dataspace '{self.dataspace}'. "
+                f"Allowed units: {self.ALLOWED_Y_UNITS[self.dataspace]}"
             )
         
         self.y_unc_input_units = y_unc_input_units.lower()
-        if self.y_unc_input_units not in self.ALLOWED_Y_UNC_UNITS.get(self.data_space, []):
+        if self.y_unc_input_units not in self.ALLOWED_Y_UNC_UNITS.get(self.dataspace, []):
             raise ValueError(
-                f"Invalid y_units '{self.y_unc_input_units}' for data_space '{self.data_space}'. "
-                f"Allowed units: {self.ALLOWED_Y_UNC_UNITS[self.data_space]}"
+                f"Invalid y_units '{self.y_unc_input_units}' for dataspace '{self.dataspace}'. "
+                f"Allowed units: {self.ALLOWED_Y_UNC_UNITS[self.dataspace]}"
             )
 
         self.pressure_input_units = pressure_input_units.lower()
@@ -241,7 +241,7 @@ class Spectrum:
         y_converted = y_raw.copy()
         y_unc_converted = y_unc_raw.copy() if y_unc_raw is not None else None
 
-        if self.data_space == 'alpha':
+        if self.dataspace == 'alpha':
             y_output_units = {'text': '10^-6 cm^-1', 'formatted': ' (10$^{-6}$ cm$^{-1}$)'}
             y_output_label = {'text': 'alpha', 'formatted' : '$\\alpha$'}
             if self.y_input_units == 'cm-1':
@@ -259,7 +259,7 @@ class Spectrum:
                 elif self.y_unc_input_units == 'rel':
                     y_unc_converted *= (y_converted)            
             
-        elif (self.data_space == 'absorbance'):
+        elif (self.dataspace == 'absorbance'):
             y_output_units = {'text': None, 'formatted': None}
             y_output_label = {'text': 'absorbance', 'formatted' : 'absorbance'}
             if (self.y_input_units == 'ppm') or (self.y_units == '10-6'):
@@ -273,7 +273,7 @@ class Spectrum:
                 elif self.y_unc_input_units == 'rel':
                     y_unc_converted *= (y_converted)   
    
-        elif (self.data_space == 'absorption'):
+        elif (self.dataspace == 'absorption'):
             y_output_units = {'text': None, 'formatted': None}
             y_output_label = {'text': 'absorption', 'formatted' : 'absorption'}
             if y_unc_raw is not None:
@@ -281,7 +281,7 @@ class Spectrum:
                     y_unc_converted *= (y_converted/100)   
                 elif self.y_unc_input_units == 'rel':
                     y_unc_converted *= (y_converted)   
-        elif (self.data_space == 'transmittance'):
+        elif (self.dataspace == 'transmittance'):
             y_output_units = {'text': None, 'formatted': None}
             y_output_label = {'text': 'transmittance', 'formatted' : 'transmittance'}
             if (self.y_input_units == '%'):
@@ -431,7 +431,7 @@ class Spectrum:
     ##Other Functions
 
     def plot_wave_y(self):
-        """Generates a plot of y (for data_space) as a function of wavenumber (cm-1).
+        """Generates a plot of y (for dataspace) as a function of wavenumber (cm-1).
         """
         fig, ax = plt.subplots()
         ax.plot(self.wavenumber, self.y_data)
