@@ -89,6 +89,10 @@ class Spectrum:
         'transmittance': ['unitless', 'none', 'a.u.', '', '%', 'rel']
     }
 
+    CIA_CONVERSION = {'cm-1': 1, 
+                      'ppm/cm': 1e-6,
+                      '10-6 cm-1': 1e-6}
+
     # 2. X-Axis Conversion (Target: cm-1)
     # 1 cm-1 = 29979.2458 MHz
     X_CONVERSION = {
@@ -124,7 +128,8 @@ class Spectrum:
                     segment_column = None,
                     etalons = {}, nominal_temperature = 296, x_shift = 0.0, baseline_order = 1, weight = 1,
                     ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2025, 
-                    compressability_file = None, cia = None):
+                    compressability_file = None,
+                    cia = None, cia_input_units = None):
         self.filename = filename
         self.molefraction = molefraction
         self.natural_abundance = natural_abundance
@@ -217,6 +222,11 @@ class Spectrum:
             self.cia = np.zeros(spectrum_length)
         else:
             self.cia = cia
+            self.cia_input_units = cia_input_units.lower()
+            if self.cia_input_units not in self.CIA_CONVERSION:
+                raise ValueError(f"Unknown x_units '{self.cia_input_units}'. Add it to CIA_CONVERSION dict.")
+            self.cia *= self.CIA_CONVERSION[self.cia_input_units]
+
         
         #Other Spectrum Inputs
         self.etalons = etalons
@@ -232,7 +242,6 @@ class Spectrum:
         self.TIPS = TIPS
         self.compressability_file = compressability_file
 
-      
         #Initial Functions and Checks
         self.diluent_sum_check() # Makes sure that the diluent contributions sum to 1
 
@@ -503,7 +512,7 @@ class Spectrum:
 
         new_file['QF'] = [self.calculate_QF()]*len(new_file)
         new_file['Background'] = self.background
-        new_file['CIA' + self.y_output_units['text']] = self.cia
+        new_file['CIA (cm-1)' ] = self.cia
 
         if save_file:
             new_file.to_csv(self.filename + '_saved.csv', index = False)
@@ -542,6 +551,7 @@ class Spectrum:
 def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofile = True,
                         wave_min=None, wave_max= None, wave_space=None, wavenumbers = [],  wave_error = 0.0,
                         SNR = None, baseline_terms = [0.0], 
+                        dataspace = 'alpha', pathlength = 0,
                         temperature = 296, temperature_err = {'bias': 0, 'function': None, 'params': {}}, 
                         pressure = 1,   pressure_err = {'per_bias': 0, 'function': None, 'params': {}},
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers', sim_window = 5, 
@@ -557,7 +567,7 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
                         TIPS = PYTIPS2025, 
                         compressability_file = None, 
                         BIA_model = {'sw_depletion': False, 'farwing_continuum': None}, 
-                        CIA_model = {'model': None, 'params': None}):
+                        CIA_model = {'model': None, 'params': None}) : #ad hoc CIA model should be in cm-1
     """Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.
 
 
@@ -743,7 +753,8 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
     cia_config = None
     cia_array = np.zeros_like(wavenumbers)
     if CIA_model.get('model') == 'ad hoc':
-        cia_array = CIA_model.get('values')
+        cia_array = CIA_model.get('values') #Should be in cm-1
+
     elif CIA_model.get('model') == 'Karman':
         cia_calc = O2_CIA_Karman_Model(band = CIA_model.get('band'))
     
@@ -758,6 +769,7 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
             pressure, 
             Diluent, 
             **CIA_model.get('parameters'))
+        
 
 
     flat_abundance_ratios = {}
@@ -775,7 +787,7 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
     seg_number = np.arange(len(wavenumbers))
     seg_number = np.abs(seg_number// (len(wavenumbers)/num_segments)).astype(int)
 
-    alpha_array = np.zeros_like(wavenumbers)
+    y_array = np.zeros_like(wavenumbers)
     final_pressure_array = np.zeros_like(wavenumbers)
     final_temp_array = np.zeros_like(wavenumbers)
 
@@ -793,7 +805,7 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
         final_temp_array[idx] = seg_T
 
         # --- CALL ENGINE (Handles LBL + Baseline + Etalon + ILS) ---
-        alpha_seg = engine.calculate_spectrum(
+        y_seg = engine.calculate_spectrum(
             waves=waves_seg,
             T=seg_T,
             p=seg_P,
@@ -821,40 +833,64 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
             IntensityThreshold=IntensityThreshold,
             wing_cutoff=wing_cutoff,
             wing_wavenumbers=wing_wavenumbers,
-            wing_method=wing_method
+            wing_method=wing_method, 
+            pathlength = pathlength,
+            dataspace = dataspace
         )
 
-        alpha_array[idx] = alpha_seg
+        y_array[idx] = y_seg
 
     if SNR is None:
-        alpha_noise = alpha_array
+        y_noise = y_array
     else:
         # Scale noise by max signal
-        alpha_noise = alpha_array + np.max(alpha_array) * np.random.normal(0, 1, len(alpha_array)) * (1/SNR)
+        y_noise = y_array + np.max(y_array) * np.random.normal(0, 1, len(y_array)) * (1/SNR)
+
+    if dataspace == 'alpha':
+        y_output_units = {'text': '10^-6 cm^-1', 'formatted': ' (10$^{-6}$ cm$^{-1}$)'}
+        y_output_label = {'text': 'alpha', 'formatted' : '$\\alpha$'} 
+    elif dataspace == 'absorbance':
+        y_output_units = {'text': None, 'formatted': None}
+        y_output_label = {'text': 'absorbance', 'formatted' : 'absorbance'} 
+    elif dataspace == 'absorption':
+        y_output_units = {'text': None, 'formatted': None}
+        y_output_label = {'text': 'absorption', 'formatted' : 'absorption'} 
+    elif dataspace == 'transmittance':
+        y_output_units = {'text': None, 'formatted': None}
+        y_output_label = {'text': 'transmittance', 'formatted' : 'transmittance'} 
 
     spectrum = pd.DataFrame()
     spectrum['Segment Number'] = seg_number
     spectrum['Wavenumber (cm-1)'] = wavenumbers
     spectrum['Wavenumber + Noise (cm-1)'] = wavenumbers_err
-    spectrum['Alpha (ppm/cm)'] = alpha_array
-    spectrum['Alpha + Noise (ppm/cm)'] = alpha_noise
+
+    
+    spectrum[y_output_label['text'] + y_output_units['text']] = y_array
+    spectrum[y_output_label['text'] + ' + Noise' + y_output_units['text']] = y_noise
     # Calculate Noise % (Data - Clean_Model)
     # Note: alpha_array ALREADY includes Baseline+Etalon from the engine
-    spectrum['CIA (ppm/cm)'] = cia_array
-    spectrum['Noise (%)'] = 100 * (alpha_noise - alpha_array) / np.max(alpha_noise) if np.max(alpha_noise) != 0 else 0
-    spectrum['Pressure (Torr)'] = final_pressure_array * 760
-    spectrum['Temperature (C)'] = final_temp_array - 273.15
+    spectrum['CIA (cm-1)'] = cia_array
+    spectrum['Noise (%)'] = 100 * (y_noise - y_array) / np.max(y_noise) if np.max(y_noise) != 0 else 0
+    spectrum['Pressure (atm)'] = final_pressure_array
+    spectrum['Temperature (K)'] = final_temp_array
     spectrum.to_csv(filename + '.csv', index=False)
 
-    return Spectrum(filename, molefraction=molefraction, natural_abundance=natural_abundance, 
-                    diluent=diluent, Diluent=Diluent, abundance_ratio_MI=abundance_ratio_MI, isotope_list=isotope_list,
-                    spectrum_number=1, input_freq=False, input_tau=False,
-                    pressure_column='Pressure (Torr)', temperature_column='Temperature (C)', frequency_column='Wavenumber + Noise (cm-1)',
+    return Spectrum(filename, molefraction=molefraction, natural_abundance=natural_abundance, abundance_ratio_MI=abundance_ratio_MI, isotope_list=isotope_list,
+                    diluent=diluent, Diluent=Diluent, 
+                    spectrum_number=1, 
+                    x_column = 'Wavenumber + Noise (cm-1)', x_input_units = 'cm-1', 
+                    y_column = y_output_label['text'] + ' + Noise' + y_output_units['text'],  y_input_units = y_output_units['text'], 
+                    y_unc_column = 'Noise (%)', y_unc_input_units = '%',
+
+                    pressure_column='Pressure (atm)', pressure_input_units='atm',
+                    temperature_column='Temperature (K)', temperature_input_units = 'K',
                     tau_column='Alpha + Noise (ppm/cm)', tau_stats_column='Noise (%)', segment_column='Segment Number',
+                    dataspace=dataspace, pathlength = pathlength,
                     etalons=etalons, nominal_temperature=nominal_temperature, x_shift=x_shift, 
                     baseline_order=len(baseline_terms)-1, weight=1,
                     ILS_function=ILS_function, ILS_resolution=ILS_resolution, ILS_wing=ILS_wing, 
-                    TIPS=TIPS, compressability_file=compressability_file, cia = cia_array)
+                    TIPS=TIPS, compressability_file=compressability_file, cia = cia_array, cia_input_units = 'cm-1')
+
 
 
     
