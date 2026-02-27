@@ -20,8 +20,8 @@ class O2_CIA_Karman_Model:
 
         self.defaults = {
             'singlet_delta': {
-                'S_SO': [39.13, 70.74],          # [O2-O2, O2-N2]
-                'S_EXCH': [304.7448171031378, 0],
+                'S_SO': [39.13e-6, 70.74e-6],          # [O2-O2, O2-N2]
+                'S_EXCH': [304.7448171031378e-6, 0],
                 'EXCH_b': [0.0028385240774561797, 0],
                 'EXCH_c': [3.6307626466573398e-06, 0],
                 'SO_b': 0.00014594154382655564,  # Scalar (broadcasts to both)
@@ -56,7 +56,8 @@ class O2_CIA_Karman_Model:
                         SO_shift_O2_O2 = 0, SO_shift_O2_N2 = 0,
                         EXCH_shift = 0,):
         '''
-        #Default values based on Karman, T. et al., Icarus 2019, 328 , 160 175.
+        #Default values based on Karman, T. et al., Icarus 2019, 328 , 160 175.  Note scalar difference from 
+        Adkins et al 2023 Journal of Quantitative Spectroscopy & Radiative Transfer 310 (2023) 108732 is to provide cm-1 instead of 10^-6 cm-1 output
         
         #Singlet Delta
         #EXCH_c, EXCH_b, EXCH_a = [3.6307626466573398e-06, 0.0028385240774561797, 1]
@@ -94,6 +95,6 @@ class O2_CIA_Karman_Model:
         CIA_model = (model_O2_O2*amagats_O2*amagats_O2) + (model_O2_N2*amagats_N2*amagats_O2) 
         #CIA_model = (Diluent['O2']['composition']*model_O2_O2) + (Diluent['N2']['composition']*model_O2_N2) # in amagats
         
-        return CIA_model
+        return CIA_model #output in units of cm-1
 
 
