@@ -617,7 +617,7 @@ class Fit_DataSet:
                 if spectrum.tau_stats.all() == 0:
                     weights = len(spectrum_residual)*[spectrum.weight]
                 else:
-                    pt_by_pt_weights= 1 / (spectrum.tau_stats)
+                    pt_by_pt_weights= 1 / (spectrum.tau_stats)**2
                     weights = spectrum.weight * pt_by_pt_weights
                 if spectrum.weight == 0:
                     spectrum_residual = np.asarray(len(spectrum_residual)*[0])
