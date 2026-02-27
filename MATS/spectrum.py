@@ -159,7 +159,7 @@ class Spectrum:
             raise ValueError(f"Unknown x_units '{self.x_input_units}'. Add it to X_CONVERSION dict.")
 
         self.y_input_units = y_input_units.lower()
-        if self.y_y_input_unitsunits not in self.ALLOWED_Y_UNITS.get(self.data_space, []):
+        if self.y_input_units not in self.ALLOWED_Y_UNITS.get(self.data_space, []):
             raise ValueError(
                 f"Invalid y_units '{self.y_input_units}' for data_space '{self.data_space}'. "
                 f"Allowed units: {self.ALLOWED_Y_UNITS[self.data_space]}"
@@ -242,56 +242,56 @@ class Spectrum:
         y_unc_converted = y_unc_raw.copy() if y_unc_raw is not None else None
 
         if self.data_space == 'alpha':
-            y_output_units = {'text': '10^-6 cm^-1', 'formatted': ' ($\\frac{10^{-6}}{cm^{-1}}$)'}
+            y_output_units = {'text': '10^-6 cm^-1', 'formatted': ' (10$^{-6}$ cm$^{-1}$)'}
             y_output_label = {'text': 'alpha', 'formatted' : '$\\alpha$'}
-            if self.y_units == 'cm-1':
+            if self.y_input_units == 'cm-1':
                 y_converted *= 1e6 
-            elif self.y_units == 'us':
+            elif self.y_input_units == 'us':
                 y_converted = (CONSTANTS['c']*y_raw / 1e12)**-1
 
             if y_unc_raw is not None:
-                if self.y_unc_units == 'cm-1':
+                if self.y_unc_input_units == 'cm-1':
                     y_unc_converted *=1e6
-                elif self.y_unc_units == 'us':
+                elif self.y_unc_input_units == 'us':
                     y_unc_converted = (CONSTANTS['c']*y_unc_raw / 1e12)**-1
-                elif self.y_unc_units == '%':
+                elif self.y_unc_input_units == '%':
                     y_unc_converted *= (y_converted/100)
-                elif self.y_unc_units == 'rel':
+                elif self.y_unc_input_units == 'rel':
                     y_unc_converted *= (y_converted)            
             
         elif (self.data_space == 'absorbance'):
             y_output_units = {'text': None, 'formatted': None}
             y_output_label = {'text': 'absorbance', 'formatted' : 'absorbance'}
-            if (self.y_units == 'ppm') or (self.y_units == '10-6'):
+            if (self.y_input_units == 'ppm') or (self.y_units == '10-6'):
                 y_converted /= 1e6 
 
             if y_unc_raw is not None:
-                if (self.y_unc_units == 'ppm') or (self.y_unc_units == '10-6'):
+                if (self.y_unc_input_units == 'ppm') or (self.y_unc_units == '10-6'):
                     y_unc_converted /=1e6
-                elif self.y_unc_units == '%':
+                elif self.y_unc_input_units == '%':
                     y_unc_converted *= (y_converted/100)   
-                elif self.y_unc_units == 'rel':
+                elif self.y_unc_input_units == 'rel':
                     y_unc_converted *= (y_converted)   
    
         elif (self.data_space == 'absorption'):
             y_output_units = {'text': None, 'formatted': None}
             y_output_label = {'text': 'absorption', 'formatted' : 'absorption'}
             if y_unc_raw is not None:
-                if self.y_unc_units == '%':
+                if self.y_unc_input_units == '%':
                     y_unc_converted *= (y_converted/100)   
-                elif self.y_unc_units == 'rel':
+                elif self.y_unc_input_units == 'rel':
                     y_unc_converted *= (y_converted)   
         elif (self.data_space == 'transmittance'):
             y_output_units = {'text': None, 'formatted': None}
             y_output_label = {'text': 'transmittance', 'formatted' : 'transmittance'}
-            if (self.y_units == '%'):
+            if (self.y_input_units == '%'):
                 y_converted /= 100
             
-            if (self.y_unc_units == '%') & (self.y_units == '%'):
+            if (self.y_unc_input_units == '%') & (self.y_units == '%'):
                 print ('Ambiguous meaning of percent in uncertainty.  Assume meaning is transmission units')
-            elif (self.y_unc_units == "%"):
+            elif (self.y_unc_input_units == "%"):
                  y_unc_converted *= (y_converted/100)
-            elif self.y_unc_units == 'rel':
+            elif self.y_unc_input_units == 'rel':
                 y_unc_converted *= (y_converted)  
         if y_unc_converted is None:
             y_unc_converted = np.zeros(len(y_converted))
@@ -433,9 +433,11 @@ class Spectrum:
     def plot_wave_y(self):
         """Generates a plot of y (for data_space) as a function of wavenumber (cm-1).
         """
-        plt.plot(self.wavenumber, self.y_data)
-        plt.xlabel('Wavenumber ($cm^{-1}$)')
-        plt.ylabel(self.y_output_label['formatted'] + self.y_output_units['formatted'])
+        fig, ax = plt.subplots()
+        ax.plot(self.wavenumber, self.y_data)
+        ax.set_xlabel('Wavenumber (cm$^{-1}$)')
+        ax.set_ylabel(self.y_output_label['formatted'] + self.y_output_units['formatted'])
+        ax.ticklabel_format(axis='both', style='plain', useOffset=False)
        
         plt.show()
 
@@ -467,7 +469,7 @@ class Spectrum:
         ax1 = plt.subplot(gs[1])
         ax1.ticklabel_format(useOffset=False)
         ax1.plot(self.wavenumber,self.residuals, "r-")
-        ax1.set_xlabel('Wavenumbers ($cm^{-1}$)')  
+        ax1.set_xlabel('Wavenumber (cm$^{-1}$)')  
 
         ax0.set_ylabel(self.y_output_label['formatted'] + self.y_output_units['formatted'])
         ax1.set_ylabel('Residuals ' + + self.y_output_units['formatted'])
@@ -489,8 +491,8 @@ class Spectrum:
 
         """
         new_file = pd.DataFrame()
-        new_file['Spectrum Number'] = [self.spectrum_number]*len(self.alpha)
-        new_file['Spectrum Name'] = [self.filename]*len(self.alpha)
+        new_file['Spectrum Number'] = [self.spectrum_number]*len(self.y_data)
+        new_file['Spectrum Name'] = [self.filename]*len(self.y_data)
         new_file['Wavenumber (cm-1)'] = self.wavenumber     
         new_file['Pressure (atm)'] = self.pressure_array
         new_file['Temperature (K)'] = self.temperature_array
@@ -539,14 +541,22 @@ class Spectrum:
 
 def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofile = True,
                         wave_min=None, wave_max= None, wave_space=None, wavenumbers = [],  wave_error = 0.0,
-                        SNR = None, baseline_terms = [0.0], temperature = 25, temperature_err = {'bias': 0, 'function': None, 'params': {}}, pressure = 760,
-                        pressure_err = {'per_bias': 0, 'function': None, 'params': {}},
+                        SNR = None, baseline_terms = [0.0], 
+                        temperature = 296, temperature_err = {'bias': 0, 'function': None, 'params': {}}, 
+                        pressure = 1,   pressure_err = {'per_bias': 0, 'function': None, 'params': {}},
                         wing_cutoff = 25, wing_wavenumbers = 25, wing_method = 'wing_wavenumbers', sim_window = 5, 
-                        filename = 'temp', molefraction = {}, molefraction_err = {},
-                        isotope_list = ISO, natural_abundance = True, abundance_ratio_MI = {},diluent = 'air', Diluent = {},
-                        nominal_temperature = 296, etalons = {}, x_shift = 0.0, IntensityThreshold = 1e-30, num_segments = 1, beta_formalism = False,
-                        ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, TIPS = PYTIPS2025, 
-                        compressability_file = None, BIA_model = {'sw_depletion': False, 'farwing_continuum': None}, 
+                        filename = 'temp', 
+                        molefraction = {}, molefraction_err = {},
+                        isotope_list = ISO, 
+                        natural_abundance = True, abundance_ratio_MI = {},
+                        diluent = 'air', Diluent = {},
+                        nominal_temperature = 296, etalons = {}, x_shift = 0.0, 
+                        IntensityThreshold = 1e-30, 
+                        num_segments = 1, beta_formalism = False,
+                        ILS_function = None, ILS_resolution = 0.1, ILS_wing = 10, 
+                        TIPS = PYTIPS2025, 
+                        compressability_file = None, 
+                        BIA_model = {'sw_depletion': False, 'farwing_continuum': None}, 
                         CIA_model = {'model': None, 'params': None}):
     """Generates a synthetic spectrum, where the output is a spectrum object that can be used in MATS classes.
 
@@ -570,11 +580,11 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
     baseline_terms : list, optional
         polynomial baseline coefficients where the index is equal to the coefficient order, ie. [0, 1, 2] would correspond to baseline = 0 + 1*(wavenumber - minimum wavenumber) + 2*(wavenumber - minimum wavenumber)^2. The default is [0].
     temperature : float, optional
-         temperature for simulation in celsius. The default is 25.
+         temperature for simulation in K. The default is 296.
     temperature_err : dict, optional
         possible keys include 'bias', 'function', and 'params'. The bias indicates the absolute bias in Celsius of the temperature reading, which will be added to the input temperature. Function can be 'linear' with params 'm' and 'b' or 'sine' with parameters 'amp', 'phase', and 'phase'. These define a function that is added to both the bias and set temperature as a function of the wavenumber. Note: if 'function' key is not equal to None, then there also needs to be a params key to define the function.. The default is {'bias': 0, 'function': None, 'params': {}}.
     pressure : float, optional
-        pressure for simulation in torr. The default is 760.
+        pressure for simulation in atm.  The default is 1
     pressure_err : dict, optional
         possible keys include bias, function, and params. The bias indicates the percent bias in of the pressure reading, which will be added to the input pressure. Function can be 'linear' with params 'm' and 'b' or 'sine' with parameters 'amp', 'phase', and 'phase'. These define a function that is added to both the bias and set pressure as a function of the wavenumber. Note: if 'function' key is not equal to None, then there also needs to be a params key to define the function.. The default is {'per_bias': 0, 'function': None, 'params': {}}.
     wing_cutoff : float, optional
@@ -691,16 +701,14 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
         engine_ils_res = ILS_resolution
     
     #Temperature
-    temperature_K = temperature + 273.15
-    temperature_w_error = np.full(len(wavenumbers), temperature_K + temperature_err['bias'])
+    temperature_w_error = np.full(len(wavenumbers), temperature + temperature_err['bias'])
     if temperature_err['function'] == 'linear' and 'params' in temperature_err:
         temperature_w_error += temperature_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + temperature_err['params']['b']
     elif temperature_err['function'] == 'sine' and 'params' in temperature_err:
          temperature_w_error += etalon((wavenumbers-np.min(wavenumbers)), temperature_err['params']['amp'], temperature_err['params']['period'], temperature_err['params']['phase'])
 
     #Pressure
-    pressure_atm = pressure / 760
-    pressure_w_error = np.full(len(wavenumbers), pressure_atm * (1 + pressure_err['per_bias']/100))
+    pressure_w_error = np.full(len(wavenumbers), pressure * (1 + pressure_err['per_bias']/100))
     if pressure_err['function'] == 'linear' and 'params' in pressure_err:
          pressure_w_error += pressure_err['params']['m']*(wavenumbers-np.min(wavenumbers)) + pressure_err['params']['b']
     elif pressure_err['function'] == 'sine' and 'params' in pressure_err:
@@ -746,8 +754,8 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
         
         cia_array = cia_calc.calculate_cia(
             wavenumbers, 
-            temperature_K, 
-            pressure_atm, 
+            temperature, 
+            pressure, 
             Diluent, 
             **CIA_model.get('parameters'))
 

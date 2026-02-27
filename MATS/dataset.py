@@ -51,6 +51,7 @@ class Dataset:
         self.base_linelist = self.generate_baseline_paramlist()
         self.check_param_list_BIA()
         self.check_if_compressability()
+        self.dataspace_summary = self.get_dataspace_counts()
 
     def renumber_spectra(self):
         """renumbers the spectra to be sequential starting at 1 (called in the initialization of the class).
@@ -413,6 +414,23 @@ class Dataset:
         for spectrum in self.spectra:
             spec_num_list.append(spectrum.spectrum_number)
         return spec_num_list
+    
+    def get_dataspace_counts(self):
+        data_space_summary = {'alpha':{'count':0, 'spectrum_numbers':[]}, 
+                              'absorbance':{'count':0, 'spectrum_numbers':[]}, 
+                              'absorption':{'count':0, 'spectrum_numbers':[]}, 
+                              'transmittance':{'count':0, 'spectrum_numbers':[]}
+                              }
+        
+        for spectrum in self.spectra:
+            ds = spectrum.data_space
+            if ds in data_space_summary:
+                data_space_summary[ds]['count'] += 1
+                data_space_summary[ds]['spectrum_numbers'].append(spectrum.spectrum_number)
+            else:
+                print(f"Warning: Spectrum {spectrum.spectrum_number} has an unrecognized data_space '{ds}'.  Valid data_spaces are 'alpha', 'absorbance','absorption', and 'transmittance'.")
+
+        return data_space_summary
 
     def generate_baseline_paramlist(self):
         """Generates a csv file called dataset_name + _baseline_paramlist, which will be used to generate another csv file that is used for fitting spectrum dependent parameters with columns for
@@ -534,35 +552,58 @@ class Dataset:
             Summary dataframe comprised of spectral information inculding model and residuals for all spectra in Dataset.
 
         """
+        active_dataspaces = [ds for ds, info in self.dataspace_summary.items() if info['count'] > 0]
 
-        summary_file = pd.DataFrame()
-        for spectrum in self.spectra:
-            spectrum_data = spectrum.save_spectrum_info(save_file = False)
-            #summary_file = summary_file.append(spectrum_data)
-            summary_file = pd.concat([summary_file, spectrum_data], ignore_index = True, sort = False)
+        if len(active_dataspaces) ==1:
 
-        if save_file:
-            summary_file.to_csv(self.dataset_name + '.csv', index = False)
-        return summary_file
+            summary_file = pd.DataFrame()
+
+            for spectrum in self.spectra:
+                spectrum_data = spectrum.save_spectrum_info(save_file = False)
+                summary_file = pd.concat([summary_file, spectrum_data], ignore_index = True, sort = False)
+
+            if save_file:
+                summary_file.to_csv(self.dataset_name + '.csv', index = False)
+
+            return summary_file
+        else:
+            summary_dict = {ds: pd.DataFrame() for ds in active_dataspaces}
+            for spectrum in self.spectra:
+                ds = spectrum.data_space
+                spectrum_data = spectrum.save_spectrum_info(save_file=False)
+                summary_dict[ds] = pd.concat([summary_dict[ds], spectrum_data], ignore_index=True, sort=False)
+            if save_file:
+                for ds, df in summary_dict.items():
+                    df.to_csv(f"{self.dataset_name}_{ds}.csv", index=False)
+            
+            return summary_dict
+
 
     def plot_model_residuals(self):
         """ Generates a plot showing both the model and experimental data as a function of wavenumber in the main plot with a subplot showing the residuals as function of wavenumber.
         """
+        for ds in self.dataspace_summary:
+            if self.dataspace_summary[ds]['count']!=0:
+                fig = plt.figure(figsize = (16,10))
+                gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1], figure=fig)
+                ax0 = plt.subplot(gs[0])
+                ax1 = plt.subplot(gs[1])
 
-        fig = plt.figure(figsize = (16,10))
-        gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
-        ax0 = plt.subplot(gs[0])
-        ax0.set_ylabel('$\\alpha (\\frac{ppm}{cm})$')
-        ax1 = plt.subplot(gs[1])
-        ax1.set_xlabel('Wavenumbers ($cm^{-1}$)')
-        ax1.set_ylabel('Residuals $(\\frac{ppm}{cm})$')
-        colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
-        ax0.ticklabel_format(useOffset=False)
-        ax1.ticklabel_format(useOffset=False)
-        for spectrum in self.spectra:
-            plot_color = colors[((spectrum.spectrum_number % 7)-1)]
-            ax0.plot(spectrum.wavenumber,spectrum.model, plot_color+'-')
-            ax0.plot(spectrum.wavenumber, spectrum.alpha, plot_color+'.', label = spectrum.filename)
-            ax1.plot(spectrum.wavenumber,spectrum.residuals, plot_color+"-")
-        ax0.legend(bbox_to_anchor=(1, 1))
-        plt.show()
+                for spectrum in self.spectra:
+                    if spectrum.spectrum_number in self.dataspace_summary[ds]['spectrum_numbers']:
+                        model_line = ax0.plot(spectrum.wavenumber,spectrum.model, '-')
+                        plot_color = model_line.get_color()
+                        ax0.plot(spectrum.wavenumber, spectrum.y_data, '.', color = plot_color, label = spectrum.filename)
+                        ax1.plot(spectrum.wavenumber,spectrum.residuals, "-", color =plot_color )
+                        y_label = spectrum.y_output_label['formatted'] + spectrum.y_output_units['formatted']
+                        residual_label = 'Residuals ' + + spectrum.y_output_units['formatted']
+                
+                ax0.set_ylabel(y_label)
+                ax0.set_xlabel('Wavenumber (cm$^{-1}$)')
+                ax1.set_ylabel(residual_label)
+                ax0.ticklabel_format(useOffset=False)
+                ax1.ticklabel_format(useOffset=False)
+                ax0.legend(bbox_to_anchor=(1, 1))
+                fig.tight_layout()
+                plt.show()
+
