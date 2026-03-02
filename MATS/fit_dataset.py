@@ -802,9 +802,9 @@ class Fit_DataSet:
         The generated file has the beta values for each line and spectra that were used in the fitting.  Access to this information is critical as the relationship between beta and nuVC is what generates a spoecific nuVC.
 
         """
-        if beta_summary_filename == None:
+        if beta_summary_filename is None:
             beta_summary_filename = 'Beta Summary File'
-        if self.beta_formalism == True:
+        if self.beta_formalism:
             beta_summary_list = self.lineparam_list.copy()
 
             for spectrum in self.dataset.spectra:
@@ -832,15 +832,15 @@ class Fit_DataSet:
                     for species, info in spectrum.Diluent.items():
                         perturber_mass += spectrum.Diluent[species]['composition']*spectrum.Diluent[species]['m']
                         if self.constrain_dictionary['nuOptRe']:
-                            nuOptRe += spectrum.Diluent[species]['composition']*(beta_summary_list['nuOptRe_%s'%species]*(p/1)*((296/T)**(beta_summary_list['n_nuOptRe_%s'%species])))
+                            nuOptRe += spectrum.Diluent[species]['composition']*(beta_summary_list['nuOptRe_%s'%species].values*(p/1)*((296/T)**(beta_summary_list['n_nuOptRe_%s'%species].values)))
                         else:
-                            nuOptRe += spectrum.Diluent[species]['composition']*(beta_summary_list['nuOptRe_%s_%s'%(species,str(spectrum.spectrum_number))]*(p/1)*((296/T)**(beta_summary_list['n_nuVC_%s'%species])))
+                            nuOptRe += spectrum.Diluent[species]['composition']*(beta_summary_list['nuOptRe_%s_%s'%(species,str(spectrum.spectrum_number))].values*(p/1)*((296/T)**(beta_summary_list['n_nuVC_%s'%species].values)))
                     alpha = perturber_mass / mass
 
                     if self.constrain_dictionary['nu']:
-                        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['mass'].values))*beta_summary_list['nu'] / CONSTANTS['c']
+                        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['mass'].values))*beta_summary_list['nu'].values / CONSTANTS['c']
                     else:
-                        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['m_mass'].values))*beta_summary_list['nu' + '_' + str(spectrum.spectrum_number)] / CONSTANTS['c']
+                        GammaD = np.sqrt(2*CONSTANTS['k']*CONSTANTS['Na']*T*np.log(2)/(beta_summary_list['mass'].values))*beta_summary_list['nu' + '_' + str(spectrum.spectrum_number)].values / CONSTANTS['c']
                     
                     mask = (beta_summary_list['nu'].values >= wave_min) & (beta_summary_list['nu'].values <= wave_max)
                     valid_indices = np.where(mask)[0]
