@@ -1,0 +1,5 @@
+Spectrum Number,Segment Number,Baseline Order,Pressure,Temperature,x_shift,molefraction_CO2,abundance_ratio_CO2_1,abundance_ratio_CO2_2,abundance_ratio_CO2_3,abundance_ratio_CO2_4,abundance_ratio_CO2_5,abundance_ratio_CO2_6,abundance_ratio_CO2_7,baseline_a
+1,1,0,0.10000000000000002,296.0,0.0,0.0004,1,1,1,1,1,1,1,0.0
+2,1,0,0.25,296.0,0.0,0.0004,1,1,1,1,1,1,1,0.0
+3,1,0,0.5,296.0,0.0,0.0004,1,1,1,1,1,1,1,0.0
+4,1,0,1.0,296.0,0.0,0.0004,1,1,1,1,1,1,1,0.0

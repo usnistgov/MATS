@@ -386,7 +386,7 @@ class Fit_DataSet:
         self.engine.configure_for_fitting(params)
         return (params)
 
-    def constrained_baseline(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
+    def constrained_baseline_segments(self, params, baseline_segment_constrained = True, xshift_segment_constrained = True, molefraction_segment_constrained = True,
                                     etalon_amp_segment_constrained = True, etalon_period_segment_constrained = True, etalon_phase_segment_constrained = True,
                                     pressure_segment_constrained = True, temperature_segment_constrained = True, abundance_ratio_segment_constrained = True, 
                                     pathlength_segment_constrained = True):
@@ -453,6 +453,50 @@ class Fit_DataSet:
                     if segment_num != spectrum_segment_min[spectrum_num]:
                         params[param].set(expr = param[:indices[2]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
         return params
+    
+    def constrain_baseline_params(self, params, parameter_name, common_spectra, vary = False):
+        prefix = parameter_name + '_'
+        matching_params = [p for p in params.keys() if p.startswith(prefix)]
+
+        if not matching_params:
+            print(f"Warning: No parameters found starting with '{parameter_name}'")
+            return params
+        spec_param_map = {}
+        for p in matching_params:
+            suffix = p[len(prefix):]
+            parts = suffix.split('_')
+            try:
+                spec_num = int(parts[0])
+                if spec_num not in spec_param_map:
+                    spec_param_map[spec_num] = []
+                spec_param_map[spec_num].append(p)
+            except ValueError:
+                continue
+        
+        if isinstance(common_spectra, str) and common_spectra.lower() == 'all':
+            main_spec_num = min(spec_param_map.keys())
+            main_param = sorted(spec_param_map[main_spec_num])[0]
+            for p in matching_params:
+                if p != main_param:
+                    params[p].set(expr=main_param)
+            params[main_param].set(vary = vary)
+        elif isinstance(common_spectra, tuple):
+            for group in common_spectra:
+                if not group:
+                    continue
+                main_spec = group[0]
+                if main_spec not in spec_param_map:
+                    print(f"Warning: Main spectrum {main_spec} not found for {parameter_name}. Skipping group.")
+                    continue
+                main_param = sorted(spec_param_map[main_spec])[0]
+                for spec_num in group[1:]:
+                    if spec_num in spec_param_map:
+                        for p in spec_param_map[spec_num]:
+                            params[p].set(expr=main_param)
+                params[main_param].set(vary = vary)
+        return params
+                
+
     
     def constrained_CIA(self, params, S_temperature_dependence_constrained = True, shift_constrained = True):
         if self.dataset.CIA_model['model'] == 'Karman':
