@@ -76,14 +76,14 @@ class Spectrum:
     """
 
     ALLOWED_Y_UNITS = {
-        'alpha': ['cm-1', '10-6 cm-1', 'ppm/cm', 'us'],
+        'alpha': ['cm-1', '10-6 cm-1', '10^-6 cm^-1', 'ppm/cm', 'us'],
         'absorbance': ['unitless', 'none', 'a.u.', '', 'ppm', '10-6'],
         'absorption': ['unitless', 'none', 'a.u.', ''],
         'transmittance': ['unitless', 'none', 'a.u.', '', "%"], 
     }
 
     ALLOWED_Y_UNC_UNITS = {
-        'alpha': ['cm-1', '10-6 cm-1', 'ppm/cm', 'us', '%', 'rel'],
+        'alpha': ['cm-1', '10-6 cm-1', '10^-6 cm^-1','ppm/cm', 'us', '%', 'rel'],
         'absorbance': ['unitless', 'none', 'a.u.', '', '%', 'ppm', '10-6', 'rel'],
         'absorption': ['unitless', 'none', 'a.u.', '', '%', 'rel'],
         'transmittance': ['unitless', 'none', 'a.u.', '', '%', 'rel']
@@ -171,11 +171,12 @@ class Spectrum:
             )
         
         self.y_unc_input_units = y_unc_input_units.lower()
-        if self.y_unc_input_units not in self.ALLOWED_Y_UNC_UNITS.get(self.dataspace, []):
-            raise ValueError(
-                f"Invalid y_units '{self.y_unc_input_units}' for dataspace '{self.dataspace}'. "
-                f"Allowed units: {self.ALLOWED_Y_UNC_UNITS[self.dataspace]}"
-            )
+        if y_unc_column is not None:
+            if self.y_unc_input_units not in self.ALLOWED_Y_UNC_UNITS.get(self.dataspace, []):
+                raise ValueError(
+                    f"Invalid y_units '{self.y_unc_input_units}' for dataspace '{self.dataspace}'. "
+                    f"Allowed units: {self.ALLOWED_Y_UNC_UNITS[self.dataspace]}"
+                )
 
         self.pressure_input_units = pressure_input_units.lower()
         if self.pressure_input_units not in self.PRESSURE_CONVERSION:
@@ -193,6 +194,8 @@ class Spectrum:
 
         if y_unc_column is not None:
             raw_y_unc = file_contents[y_unc_column].values if y_unc_column in file_contents.columns else None
+        else:
+            raw_y_unc = None
         
         if segment_column is not None:
             self.segments = file_contents[segment_column].values.astype(int)
@@ -269,13 +272,13 @@ class Spectrum:
                     y_unc_converted *= (y_converted)            
             
         elif (self.dataspace == 'absorbance'):
-            y_output_units = {'text': None, 'formatted': None}
+            y_output_units = {'text': '', 'formatted': ''}
             y_output_label = {'text': 'absorbance', 'formatted' : 'absorbance'}
-            if (self.y_input_units == 'ppm') or (self.y_units == '10-6'):
+            if (self.y_input_units == 'ppm') or (self.y_input_units == '10-6'):
                 y_converted /= 1e6 
 
             if y_unc_raw is not None:
-                if (self.y_unc_input_units == 'ppm') or (self.y_unc_units == '10-6'):
+                if (self.y_unc_input_units == 'ppm') or (self.y_unc_input_units == '10-6'):
                     y_unc_converted /=1e6
                 elif self.y_unc_input_units == '%':
                     y_unc_converted *= (y_converted/100)   
@@ -283,7 +286,7 @@ class Spectrum:
                     y_unc_converted *= (y_converted)   
    
         elif (self.dataspace == 'absorption'):
-            y_output_units = {'text': None, 'formatted': None}
+            y_output_units = {'text': '', 'formatted': ''}
             y_output_label = {'text': 'absorption', 'formatted' : 'absorption'}
             if y_unc_raw is not None:
                 if self.y_unc_input_units == '%':
@@ -291,17 +294,17 @@ class Spectrum:
                 elif self.y_unc_input_units == 'rel':
                     y_unc_converted *= (y_converted)   
         elif (self.dataspace == 'transmittance'):
-            y_output_units = {'text': None, 'formatted': None}
+            y_output_units = {'text': '', 'formatted': ''}
             y_output_label = {'text': 'transmittance', 'formatted' : 'transmittance'}
             if (self.y_input_units == '%'):
                 y_converted /= 100
-            
-            if (self.y_unc_input_units == '%') & (self.y_units == '%'):
-                print ('Ambiguous meaning of percent in uncertainty.  Assume meaning is transmission units')
-            elif (self.y_unc_input_units == "%"):
-                 y_unc_converted *= (y_converted/100)
-            elif self.y_unc_input_units == 'rel':
-                y_unc_converted *= (y_converted)  
+            if y_unc_raw is not None:
+                if (self.y_unc_input_units == '%') & (self.y_input_units == '%'):
+                    print ('Ambiguous meaning of percent in uncertainty.  Assume meaning is transmission units')
+                elif (self.y_unc_input_units == "%"):
+                    y_unc_converted *= (y_converted/100)
+                elif self.y_unc_input_units == 'rel':
+                    y_unc_converted *= (y_converted)  
         if y_unc_converted is None:
             y_unc_converted = np.zeros(len(y_converted))
 
@@ -382,8 +385,6 @@ class Spectrum:
         return self.tau_stats
     def get_wavenumber(self):
         return self.wavenumber
-    def get_alpha(self):
-        return self.alpha
     def get_etalons(self):
         return self.etalons
     def get_model(self):
@@ -398,13 +399,13 @@ class Spectrum:
         return self.nominal_temperature
     
     def get_temperature_at_segment(self, segment_number):
-        mask = (self.segments == segment_number)
+        mask = (np.asarray(self.segments) == segment_number)
         if not np.any(mask):
             raise ValueError(f"Segment {segment_number} not found in this spectrum.")
         return np.mean(self.temperature_array[mask])
         
     def get_pressure_at_segment(self, segment_number):
-        mask = (self.segments == segment_number)
+        mask = (np.asarray(self.segments) == segment_number)
         if not np.any(mask):
             raise ValueError(f"Segment {segment_number} not found in this spectrum.")
         return np.mean(self.pressure_array[mask])
@@ -472,7 +473,7 @@ class Spectrum:
             QF.
 
         """
-        return np.around(np.abs(self.alpha.max() - self.alpha.min()) / self.residuals.std(),0)
+        return np.around(np.abs(self.y_data.max() - self.y_data.min()) / self.residuals.std(),0)
 
     def plot_model_residuals(self):
         """Generates a plot of the alpha and model (ppm/cm) as a function of wavenumber (cm-1) and on lower plot shows the residuals (ppm/cm) as a function of wavenumber (cm-1).
@@ -862,13 +863,13 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
         y_output_units = {'text': '10^-6 cm^-1', 'formatted': ' (10$^{-6}$ cm$^{-1}$)'}
         y_output_label = {'text': 'alpha', 'formatted' : '$\\alpha$'} 
     elif dataspace == 'absorbance':
-        y_output_units = {'text': None, 'formatted': None}
+        y_output_units = {'text': '', 'formatted': ''}
         y_output_label = {'text': 'absorbance', 'formatted' : 'absorbance'} 
     elif dataspace == 'absorption':
-        y_output_units = {'text': None, 'formatted': None}
+        y_output_units = {'text': '', 'formatted': ''}
         y_output_label = {'text': 'absorption', 'formatted' : 'absorption'} 
     elif dataspace == 'transmittance':
-        y_output_units = {'text': None, 'formatted': None}
+        y_output_units = {'text': '', 'formatted': ''}
         y_output_label = {'text': 'transmittance', 'formatted' : 'transmittance'} 
 
     spectrum = pd.DataFrame()
@@ -893,10 +894,8 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
                     x_column = 'Wavenumber + Noise (cm-1)', x_input_units = 'cm-1', 
                     y_column = y_output_label['text'] + ' + Noise' + y_output_units['text'],  y_input_units = y_output_units['text'], 
                     y_unc_column = 'Noise (%)', y_unc_input_units = '%',
-
-                    pressure_column='Pressure (atm)', pressure_input_units='atm',
-                    temperature_column='Temperature (K)', temperature_input_units = 'K',
-                    tau_column='Alpha + Noise (ppm/cm)', tau_stats_column='Noise (%)', segment_column='Segment Number',
+                    pressure_column = 'Pressure (atm)', pressure_input_units = 'atm',
+                    temperature_column = 'Temperature (K)', temperature_input_units = 'K',
                     dataspace=dataspace, pathlength = pathlength,
                     etalons=etalons, nominal_temperature=nominal_temperature, x_shift=x_shift, 
                     baseline_order=len(baseline_terms)-1, weight=1,

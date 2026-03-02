@@ -103,7 +103,7 @@ class Fit_DataSet:
         self.temperature_bounds = init_bounds(temperature_bounds)
         self.x_shift_bounds = init_bounds(x_shift_bounds)
         self.abundance_ratio_bounds = init_bounds(abundance_ratio_bounds)
-        self.pathlength_bounds = init_bounds(self.pathlength_bounds)
+        self.pathlength_bounds = init_bounds(pathlength_bounds)
 
         self.etalon_amp_bounds = init_bounds(etalon_amp_bounds)
         self.etalon_period_bounds = init_bounds(etalon_period_bounds)

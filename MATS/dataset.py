@@ -424,7 +424,7 @@ class Dataset:
                               }
         
         for spectrum in self.spectra:
-            ds = spectrum.data_pace
+            ds = spectrum.dataspace
             if ds in dataspace_summary:
                 dataspace_summary[ds]['count'] += 1
                 dataspace_summary[ds]['spectrum_numbers'].append(spectrum.spectrum_number)
@@ -597,12 +597,12 @@ class Dataset:
 
                 for spectrum in self.spectra:
                     if spectrum.spectrum_number in self.dataspace_summary[ds]['spectrum_numbers']:
-                        model_line = ax0.plot(spectrum.wavenumber,spectrum.model, '-')
+                        model_line, = ax0.plot(spectrum.wavenumber,spectrum.model, '-')
                         plot_color = model_line.get_color()
                         ax0.plot(spectrum.wavenumber, spectrum.y_data, '.', color = plot_color, label = spectrum.filename)
                         ax1.plot(spectrum.wavenumber,spectrum.residuals, "-", color =plot_color )
                         y_label = spectrum.y_output_label['formatted'] + spectrum.y_output_units['formatted']
-                        residual_label = 'Residuals ' + + spectrum.y_output_units['formatted']
+                        residual_label = 'Residuals ' + spectrum.y_output_units['formatted']
                 
                 ax0.set_ylabel(y_label)
                 ax0.set_xlabel('Wavenumber (cm$^{-1}$)')

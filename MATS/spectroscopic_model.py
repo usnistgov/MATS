@@ -225,9 +225,6 @@ class Spectroscopic_model:
                                  IntensityThreshold = IntensityThreshold, 
                                  wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method,segment=segment)      
         
-        if dataspace == 'alpha':
-            LBL_alpha = LBL_alpha* 1e6
-
         # Calculate CIA
         cia_alpha = np.zeros_like(waves)
         if cia_config:
