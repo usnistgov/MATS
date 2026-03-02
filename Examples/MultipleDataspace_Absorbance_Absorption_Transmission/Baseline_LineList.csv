@@ -1,0 +1,12 @@
+Spectrum Number,Segment Number,Pressure,Pressure_err,Pressure_vary,Temperature,Temperature_err,Temperature_vary,x_shift,x_shift_err,x_shift_vary,molefraction_O2,molefraction_O2_err,molefraction_O2_vary,baseline_a,baseline_a_err,baseline_a_vary,pathlength,pathlength_err,pathlength_vary
+1,1,0.0013001299999998,0.0,False,296.0100000000002,0.0,False,0.0,0.0,False,1.0,0.0,False,0.0,0.0,False,0.0,0.0,False
+2,1,0.0013001299999998,0.0,False,296.0100000000002,0.0,False,0.0,0.0,False,0.2072,0.0,False,0.0,0.0,False,0.0,0.0,False
+3,1,0.5260526,0.0,False,296.01000000000016,0.0,False,0.0,0.0,False,0.2072,0.0,False,0.0,0.0,False,0.0,0.0,False
+4,1,1.2971296999999995,0.0,False,296.0100000000001,0.0,False,0.0,0.0,False,0.2072,0.0,False,0.0,0.0,False,0.0,0.0,False
+5,1,0.327327,0.0,False,297.4,0.0,False,0.0,0.0,False,0.2072,0.0,False,0.0,0.0,False,8273.0,0.0,False
+6,1,0.2642639999999999,0.0,False,297.1,0.0,False,0.0,0.0,False,0.2072,0.0,False,0.0,0.0,False,9925.0,0.0,False
+7,1,0.5305299999999997,0.0,False,297.4,0.0,False,0.0,0.0,False,0.2072,0.0,False,0.0,0.0,False,9925.0,0.0,False
+8,1,0.3963960000000001,0.0,False,295.1,0.0,False,0.0,0.0,False,0.325,0.0,False,0.0,0.0,False,9925.0,0.0,False
+9,1,0.1911909999999999,0.0,False,296.0,0.0,False,0.0,0.0,False,0.1057,0.0,False,0.0,0.0,False,9925.0,0.0,False
+10,1,0.2632629999999999,0.0,False,297.30000000000007,0.0,False,0.0,0.0,False,1.0,0.0,False,0.0,0.0,False,5200.0,0.0,False
+11,1,0.6626619999999999,0.0,False,297.69999999999993,0.0,False,0.0,0.0,False,1.0,0.0,False,0.0,0.0,False,5200.0,0.0,False
