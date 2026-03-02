@@ -39,8 +39,11 @@ class LoadLineListData(object):
     _prefix_local = Path(__file__).parent / "Linelists"
 
     def __init__(self, paths=None):
+        
+        paths_csv = list(self._prefix_local.glob('*.csv'))
+        paths_xlsx = list(self._prefix_local.glob('*.xlsx'))
+        paths_default = paths_csv + paths_xlsx
 
-        paths_default = list(self._prefix_local.glob('*.csv'))
         if paths is None:
             paths = []
         else:
@@ -70,7 +73,12 @@ class LoadLineListData(object):
             raise ValueError("file name must be in {}".format(self.names))
         path = self._paths_dict[name]
         if name not in self._cache:
-            self._cache[name] = pd.read_csv(path)
+            if path.suffix.lower() == '.csv':
+                self._cache[name] = pd.read_csv(path)
+            elif path.suffix.lower() == '.xlsx':
+                self._cache[name] = pd.read_excel(path)
+            else:
+                raise ValueError(f"Unsupported file format: {path.suffix}")
 
         # always return a copy.
         # MATS manipulates in place the linelist
