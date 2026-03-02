@@ -479,10 +479,10 @@ class Fit_DataSet:
                 w_array = None
                 if self.weight_spectra:
                     if spectrum.y_unc.all() == 0:
-                        w_array = spectrum.weight
+                        w_array = np.sqrt(spectrum.weight)
                     else:
                         seg_stats = spectrum.y_unc[idx_min : idx_max + 1]
-                        w_array = spectrum.weight * (1.0 / seg_stats)**2
+                        w_array = np.sqrt(spectrum.weight) * (1.0 / seg_stats)
                 
                 # Pre-calc CIA Slice indices if needed
                 cia_slice_indices = None
@@ -636,12 +636,12 @@ class Fit_DataSet:
 
             if self.weight_spectra:
                 if spectrum.y_unc.all() == 0:
-                    weights = len(spectrum_residual)*[spectrum.weight]
+                    weights = len(spectrum_residual)*[np.sqrt(spectrum.weight)]
                 else:
-                    pt_by_pt_weights= 1 / (spectrum.y_unc)**2
-                    weights = spectrum.weight * pt_by_pt_weights
+                    pt_by_pt_weights= 1 / (spectrum.y_unc)
+                    weights = np.sqrt(spectrum.weight) * pt_by_pt_weights
                 if spectrum.weight == 0:
-                    spectrum_residual = np.asarray(len(spectrum_residual)*[0])
+                    spectrum_residual = np.zeros_like(spectrum_residual)
                 else:
                     spectrum_residual  = spectrum_residual / weights
 
