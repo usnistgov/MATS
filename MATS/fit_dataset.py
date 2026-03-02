@@ -30,7 +30,7 @@ class Fit_DataSet:
     """Provides the fitting functionality for a Dataset."""
 
     def __init__(self, dataset, base_linelist_file, param_linelist_file, CIA_linelist_file = None,
-                 lineprofile = 'mHTP', numba_lineprofile = True,
+                 lineprofile = 'mHTP', numba_lineprofile = False,
                  minimum_parameter_fit_intensity = 1e-30, minimum_simulation_intensity=1e-30,
                  weight_spectra = False,
                  

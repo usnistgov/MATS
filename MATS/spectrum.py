@@ -561,7 +561,7 @@ class Spectrum:
         plt.show()
 
 
-def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofile = True,
+def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofile = False,
                         wave_min=None, wave_max= None, wave_space=None, wavenumbers = [],  wave_error = 0.0,
                         SNR = None, baseline_terms = [0.0], 
                         dataspace = 'alpha', pathlength = 0,
