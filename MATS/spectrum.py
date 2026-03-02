@@ -494,7 +494,7 @@ class Spectrum:
         ax1.set_xlabel('Wavenumber (cm$^{-1}$)')  
 
         ax0.set_ylabel(self.y_output_label['formatted'] + self.y_output_units['formatted'])
-        ax1.set_ylabel('Residuals ' + + self.y_output_units['formatted'])
+        ax1.set_ylabel('Residuals ' + self.y_output_units['formatted'])
         plt.show()
 
     def save_spectrum_info(self, save_file = False):
