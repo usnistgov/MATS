@@ -602,7 +602,7 @@ class Dataset:
                         ax0.plot(spectrum.wavenumber, spectrum.y_data, '.', color = plot_color, label = spectrum.filename)
                         ax1.plot(spectrum.wavenumber,spectrum.residuals, "-", color =plot_color )
                         y_label = spectrum.y_output_label['formatted'] + spectrum.y_output_units['formatted']
-                        residual_label = 'Residuals ' + spectrum.y_output_units['formatted']
+                        residual_label = 'Residuals \n' + spectrum.y_output_units['formatted']
                 
                 ax0.set_ylabel(y_label)
                 ax0.set_xlabel('Wavenumber (cm$^{-1}$)')

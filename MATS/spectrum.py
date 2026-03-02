@@ -519,9 +519,9 @@ class Spectrum:
         new_file['Pressure (atm)'] = self.pressure_array
         new_file['Temperature (K)'] = self.temperature_array
 
-        new_file[self.y_output_label['text'] + self.y_output_units['text']] = self.y_data
-        new_file['Model' + self.y_output_units['text'] ] = self.model
-        new_file['Residuals' + self.y_output_units['text']] = self.residuals
+        new_file[self.y_output_label['text'] + ' ('+ self.y_output_units['text'] + ')'] = self.y_data
+        new_file['Model (' + self.y_output_units['text']+')'] = self.model
+        new_file['Residuals (' + self.y_output_units['text'] + ')'] = self.residuals
 
         new_file['QF'] = [self.calculate_QF()]*len(new_file)
         new_file['Background'] = self.background
