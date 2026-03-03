@@ -454,7 +454,7 @@ class Fit_DataSet:
                         params[param].set(expr = param[:indices[2]+1] + str(spectrum_num) + '_' + str(spectrum_segment_min[spectrum_num]))
         return params
     
-    def constrain_baseline_params(self, params, parameter_name, common_spectra, vary = False):
+    def constrain_baseline_params(self, params, parameter_name, common_spectra = 'all', vary = False):
         prefix = parameter_name + '_'
         matching_params = [p for p in params.keys() if p.startswith(prefix)]
 
