@@ -1,20 +1,16 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>HITRAN Line-by-Line Static Molecules &#8212; MATS 3 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=279e0f84" />
+    <script src="_static/documentation_options.js?v=ba26cd90"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -24,6 +20,13 @@
   <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
   <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
 
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-RJSMY46M5C"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-RJSMY46M5C');
+</script>
 
 <script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
 <script>
@@ -50,7 +53,7 @@ $(document).ready(function(){
 
 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -77,12 +80,12 @@ $(document).ready(function(){
           <div class="body" role="main">
             
   <section id="hitran-line-by-line-static-molecules">
-<h1>HITRAN Line-by-Line Static Molecules<a class="headerlink" href="#hitran-line-by-line-static-molecules" title="Permalink to this heading">¶</a></h1>
+<h1>HITRAN Line-by-Line Static Molecules<a class="headerlink" href="#hitran-line-by-line-static-molecules" title="Link to this heading">¶</a></h1>
 <p>Provided in the MATS are several examples highlighting MATS capabilities, which can be found in the MATS <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples">examples folder</a>.</p>
 <p>MATS has added the capability to simulate and/or fit spectra of molecules that only available in HITRAN as static molecules (not in the typical HITRANOnline) format.</p>
 <p><a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples/HITRAN_static_LBL_molecules">The example below ptovides an example of how to simulate spectra using static HITRAN LBL data and is based on the code provided in the HITRAN static LBL molecule example.</a></p>
 <section id="generating-a-mats-linelist-from-a-par-file">
-<h2>Generating a MATS linelist from a .par file<a class="headerlink" href="#generating-a-mats-linelist-from-a-par-file" title="Permalink to this heading">¶</a></h2>
+<h2>Generating a MATS linelist from a .par file<a class="headerlink" href="#generating-a-mats-linelist-from-a-par-file" title="Link to this heading">¶</a></h2>
 <p>The .par formatting is provided in Table 1 of the HITRAN 2004 paper.  The code below uses that .par formatting to parse the spectra into the MATS format.</p>
 <p>L.S. Rothman, D. Jacquemart, A. Barbe, D. Chris Benner, M. Birk, L.R. Brown, M.R. Carleer, C. Chackerian, K. Chance, L.H. Coudert, V. Dana, V.M. Devi, J.-M. Flaud, R.R. Gamache, A. Goldman, J.-M. Hartmann, K.W. Jucks, A.G. Maki, J.-Y. Mandin, S.T. Massie, J. Orphal, A. Perrin, C.P. Rinsland, M.A.H. Smith, J. Tennyson, R.N. Tolchenov, R.A. Toth, J. Vander Auwera, P. Varanasi, G. Wagner, The HITRAN 2004 molecular spectroscopic database, Journal of Quantitative Spectroscopy and Radiative Transfer, Volume 96, Issue 2, 2005, Pages 139-204, <a class="reference external" href="https://doi.org/10.1016/j.jqsrt.2004.10.008">https://doi.org/10.1016/j.jqsrt.2004.10.008</a></p>
 <p>Users will need to download the .par file provided by HITRAN for desired molecule.</p>
@@ -156,7 +159,7 @@ $(document).ready(function(){
 <img alt="_images/HITRAN_static_LBL.png" src="_images/HITRAN_static_LBL.png" />
 </section>
 <section id="tips-availability">
-<h2>TIPS Availability<a class="headerlink" href="#tips-availability" title="Permalink to this heading">¶</a></h2>
+<h2>TIPS Availability<a class="headerlink" href="#tips-availability" title="Link to this heading">¶</a></h2>
 <p>While these molecules are available in HITRAN, the molecules available in the TIPS-2011 and TIPS-2017 partition function libraries differ. For example in hapi TIPS-2011 has information for CF4, where TIPS-2017 is an array of zeros. This leads to nan values for the at simulation temperature line intensities. We added the MATS capability to switch from the default TIPS-2017 to TIPS-2011, so that this molecule could be appropriately simulated. Below is a summary of molecules, where this might be an issue. For molecules with no TIPS available the TIPS call with through an error and the 296 line intensity will be used.</p>
 <p>TIPS 2011 Only</p>
 <p>SO3, M = 46, I =1
@@ -173,7 +176,7 @@ O, M = 34, I = 1
 CH3OH, M = 38, I=1</p>
 </section>
 <section id="simulating-in-mats">
-<h2>Simulating in MATS<a class="headerlink" href="#simulating-in-mats" title="Permalink to this heading">¶</a></h2>
+<h2>Simulating in MATS<a class="headerlink" href="#simulating-in-mats" title="Link to this heading">¶</a></h2>
 <p>Once the MATS linelist file has been generated spectra can be simulated or fit in MATS as normal.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#PARAM_LINELIST = pd.read_csv(&#39;CF4_ParameterLinelist.csv&#39;) # Option to read in so you don&#39;t have to generate the file every time</span>
 
@@ -210,7 +213,7 @@ CH3OH, M = 38, I=1</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h4>Previous topic</h4>
@@ -222,7 +225,7 @@ CH3OH, M = 38, I=1</p>
     <p class="topless"><a href="Oxygen%20CIA%20using%20theoretical%20model.html"
                           title="next chapter">Oxygen CIA using theoretical model</a></p>
   </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -230,13 +233,13 @@ CH3OH, M = 38, I=1</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -257,7 +260,7 @@ CH3OH, M = 38, I=1</p>
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     </div>
   </body>
 </html>

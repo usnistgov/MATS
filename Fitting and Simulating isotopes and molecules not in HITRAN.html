@@ -1,20 +1,16 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Fitting and Simulating isotopes and molecules not in HITRAN &#8212; MATS 3 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=279e0f84" />
+    <script src="_static/documentation_options.js?v=ba26cd90"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -24,6 +20,13 @@
   <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
   <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
 
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-RJSMY46M5C"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-RJSMY46M5C');
+</script>
 
 <script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
 <script>
@@ -50,7 +53,7 @@ $(document).ready(function(){
 
 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -77,20 +80,20 @@ $(document).ready(function(){
           <div class="body" role="main">
             
   <section id="fitting-and-simulating-isotopes-and-molecules-not-in-hitran">
-<h1>Fitting and Simulating isotopes and molecules not in HITRAN<a class="headerlink" href="#fitting-and-simulating-isotopes-and-molecules-not-in-hitran" title="Permalink to this heading">¶</a></h1>
+<h1>Fitting and Simulating isotopes and molecules not in HITRAN<a class="headerlink" href="#fitting-and-simulating-isotopes-and-molecules-not-in-hitran" title="Link to this heading">¶</a></h1>
 <p>Provided in the MATS v2 release are several examples highlighting MATS capabilities, which can be found in the MATS <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples">examples folder</a>.</p>
 <p>HITRAN’s focus is on atmospherically relevent molecules.  This was the original focus of MATS, however recent feature development has allowed for adaption of to include non-HITRAN molecules.</p>
 <p>The example shows how to supplement the HITRAN isotope list and then use that in simulations and fits. This example uses Mercury as an examaple case <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples/nonHITRAN_Molecules">This example uses Mercury as an example case</a>.</p>
 <section id="append-to-the-hitran-isotope-list-to-include-desired-isotopes">
-<h2>Append to the HITRAN isotope list to include desired isotopes<a class="headerlink" href="#append-to-the-hitran-isotope-list-to-include-desired-isotopes" title="Permalink to this heading">¶</a></h2>
+<h2>Append to the HITRAN isotope list to include desired isotopes<a class="headerlink" href="#append-to-the-hitran-isotope-list-to-include-desired-isotopes" title="Link to this heading">¶</a></h2>
 <p>Module import follows from the <a class="reference internal" href="Fitting%20Experimental%20Spectra.html#fitting-experimental-spectra"><span class="std std-ref">Fitting Experimental Spectra</span></a> and <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> examples.</p>
 <p>The <a class="reference internal" href="MATS.html#MATS.utilities.add_to_HITRANstyle_isotope_list" title="MATS.utilities.add_to_HITRANstyle_isotope_list"><code class="xref py py-func docutils literal notranslate"><span class="pre">add_to_HITRANstyle_isotope_list()</span></code></a> function allows you to ammend a given isotope list to include additional molecules and/or isotopes using the HITRAN-style molcule_id, local_isotope id, and global isotope id parameterization.  This function has some checks to verify expected behavior
 - if the molecule id and isotope id are in the initial isotope line list, it will return ‘Already entry with that molec_id and local_iso_id.  This result will write over that entry.
 - if the molecule id is in the initial isotope list it will return ‘This is being added as a new isotope of molecule name.  Proceed if that was the intention.
 - if the global isotope id is already in the isotope list it will return, ‘There is another entry with this global isotope id.  Consider changing the value for consistency’</p>
 <p>Mercury line shape parameters are not included in the HITRAN database.  The code below uses <a class="reference internal" href="MATS.html#MATS.utilities.add_to_HITRANstyle_isotope_list" title="MATS.utilities.add_to_HITRANstyle_isotope_list"><code class="xref py py-func docutils literal notranslate"><span class="pre">add_to_HITRANstyle_isotope_list()</span></code></a> function to add 10 Mercury isotopes to the HITRAN isotope list.  This is saved in a new isotope list called HITRAN_Hg_isolist that can be used in simulating and fitting spectra. The <a class="reference external" href="https://hitran.org/docs/iso-meta/">HITRAN isotope list</a> provides the HITRAN molecule and global ids that are already in use.</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">MATS.hapi</span> <span class="kn">import</span> <span class="n">ISO</span>
-<span class="kn">from</span> <span class="nn">MATS</span> <span class="kn">import</span> <span class="n">add_to_HITRANstyle_isotope_list</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">MATS.hapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">ISO</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">MATS</span><span class="w"> </span><span class="kn">import</span> <span class="n">add_to_HITRANstyle_isotope_list</span>
 
 <span class="n">HITRAN_Hg_isolist</span> <span class="o">=</span> <span class="n">add_to_HITRANstyle_isotope_list</span><span class="p">(</span><span class="n">input_isotope_list</span> <span class="o">=</span> <span class="n">ISO</span><span class="p">,</span> <span class="n">molec_id</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">local_iso_id</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
                                                  <span class="n">global_isotope_id</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">iso_name</span> <span class="o">=</span> <span class="s1">&#39;196&#39;</span><span class="p">,</span>
@@ -126,7 +129,7 @@ $(document).ready(function(){
 </div>
 </section>
 <section id="generate-spectra">
-<h2>Generate Spectra<a class="headerlink" href="#generate-spectra" title="Permalink to this heading">¶</a></h2>
+<h2>Generate Spectra<a class="headerlink" href="#generate-spectra" title="Link to this heading">¶</a></h2>
 <p>The simulate spectrum function is used to generate spectra (similar to in the <a class="reference internal" href="Fitting%20Synthetic%20Spectra.html#fitting-synthetic-spectra"><span class="std std-ref">Fitting Synthetic Spectra</span></a> example), but the isotope_list variable is set to use the isotope list that was just generated opposed to using the default HITRAN isotope list defined in HAPI.</p>
 <p>The initial parameter line list should have molecule and local isotope ids that correspond to the new isotope list.  The mole fraction definition should also use the appropriate mole fraction id.  The same would be true for the abundance_ratio_MI term if the sample was not at natural abundance.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">PARAM_LINELIST</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;Hg_Linelist.csv&#39;</span><span class="p">)</span>
@@ -160,10 +163,10 @@ $(document).ready(function(){
 </pre></div>
 </div>
 <img alt="_images/Hg_100Torr.png" src="_images/Hg_100Torr.png" />
-<img alt="_images/Hg_500Torr.png" src="_images/Hg_500Torr.png" />
+<img alt="_images/Hg_500torr.png" src="_images/Hg_500torr.png" />
 </section>
 <section id="construct-dataset-and-generate-fit-parameters">
-<h2>Construct Dataset and Generate Fit Parameters<a class="headerlink" href="#construct-dataset-and-generate-fit-parameters" title="Permalink to this heading">¶</a></h2>
+<h2>Construct Dataset and Generate Fit Parameters<a class="headerlink" href="#construct-dataset-and-generate-fit-parameters" title="Link to this heading">¶</a></h2>
 <p>The construction of the dataset and the generate fit parameter classes act as normal.  For the generation of the fit parameter line list, the example below shows how the vary_variable input dictionaries function with multiple isotopes.  Specifically, in the example below the VP is used as the fitting line shape, where the spectra were simulated with the SDVP.  All parameters are constrained across the spectra and the only parameters being floated are the collisional broadening terms for all isotopes.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SPECTRA</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">Dataset</span><span class="p">([</span><span class="n">spec_1</span><span class="p">,</span> <span class="n">spec_2</span><span class="p">],</span> <span class="s1">&#39;Mercury Fitting&#39;</span><span class="p">,</span><span class="n">PARAM_LINELIST</span> <span class="p">)</span>
 
@@ -197,7 +200,7 @@ $(document).ready(function(){
 </div>
 </section>
 <section id="fit-spectra">
-<h2>Fit Spectra<a class="headerlink" href="#fit-spectra" title="Permalink to this heading">¶</a></h2>
+<h2>Fit Spectra<a class="headerlink" href="#fit-spectra" title="Link to this heading">¶</a></h2>
 <p>Fitting follows the same strucutre described in <a class="reference internal" href="Fitting%20Experimental%20Spectra.html#fitting-experimental-spectra"><span class="std std-ref">Fitting Experimental Spectra</span></a>.  The fit results shown below are the result of fitting spectra simulated with the SDVP with the VP and only allowing the collsional broadening terms to float.  The residuals at both pressures show the expected w-shaped residuals.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit_data</span> <span class="o">=</span> <span class="n">MATS</span><span class="o">.</span><span class="n">Fit_DataSet</span><span class="p">(</span><span class="n">SPECTRA</span><span class="p">,</span><span class="s1">&#39;Baseline_LineList&#39;</span><span class="p">,</span> <span class="s1">&#39;Parameter_LineList&#39;</span><span class="p">,</span> <span class="n">minimum_parameter_fit_intensity</span> <span class="o">=</span> <span class="n">Fit_Intensity</span><span class="p">,</span> <span class="n">weight_spectra</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
 <span class="n">params</span> <span class="o">=</span> <span class="n">fit_data</span><span class="o">.</span><span class="n">generate_params</span><span class="p">()</span>
@@ -237,7 +240,7 @@ $(document).ready(function(){
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h4>Previous topic</h4>
@@ -249,7 +252,7 @@ $(document).ready(function(){
     <p class="topless"><a href="Correcting%20the%20Ideal%20Gas%20Law%20with%20Compressability%20Factor.html"
                           title="next chapter">Correcting the Ideal Gas Law with Compressability Factors</a></p>
   </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -257,13 +260,13 @@ $(document).ready(function(){
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -284,7 +287,7 @@ $(document).ready(function(){
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     </div>
   </body>
 </html>

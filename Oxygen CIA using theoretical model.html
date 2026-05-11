@@ -1,20 +1,16 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Oxygen CIA using theoretical model &#8212; MATS 3 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=279e0f84" />
+    <script src="_static/documentation_options.js?v=ba26cd90"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -24,6 +20,13 @@
   <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
   <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
 
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-RJSMY46M5C"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-RJSMY46M5C');
+</script>
 
 <script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
 <script>
@@ -50,7 +53,7 @@ $(document).ready(function(){
 
 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -77,7 +80,7 @@ $(document).ready(function(){
           <div class="body" role="main">
             
   <section id="oxygen-cia-using-theoretical-model">
-<h1>Oxygen CIA using theoretical model<a class="headerlink" href="#oxygen-cia-using-theoretical-model" title="Permalink to this heading">¶</a></h1>
+<h1>Oxygen CIA using theoretical model<a class="headerlink" href="#oxygen-cia-using-theoretical-model" title="Link to this heading">¶</a></h1>
 <p>Provided in MATS are several examples highlighting MATS capabilities, which can be found in the MATS <a class="reference external" href="https://github.com/usnistgov/MATS/tree/master/Examples">examples folder</a>.</p>
 <p>Karman et al published a theoretical O_2 - O_2 and O_2 - N_2 collision-induced absorption model based on quantum calculations <a class="reference external" href="https://doi.org/10.1038/s41557-018-0015-x">https://doi.org/10.1038/s41557-018-0015-x</a>. This model is composed of spin-orbit and exchange mechanisms. In the manuscript Parameterized Model to Approximate Theoretical Collision-Induced Absorption Band Shapes for O2-O2 and O2-N2, Adkins et al present a parameterized representation of the theoretical model reported by Karman et al.</p>
 <p>The details of the model can be found in <a class="reference external" href="https://doi.org/10.1016/j.jqsrt.2023.108732">https://doi.org/10.1016/j.jqsrt.2023.108732</a>.</p>
@@ -86,7 +89,7 @@ $(document).ready(function(){
 <div><p>Most of this example follows from the theoretical spectra generation and fit example. However, this example makes use of the new parameterized CIA model based on the theory published by Karman et al <a class="reference external" href="https://doi.org/10.1016/j.jqsrt.2023.108732">https://doi.org/10.1016/j.jqsrt.2023.108732</a>.</p>
 </div></blockquote>
 <p>In the first step we read in the linelist. The one used in the example is that reported in the JQSRT 270 (2021) 107684. However this linelist is for demonstration purposes only, users should refer to that paper for the actual line list.</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">MATS.linelistdata</span> <span class="kn">import</span> <span class="n">linelistdata</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">MATS.linelistdata</span><span class="w"> </span><span class="kn">import</span> <span class="n">linelistdata</span>
 <span class="n">PARAM_LINELIST</span> <span class="o">=</span> <span class="n">linelistdata</span><span class="p">[</span><span class="s1">&#39;Singlet_Delta_Linelist_JQSRT_270_2021_107684&#39;</span><span class="p">]</span>
 <span class="n">PARAM_LINELIST</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;nu&#39;</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
 </pre></div>
@@ -105,7 +108,7 @@ $(document).ready(function(){
 <span class="n">wavenumbers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">wave_min</span><span class="p">,</span> <span class="n">wave_max</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">sim_spectra_with_CIA</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample_molefraction</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">sim_spectra_with_CIA</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">sample_molefraction</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
         <span class="n">Diluent</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;O2&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span><span class="n">sample_molefraction</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="mf">31.998</span><span class="p">},</span> <span class="s1">&#39;N2&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span><span class="mi">1</span><span class="o">-</span><span class="n">sample_molefraction</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="mf">28.0134</span><span class="p">}}</span>
         <span class="n">spec</span> <span class="o">=</span>  <span class="n">MATS</span><span class="o">.</span><span class="n">simulate_spectrum</span><span class="p">(</span><span class="n">PARAM_LINELIST</span><span class="p">,</span> <span class="n">wavenumbers</span> <span class="o">=</span> <span class="n">wavenumbers</span><span class="p">,</span>
                                                  <span class="n">temperature</span> <span class="o">=</span> <span class="n">temperature</span><span class="p">,</span>  <span class="n">pressure</span> <span class="o">=</span> <span class="n">pressure</span><span class="p">,</span>
@@ -139,7 +142,7 @@ $(document).ready(function(){
 </div>
 <img alt="_images/O2_CIA_simualted.png" src="_images/O2_CIA_simualted.png" />
 <section id="set-up-for-fitting">
-<h2>Set-up for Fitting<a class="headerlink" href="#set-up-for-fitting" title="Permalink to this heading">¶</a></h2>
+<h2>Set-up for Fitting<a class="headerlink" href="#set-up-for-fitting" title="Link to this heading">¶</a></h2>
 <p>he CIA model is specified in the instantiation of the Dataset class. The CIA_model is specified through a dictionary specifying both the model and band. Currently, the Karman model is the only model available and the available bands are a_band and singlet_delta.</p>
 <p>Like the generate_baseline_paramlist() definition, the generate_CIA_paramlist() generates a dataframe and file that summarizes the parameters based on the MATS preset values from the literature. <a class="reference external" href="https://doi.org/10.1038/s41557-018-0015-x">https://doi.org/10.1038/s41557-018-0015-x</a>, <a class="reference external" href="https://doi.org/10.1016/j.icarus.2019.02.034">https://doi.org/10.1016/j.icarus.2019.02.034</a></p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#Add all spectrum to a Dataset object</span>
@@ -155,7 +158,7 @@ $(document).ready(function(){
 <p>In the Generate_FitParam_File class, the CIA_linelist is set to the CIA_LINELIST generated by the generate_CIA_paramlist. The genererate_fit_KarmanCIA_linelist() will then add the uncertainty and boolean vary columns, setting the vary column to vary the parameters indicated in the definition call</p>
 </section>
 <section id="fit-the-spectra">
-<h2>Fit the SPECTRA<a class="headerlink" href="#fit-the-spectra" title="Permalink to this heading">¶</a></h2>
+<h2>Fit the SPECTRA<a class="headerlink" href="#fit-the-spectra" title="Link to this heading">¶</a></h2>
 <p>Finally, in the Fit_Dataset instance, the CIA_linelist_file needs to be specified to indicate what parameters are being adjusted, provide initial values, and to allow uncertainties to be updated.</p>
 <p>The CIA parameters can be constrained using the constrained_CIA parameters() definition. The default option is that the the spin orbit intensity temperature dependence is the same for O2-O2 and O2-N2. Additionally, the shift of the spin-orbit mechanism is normally constrained to be the same for O2-O2 and O2-N2. However, either of these constraints can be removed by setting S_temperature_dependence_constrained = False or shift_constrained = False.</p>
 <p>The rest of the fitting runs in the same manner as for monomer-absorption only MATS fits.</p>
@@ -185,7 +188,7 @@ $(document).ready(function(){
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h4>Previous topic</h4>
@@ -197,7 +200,7 @@ $(document).ready(function(){
     <p class="topless"><a href="MATS.html"
                           title="next chapter">MATS module</a></p>
   </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -205,13 +208,13 @@ $(document).ready(function(){
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -232,7 +235,7 @@ $(document).ready(function(){
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     </div>
   </body>
 </html>
