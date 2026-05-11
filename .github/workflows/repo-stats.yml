@@ -1,0 +1,17 @@
+name: fetch-repository-stats
+on:
+  schedule:
+    # This runs at 00:00 UTC every day
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allows you to run it manually for testing
+
+jobs:
+  run-stats:
+    runs-on: ubuntu-latest
+    steps:
+      - name: run-ghrs
+        uses: jgehrcke/github-repo-stats@v1.4.1
+        with:
+          # Use the secret name you created in Step 2
+          repository: ${{ github.repository }}
+          ghtoken: ${{ secrets.GH_STATS_TOKEN }}
