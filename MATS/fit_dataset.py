@@ -21,7 +21,7 @@ from lmfit import Minimizer,  Parameters, conf_interval, printfuncs
 warnings.filterwarnings("ignore", category=UserWarning, module="uncertainties")
 
 def convert_int_to_float(df, exclude_cols=None):
-    mask = (df.drop(columns=exclude_cols, axis=1) if exclude_cols else df).select_dtypes(int)
+    mask = (df.drop(columns=exclude_cols) if exclude_cols else df).select_dtypes(int)
     df[mask.columns] = mask.astype(float)
     return df
 
