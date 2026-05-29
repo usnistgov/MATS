@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -15,7 +16,7 @@ from .hapi import ISO
 
 class MonteCarlo:
 
-    def __init__(self, dataset, base_linelist_file, param_linelist_file):
+    def __init__(self, dataset, base_linelist_file, param_linelist_file, directory = None):
         #Assumes parameters have been saved as .csvs
         # Currently written for one dataset type
         # Currently assumes that you aren't using the segment feature or the ILS features
@@ -26,8 +27,24 @@ class MonteCarlo:
         self.dataset = dataset
         self.dataset_name= self.dataset.dataset_name
 
-        self.base_linelist = pd.read_csv(base_linelist_file + '.csv')
-        self.param_linelist = pd.read_csv(param_linelist_file + '.csv')
+
+
+        self.directory = directory
+
+        self.base_linelist_file = base_linelist_file
+        self.param_linelist_file = param_linelist_file
+
+        if self.directory == None:
+
+            self.base_linelist = pd.read_csv(base_linelist_file + '.csv')
+            self.param_linelist = pd.read_csv(param_linelist_file + '.csv')
+        else:
+            self.base_linelist = pd.read_csv(os.path.join(self.directory, base_linelist_file + '.csv'))
+            self.param_linelist = pd.read_csv(os.path.join(self.directory, param_linelist_file + '.csv'))
+
+        self.iterations_param_linelist = pd.DataFrame()
+        self.iterations_base_linelist = pd.DataFrame()
+
 
     def _extract_baseline_params(self, spec_base_linelist):
         """Reconstructs polynomial coeffs list [c_0, ..., c_n] from baseline_params."""
@@ -66,20 +83,21 @@ class MonteCarlo:
         return etalon_dict
 
   
-   
-    def simulate_dataset(self, at_SNR = True,
+    def simulate_dataset(self, at_SNR = True, beta_formalism = False,
                          wave_error = 0.0, temperature_err =  {'bias': 0, 'function': None, 'params': {}}, 
                          pressure_err = {'per_bias': 0, 'function': None, 'params': {}},
                          molefraction_err = {},
                          wing_method = 'wing_wavenumbers', wing_cutoff = 25, wing_wavenumbers = 25, sim_window = 5):
     
-
-
-        fit_summary = pd.read_csv(self.dataset_name + '.csv') #assumes only one dataset type
+        if self.directory == None:
+            fit_summary = pd.read_csv(self.dataset_name + '.csv') #assumes only one dataset type
+        else:
+            fit_summary = pd.read_csv(os.path.join(self.directory, self.dataset_name  + '.csv'))
+        
 
         list_spec = []
  
-        for spectrum in self.spectra:
+        for spectrum in self.dataset.spectra:
             spec_num = spectrum.spectrum_number
             spec_fit_summary = fit_summary[fit_summary['Spectrum Number']==spec_num]
 
@@ -98,7 +116,7 @@ class MonteCarlo:
 
             molefraction_dict = self._extract_molefraction_parms(spec_base_linelist, spectrum)
             isotopic_abund_dict = self._extract_isoabund_parms(spec_base_linelist, spectrum)
-            etalon_dict = self._extract_etalon_params(self, spec_base_linelist, spectrum)
+            etalon_dict = self._extract_etalon_params(spec_base_linelist, spectrum)
 
             #generate simulated param_list for parameter_linelist this is where to pertub the parameters
             #Regenerate sw_based on sw_scale
@@ -141,13 +159,71 @@ class MonteCarlo:
                                          Diluent= spectrum.Diluent,
                                          nominal_temperature = spectrum.nominal_temperature, 
                                          etalons = etalon_dict, x_shift = spec_base_linelist['x_shift'].values[0], 
-                                         beta_formalism = spectrum.beta_formalism, TIPS = spectrum.TIPS, compressability_file= spectrum.compressability_file,
-                                         BIA_model = spectrum.BIA_model, CIA_model = spectrum.CIA_model,
+                                         beta_formalism = beta_formalism, TIPS = spectrum.TIPS, compressability_file= spectrum.compressability_file,
+                                         BIA_model = self.dataset.BIA_model, CIA_model = self.dataset.CIA_model,
                                          
                                          wing_cutoff = wing_cutoff, wing_wavenumbers = wing_wavenumbers, wing_method = wing_method, sim_window = sim_window, 
                                          filename = 'temp', isotope_list = self.dataset.isotope_list, natural_abundance=spectrum.natural_abundance,)
 
             list_spec.append(sim_spec)
-        return Dataset(list_spec, self.dataset_name + 'MC', self.dataset.param_linelist, BIA_model=self.dataset.BIA_model)
+        return Dataset(list_spec, self.dataset_name + '_MC', self.dataset.param_linelist, BIA_model=self.dataset.BIA_model)
+
+
+    def update_fit_files(self, initial_at_optimized = False):
+
+        parameter_linelist = self.param_linelist.copy()
+        baseline_linelist = self.base_linelist.copy()
+
+        for col in list(parameter_linelist):
+            if '_vary' in col:
+                param = col.replace('_vary', "")
+                if not initial_at_optimized:
+                    parameter_linelist[param] += np.random.normal(loc = 0.0, scale = parameter_linelist[param + '_err'], size = len(parameter_linelist) )
+                parameter_linelist[param + '_vary'] = False
+                parameter_linelist.loc[parameter_linelist[param + '_err']!=0, param + '_vary'] = True
+        
+        for col in list(baseline_linelist):
+            if '_vary' in col:
+                param = col.replace('_vary', "")
+                if not initial_at_optimized:
+                    baseline_linelist[param] += np.random.normal(loc = 0.0, scale = baseline_linelist[param + '_err'], size = len(baseline_linelist) )
+                baseline_linelist[param + '_vary'] = False
+                baseline_linelist.loc[baseline_linelist[param + '_err']!=0, param + '_vary'] = True
+
+        if self.directory == None:
+            parameter_linelist.to_csv(self.param_linelist_file + '_MC.csv')
+            baseline_linelist.to_csv(self.base_linelist_file + '_MC.csv')
+        else:
+            baseline_linelist.to_csv(os.path.join(self.directory,self.base_linelist_file + '_MC.csv'), index = False)
+            parameter_linelist.to_csv(os.path.join(self.directory,self.param_linelist_file + '_MC.csv'))
+    
+    def add_iteration_results(self, fit_data_obj, iteration):
+
+        lineparam_list = fit_data_obj.lineparam_list.copy()
+        baseline_list = fit_data_obj.baseline_list.copy()
+
+        lineparam_list['Iteration'] = iteration
+        baseline_list['Iteration'] = iteration
+
+        for spectrum in fit_data_obj.dataset.spectra:
+            baseline_list.loc[ baseline_list['Spectrum Number'] == spectrum.spectrum_number, 'QF'] = spectrum.calculate_QF()
+
+        self.iterations_param_linelist = pd.concat([self.iterations_param_linelist, lineparam_list], ignore_index=True)
+        self.iterations_base_linelist = pd.concat([self.iterations_base_linelist, baseline_list], ignore_index=True)
+
+    #def parametric_bootstrap_analysis(self):
+
+
+
+        
+        
+
+        
+
+
+
+            
+                
+
 
 

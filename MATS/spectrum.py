@@ -148,7 +148,6 @@ class Spectrum:
         else:
             self.Diluent = Diluent
             if 'self' in self.Diluent:
-                print ("You are using the 'self' term, consider explicitly labeling the broadener (ie in an oxygen spectra use 'O2' instead of 'self').  This may avoid confusion in multiple species fits. For single species fits it should not matter.")
                 print ("Double check that you did not include the equivalent of the self term explicitly (ie in an oxygen spectra having both 'O2' and 'self').")
         self.spectrum_number = spectrum_number
 
@@ -901,6 +900,8 @@ def simulate_spectrum(parameter_linelist, lineprofile = 'mHTP', numba_lineprofil
                     baseline_order=len(baseline_terms)-1, weight=1,
                     ILS_function=ILS_function, ILS_resolution=ILS_resolution, ILS_wing=ILS_wing, 
                     TIPS=TIPS, compressability_file=compressability_file, cia = cia_array, cia_input_units = 'cm-1')
+
+
 
 
 
