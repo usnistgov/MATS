@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
+from scipy.stats import norm
 import re
 
 from .spectrum import simulate_spectrum
@@ -13,6 +14,11 @@ from .utilities import (
 )
 
 from .hapi import ISO
+
+def sigma_to_alpha(sigma_level):
+        alpha = 2 * norm.sf(sigma_level)
+        
+        return alpha
 
 class MonteCarlo:
 
@@ -211,7 +217,123 @@ class MonteCarlo:
         self.iterations_param_linelist = pd.concat([self.iterations_param_linelist, lineparam_list], ignore_index=True)
         self.iterations_base_linelist = pd.concat([self.iterations_base_linelist, baseline_list], ignore_index=True)
 
-    #def parametric_bootstrap_analysis(self):
+    def calculate_kappa(self):
+        param_drops = [c for c in self.param_linelist.columns if c.endswith('_kappa') or c.endswith('_experr')]
+        if param_drops:
+            self.param_linelist = self.param_linelist.drop(columns=param_drops)
+            
+        base_drops = [c for c in self.base_linelist.columns if c.endswith('_kappa') or c.endswith('_experr')]
+        if base_drops:
+            self.base_linelist = self.base_linelist.drop(columns=base_drops)
+        
+        param_names = [col.replace("_vary", "") for col in self.iterations_param_linelist.columns if "_vary" in col]
+        new_param_cols = {f"{p}_kappa": 1.0 for p in param_names}
+        df_new_param = pd.DataFrame(new_param_cols, index=self.param_linelist.index)
+
+        # Calculate Kappa values
+        for transition in self.iterations_param_linelist['Unnamed: 0'].unique():
+            select = self.iterations_param_linelist[self.iterations_param_linelist['Unnamed: 0'] == transition]
+            for param_name in param_names:
+                vary_col = param_name + '_vary'
+                if vary_col in select.columns and select[vary_col].values[0]:
+                    kappa = select[param_name].std() / select[param_name + '_err'].mean()
+                    if kappa < 1.0 or np.isnan(kappa):
+                        kappa = 1.0
+                    
+                    # Update our pre-allocated structures in memory
+                    df_new_param.loc[self.param_linelist['Unnamed: 0'] == transition, param_name + '_kappa'] = kappa
+
+        self.param_linelist = pd.concat([self.param_linelist, df_new_param], axis=1)
+        new_experr_cols = {}
+        for param in param_names:
+            new_experr_cols[param + '_experr'] = self.param_linelist[param + '_kappa'].values * self.param_linelist[param + '_err'].values
+        self.param_linelist = pd.concat([self.param_linelist, pd.DataFrame(new_experr_cols, index=self.param_linelist.index)], axis=1)
+
+        base_params = [col.replace("_vary", "") for col in self.iterations_base_linelist.columns if "_vary" in col]
+        new_base_cols = {f"{p}_kappa": 1.0 for p in base_params}
+        df_new_base = pd.DataFrame(new_base_cols, index=self.base_linelist.index)
+            
+        for spec_num in self.iterations_base_linelist['Spectrum Number'].unique():
+            select = self.iterations_base_linelist[self.iterations_base_linelist['Spectrum Number'] == spec_num]
+            
+            for param_name in base_params:
+                vary_col = param_name + '_vary'
+                if vary_col in select.columns and select[vary_col].values[0]:
+                    kappa = select[param_name].std() / select[param_name + '_err'].mean()
+                    if kappa < 1.0 or np.isnan(kappa):
+                        kappa = 1.0
+                    df_new_base.loc[self.base_linelist['Spectrum Number'] == spec_num, param_name + '_kappa'] = kappa
+
+        # Concatenate baseline kappas all at once
+        self.base_linelist = pd.concat([self.base_linelist, df_new_base], axis=1)
+
+        # Calculate baseline experimental errors all at once
+        new_base_experr_cols = {}
+        for param in base_params:
+            new_base_experr_cols[param + '_experr'] = self.base_linelist[param + '_kappa'].values * self.base_linelist[param + '_err'].values
+        self.base_linelist = pd.concat([self.base_linelist, pd.DataFrame(new_base_experr_cols, index=self.base_linelist.index)], axis=1)
+    
+    
+
+    def calculate_ci(self, sigma = 1):
+
+        alpha = sigma_to_alpha(sigma)
+        lower_q = (alpha) /2
+        upper_q = 1 - lower_q
+
+        param_drops = [c for c in self.param_linelist.columns if c.endswith('_lower_ci') or c.endswith('_upper_ci')]
+        if param_drops:
+            self.param_linelist = self.param_linelist.drop(columns=param_drops)
+                
+        base_drops = [c for c in self.base_linelist.columns if  c.endswith('_lower_ci') or c.endswith('_upper_ci')]
+        if base_drops:
+            self.base_linelist = self.base_linelist.drop(columns=base_drops)
+            
+        param_names = [col.replace("_vary", "") for col in self.iterations_param_linelist.columns if "_vary" in col]
+        new_param_cols_lower = {f"{p}_lower_ci": 0.0 for p in param_names}
+        new_param_cols_upper = {f"{p}_upper_ci": 0.0 for p in param_names}
+        new_param_cols = new_param_cols_lower | new_param_cols_upper
+        df_new_param = pd.DataFrame(new_param_cols, index=self.param_linelist.index)
+
+        for transition in self.iterations_param_linelist['Unnamed: 0'].unique():
+            select = self.iterations_param_linelist[self.iterations_param_linelist['Unnamed: 0'] == transition]
+            for param_name in param_names:
+                
+                vary_col = param_name + '_vary'
+                if vary_col in select.columns and select[vary_col].values[0]:
+                    lower_bound = select[param_name].quantile(lower_q)
+                    upper_bound = select[param_name].quantile(upper_q)
+                    exp_fit_value = self.param_linelist[self.param_linelist['Unnamed: 0'] == transition][param_name].values[0]
+                    
+                    
+                    df_new_param.loc[self.param_linelist['Unnamed: 0'] == transition, param_name + '_lower_ci'] = lower_bound - exp_fit_value 
+                    df_new_param.loc[self.param_linelist['Unnamed: 0'] == transition, param_name + '_upper_ci'] = upper_bound - exp_fit_value
+
+        self.param_linelist = pd.concat([self.param_linelist, df_new_param], axis=1)
+        
+        base_params = [col.replace("_vary", "") for col in self.iterations_base_linelist.columns if "_vary" in col]
+        
+        new_base_cols_lower = {f"{p}_lower_ci": 0.0 for p in base_params}
+        new_base_cols_upper = {f"{p}_upper_ci": 0.0 for p in base_params}
+        new_base_cols = new_base_cols_lower | new_base_cols_upper
+        df_new_base = pd.DataFrame(new_base_cols, index=self.base_linelist.index)
+
+        for spec_num in self.iterations_base_linelist['Spectrum Number'].unique():
+            select = self.iterations_base_linelist[self.iterations_base_linelist['Spectrum Number'] == spec_num]
+            for param_name in base_params:
+                vary_col = param_name + '_vary'
+                if vary_col in select.columns and select[vary_col].values[0]:
+                    lower_bound = select[param_name].quantile(lower_q)
+                    upper_bound = select[param_name].quantile(upper_q)
+                    exp_fit_value = self.base_linelist[self.base_linelist['Spectrum Number'] == spec_num][param_name].values[0]
+
+                    df_new_base.loc[self.base_linelist['Spectrum Number'] == spec_num, param_name + '_lower_ci'] = lower_bound - exp_fit_value 
+                    df_new_base.loc[self.base_linelist['Spectrum Number'] == spec_num, param_name + '_upper_ci'] = upper_bound - exp_fit_value
+        self.base_linelist = pd.concat([self.base_linelist, df_new_base], axis=1)
+
+
+
+
 
 
 
