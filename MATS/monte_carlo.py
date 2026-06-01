@@ -43,10 +43,14 @@ class MonteCarlo:
         if self.directory == None:
 
             self.base_linelist = pd.read_csv(base_linelist_file + '.csv')
-            self.param_linelist = pd.read_csv(param_linelist_file + '.csv')
+            self.param_linelist = pd.read_csv(param_linelist_file + '.csv')  
+            self.fit_summary = pd.read_csv(self.dataset_name + '.csv') #assumes only one dataset type
+        
+            
         else:
             self.base_linelist = pd.read_csv(os.path.join(self.directory, base_linelist_file + '.csv'))
             self.param_linelist = pd.read_csv(os.path.join(self.directory, param_linelist_file + '.csv'))
+            self.fit_summary = pd.read_csv(os.path.join(self.directory, self.dataset_name  + '.csv'))
 
         self.iterations_param_linelist = pd.DataFrame()
         self.iterations_base_linelist = pd.DataFrame()
@@ -89,30 +93,36 @@ class MonteCarlo:
         return etalon_dict
 
   
-    def simulate_dataset(self, at_SNR = True, beta_formalism = False,
+    def simulate_dataset(self, at_SNR = True, from_parametric_bs = False, iteration = 0,
+                         beta_formalism = False,
                          wave_error = 0.0, temperature_err =  {'bias': 0, 'function': None, 'params': {}}, 
                          pressure_err = {'per_bias': 0, 'function': None, 'params': {}},
                          molefraction_err = {},
                          wing_method = 'wing_wavenumbers', wing_cutoff = 25, wing_wavenumbers = 25, sim_window = 5):
     
-        if self.directory == None:
-            fit_summary = pd.read_csv(self.dataset_name + '.csv') #assumes only one dataset type
-        else:
-            fit_summary = pd.read_csv(os.path.join(self.directory, self.dataset_name  + '.csv'))
-        
 
         list_spec = []
+
+        if from_parametric_bs:
+            baseline_linelist_for_sim = self.iterations_base_linelist[self.iterations_base_linelist['Iteration'] == iteration].copy()
+            parameter_linelist_for_sim = self.iterations_param_linelist[self.iterations_param_linelist['Iteration'] == iteration].copy()
+        
+        else:
+            baseline_linelist_for_sim = self.base_linelist.copy()
+            parameter_linelist_for_sim = self.param_linelist.copy()
+
+
  
         for spectrum in self.dataset.spectra:
             spec_num = spectrum.spectrum_number
-            spec_fit_summary = fit_summary[fit_summary['Spectrum Number']==spec_num]
+            spec_fit_summary = self.fit_summary[self.fit_summary['Spectrum Number']==spec_num].copy()
 
             if at_SNR:
                 SNR = spec_fit_summary['QF'].mean()
             else:
                 SNR = None
 
-            spec_base_linelist = self.base_linelist[self.base_linelist['Spectrum Number']==spec_num]
+            spec_base_linelist = baseline_linelist_for_sim[baseline_linelist_for_sim['Spectrum Number']==spec_num].copy()
             baseline_params = self._extract_baseline_params(spec_base_linelist)
             if spectrum.dataspace == 'alpha':
                 pathlength = 0
@@ -126,7 +136,7 @@ class MonteCarlo:
 
             #generate simulated param_list for parameter_linelist this is where to pertub the parameters
             #Regenerate sw_based on sw_scale
-            spec_param_linelist = self.param_linelist.copy()
+            spec_param_linelist = parameter_linelist_for_sim.copy()
 
             lineshape_parameters = ['nu', 'sw', 'gamma0', 'delta0', 'SD_gamma', 'SD_delta', 'nuVC', 'nuOptRe', 'eta', 'nuOptIm', 'y']
             broadener_suffix = self.dataset.get_broadener_list()   
@@ -330,6 +340,25 @@ class MonteCarlo:
                     df_new_base.loc[self.base_linelist['Spectrum Number'] == spec_num, param_name + '_lower_ci'] = lower_bound - exp_fit_value 
                     df_new_base.loc[self.base_linelist['Spectrum Number'] == spec_num, param_name + '_upper_ci'] = upper_bound - exp_fit_value
         self.base_linelist = pd.concat([self.base_linelist, df_new_base], axis=1)
+    
+    def parametric_bootstrap_analysis(self, kappa = True, CI = True, sigma = 1):
+
+        if kappa:
+            self.calculate_kappa()
+        
+        if CI:
+            self.calculate_ci(sigma = sigma)
+
+        if self.directory == None:
+
+            self.base_linelist.to_csv(self.base_linelist_file + '_pbs.csv')
+            self.param_linelist.to_csv(self.param_linelist_file + '_pbs.csv')         
+        else:
+            self.base_linelist.to_csv(os.path.join(self.directory, self.base_linelist_file + '_pbs.csv'))
+            self.param_linelist.to_csv(os.path.join(self.directory, self.param_linelist_file + '_pbs.csv'))
+
+
+
 
 
 
