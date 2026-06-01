@@ -52,10 +52,6 @@ class MonteCarlo:
             self.param_linelist = pd.read_csv(os.path.join(self.directory, param_linelist_file + '.csv'))
             self.fit_summary = pd.read_csv(os.path.join(self.directory, self.dataset_name  + '.csv'))
 
-        self.iterations_param_linelist = pd.DataFrame()
-        self.iterations_base_linelist = pd.DataFrame()
-
-
     def _extract_baseline_params(self, spec_base_linelist):
         """Reconstructs polynomial coeffs list [c_0, ..., c_n] from baseline_params."""
         baseline_params= []
@@ -185,7 +181,7 @@ class MonteCarlo:
         return Dataset(list_spec, self.dataset_name + '_MC', self.dataset.param_linelist, BIA_model=self.dataset.BIA_model)
 
 
-    def update_fit_files(self, initial_at_optimized = False):
+    def update_fit_files(self, initial_at_optimized = False, lineprofile = None):
 
         parameter_linelist = self.param_linelist.copy()
         baseline_linelist = self.base_linelist.copy()
@@ -197,6 +193,22 @@ class MonteCarlo:
                     parameter_linelist[param] += np.random.normal(loc = 0.0, scale = parameter_linelist[param + '_err'], size = len(parameter_linelist) )
                 parameter_linelist[param + '_vary'] = False
                 parameter_linelist.loc[parameter_linelist[param + '_err']!=0, param + '_vary'] = True
+
+                #lineprofile
+                if (lineprofile == 'SDNGP') | (lineprofile == 'SDVP')| (lineprofile == 'NGP')| (lineprofile == 'VP'):
+                    if ('nuOptIm_' in param):
+                        parameter_linelist[param] = 0
+                        parameter_linelist[param + '_vary'] = False
+
+                if  (lineprofile == 'SDVP')| (lineprofile == 'VP'):
+                    if ('nuOptRe_' in param):
+                        parameter_linelist[param] = 0
+                        parameter_linelist[param + '_vary'] = False
+                
+                if  (lineprofile == 'NGP')| (lineprofile == 'VP'):
+                    if ('SD_gamma_' in param) | ('SD_delta_' in param):
+                        parameter_linelist[param] = 0
+                        parameter_linelist[param + '_vary'] = False
         
         for col in list(baseline_linelist):
             if '_vary' in col:
@@ -205,6 +217,7 @@ class MonteCarlo:
                     baseline_linelist[param] += np.random.normal(loc = 0.0, scale = baseline_linelist[param + '_err'], size = len(baseline_linelist) )
                 baseline_linelist[param + '_vary'] = False
                 baseline_linelist.loc[baseline_linelist[param + '_err']!=0, param + '_vary'] = True
+        
 
         if self.directory == None:
             parameter_linelist.to_csv(self.param_linelist_file + '_MC.csv')
@@ -213,7 +226,8 @@ class MonteCarlo:
             baseline_linelist.to_csv(os.path.join(self.directory,self.base_linelist_file + '_MC.csv'), index = False)
             parameter_linelist.to_csv(os.path.join(self.directory,self.param_linelist_file + '_MC.csv'))
     
-    def add_iteration_results(self, fit_data_obj, iteration):
+
+    def add_iteration_results(self, fit_data_obj, iteration, lineprofile = None):
 
         lineparam_list = fit_data_obj.lineparam_list.copy()
         baseline_list = fit_data_obj.baseline_list.copy()
@@ -224,8 +238,25 @@ class MonteCarlo:
         for spectrum in fit_data_obj.dataset.spectra:
             baseline_list.loc[ baseline_list['Spectrum Number'] == spectrum.spectrum_number, 'QF'] = spectrum.calculate_QF()
 
-        self.iterations_param_linelist = pd.concat([self.iterations_param_linelist, lineparam_list], ignore_index=True)
-        self.iterations_base_linelist = pd.concat([self.iterations_base_linelist, baseline_list], ignore_index=True)
+        if lineprofile is None:
+            param_attr_name = "iterations_param_linelist"
+            base_attr_name = "iterations_base_linelist"
+        
+        else:
+            param_attr_name = f"iterations_param_linelist_{lineprofile}"
+            base_attr_name = f"iterations_base_linelist_{lineprofile}
+        
+        if not hasattr(self, param_attr_name):
+            setattr(self, param_attr_name, pd.DataFrame())
+        if not hasattr(self, base_attr_name):
+            setattr(self, base_attr_name, pd.DataFrame())
+        
+        existing_param_df = getattr(self, param_attr_name)
+        existing_base_df = getattr(self, base_attr_name)
+
+        setattr(self, param_attr_name, pd.concat([existing_param_df, lineparam_list], ignore_index=True))
+        setattr(self, base_attr_name, pd.concat([existing_base_df, baseline_list], ignore_index=True))
+
 
     def calculate_kappa(self):
         param_drops = [c for c in self.param_linelist.columns if c.endswith('_kappa') or c.endswith('_experr')]
