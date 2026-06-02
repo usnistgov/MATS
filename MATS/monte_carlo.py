@@ -217,6 +217,14 @@ class MonteCarlo:
                     baseline_linelist[param] += np.random.normal(loc = 0.0, scale = baseline_linelist[param + '_err'], size = len(baseline_linelist) )
                 baseline_linelist[param + '_vary'] = False
                 baseline_linelist.loc[baseline_linelist[param + '_err']!=0, param + '_vary'] = True
+
+        param_drops = [c for c in parameter_linelist.columns if c.endswith('_kappa') or c.endswith('_experr') or c.endswith('_lower_ci')or c.endswith('_upper_ci')]
+        if param_drops:
+            parameter_linelist = parameter_linelist.drop(columns=param_drops)
+            
+        base_drops = [c for c in baseline_linelist.columns if c.endswith('_kappa') or c.endswith('_experr')or c.endswith('_lower_ci')or c.endswith('_upper_ci')]
+        if base_drops:
+            baseline_linelist = baseline_linelist.drop(columns=base_drops)
         
 
         if self.directory == None:
@@ -244,7 +252,7 @@ class MonteCarlo:
         
         else:
             param_attr_name = f"iterations_param_linelist_{lineprofile}"
-            base_attr_name = f"iterations_base_linelist_{lineprofile}
+            base_attr_name = f"iterations_base_linelist_{lineprofile}"
         
         if not hasattr(self, param_attr_name):
             setattr(self, param_attr_name, pd.DataFrame())
@@ -387,6 +395,66 @@ class MonteCarlo:
         else:
             self.base_linelist.to_csv(os.path.join(self.directory, self.base_linelist_file + '_pbs.csv'))
             self.param_linelist.to_csv(os.path.join(self.directory, self.param_linelist_file + '_pbs.csv'))
+
+    def get_new_LS_params(self, lineprofile = None):
+        if lineprofile == None:
+            raise AttributeError(f"No iteration data found for lineprofile: '{lineprofile}'")  
+        else:
+            param_attr_name = f"iterations_param_linelist_{lineprofile}"
+            base_attr_name = f"iterations_base_linelist_{lineprofile}"
+            if not hasattr(self, param_attr_name):
+                raise AttributeError(f"No iteration data found for lineprofile: '{lineprofile}'")
+            df_param_iter = getattr(self, param_attr_name)
+            df_base_iter = getattr(self, base_attr_name)
+
+        
+            df_param_consolidated = self.param_linelist.copy()
+            df_base_consolidated = self.base_linelist.copy()
+
+            param_drops = [c for c in df_param_consolidated.columns if c.endswith('_kappa') or c.endswith('_experr') or  c.endswith('_lower_ci') or c.endswith('_upper_ci')]
+            if param_drops:
+                df_param_consolidated = df_param_consolidated.drop(columns=param_drops)      
+
+            base_drops = [c for c in df_base_consolidated.columns if c.endswith('_kappa') or c.endswith('_experr') or  c.endswith('_lower_ci') or c.endswith('_upper_ci')]
+            if base_drops:
+                df_base_consolidated = df_base_consolidated.drop(columns=base_drops)
+
+            # LS Parameters
+            grouped = df_param_iter.groupby('Unnamed: 0')
+            means = grouped.mean(numeric_only=True)
+            stds = grouped.std(numeric_only=True)
+    
+            param_names = [col for col in means.columns if col + '_err' in df_param_consolidated.columns]
+
+            for param in param_names:
+                df_param_consolidated[param] = df_param_consolidated['Unnamed: 0'].map(means[param])
+                df_param_consolidated[param + '_err'] = df_param_consolidated['Unnamed: 0'].map(stds[param])
+
+            #base parameters
+            grouped = df_base_iter.groupby('Spectrum Number')
+            means = grouped.mean(numeric_only=True)
+            stds = grouped.std(numeric_only=True)
+    
+            param_names = [col for col in means.columns if col + '_err' in df_base_consolidated.columns]
+
+            for param in param_names:
+                df_base_consolidated[param] = df_base_consolidated['Spectrum Number'].map(means[param])
+                df_base_consolidated[param + '_err'] = df_base_consolidated['Spectrum Number'].map(stds[param])
+
+            
+            param_attr_name = f"param_linelist_{lineprofile}"
+            base_attr_name = f"base_linelist_{lineprofile}"
+
+            setattr(self, param_attr_name, df_param_consolidated)
+            setattr(self, base_attr_name,df_base_consolidated)
+
+            if self.directory == None:
+                df_base_consolidated.to_csv(self.base_linelist_file + '_' + lineprofile +'.csv')
+                df_param_consolidated.to_csv(self.param_linelist_file + '_' + lineprofile + '.csv')         
+            else:
+                df_base_consolidated.to_csv(os.path.join(self.directory, self.base_linelist_file + '_' + lineprofile+ '.csv'))
+                df_param_consolidated.to_csv(os.path.join(self.directory, self.param_linelist_file + '_' + lineprofile+ '.csv'))
+
 
 
 
