@@ -70,12 +70,17 @@ class MonteCarlo:
         return molefraction_dict
     
     def _extract_isoabund_parms(self, spec_base_linelist, spectrum):
+
+        
         abundance_ratio_dict = spectrum.abundance_ratio_MI
         for molec_id, isotope_dict in abundance_ratio_dict.items():
             mol_name = self.dataset.isotope_list.get((molec_id, 1), [0,0,0,0,'Unknown'])[4]
             for isotope_id in isotope_dict:
                 isotope_param_name = f'abundance_ratio_{mol_name}_{isotope_id}' 
-                abundance_ratio_dict[molec_id][isotope_id] = spec_base_linelist[isotope_param_name].values[0]
+                try:
+                    abundance_ratio_dict[molec_id][isotope_id] = spec_base_linelist[isotope_param_name].values[0]
+                except:
+                    pass
 
         return abundance_ratio_dict
     
@@ -83,9 +88,11 @@ class MonteCarlo:
         etalon_dict = spectrum.etalons
         if etalon_dict != {}:
             for etalon in etalon_dict:
+            
                 etalon_prefix =  f'etalon_{etalon}_'
-                etalon_dict[etalon] = [spec_base_linelist[etalon_prefix + '_amp'].values[0], 
-                                       spec_base_linelist[etalon_prefix + '_period'].values[1]]
+                
+                etalon_dict[etalon] = [spec_base_linelist[etalon_prefix + 'amp'].values[0], 
+                                       spec_base_linelist[etalon_prefix + 'period'].values[0]]
         return etalon_dict
 
   
@@ -229,7 +236,7 @@ class MonteCarlo:
 
         if self.directory == None:
             parameter_linelist.to_csv(self.param_linelist_file + '_MC.csv')
-            baseline_linelist.to_csv(self.base_linelist_file + '_MC.csv')
+            baseline_linelist.to_csv(self.base_linelist_file + '_MC.csv', index = False)
         else:
             baseline_linelist.to_csv(os.path.join(self.directory,self.base_linelist_file + '_MC.csv'), index = False)
             parameter_linelist.to_csv(os.path.join(self.directory,self.param_linelist_file + '_MC.csv'))

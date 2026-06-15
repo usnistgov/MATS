@@ -147,8 +147,8 @@ class Spectrum:
                 self.Diluent = {self.diluent: {'composition':1, 'm': 0}}
         else:
             self.Diluent = Diluent
-            if 'self' in self.Diluent:
-                print ("Double check that you did not include the equivalent of the self term explicitly (ie in an oxygen spectra having both 'O2' and 'self').")
+            #if 'self' in self.Diluent:
+                #print ("Double check that you did not include the equivalent of the self term explicitly (ie in an oxygen spectra having both 'O2' and 'self').")
         self.spectrum_number = spectrum_number
 
         self.dataspace = dataspace.lower()
